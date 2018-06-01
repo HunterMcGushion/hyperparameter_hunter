@@ -1,6 +1,3 @@
-##################################################
-# Make Executable in Terminal, and Enable Module Importing
-##################################################
 import sys
 import os.path
 
