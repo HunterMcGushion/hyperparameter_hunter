@@ -67,12 +67,12 @@ directory.
 
 Tested Libraries
 ----------------
-* [Keras](<link/to/example.py>)
-* [scikit-learn](<link/to/example.py>)
-* [LightGBM](<link/to/example.py>)
-* [CatBoost](<link/to/example.py>)
-* [XGBoost](<link/to/example.py>)
-* [rgf_python](<link/to/example.py>)
+* [Keras](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/keras_example.py)
+* [scikit-learn](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/sklearn_example.py)
+* [LightGBM](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/lightgbm_example.py)
+* [CatBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/catboost_example.py)
+* [XGBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/simple_example.py)
+* [rgf_python](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/rgf_example.py)
 * ... More on the way
 
 Installation

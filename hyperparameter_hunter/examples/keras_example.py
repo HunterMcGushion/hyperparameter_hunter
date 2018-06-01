@@ -1,6 +1,3 @@
-##################################################
-# Make Executable in Terminal, and Enable Module Importing
-##################################################
 import sys
 import os.path
 
@@ -9,9 +6,6 @@ try:
 except Exception as _ex:
     raise _ex
 
-##################################################
-# Import Own Assets
-##################################################
 from hyperparameter_hunter.importer import hook_keras_layer
 try:
     hook_keras_layer()
@@ -22,14 +16,8 @@ from hyperparameter_hunter.environment import Environment
 from hyperparameter_hunter.experiments import CrossValidationExperiment
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 
-##################################################
-# Import Miscellaneous Assets
-##################################################
 import copy
 
-##################################################
-# Import Learning Assets
-##################################################
 from sklearn.model_selection import StratifiedKFold
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.layers import Dense, Activation, Dropout
@@ -37,10 +25,6 @@ from keras.losses import binary_crossentropy
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
-
-
-# def get_holdout_set(train, target_column):
-#     return train, train.copy()
 
 
 def define_architecture(input_dim=-1):
@@ -70,7 +54,6 @@ def execute():
         root_results_path=os.path.abspath(os.path.join(os.path.dirname(__file__), '../HyperparameterHunterAssets')),
         target_column='diagnosis',
         metrics_map=['roc_auc_score'],
-        runs=2,
         cross_validation_type=StratifiedKFold,
         cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
     )

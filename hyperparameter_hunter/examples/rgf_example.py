@@ -1,6 +1,3 @@
-##################################################
-# Make Executable in Terminal, and Enable Module Importing
-##################################################
 import sys
 import os.path
 
@@ -23,7 +20,6 @@ def execute():
         metrics_map=['roc_auc_score'],
         cross_validation_type=RepeatedStratifiedKFold,
         cross_validation_params=dict(n_splits=5, n_repeats=2, random_state=32),
-        runs=1,
     )
 
     experiment = CrossValidationExperiment(
