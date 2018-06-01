@@ -61,7 +61,8 @@ optimizer.set_experiment_guidelines(
 optimizer.go()
 ```
 Plenty of examples for different libraries, and algorithms, as well as more advanced
-HyperparameterHunter features can be found in the [examples](<path/to/examples/>)
+HyperparameterHunter features can be found in the
+[examples](https://github.com/HunterMcGushion/hyperparameter_hunter/tree/master/hyperparameter_hunter/examples)
 directory.
 
 Tested Libraries
