@@ -1,0 +1,10 @@
+.ipynb_checkpoints
+*.pyc
+.idea/
+.DS_Store
+*.egg-info/
+
+env/
+env3/
+
+HyperparameterHunterAssets/
