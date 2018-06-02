@@ -19,14 +19,15 @@ setup(
     packages=find_packages(),
     install_requires=[
         # 'h5py',  # ?
-        # 'keras',  # ?
+        'keras',  # New
         'numpy',
         'pandas',
         'scikit-learn',
         'scikit-optimize',
         'scipy',
         'simplejson',
-        # 'tensorflow',  # ?
+        'dill',  # New
+        'tensorflow',  # New
         # 'xgboost',  # ?
     ],
     include_package_data=True,

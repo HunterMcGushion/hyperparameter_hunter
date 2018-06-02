@@ -9,19 +9,6 @@ from functools import partial
 from inspect import signature, isclass, isfunction
 import numpy as np
 
-##################################################
-# Import Learning Assets
-##################################################
-from catboost import CatBoostClassifier, CatBoostRegressor
-from lightgbm import LGBMClassifier, LGBMRegressor
-from rgf import RGFClassifier, RGFRegressor
-from sklearn.svm import SVR
-from sklearn.linear_model import LogisticRegression
-from sklearn.gaussian_process import GaussianProcessClassifier, GaussianProcessRegressor
-from sklearn.cluster import DBSCAN, SpectralClustering, KMeans
-from tpot import TPOTClassifier, TPOTRegressor
-from xgboost import XGBClassifier, XGBRegressor
-
 
 def identify_algorithm(model_initializer):
     """Determine the name, and module of the algorithm provided by `model_initializer`
@@ -129,65 +116,7 @@ def identify_hyperparameter_choices(algorithm_name, module_name, hyperparameter_
 
 
 def execute():
-    # models = [
-    #     LGBMClassifier, LGBMRegressor,
-    #     XGBClassifier, XGBRegressor,
-    #     SVR,
-    #     LogisticRegression,
-    #     GaussianProcessClassifier, GaussianProcessRegressor,
-    #     DBSCAN, SpectralClustering, KMeans
-    # ]
-    # models = [
-    #     XGBClassifier,
-    #     partial(XGBClassifier),
-    #     XGBClassifier(),
-    #     DBSCAN,
-    #     partial(DBSCAN),
-    #     DBSCAN(),
-    #     SpectralClustering,
-    #     partial(SpectralClustering),
-    #     SpectralClustering(),
-    # ]
-    models = [
-        CatBoostClassifier,
-        CatBoostClassifier(),
-        partial(CatBoostClassifier),
-
-        LGBMClassifier,
-        LGBMClassifier(),
-        partial(LGBMClassifier),
-
-        RGFClassifier,
-        RGFClassifier(),
-        partial(RGFClassifier),
-
-        SVR,
-        SVR(),
-        partial(SVR),
-
-        GaussianProcessClassifier,
-        GaussianProcessClassifier(),
-        partial(GaussianProcessClassifier),
-
-        SpectralClustering,
-        SpectralClustering(),
-        partial(SpectralClustering),
-
-        TPOTClassifier,
-        TPOTClassifier(),
-        partial(TPOTClassifier),
-
-        XGBClassifier,
-        XGBClassifier(),
-        partial(XGBClassifier),
-    ]
-
-    for model in models:
-        print(identify_algorithm(model))
-        print(identify_algorithm_hyperparameters(model))
-        print('')
-
-    print('')
+    pass
 
 
 if __name__ == '__main__':
