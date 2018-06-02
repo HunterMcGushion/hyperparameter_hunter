@@ -197,27 +197,27 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
         self.logger.print_optimization_header()
 
         while iteration < self.iterations:
-            print(iteration)
+            # print(iteration)
             try:
-                print(F'try         {iteration}')
+                # print(F'try         {iteration}')
                 self._execute_experiment()
-                print(F'success     {iteration}')
+                # print(F'success     {iteration}')
             except RepeatedExperimentError:
-                print(F'repeated    {iteration}')
+                # print(F'repeated    {iteration}')
                 # G.debug_(F'Skipping repeated Experiment: {_ex!s}\n')
                 self.skipped_iterations += 1
                 continue
             except StopIteration:
-                print(F'stopped     {iteration}')
+                # print(F'stopped     {iteration}')
                 if len(self.tested_keys) >= self.search_space_size:
                     G.log_(F'Hyperparameter search space has been exhausted after testing {len(self.tested_keys)} keys')
                     break
                 # G.debug_(F'Re-initializing hyperparameter grid after testing {len(self.tested_keys)} keys')
-                print(F'resetting     {iteration}')
+                # print(F'resetting     {iteration}')
                 self._set_hyperparameter_space()
                 continue
 
-            print(F'after     {iteration}')
+            # print(F'after     {iteration}')
             # FLAG: TEST BELOW - :attr:`current_hyperparameters_list` only exists in Informed Protocols
             # FLAG: TEST BELOW - :attr:`current_hyperparameters_list` only exists in Informed Protocols
             # FLAG: TEST BELOW - :attr:`current_hyperparameters_list` only exists in Informed Protocols
@@ -580,31 +580,15 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         super()._execute_experiment()
 
         # FLAG: BIG BREAKING TEST BELOW
-        # FLAG: BIG BREAKING TEST BELOW
-        # FLAG: BIG BREAKING TEST BELOW
-        # FLAG: BIG BREAKING TEST BELOW
-        # FLAG: BIG BREAKING TEST BELOW
-        # FLAG: BIG BREAKING TEST BELOW
-        # FLAG: BIG BREAKING TEST BELOW
-        # FLAG: BIG BREAKING TEST BELOW
         # self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, self.current_score, fit=True)  # FLAG: ORIGINAL
         self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, -self.current_score, fit=True)  # FLAG: TEST
-        # FLAG: BIG BREAKING TEST ABOVE
-        # FLAG: BIG BREAKING TEST ABOVE
-        # FLAG: BIG BREAKING TEST ABOVE
-        # FLAG: BIG BREAKING TEST ABOVE
-        # FLAG: BIG BREAKING TEST ABOVE
-        # FLAG: BIG BREAKING TEST ABOVE
-        # FLAG: BIG BREAKING TEST ABOVE
         # FLAG: BIG BREAKING TEST ABOVE
 
         if eval_callbacks(self.callbacks, self.optimizer_result):
             return
 
     def _get_current_hyperparameters(self):
-        print('?' * 80)
         _current_hyperparameters = self.optimizer.ask()
-        print('!' * 80)
 
         if _current_hyperparameters == self.current_hyperparameters_list:
             # G.debug_('Repeated hyperparameters selected. Switching to random selection for this iteration')
@@ -631,22 +615,8 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             self.logger.print_result(_hyperparameters, _evaluation)
 
             # FLAG: BIG BREAKING TEST BELOW
-            # FLAG: BIG BREAKING TEST BELOW
-            # FLAG: BIG BREAKING TEST BELOW
-            # FLAG: BIG BREAKING TEST BELOW
-            # FLAG: BIG BREAKING TEST BELOW
-            # FLAG: BIG BREAKING TEST BELOW
-            # FLAG: BIG BREAKING TEST BELOW
-            # FLAG: BIG BREAKING TEST BELOW
             # self.optimizer_result = self.optimizer.tell(_hyperparameters, _evaluation)  # FLAG: ORIGINAL
             self.optimizer_result = self.optimizer.tell(_hyperparameters, -_evaluation)  # FLAG: TEST
-            # FLAG: BIG BREAKING TEST ABOVE
-            # FLAG: BIG BREAKING TEST ABOVE
-            # FLAG: BIG BREAKING TEST ABOVE
-            # FLAG: BIG BREAKING TEST ABOVE
-            # FLAG: BIG BREAKING TEST ABOVE
-            # FLAG: BIG BREAKING TEST ABOVE
-            # FLAG: BIG BREAKING TEST ABOVE
             # FLAG: BIG BREAKING TEST ABOVE
 
             # self.optimizer_result = self.optimizer.tell(
