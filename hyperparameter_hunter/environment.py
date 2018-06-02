@@ -281,6 +281,7 @@ class Environment():
         elif isinstance(self.root_results_path, str):
             if not self.root_results_path.endswith(ASSETS_DIRNAME):
                 self.root_results_path = os.path.join(self.root_results_path, ASSETS_DIRNAME)
+                self.result_paths['root'] = self.root_results_path
             if not os.path.exists(self.root_results_path):
                 os.makedirs(self.root_results_path, exist_ok=True)
         else:
