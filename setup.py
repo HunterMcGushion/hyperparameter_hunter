@@ -27,7 +27,8 @@ setup(
         'scipy',
         'simplejson',
         'dill',  # New
-        'tensorflow',  # New
+        # 'tensorflow',  # FLAG: Original
+        'tensorflow==1.5.0',  # FLAG: New
         # 'xgboost',  # ?
     ],
     include_package_data=True,
