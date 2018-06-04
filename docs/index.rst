@@ -11,9 +11,6 @@ Welcome to hyperparameter_hunter's documentation!
    :caption: Contents:
 .. automodule:: hyperparameter_hunter.environment
    :members:
-.. automodule:: hyperparameter_hunter
-   :members:
-
 
 Indices and tables
 ==================
