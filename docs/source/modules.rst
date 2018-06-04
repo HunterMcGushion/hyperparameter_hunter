@@ -5,4 +5,3 @@ hyperparameter_hunter
    :maxdepth: 4
 
    hyperparameter_hunter
-   setup
