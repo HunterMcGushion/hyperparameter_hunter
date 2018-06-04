@@ -8,3 +8,8 @@ env/
 env3/
 
 HyperparameterHunterAssets/
+
+# Documentation
+_build
+_static
+_templates
