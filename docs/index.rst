@@ -9,6 +9,8 @@ Welcome to hyperparameter_hunter's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+.. automodule:: hyperparameter_hunter.experiments
+   :members:
 .. automodule:: hyperparameter_hunter.environment
    :members:
 
