@@ -33,27 +33,9 @@ from keras.callbacks import Callback as base_keras_callback
 # KeyMaker Base Class:
 ##################################################
 class KeyMaker(metaclass=ABCMeta):
-    """KeyMaker and the classes that inherit it assume the following:
+    """
     # TODO: Fix documentation to reflect HyperparameterHunterAssets structure changes
-    - 1) ASSETS_DIRNAME contains a "TestedKeys" directory
-        - 1A) "TestedKeys" contains .json files named for each unique cross-experiment key
-        - 1B) Each of the .json files in "TestedKeys" contains a single dict
-        - 1C) The dict's keys are hyperparameter keys used with the cross-experiment key for which the file is named
-        - 1D) Each key's value is a list of experiment ids using hyperparameter_key=key and cross_experiment_key=filename
-    - 2) ASSETS_DIRNAME contains a "CrossExperimentKeyLookup.json" file
-        - 2A) This file contains a single dict
-        - 2B) The dict's keys are identical to the unique cross-experiment keys named in the "TestedKeys" directory
-        - 2C) Each key's value is a dict containing 3 keys: "alias" (str), "leaderboard" (str), "parameters" (dict)
-        - 2D) "alias" is either identical to key or a name that represents the key
-        - 2E) "leaderboard" is the filepath of the leaderboard for cross_experiment_key=key
-        - 2F) "parameters" contains all the parameters used to create the cross_experiment_key
-    - 3) ASSETS_DIRNAME contains a "HyperparameterKeyLookup.json" file
-        - 3A) This file contains a single dict
-        - 3B) The dict's keys are the result of joining all unique hyperparameter_keys from the keys of the files in "TestedKeys"
-        - 3C) Each key's value is a dict of 3 keys: "alias" (str), "associated_cross_experiment_keys" (list), "parameters" (dict)
-        - 3D) "alias" is either identical to key or a name that represents the key
-        - 3E) "associated_cross_experiment_keys" list the cross_experiment_key files in "TestedKeys" that contained this key
-        - 3F) "parameters" contains all the parameters used to create the hyperparameter_key"""
+    """
     def __init__(self, parameters, **kwargs):
         self.parameters = deepcopy(parameters)
         self.key = None
@@ -288,7 +270,8 @@ def make_hash_sha256(obj, **kwargs):
 
     Returns
     -------
-    Stringified sha256 hash"""
+    Stringified sha256 hash
+    """
     hasher = hashlib.sha256()
     hasher.update(repr(to_hashable(obj, **kwargs)).encode())
     return base64.urlsafe_b64encode(hasher.digest()).decode()

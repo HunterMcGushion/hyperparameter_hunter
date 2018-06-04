@@ -138,14 +138,14 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
         Parameters
         ----------
-        model_initializer: See :doc:`experiments.BaseExperiment`
-        model_init_params: See :doc:`experiments.BaseExperiment`
-        model_extra_params: See :doc:`experiments.BaseExperiment`
-        feature_selector: See :doc:`experiments.BaseExperiment`
-        preprocessing_pipeline: See :doc:`experiments.BaseExperiment`
-        preprocessing_params: See :doc:`experiments.BaseExperiment`
-        notes: See :doc:`experiments.BaseExperiment`
-        do_raise_repeated: See :doc:`experiments.BaseExperiment`
+        model_initializer: See :class:`experiments.BaseExperiment`
+        model_init_params: See :class:`experiments.BaseExperiment`
+        model_extra_params: See :class:`experiments.BaseExperiment`
+        feature_selector: See :class:`experiments.BaseExperiment`
+        preprocessing_pipeline: See :class:`experiments.BaseExperiment`
+        preprocessing_params: See :class:`experiments.BaseExperiment`
+        notes: See :class:`experiments.BaseExperiment`
+        do_raise_repeated: See :class:`experiments.BaseExperiment`
 
         Notes
         -----
