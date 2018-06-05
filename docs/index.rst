@@ -10,12 +10,41 @@ Welcome to hyperparameter_hunter's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+Environment
+-----------
+
 .. autoclass:: hyperparameter_hunter.environment.Environment
    :members: __init__
    :show-inheritance:
 
+Experiment Execution
+--------------------
+
 .. autoclass:: hyperparameter_hunter.experiments.CrossValidationExperiment
-   :members:
+   :members: __init__
+   :show-inheritance:
+
+Hyperparameter Optimization
+---------------------------
+
+.. autoclass:: hyperparameter_hunter.optimization.BayesianOptimization
+   :members: __init__, set_experiment_guidelines, go
+   :show-inheritance:
+
+.. autoclass:: hyperparameter_hunter.optimization.GradientBoostedRegressionTreeOptimization
+   :members: __init__, set_experiment_guidelines, go
+   :show-inheritance:
+
+.. autoclass:: hyperparameter_hunter.optimization.RandomForestOptimization
+   :members: __init__, set_experiment_guidelines, go
+   :show-inheritance:
+
+.. autoclass:: hyperparameter_hunter.optimization.ExtraTreesOptimization
+   :members: __init__, set_experiment_guidelines, go
+   :show-inheritance:
+
+.. autoclass:: hyperparameter_hunter.optimization.DummySearch
+   :members: __init__, set_experiment_guidelines, go
    :show-inheritance:
 
 
