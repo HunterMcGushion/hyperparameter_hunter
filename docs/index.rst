@@ -10,12 +10,16 @@ Welcome to hyperparameter_hunter's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. module:: hyperparameter_hunter.utils.boltons_utils
+   :noindex:
+
 Environment
 -----------
 
 .. autoclass:: hyperparameter_hunter.environment.Environment
    :members: __init__
    :show-inheritance:
+   :noindex:
 
 Experiment Execution
 --------------------
@@ -23,6 +27,7 @@ Experiment Execution
 .. autoclass:: hyperparameter_hunter.experiments.CrossValidationExperiment
    :members: __init__
    :show-inheritance:
+   :noindex:
 
 Hyperparameter Optimization
 ---------------------------
@@ -35,18 +40,22 @@ Hyperparameter Optimization
 .. autoclass:: hyperparameter_hunter.optimization.GradientBoostedRegressionTreeOptimization
    :members: __init__, set_experiment_guidelines, go
    :show-inheritance:
+   :noindex:
 
 .. autoclass:: hyperparameter_hunter.optimization.RandomForestOptimization
    :members: __init__, set_experiment_guidelines, go
    :show-inheritance:
+   :noindex:
 
 .. autoclass:: hyperparameter_hunter.optimization.ExtraTreesOptimization
    :members: __init__, set_experiment_guidelines, go
    :show-inheritance:
+   :noindex:
 
 .. autoclass:: hyperparameter_hunter.optimization.DummySearch
    :members: __init__, set_experiment_guidelines, go
    :show-inheritance:
+   :noindex:
 
 
 Indices and tables
