@@ -2,7 +2,7 @@ import sys
 import os.path
 
 try:
-    sys.path.append(os.path.split(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0])[0])
+    sys.path.append(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0])
 except Exception as _ex:
     raise _ex
 
@@ -51,7 +51,7 @@ def define_architecture(input_dim=-1):
 def execute():
     env = Environment(
         train_dataset=get_breast_cancer_data(),
-        root_results_path=os.path.abspath(os.path.join(os.path.dirname(__file__), '../HyperparameterHunterAssets')),
+        root_results_path='HyperparameterHunterAssets',
         target_column='diagnosis',
         metrics_map=['roc_auc_score'],
         cross_validation_type=StratifiedKFold,
@@ -64,7 +64,7 @@ def execute():
         # model_init_params=define_architecture,
         model_extra_params=dict(
             callbacks=[
-                ModelCheckpoint(filepath='../foo_checkpoint'),
+                ModelCheckpoint(filepath=os.path.abspath('foo_checkpoint')),
                 ReduceLROnPlateau(patience=5),
             ],
             batch_size=32,

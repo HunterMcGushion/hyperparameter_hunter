@@ -2,7 +2,7 @@ import sys
 import os.path
 
 try:
-    sys.path.append(os.path.split(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0])[0])
+    sys.path.append(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0])
 except Exception as _ex:
     raise _ex
 
@@ -15,7 +15,7 @@ from rgf import RGFClassifier
 def execute():
     env = Environment(
         train_dataset=get_toy_classification_data(target='diagnosis'),
-        root_results_path=os.path.abspath(os.path.join(os.path.dirname(__file__), '../HyperparameterHunterAssets')),
+        root_results_path='HyperparameterHunterAssets',
         target_column='diagnosis',
         metrics_map=['roc_auc_score'],
         cross_validation_type=RepeatedStratifiedKFold,
