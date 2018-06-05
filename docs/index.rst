@@ -1,5 +1,5 @@
 .. hyperparameter_hunter documentation master file, created by
-   sphinx-quickstart on Mon Jun  4 16:26:46 2018.
+   sphinx-quickstart on Mon Jun  4 20:28:43 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -30,6 +30,7 @@ Hyperparameter Optimization
 .. autoclass:: hyperparameter_hunter.optimization.BayesianOptimization
    :members: __init__, set_experiment_guidelines, go
    :show-inheritance:
+   :noindex:
 
 .. autoclass:: hyperparameter_hunter.optimization.GradientBoostedRegressionTreeOptimization
    :members: __init__, set_experiment_guidelines, go

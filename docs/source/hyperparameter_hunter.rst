@@ -7,10 +7,8 @@ Subpackages
 .. toctree::
 
     hyperparameter_hunter.callbacks
-    hyperparameter_hunter.examples
     hyperparameter_hunter.library_helpers
     hyperparameter_hunter.object_frameworks
-    hyperparameter_hunter.tests
     hyperparameter_hunter.utils
 
 Submodules
