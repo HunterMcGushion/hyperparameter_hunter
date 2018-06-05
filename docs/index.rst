@@ -11,7 +11,7 @@ Welcome to hyperparameter_hunter's documentation!
    :caption: Contents:
 
 .. autoclass:: hyperparameter_hunter.environment.Environment
-   :members:
+   :members: __init__
    :show-inheritance:
 
 .. autoclass:: hyperparameter_hunter.experiments.CrossValidationExperiment
