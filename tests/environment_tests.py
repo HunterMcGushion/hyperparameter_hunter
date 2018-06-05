@@ -79,12 +79,12 @@ class TestCrossExperimentKeyMaker(TestCase):
                 do_predict_proba=False,
                 prediction_formatter=None,
                 metrics_params=metrics_parameters,
-                cross_experiment_params=experiment_params,
+                **experiment_params,
                 cross_validation_params=repeated_cross_validation_params,
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'kJKV0kCGPUM4HuVlZVVcQAYGy+U1ChZnyzftCLw2n3o='],
+            ), 'QXkeQc5JdA1-dm0bib5eyGM4HF_P_sySsyZvWuHtEGE='],
             [dict(
                 train_dataset=train_dataset,
                 environment_params_path=None,
@@ -95,12 +95,12 @@ class TestCrossExperimentKeyMaker(TestCase):
                 do_predict_proba=False,
                 prediction_formatter=None,
                 metrics_params=metrics_parameters,
-                cross_experiment_params=experiment_params,
+                **experiment_params,
                 cross_validation_params=cross_validation_params,
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'xbfyOmtuDqGxr98zQjWCzOMle1m7Zr5tI+3CYvkO6gs=']
+            ), 'xyA9FG-O_UPj1uY3DzNAQGiAueAcrnRRhWLUNYOrPso=']
         ],
         'metrics_params': [
             [dict(
@@ -116,12 +116,12 @@ class TestCrossExperimentKeyMaker(TestCase):
                     roc='roc_auc_score',
                     acc='accuracy_score',
                 ), in_fold='all', oof='all', holdout='all'),
-                cross_experiment_params=experiment_params,
+                **experiment_params,
                 cross_validation_params=repeated_cross_validation_params,
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'oy7EE1FOZb4D6Mz1x4l96Qlr0pv2ZB8PGYnYEbR2G38='],
+            ), 'UYwk_wmbCYGEAuflG_klJ54p2KHqytgQ-_xAD6wpNw4='],
             [dict(
                 train_dataset=train_dataset,
                 environment_params_path=None,
@@ -136,12 +136,12 @@ class TestCrossExperimentKeyMaker(TestCase):
                     f1='f1_score',
                     acc=lambda _t, _p: accuracy_score(_t, np.clip(np.round(_p), 0, 1)),
                 ), in_fold='all', oof='all', holdout='all'),
-                cross_experiment_params=experiment_params,
+                **experiment_params,
                 cross_validation_params=repeated_cross_validation_params,
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'XEnUqrPDZ3RTwV3W/bowhKLls5rx0S1WoeMFKvcKKeY='],
+            ), 'jptf0CLgzEWEybDmbQO34exyGrJ0s1JJAj4iR3U0tbE='],
         ],
         'cross_experiment_params': [
             [dict(
@@ -154,16 +154,14 @@ class TestCrossExperimentKeyMaker(TestCase):
                 do_predict_proba=False,
                 prediction_formatter=None,
                 metrics_params=metrics_parameters,
-                cross_experiment_params=dict(
-                    random_seeds=None,
-                    runs=10,
-                    cross_validation_type='StratifiedKFold'
-                ),
+                random_seeds=None,
+                runs=10,
+                cross_validation_type='StratifiedKFold',
                 cross_validation_params=repeated_cross_validation_params,
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'XDdtCQnpc2imFany7ZGMVCwkwOKSGKeN9jwx9R9LWrU='],
+            ), '9fj2B3LbX2zw-I7Fw_lLVkSWbKjrVOMKqEsqtNYS4_I='],
             [dict(
                 train_dataset=train_dataset,
                 environment_params_path=None,
@@ -174,16 +172,14 @@ class TestCrossExperimentKeyMaker(TestCase):
                 do_predict_proba=False,
                 prediction_formatter=None,
                 metrics_params=metrics_parameters,
-                cross_experiment_params=dict(
-                    random_seeds=None,
-                    runs=3,
-                    cross_validation_type='KFold',
-                ),
+                random_seeds=None,
+                runs=3,
+                cross_validation_type='KFold',
                 cross_validation_params=cross_validation_params,
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'mkhKRknVEEpPCHgYHcl49KaF2Root8OaCGD5BK1aDs0=']
+            ), '7CLaIVYDzzJ46xoX2iBtQRRh9xHTW3TO1T5YGvvcDlU=']
         ],
     }
 

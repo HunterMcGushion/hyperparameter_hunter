@@ -228,7 +228,7 @@ class Environment():
         self.verbose = verbose
         self.file_blacklist = file_blacklist
         self.reporting_handler_params = reporting_handler_params or {}
-        self.to_csv_params = to_csv_params
+        self.to_csv_params = to_csv_params or {}
         self.do_full_save = do_full_save
         self.experiment_callbacks = experiment_callbacks or []
 
