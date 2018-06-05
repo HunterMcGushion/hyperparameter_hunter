@@ -9,7 +9,14 @@ Welcome to hyperparameter_hunter's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-.. module:: hyperparameter_hunter.experiments
+
+.. autoclass:: hyperparameter_hunter.environment.Environment
+   :members:
+   :show-inheritance:
+
+.. autoclass:: hyperparameter_hunter.experiments.CrossValidationExperiment
+   :members:
+   :show-inheritance:
 
 
 Indices and tables
