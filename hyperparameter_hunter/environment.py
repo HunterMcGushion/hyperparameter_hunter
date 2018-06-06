@@ -130,11 +130,11 @@ class Environment():
             value must be one of: 1) a callable to calculate the metric, 2) None if the "id" key is an attribute in
             `sklearn.metrics` and should be used to fetch a callable, 3) a string that is an attribute in `sklearn.metrics` and
             should be used to fetch a callable. Metric callable functions should expect inputs of form (target, prediction), and
-            should return floats. See :doc:`Environment.__init__.metrics_params` for details on how these two are related
+            should return floats. See `metrics_params` for details on how these two are related
         metrics_params: Dict, or None, default=dict()
             Dictionary of extra parameters to provide to :meth:`metrics.ScoringMixIn.__init__`. `metrics_map` must be provided
-            either 1) as an input kwarg to :meth:`Environment.__init__` (see :doc:`Environment.__init__.metrics_map`), or 2) as a
-            key in `metrics_params`, but not both. An Exception will be raised if both are given, or if neither is given
+            either 1) as an input kwarg to :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
+            but not both. An Exception will be raised if both are given, or if neither is given
             # TODO: Move metrics_map/metrics_params closer to the top of arguments, since one is required
         cross_validation_type: Class, default=:class:`sklearn.model_selection.KFold`
             The class to define cross-validation splits. It must implement the following methods: [`__init__`, `split`]. If
@@ -179,8 +179,8 @@ class Environment():
         experiment_callbacks: :class:`LambdaCallback`, list of :class:`LambdaCallback`, or None, default=None
             If not None, should be a :class:`LambdaCallback` produced by :func:`callbacks.bases.lambda_callback`, or a list of
             such classes. The contents will be added to the MRO of the executed Experiment class by
-            :meta:`experiment_core.ExperimentMeta` at `__call__` time, making `experiment_callbacks` new base classes of the
-            Experiment. See :doc:`callbacks.bases.lambda_callback` for more information
+            :class:`experiment_core.ExperimentMeta` at `__call__` time, making `experiment_callbacks` new base classes of the
+            Experiment. See :func:`callbacks.bases.lambda_callback` for more information
 
         Notes
         -----
@@ -191,13 +191,12 @@ class Environment():
 
         The order of precedence for determining the value of each parameter is as follows, with items at the top having the
         highest priority, and deferring only to the items below if their own value is None:
-            - 1)kwargs passed directly to :meth:`Environment.__init__` on initialization,
-            - 2)keys of the file at environment_params_path (if valid .json object),
-            - 3)keys of the DEFAULT_PARAMS dict
+        - 1)kwargs passed directly to :meth:`Environment.__init__` on initialization,
+        - 2)keys of the file at environment_params_path (if valid .json object),
+        - 3)keys of the DEFAULT_PARAMS dict
 
         Examples
         --------
-
         TODO: ADD EXAMPLE FOR OVERRIDING PARAMS WITH KWARGS AND THE ORDER OF PRECEDENCE, AS IN THE FIRST TWO NOTES
         """
         G.Env = self

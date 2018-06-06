@@ -17,11 +17,11 @@ class BaseCallback(object):
     that callback class. Again, :meth:`__init__` of classes that inherit :class:`BaseCallback` will not be called
 
     The methods below each call :meth:`settings.G.debug` to signal that the dynamic callback inheritance organized in
-    :meta:`experiment_core.ExperimentMeta` has proceeded at least partially successfully. If all callback methods end by executing
-    the method of the same name in their parent classes, then the below debug messages should be visible in the "Heartbeat.log"
-    file. Conversely, if any of the below debug messages are not printed to "Heartbeat.log", it is likely that a callback class's
-    implementation of the corresponding method does not end with "super().<method_name>()". Such cases should be remedied
-    immediately, as the callback stream could be skipping any number of other callbacks
+    :class:`experiment_core.ExperimentMeta` has proceeded at least partially successfully. If all callback methods end by
+    executing the method of the same name in their parent classes, then the below debug messages should be visible in the
+    "Heartbeat.log" file. Conversely, if any of the below debug messages are not printed to "Heartbeat.log", it is likely that a
+    callback class's implementation of the corresponding method does not end with "super().<method_name>()". Such cases should be
+    remedied immediately, as the callback stream could be skipping any number of other callbacks
     """
 
     # FLAG: Try to implement something like below to ensure other attributes aren't modified (except predictions by Predictors)

@@ -265,7 +265,7 @@ def make_hash_sha256(obj, **kwargs):
     ----------
     obj: Any object
         The object for which a hash will be created
-    kwargs: **
+    **kwargs: Dict
         Any extra kwargs will be supplied to :func:`key_handler.hash_callable`
 
     Returns
@@ -284,7 +284,7 @@ def to_hashable(obj, **kwargs):
     ----------
     obj: Any object
         The object to convert to a hashable format
-    kwargs: **
+    **kwargs: Dict
         Any extra kwargs will be supplied to :func:`key_handler.hash_callable`
 
     Returns

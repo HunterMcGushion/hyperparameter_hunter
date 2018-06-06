@@ -224,7 +224,7 @@ class OptimizationReporter():
         ----------
         parameter_names: List
             The names of the hyperparameters being evaluated and optimized
-        verbose: Integer in [0, 1, 2], default=1
+        verbose: Int in [0, 1, 2], default=1
             If 0, all but critical logging is silenced. If 1, normal logging is performed. If 2, detailed logging is performed
         show_experiment_id: Boolean or 'partial', default=True
             If True, the experiment_id will be printed in each result row. If False, it will not. If string 'partial', the first
@@ -535,7 +535,7 @@ def log(*contents, blocks=True, pad='#', size=80, sep='   ', pre_embed='', post_
         If True, print a block of size-many pad characters before and after the message content
     pad: String, default='#'
         The character used to create the pre/post blocks
-    size: Integer, default=80
+    size: Int, default=80
         The number of characters that pre_block and post_block should span
     sep: String, default='   '
         The string used to join contents' arguments to form the message
@@ -543,7 +543,7 @@ def log(*contents, blocks=True, pad='#', size=80, sep='   ', pre_embed='', post_
         Content to be embedded in the center of pre_block, if truthy and blocks=True
     post_embed: String or None (empty string), default=''
         Content to be embedded in the center of post_block, if truthy and blocks=True
-    log_pad: Integer, default=1
+    log_pad: Int, default=1
         Number of times to print given pad before the message content
     float_format: Valid string to format float, default='{:.5f}'
         Format all floats in contents by using this. If no formatting is desired, set float_format='{}'

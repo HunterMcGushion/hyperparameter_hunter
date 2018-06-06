@@ -469,7 +469,7 @@ class BaseCVExperiment(BaseExperiment):
     # Fold Workflow Methods:
     ##################################################
     def on_fold_start(self):
-        """Override :meth:`on_fold_start` tasks organized by :meta:`experiment_core.ExperimentMeta`, consisting of: 1) Log fold
+        """Override :meth:`on_fold_start` tasks organized by :class:`experiment_core.ExperimentMeta`, consisting of: 1) Log fold
         start, 2) Execute original tasks, 3) Split train and validation data"""
         super().on_fold_start()
 
@@ -494,7 +494,7 @@ class BaseCVExperiment(BaseExperiment):
     # Run Workflow Methods:
     ##################################################
     def on_run_start(self):
-        """Override :meth:`on_run_start` tasks organized by :meta:`experiment_core.ExperimentMeta`, consisting of: 1) Set random
+        """Override :meth:`on_run_start` tasks organized by :class:`experiment_core.ExperimentMeta`, consisting of: 1) Set random
         seed and update_model_params according to current seed, 2) Log run start, 3) Execute original tasks"""
         self.current_seed = self.experiment_params['random_seeds'][self._rep][self._fold][self._run]
         np.random.seed(self.current_seed)

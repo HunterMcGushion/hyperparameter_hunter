@@ -85,7 +85,7 @@ class Leaderboard(metaclass=ABCMeta):
         ----------
         path: str
             The file to which the Leaderboard instance should be saved
-        kwargs: **
+        **kwargs: Dict
             Additional arguments to supply to :meth:`pandas.DataFrame.to_csv`"""
         self.data.to_csv(path_or_buf=path, index=False, **kwargs)
 

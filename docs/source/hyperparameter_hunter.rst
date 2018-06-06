@@ -164,5 +164,6 @@ Module contents
 
 .. automodule:: hyperparameter_hunter
     :members:
-    :undoc-members:
+    :undoc-members: Real, Integer, Categorical
     :show-inheritance:
+    :noindex:
