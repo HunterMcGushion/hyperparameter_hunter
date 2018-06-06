@@ -74,15 +74,15 @@ class AskingOptimizer(Optimizer):
 
         Parameters
         ----------
-        dimensions: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        base_estimator: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        n_random_starts: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        n_initial_points: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        acq_func: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        acq_optimizer: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        random_state: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        acq_func_kwargs: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`
-        acq_optimizer_kwargs: See :doc:`skopt.optimizer.optimizer.Optimizer.__init__`"""
+        dimensions: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        base_estimator: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        n_random_starts: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        n_initial_points: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        acq_func: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        acq_optimizer: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        random_state: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        acq_func_kwargs: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`
+        acq_optimizer_kwargs: See :class:`skopt.optimizer.optimizer.Optimizer.__init__`"""
         # TODO: Figure out way to override skopt Optimizer's use of skopt Space without having to rewrite __init__
         self.__repeated_ask_kwargs = {}
         self.rng = check_random_state(random_state)

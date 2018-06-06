@@ -14,7 +14,7 @@ Environment
 -----------
 
 .. autoclass:: hyperparameter_hunter.environment.Environment
-   :members: __init__
+   :members:
    :show-inheritance:
    :noindex:
 
