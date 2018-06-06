@@ -67,12 +67,12 @@ directory.
 
 Tested Libraries
 ----------------
-* [Keras](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/keras_example.py)
-* [scikit-learn](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/sklearn_example.py)
-* [LightGBM](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/lightgbm_example.py)
-* [CatBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/catboost_example.py)
-* [XGBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/simple_example.py)
-* [rgf_python](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/hyperparameter_hunter/examples/rgf_example.py)
+* [Keras](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/keras_example.py)
+* [scikit-learn](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/sklearn_example.py)
+* [LightGBM](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lightgbm_example.py)
+* [CatBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/catboost_example.py)
+* [XGBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/simple_example.py)
+* [rgf_python](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/rgf_example.py)
 * ... More on the way
 
 Installation
