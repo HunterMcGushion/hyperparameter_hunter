@@ -1047,22 +1047,23 @@ class SequentialGUIDerator(GUIDerator):
 guid_iter = GUIDerator()
 seq_guid_iter = SequentialGUIDerator()
 
-"""
-May actually be faster to do an isinstance check for a str path
-$ python -m timeit -s "x = [1]" "x[0]"
-10000000 loops, best of 3: 0.0207 usec per loop
-$ python -m timeit -s "x = [1]" "try: x[0] \nexcept: pass"
-10000000 loops, best of 3: 0.029 usec per loop
-$ python -m timeit -s "x = [1]" "try: x[1] \nexcept: pass"
-1000000 loops, best of 3: 0.315 usec per loop
-# setting up try/except is fast, only around 0.01us
-# actually triggering the exception takes almost 10x as long
-$ python -m timeit -s "x = [1]" "isinstance(x, basestring)"
-10000000 loops, best of 3: 0.141 usec per loop
-$ python -m timeit -s "x = [1]" "isinstance(x, str)"
-10000000 loops, best of 3: 0.131 usec per loop
-$ python -m timeit -s "x = [1]" "try: x.split('.')\n except: pass"
-1000000 loops, best of 3: 0.443 usec per loop
-$ python -m timeit -s "x = [1]" "try: x.split('.') \nexcept AttributeError: pass"
-1000000 loops, best of 3: 0.544 usec per loop
-"""
+
+# """
+# May actually be faster to do an isinstance check for a str path
+# $ python -m timeit -s "x = [1]" "x[0]"
+# 10000000 loops, best of 3: 0.0207 usec per loop
+# $ python -m timeit -s "x = [1]" "try: x[0] \nexcept: pass"
+# 10000000 loops, best of 3: 0.029 usec per loop
+# $ python -m timeit -s "x = [1]" "try: x[1] \nexcept: pass"
+# 1000000 loops, best of 3: 0.315 usec per loop
+# # setting up try/except is fast, only around 0.01us
+# # actually triggering the exception takes almost 10x as long
+# $ python -m timeit -s "x = [1]" "isinstance(x, basestring)"
+# 10000000 loops, best of 3: 0.141 usec per loop
+# $ python -m timeit -s "x = [1]" "isinstance(x, str)"
+# 10000000 loops, best of 3: 0.131 usec per loop
+# $ python -m timeit -s "x = [1]" "try: x.split('.')\n except: pass"
+# 1000000 loops, best of 3: 0.443 usec per loop
+# $ python -m timeit -s "x = [1]" "try: x.split('.') \nexcept AttributeError: pass"
+# 1000000 loops, best of 3: 0.544 usec per loop
+# """

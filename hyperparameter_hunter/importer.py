@@ -7,8 +7,10 @@ from hyperparameter_hunter.tracers import KerasTracer
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-import sys
+from functools import partial, wraps
 from importlib.machinery import PathFinder, ModuleSpec, SourceFileLoader
+from inspect import ismodule, isclass, ismethod, isfunction
+import sys
 
 
 # def patcher(a_function):
@@ -46,8 +48,47 @@ def hook_keras_layer():
         ))
     # sys.meta_path.insert(0, Interceptor('keras.layers.core'))
     sys.meta_path.insert(0, Interceptor('keras.engine.topology', KerasLayerLoader))
-
     G.import_hooks.append('keras_layer')
+
+
+##################################################
+# Docstring Modification
+##################################################
+class ModuleMultiWrapper(SourceFileLoader):
+    def __init__(self, fullname, path, wrappers=None, checks=None):
+        self.wrappers = wrappers or []
+        self.checks = checks or [lambda _: True]
+        super().__init__(fullname, path)
+
+    # noinspection PyMethodOverriding
+    def exec_module(self, module):
+        super().exec_module(module)
+
+        for attr in module.__dict__:
+            obj = getattr(module, attr)
+
+            if any([_(obj) for _ in self.checks]):
+                for wrapper in self.wrappers:
+                    obj = wrapper(obj)
+
+                setattr(module, attr, obj)
+
+
+def nullify_docstring(f):
+    @wraps(f)
+    def new_func(*args, **kwargs):
+        return f(*args, **kwargs)
+
+    new_func.__doc__ = None
+    return new_func
+
+
+def nullify_module_docstrings(module_name):
+    sys.meta_path.insert(0, Interceptor(
+        module_name, partial(
+            ModuleMultiWrapper, wrappers=[nullify_docstring], checks=[ismodule, isclass, ismethod, isfunction]
+        )
+    ))
 
 
 def execute():
