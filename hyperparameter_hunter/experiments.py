@@ -595,9 +595,5 @@ class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
 #     pass
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

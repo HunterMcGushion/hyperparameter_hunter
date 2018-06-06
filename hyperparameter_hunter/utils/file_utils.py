@@ -135,11 +135,5 @@ def clear_file(file_path):
     clear_target.close()
 
 
-def execute():
-    # q = read_json('../HyperparameterHunterAssets/Heartbeat.txt')
-
-    print('')
-
-
 if __name__ == '__main__':
-    execute()
+    pass

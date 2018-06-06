@@ -170,19 +170,15 @@ def get_toy_classification_data(target='target', n_samples=300, n_classes=2, shu
     return train_df
 
 
-def execute():
+def _execute():
     # (input_data, target_data) = test_iris_upsample()
     # upsampled_input, upsampled_target = upsample(
     #     input_data, target_data, target_feature='is_setosa', target_value=1.0
     # )
     # upsampled_target_counts = zip(np.unique(upsampled_target.values, return_counts=True, axis=0))
     # print(upsampled_target_counts)
-
-    print('hold')
+    pass
 
 
 if __name__ == '__main__':
-    vals = gini_xgb(np.array([]), np.array([]))
-    print('wait')
-
-    # execute()
+    _execute()

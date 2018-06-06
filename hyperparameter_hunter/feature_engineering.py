@@ -442,7 +442,7 @@ class Sampler():
             ))
 
 
-def execute():
+def _execute():
     test_parameters = [
         dict(
             target_feature='target',
@@ -482,4 +482,4 @@ def execute():
 
 
 if __name__ == '__main__':
-    execute()
+    _execute()

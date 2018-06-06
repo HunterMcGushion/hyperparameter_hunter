@@ -200,9 +200,5 @@ class RandomizedGridSearch(UninformedOptimizationProtocol):
         return self._search_space_size
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

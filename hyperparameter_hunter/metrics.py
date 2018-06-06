@@ -260,9 +260,5 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset='oof
     return target_metric
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

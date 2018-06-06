@@ -651,9 +651,5 @@ def run_log_examples():
     print('')
 
 
-def execute():
-    run_log_examples()
-
-
 if __name__ == '__main__':
-    execute()
+    pass

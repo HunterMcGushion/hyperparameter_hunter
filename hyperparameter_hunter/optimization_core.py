@@ -651,9 +651,5 @@ class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta
         return current_hyperparameters
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

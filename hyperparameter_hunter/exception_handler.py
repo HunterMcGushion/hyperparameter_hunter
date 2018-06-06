@@ -52,9 +52,5 @@ class RepeatedExperimentError(Exception):
         super(RepeatedExperimentError, self).__init__(message + extra)
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

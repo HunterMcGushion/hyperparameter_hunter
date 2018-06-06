@@ -500,11 +500,11 @@ def validate_file_blacklist(blacklist):
     return blacklist
 
 
-def execute():
+def _execute():
     # invalid_blacklist = ['foo', 'bar', 14, {'a': 10, 'b': 20}]
     # validate_file_blacklist(invalid_blacklist)
     pass
 
 
 if __name__ == '__main__':
-    execute()
+    _execute()

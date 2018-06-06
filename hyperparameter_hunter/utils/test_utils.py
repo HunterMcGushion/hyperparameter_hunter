@@ -200,16 +200,15 @@ def format_suites(test_suites, group_format, reindex=True):
     return all_cases, all_keys
 
 
-def execute():
+def _execute():
     suites = {
         'a': [[None], [None]],
         'b': [[None], [None]],
     }
     print(format_suites(suites, 'suites_{}_', reindex=True)[1])
     print(format_suites(suites, 'suites_{}_', reindex=False)[1])
-
     print('')
 
 
 if __name__ == '__main__':
-    execute()
+    _execute()

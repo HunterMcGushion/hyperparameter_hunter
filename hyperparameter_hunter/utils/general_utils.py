@@ -118,9 +118,5 @@ def deep_dict_set(rec_dict, keys, value):
     return rec_dict
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

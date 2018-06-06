@@ -151,9 +151,5 @@ class PredictorTest(BasePredictorCallback):
         super().on_experiment_end()
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

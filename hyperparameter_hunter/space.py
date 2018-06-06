@@ -135,9 +135,5 @@ def dimension_subset(hyperparameters, dimensions):
     return values
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

@@ -341,9 +341,5 @@ class LeaderboardEntryRecorder(BaseRecorder):
             self.result.save(path=self.result_paths['global_leaderboard'])
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

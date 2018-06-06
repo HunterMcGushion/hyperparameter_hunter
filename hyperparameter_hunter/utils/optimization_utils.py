@@ -395,9 +395,5 @@ def filter_by_guidelines(
     return hyperparameters_and_scores
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

@@ -115,9 +115,5 @@ def identify_hyperparameter_choices(algorithm_name, module_name, hyperparameter_
             )
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

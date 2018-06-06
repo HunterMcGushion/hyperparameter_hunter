@@ -91,9 +91,5 @@ def nullify_module_docstrings(module_name):
     ))
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

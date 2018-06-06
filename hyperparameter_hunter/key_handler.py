@@ -381,9 +381,5 @@ def is_line_comment(string):
     return bool(re.match(r'^\s*#', string))
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

@@ -124,9 +124,5 @@ class LoggerTest(BaseLoggerCallback): pass
 class LoggerEvaluation(BaseLoggerCallback): pass
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

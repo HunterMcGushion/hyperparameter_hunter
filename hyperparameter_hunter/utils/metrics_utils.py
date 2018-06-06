@@ -96,9 +96,5 @@ def gini_xgb(prediction, dtrain):
     return [('gini', gini_score)]
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

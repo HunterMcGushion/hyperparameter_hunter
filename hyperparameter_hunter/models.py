@@ -316,9 +316,5 @@ class KerasModel(Model):
         )
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

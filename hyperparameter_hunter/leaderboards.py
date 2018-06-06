@@ -208,9 +208,5 @@ def combine_column_order(df_1, df_2, both_cols=None):
     return combined_cols
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

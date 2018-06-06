@@ -269,9 +269,5 @@ class AggregatorEvaluationsToDicts(BaseAggregatorCallback):
         super().on_fold_end()
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass

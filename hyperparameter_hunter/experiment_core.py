@@ -108,9 +108,5 @@ def base_callback_class_sorter(auxiliary_bases, parent_class_order=None):
     return sorted_auxiliary_bases
 
 
-def execute():
-    pass
-
-
 if __name__ == '__main__':
-    execute()
+    pass
