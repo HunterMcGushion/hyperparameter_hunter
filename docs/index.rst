@@ -10,9 +10,6 @@ Welcome to hyperparameter_hunter's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: hyperparameter_hunter.utils.boltons_utils
-   :noindex:
-
 Environment
 -----------
 

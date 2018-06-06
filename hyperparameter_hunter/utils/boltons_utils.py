@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-""":mod:`itertools` is full of great examples of Python generator
-usage. However, there are still some critical gaps. ``iterutils``
-fills many of those gaps with featureful, tested, and Pythonic
-solutions.
-Many of the functions below have two versions, one which
-returns an iterator (denoted by the ``*_iter`` naming pattern), and a
-shorter-named convenience form that returns a list. Some of the
-following are based on examples in itertools docs.
-"""
+# """:mod:`itertools` is full of great examples of Python generator
+# usage. However, there are still some critical gaps. ``iterutils``
+# fills many of those gaps with featureful, tested, and Pythonic
+# solutions.
+# Many of the functions below have two versions, one which
+# returns an iterator (denoted by the ``*_iter`` naming pattern), and a
+# shorter-named convenience form that returns a list. Some of the
+# following are based on examples in itertools docs.
+# """
 
 import os
 import math
