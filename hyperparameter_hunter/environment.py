@@ -143,9 +143,9 @@ class Environment():
             :meth:`cross_validation_type.__init__` will be :attr:`Environment.cross_validation_params`, which should include the
             following: ["n_splits" <int>, "n_repeats" <int> (if applicable)]. :meth:`cross_validation_type.split` will receive the
             following arguments: [:attr:`BaseExperiment.train_input_data`, :attr:`BaseExperiment.train_target_data`]
-        runs: Integer, default=1
+        runs: Int, default=1
             The number of times to fit a model within each fold to perform multiple-run-averaging with different random seeds
-        global_random_seed: Integer, default=32
+        global_random_seed: Int, default=32
             The initial random seed used just before generating an Experiment's random_seeds. This ensures consistency for
             `random_seeds` between Experiments, without having to explicitly provide it here
         random_seeds: None, or List, default=None

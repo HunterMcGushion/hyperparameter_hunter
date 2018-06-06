@@ -8,7 +8,6 @@ Subpackages
 
     hyperparameter_hunter.callbacks
     hyperparameter_hunter.library_helpers
-    hyperparameter_hunter.object_frameworks
     hyperparameter_hunter.utils
 
 Submodules
@@ -164,6 +163,5 @@ Module contents
 
 .. automodule:: hyperparameter_hunter
     :members:
-    :undoc-members: Real, Integer, Categorical
+    :undoc-members:
     :show-inheritance:
-    :noindex:

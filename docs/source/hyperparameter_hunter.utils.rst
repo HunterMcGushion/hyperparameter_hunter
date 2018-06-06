@@ -20,14 +20,6 @@ hyperparameter\_hunter.utils.file\_utils module
     :undoc-members:
     :show-inheritance:
 
-hyperparameter\_hunter.utils.framework\_utils module
-----------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.utils.framework_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 hyperparameter\_hunter.utils.general\_utils module
 --------------------------------------------------
 
