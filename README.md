@@ -62,7 +62,7 @@ optimizer.go()
 ```
 Plenty of examples for different libraries, and algorithms, as well as more advanced
 HyperparameterHunter features can be found in the
-[examples](https://github.com/HunterMcGushion/hyperparameter_hunter/tree/master/hyperparameter_hunter/examples)
+[examples](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples)
 directory.
 
 Tested Libraries
