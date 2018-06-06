@@ -78,6 +78,9 @@ autodoc_mock_imports = [
     'hyperparameter_hunter.utils.boltons_utils',
 ]
 
+autoclass_content = 'both'
+# add_module_names = False
+
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 

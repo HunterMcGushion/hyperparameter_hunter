@@ -1,11 +1,3 @@
-import sys
-import os.path
-
-try:
-    sys.path.append(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0])
-except Exception as _ex:
-    raise _ex
-
 from hyperparameter_hunter import Environment, CrossValidationExperiment
 from hyperparameter_hunter.callbacks.bases import lambda_callback
 from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data

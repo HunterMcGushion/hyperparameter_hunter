@@ -1,11 +1,3 @@
-import sys
-import os.path
-
-try:
-    sys.path.append(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0])
-except Exception as _ex:
-    raise _ex
-
 from hyperparameter_hunter.importer import hook_keras_layer
 try:
     hook_keras_layer()
@@ -16,6 +8,7 @@ from hyperparameter_hunter.environment import Environment
 from hyperparameter_hunter.experiments import CrossValidationExperiment
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 
+import os.path
 import copy
 
 from sklearn.model_selection import StratifiedKFold

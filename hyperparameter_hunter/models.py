@@ -161,8 +161,8 @@ class XGBoostModel(Model):
         Parameters
         ----------
         model_initializer: :class:`xgboost.sklearn.XGBClassifier`, or :class:`xgboost.sklearn.XGBRegressor`
-            See :doc:`Model`
-        initialization_params: See :doc:`Model`
+            See :class:`Model`
+        initialization_params: See :class:`Model`
         extra_params: Dict, default={}
             Useful keys: ['fit', 'predict']. If 'fit' is a key with a dict value, its contents will be provided to
             :meth:`xgboost.sklearn.XGBModel.fit`, with the exception of the following: ['X', 'y', 'eval_set']. If any of the
@@ -173,15 +173,15 @@ class XGBoostModel(Model):
             performed automatically.
             The 'eval_set' argument to :meth:`xgboost.sklearn.XGBModel.fit` will be: [(`train_input`, `train_target`),
             (`validation_input`, `validation_target`)]. If validation data is None, it will be excluded.
-        train_input: See :doc:`Model`
-        train_target: See :doc:`Model`
-        validation_input: See :doc:`Model`
-        validation_target: See :doc:`Model`
-        do_predict_proba: See :doc:`Model`
+        train_input: See :class:`Model`
+        train_target: See :class:`Model`
+        validation_input: See :class:`Model`
+        validation_target: See :class:`Model`
+        do_predict_proba: See :class:`Model`
         target_metric: Tuple
             Used to determine the 'eval_metric' argument to :meth:`xgboost.sklearn.XGBModel.fit`. See the documentation for
             :attr:`XGBoostModel.extra_params` for more information
-        metrics_map: See :doc:`Model`"""
+        metrics_map: See :class:`Model`"""
         if model_initializer.__name__ not in ('XGBClassifier', 'XGBRegressor'):
             raise ValueError('XGBoostModel given invalid model_initializer: {} - {}\nTry using the standard Model class'.format(
                 type(model_initializer), (model_initializer.__name__ or model_initializer)
@@ -225,18 +225,18 @@ class KerasModel(Model):
         Parameters
         ----------
         model_initializer: :class:`keras.wrappers.scikit_learn.KerasClassifier`, or `keras.wrappers.scikit_learn.KerasRegressor`
-            See :doc:`Model`
+            See :class:`Model`
         initialization_params: # TODO: ...
             # TODO: ...
         extra_params: Dict, default={}
             # TODO: ...
-        train_input: See :doc:`Model`
-        train_target: See :doc:`Model`
-        validation_input: See :doc:`Model`
-        validation_target: See :doc:`Model`
-        do_predict_proba: See :doc:`Model`
-        target_metric: See :doc:`Model`
-        metrics_map: See :doc:`Model`"""
+        train_input: See :class:`Model`
+        train_target: See :class:`Model`
+        validation_input: See :class:`Model`
+        validation_target: See :class:`Model`
+        do_predict_proba: See :class:`Model`
+        target_metric: See :class:`Model`
+        metrics_map: See :class:`Model`"""
         if model_initializer.__name__ not in ('KerasClassifier', 'KerasRegressor'):
             raise ValueError('KerasModel given invalid model_initializer: {} - {}\nTry using the standard Model class'.format(
                 type(model_initializer), (model_initializer.__name__ or model_initializer)

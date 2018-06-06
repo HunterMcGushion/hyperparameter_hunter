@@ -1,16 +1,7 @@
-import sys
-import os.path
-
-try:
-    sys.path.append(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0])
-except Exception as _ex:
-    raise _ex
-
-from hyperparameter_hunter.environment import Environment
-from hyperparameter_hunter.optimization import BayesianOptimization, GradientBoostedRegressionTreeOptimization
-from hyperparameter_hunter.optimization import RandomForestOptimization, ExtraTreesOptimization, DummySearch
-from hyperparameter_hunter.space import Real, Integer, Categorical
+from hyperparameter_hunter import Environment, Real, Integer, Categorical, RandomForestOptimization, ExtraTreesOptimization
+from hyperparameter_hunter import BayesianOptimization, GradientBoostedRegressionTreeOptimization, DummySearch
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data, get_toy_classification_data
+
 from sklearn.model_selection import StratifiedKFold
 from xgboost import XGBClassifier
 

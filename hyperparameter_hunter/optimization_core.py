@@ -43,9 +43,9 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
             according to the values supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
             :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or used as the `target_metric`
             input to this function are acceptable values for :attr:`BaseOptimizationProtocol.target_metric`
-        iterations: Integer, default=1
+        iterations: Int, default=1
             The number of distinct experiments to execute
-        verbose: Integer 0, 1, or 2, default=1
+        verbose: Int 0, 1, or 2, default=1
             Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization Protocol. 2: In addition to
             logs shown when verbose=1, also show the logs from individual Experiments
         read_experiments: Boolean, default=True
@@ -473,11 +473,11 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         Parameters
         ----------
-        target_metric: See :doc:`optimization_core.BaseOptimizationProtocol`
-        iterations: See :doc:`optimization_core.BaseOptimizationProtocol`
-        verbose: See :doc:`optimization_core.BaseOptimizationProtocol`
-        read_experiments: See :doc:`optimization_core.BaseOptimizationProtocol`
-        reporter_parameters: See :doc:`optimization_core.BaseOptimizationProtocol`
+        target_metric: See :class:`optimization_core.BaseOptimizationProtocol`
+        iterations: See :class:`optimization_core.BaseOptimizationProtocol`
+        verbose: See :class:`optimization_core.BaseOptimizationProtocol`
+        read_experiments: See :class:`optimization_core.BaseOptimizationProtocol`
+        reporter_parameters: See :class:`optimization_core.BaseOptimizationProtocol`
         dimensions: List
             List of hyperparameter search space dimensions, in which each dimension is an instance of :class:`space.Real`, or
             :class:`space.Integer`, or :class:`space.Categorical`. Additionally, each of the `Dimension` classes MUST be given a
@@ -486,7 +486,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             If one of the above strings, a default model of that type will be used. Else, should inherit from
             :class:`sklearn.base.RegressorMixin`, and its :meth:`predict` should have an optional `return_std` argument, which
             returns `std(Y | x)`, along with `E[Y | x]`
-        n_initial_points: Integer, default=10
+        n_initial_points: Int, default=10
             The number of complete evaluation points necessary before allowing Experiments to be approximated with
             `base_estimator`. Any valid Experiment records found will count as initialization points. If enough Experiment records
             are not found, additional points will be randomly sampled
@@ -500,13 +500,13 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             `acquisition_optimizer_kwargs['n_points']` randomly sampled points. 'lbfgs': optimize by sampling
             `n_restarts_optimizer` random points, then run 'lbfgs' for 20 iterations with those points to find local minima, the
             optimal of which is used to update the prior. 'auto': configure on the basis of `base_estimator` and `dimensions`
-        random_state: Integer, `RandomState` instance, or None, default=None
+        random_state: Int, `RandomState` instance, or None, default=None
             Set to something other than None for reproducible results
         acquisition_function_kwargs: Dict, or None, default=dict(xi=0.01, kappa=1.96)
             Additional arguments passed to the acquisition function
         acquisition_optimizer_kwargs: Dict, or None, default=dict(n_points=10000, n_restarts_optimizer=5, n_jobs=1)
             Additional arguments passed to the acquisition optimizer
-        n_random_starts: Integer, default=10
+        n_random_starts: Int, default=10
             The number of Experiments to execute with random points before checking that `n_initial_points` have been evaluated
         callbacks: Callable, list of callables, or None, default=[]
             If callable, then `callbacks(self.optimizer_result)` is called after each update to :attr:`optimizer`. If list, then
