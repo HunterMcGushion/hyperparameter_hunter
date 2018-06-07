@@ -84,11 +84,11 @@ class BaseExperiment(ScoringMixIn):
         model_initializer: functools.partial, or class, or class instance
             The algorithm class being used to initialize a model
         model_init_params: dict
-            The dictionary of arguments given when creating a model instance with `model_initializer` via
-            :meth:`models.Model.__init__`. Any kwargs that are considered valid by the `__init__` method of
-            `model_initializer` are valid in `model_init_params`
+            The dictionary of arguments given when creating a model instance with `model_initializer` via the `__init__` method
+            of :class:`.models.Model`. Any kwargs that are considered valid by the `__init__` method of `model_initializer` are
+            valid in `model_init_params`
         model_extra_params: dict, or None, default=None
-            A dictionary of extra parameters passed to :meth:`models.Model.__init__`. This is generally only used when
+            A dictionary of extra parameters passed to :class:`.models.Model`. This is generally only used when
             `model_initializer` is for a neural network, or some other algorithm that requires more complicated hyperparameters
         feature_selector: List of column names, callable, list of booleans, default=None
             The value provided when splitting apart the input data for all provided DataFrames. `feature_selector` is provided as
@@ -105,8 +105,9 @@ class BaseExperiment(ScoringMixIn):
             If True and this Experiment locates a previous Experiment's results with matching Environment and Hyperparameter Keys,
             a RepeatedExperimentError will be raised. Else, a warning will be logged
         auto_start: Boolean, default=True
-            If True, after the Experiment is initialized, it will automatically call :meth:`preparation_workflow`, followed by
-            :meth:`experiment_workflow`, effectively completing all essential tasks without requiring additional method calls
+            If True, after the Experiment is initialized, it will automatically call :meth:`BaseExperiment.preparation_workflow`,
+            followed by :meth:`BaseExperiment.experiment_workflow`, effectively completing all essential tasks without requiring
+            additional method calls
         target_metric: # TODO: ...
             # TODO: ..."""
         self.model_initializer = model_initializer

@@ -23,6 +23,7 @@ from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
 # Informed Optimization Protocols
 ##################################################
 class BayesianOptimization(InformedOptimizationProtocol):
+    """Bayesian optimization with Gaussian Processes"""
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
             dimensions=None, base_estimator='GP', n_initial_points=10,
@@ -30,7 +31,6 @@ class BayesianOptimization(InformedOptimizationProtocol):
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
     ):
-        """Bayesian optimization with Gaussian Processes"""
         if base_estimator.upper() != 'GP' and not isinstance(base_estimator, GaussianProcessRegressor):
             raise TypeError(F'Expected `base_estimator`="GP", or `GaussianProcessRegressor`, not {base_estimator}')
 
@@ -48,6 +48,7 @@ class BayesianOptimization(InformedOptimizationProtocol):
 
 
 class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
+    """Sequential optimization with gradient boosted regression trees"""
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
             dimensions=None, base_estimator='GBRT', n_initial_points=10,
@@ -55,7 +56,6 @@ class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
     ):
-        """Sequential optimization with gradient boosted regression trees"""
         if base_estimator.upper() != 'GBRT' and not isinstance(base_estimator, GradientBoostingQuantileRegressor):
             raise TypeError(F'Expected `base_estimator`="GBRT", or `GradientBoostingQuantileRegressor`, not {base_estimator}')
 
@@ -72,6 +72,7 @@ class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
 
 
 class RandomForestOptimization(InformedOptimizationProtocol):
+    """Sequential optimization with random forest regressor decision trees"""
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
             dimensions=None, base_estimator='RF', n_initial_points=10,
@@ -79,7 +80,6 @@ class RandomForestOptimization(InformedOptimizationProtocol):
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
     ):
-        """Sequential optimization with random forest regressor decision trees"""
         if base_estimator.upper() != 'RF' and not isinstance(base_estimator, RandomForestRegressor):
             raise TypeError(F'Expected `base_estimator`="RF", or `RandomForestRegressor`, not {base_estimator}')
 
@@ -96,6 +96,7 @@ class RandomForestOptimization(InformedOptimizationProtocol):
 
 
 class ExtraTreesOptimization(InformedOptimizationProtocol):
+    """Sequential optimization with extra trees regressor decision trees"""
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
             dimensions=None, base_estimator='ET', n_initial_points=10,
@@ -103,7 +104,6 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
     ):
-        """Sequential optimization with extra trees regressor decision trees"""
         if base_estimator.upper() != 'ET' and not isinstance(base_estimator, ExtraTreesRegressor):
             raise TypeError(F'Expected `base_estimator`="ET", or `ExtraTreesRegressor`, not {base_estimator}')
 
@@ -120,6 +120,8 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
 
 
 class DummySearch(InformedOptimizationProtocol):
+    """Random search by uniform sampling. Technically this is not "Informed", but it fits better as an Informed subclass due to
+    its reliance on `Scikit-Optimize`"""
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
             dimensions=None, base_estimator='DUMMY', n_initial_points=10,
@@ -127,8 +129,6 @@ class DummySearch(InformedOptimizationProtocol):
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
     ):
-        """Random search by uniform sampling. Technically this is not "Informed", but it fits better as an Informed subclass due
-        to its reliance on `Scikit-Optimize`"""
         if base_estimator.upper() != 'DUMMY':
             raise TypeError(F'Expected `base_estimator`="DUMMY", not {base_estimator}')
 

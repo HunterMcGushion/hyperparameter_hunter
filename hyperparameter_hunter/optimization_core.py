@@ -176,6 +176,10 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
             raise ValueError('Sorry, Hyperparameter Optimization algorithms are not yet equipped to work with Keras. Stay tuned')
 
     def go(self):
+        """Begin hyperparameter optimization process after experiment guidelines have been set and search dimensions are in place.
+        This process includes the following: setting the hyperparameter space; locating similar experiments to be used as
+        learning material for :class:`InformedOptimizationProtocol` s; and executing :meth:`_optimization_loop`, which actually
+        sets off the Experiment execution process"""
         if self.model_initializer is None:
             raise ValueError('Experiment guidelines and options must be set before hyperparameter optimization can be started')
 
@@ -366,6 +370,8 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
     # Utility Methods:
     ##################################################
     def _preparation_workflow(self):
+        """Perform housekeeping tasks to prepare for core functionality like validating the `Environment` and parameters,
+        and updating the verbosity of individual Experiments"""
         self._validate_environment()
         self._validate_parameters()
         self._update_verbosity()
@@ -467,9 +473,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             #################### Other Parameters ####################
             base_estimator_kwargs=None,
     ):
-        """Base class for Informed Optimization Protocols, including the following: :class:`optimization.BayesianOptimization`,
-        :class:`optimization.GradientBoostedRegressionTreeOptimization`, :class:`optimization.RandomForestOptimization`,
-        :class:`optimization.ExtraTreesOptimization`, and :class:`optimization.DummySearch`
+        """Base class for Informed Optimization Protocols
 
         Parameters
         ----------
@@ -519,7 +523,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         To provide initial input points for evaluation, individual Experiments can be executed prior to instantiating an
         Optimization Protocol. The results of these Experiments will automatically be detected and cherished by the optimizer.
 
-        :class:`InformedOptimizationProtocol` and its children in :mod:`optimization` rely heavily on the utilities provided by
+        :class:`.InformedOptimizationProtocol` and its children in :mod:`.optimization` rely heavily on the utilities provided by
         the `Scikit-Optimize` library, so thank you to the creators and contributors for their excellent work."""
         # TODO: Add 'EIps', and 'PIps' to the allowable `acquisition_function` values - Will need to return execution times
 
@@ -564,6 +568,8 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         self.base_estimator = cook_estimator(self.base_estimator, space=self.hyperparameter_space, **self.base_estimator_kwargs)
 
     def _build_optimizer(self):
+        """Set :attr:`optimizer` to the optimizing class used to both estimate the utility of sets of hyperparameters by learning
+        from executed Experiments, and suggest points at which the objective should be evaluated"""
         self.optimizer = AskingOptimizer(
             dimensions=self.hyperparameter_space,
             base_estimator=self.base_estimator,
@@ -634,6 +640,14 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
     @property
     def search_space_size(self):
+        """The number of different hyperparameter permutations possible given the current hyperparameter search dimensions.
+
+        Returns
+        -------
+        :attr:`_search_space_size`: Int, or `numpy.inf`
+            Infinity will be returned if any of the following constraints are met: 1) the hyperparameter dimensions include any
+            real-valued boundaries, 2) the boundaries include values that are neither categorical nor integer, or 3) the search
+            space size is otherwise incalculable"""
         if self._search_space_size is None:
             self._search_space_size = len(self.hyperparameter_space)
         return self._search_space_size

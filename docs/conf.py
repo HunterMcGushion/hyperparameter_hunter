@@ -46,6 +46,9 @@ extensions = [
 ]
 
 napoleon_google_docstring = False
+# napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_notes = False  # DEFAULT
+# napoleon_use_param = True  # DEFAULT
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -79,11 +82,14 @@ autodoc_mock_imports = [
 ]
 
 # autoclass_content = 'both'
-autoclass_content = 'init'
+autoclass_content = 'init'  # FLAG: ORIGINAL
+autodoc_member_order = 'bysource'  # FLAG: TEST
+autodoc_default_flags = ['show-inheritance']
+
 # add_module_names = False
-# html_use_index = False  # FLAG: TEST
-# html_copy_source = False  # FLAG: TEST
-# html_show_sourcelink = False  # FLAG: TEST
+# html_use_index = False
+# html_copy_source = False
+# html_show_sourcelink = False
 html_split_index = False
 
 # The name of the Pygments (syntax highlighting) style to use.
@@ -95,8 +101,8 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = 'sphinx_rtd_theme'  # FLAG: ORIGINAL
-html_theme = 'nature'  # FLAG: TEST
+# html_theme = 'sphinx_rtd_theme'
+html_theme = 'nature'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -108,6 +114,19 @@ html_theme = 'nature'  # FLAG: TEST
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+# FLAG: TEST BELOW
+# FLAG: TEST BELOW
+# FLAG: TEST BELOW
+# FLAG: TEST BELOW
+html_context = {
+    'css_files': ['../../custom_styles.css']
+}
+
+modindex_common_prefix = ['hyperparameter_hunter.']  # FLAG: TEST
+# FLAG: TEST ABOVE
+# FLAG: TEST ABOVE
+# FLAG: TEST ABOVE
+# FLAG: TEST ABOVE
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -130,19 +149,15 @@ htmlhelp_basename = 'hyperparameter_hunterdoc'
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    #
     # 'papersize': 'letterpaper',
 
     # The font size ('10pt', '11pt' or '12pt').
-    #
     # 'pointsize': '10pt',
 
     # Additional stuff for the LaTeX preamble.
-    #
     # 'preamble': '',
 
     # Latex figure (float) alignment
-    #
     # 'figure_align': 'htbp',
 }
 
@@ -178,3 +193,38 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+def docstring_processor(app, what, name, obj, options, lines):
+    # FLAG: See http://www.sphinx-doc.org/en/master/ext/autodoc.html#event-autodoc-process-docstring
+    # Expected to modify `lines` in-place
+    print('#' * 80)
+    print('#' * 80)
+    print(app)  # Sphinx obj - Unnecessary
+    print(what)  # Type of object (method, class, module, function, ...)
+    print(name)  # Full name of object ('hyperparameter_hunter.environment.validate_file_blacklist')
+    print(obj)  # The literal <function>, <class>, ... object
+    print(options)  # Dict of options for docstring, like 'undoc-members', 'show-inheritance'
+    print(lines)  # List of strings, where each string is one line of the documentation
+    print('#' * 80)
+    print('#' * 80)
+
+
+def signature_processor(app, what, name, obj, options, signature, return_annotation):
+    # FLAG: See http://www.sphinx-doc.org/en/master/ext/autodoc.html#event-autodoc-process-signature
+    # Expected to return tuple (`signature`, `return_annotation`) to change Sphinx output
+    print('#' * 80)
+    print('#' * 80)
+    print(app)  # Same as 'autodoc-process-docstring'
+    print(what)  # Same as 'autodoc-process-docstring'
+    print(name)  # Same as 'autodoc-process-docstring'
+    print(obj)  # Same as 'autodoc-process-docstring'
+    print(options)  # Same as 'autodoc-process-docstring'
+    print(signature)  # Function signature string - Looks like long named tuple
+    print(return_annotation)  # Function return annotation string if given (which it isn't), else None
+    print('#' * 80)
+    print('#' * 80)
+
+
+def setup(app):
+    # app.connect('autodoc-process-docstring', docstring_processor)
+    # app.connect('autodoc-process-signature', signature_processor)
+    pass

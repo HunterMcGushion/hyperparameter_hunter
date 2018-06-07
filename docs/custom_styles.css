@@ -1,0 +1,6 @@
+@import url('_build/html/_static/nature.css');
+
+div.related {
+    background-color: #a80b00;
+    /*line-height: 132px;*/
+}

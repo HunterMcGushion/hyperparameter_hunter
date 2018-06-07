@@ -115,10 +115,10 @@ class Environment():
         id_column: str, or None, default=None
             If not None, str denoting the column name in all provided datasets that contains sample IDs
         do_predict_proba: Boolean, default=False
-            If True, :meth:`models.Model.fit` will call :meth:`models.Model.model.predict_proba`. Else, it will
+            If True, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict_proba`. Else, it will
             call :meth:`models.Model.model.predict`
         prediction_formatter: Callable, or None, default=None
-            If callable, expected to have same signature as :func:`environment_hander.format_predictions`. That is, the callable
+            If callable, expected to have same signature as :func:`.utils.result_utils.format_predictions`. That is, the callable
             will receive (raw_predictions: np.array, dataset_df: pd.DataFrame, target_column: str, id_column: str or None) as
             input and should return a properly formatted prediction DataFrame. The callable uses raw_predictions as the content,
             dataset_df to provide any id column, and target_column to identify the column in which to place raw_predictions
@@ -132,7 +132,7 @@ class Environment():
             should be used to fetch a callable. Metric callable functions should expect inputs of form (target, prediction), and
             should return floats. See `metrics_params` for details on how these two are related
         metrics_params: Dict, or None, default=dict()
-            Dictionary of extra parameters to provide to :meth:`metrics.ScoringMixIn.__init__`. `metrics_map` must be provided
+            Dictionary of extra parameters to provide to :meth:`.metrics.ScoringMixIn.__init__`. `metrics_map` must be provided
             either 1) as an input kwarg to :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
             but not both. An Exception will be raised if both are given, or if neither is given
             # TODO: Move metrics_map/metrics_params closer to the top of arguments, since one is required
@@ -152,10 +152,10 @@ class Environment():
             If None, `random_seeds` of the appropriate shape will be created automatically. Else, must be a list of ints of shape
             (`cross_validation_params['n_repeats']`, `cross_validation_params['n_splits']`, `runs`). If `cross_validation_params`
             does not have the key `n_repeats` (because standard cross-validation is being used), the value will default to 1.
-            See :meth:`experiments.BaseExperiment.random_seed_initializer` for more info on the expected shape
+            See :meth:`.experiments.BaseExperiment.random_seed_initializer` for more info on the expected shape
         random_seed_bounds: List, default=[0, 100000]
             A list containing two integers: the lower and upper bounds, respectively, for generating an Experiment's random seeds
-            in :meth:`experiments.BaseExperiment.random_seed_initializer`. Generally, leave this kwarg alone
+            in :meth:`.experiments.BaseExperiment.random_seed_initializer`. Generally, leave this kwarg alone
         cross_validation_params: dict, or None, default=dict()
             Dict of parameters provided upon initialization of cross_validation_type. Keys may be any args accepted by
             :meth:`cross_validation_type.__init__`. Number of fold splits must be provided here via "n_splits", and number of
@@ -165,9 +165,9 @@ class Environment():
         file_blacklist: List of str, or None, or 'ALL', default=None
             If list of str, the result files named within are not saved to their respective directory in
             "<ASSETS_DIRNAME>/Experiments". If None, all result files are saved. If 'ALL', nothing at all will be saved for the
-            Experiments. For info on acceptable values, see :func:`hyperparameter_hunter.environment.validate_file_blacklist`
+            Experiments. For info on acceptable values, see :func:`validate_file_blacklist`
         reporting_handler_params: Dict, default=dict()
-            Parameters passed to initialize :class:`reporting.ReportingHandler`
+            Parameters passed to initialize :class:`.reporting.ReportingHandler`
         to_csv_params: Dict, default=dict()
             Parameters passed to the calls to :meth:`pandas.frame.DataFrame.to_csv` in :mod:`recorders`. In particular,
             this is where an Experiment's final prediction files are saved, so the values here will affect the format of the .csv
@@ -177,10 +177,10 @@ class Environment():
             If callable, expected to take an Experiment's result description dict as input and return a boolean. If None, treated
             as a callable that returns True
         experiment_callbacks: :class:`LambdaCallback`, list of :class:`LambdaCallback`, or None, default=None
-            If not None, should be a :class:`LambdaCallback` produced by :func:`callbacks.bases.lambda_callback`, or a list of
+            If not None, should be a :class:`LambdaCallback` produced by :func:`.callbacks.bases.lambda_callback`, or a list of
             such classes. The contents will be added to the MRO of the executed Experiment class by
-            :class:`experiment_core.ExperimentMeta` at `__call__` time, making `experiment_callbacks` new base classes of the
-            Experiment. See :func:`callbacks.bases.lambda_callback` for more information
+            :class:`.experiment_core.ExperimentMeta` at `__call__` time, making `experiment_callbacks` new base classes of the
+            Experiment. See :func:`.callbacks.bases.lambda_callback` for more information
 
         Notes
         -----
@@ -191,9 +191,10 @@ class Environment():
 
         The order of precedence for determining the value of each parameter is as follows, with items at the top having the
         highest priority, and deferring only to the items below if their own value is None:
-        - 1)kwargs passed directly to :meth:`Environment.__init__` on initialization,
-        - 2)keys of the file at environment_params_path (if valid .json object),
-        - 3)keys of the DEFAULT_PARAMS dict
+
+        * 1)kwargs passed directly to :meth:`.Environment.__init__` on initialization,
+        * 2)keys of the file at environment_params_path (if valid .json object),
+        * 3)keys of the DEFAULT_PARAMS dict
 
         Examples
         --------
