@@ -207,7 +207,7 @@ class ReportingHandler(object):
     #         self.heartbeat(content)
 
 
-class Color():
+class _Color():
     BLUE = '\033[94m'
     CYAN = '\033[36m'
     GREEN = '\033[32m'
@@ -249,8 +249,8 @@ class OptimizationReporter():
 
     def print_saved_results_header(self):
         """Print a header signifying that saved Experiment results are being read"""
-        header = F'{Color.RED}Saved Result Files{Color.STOP}'
-        line = (Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + Color.STOP)
+        header = F'{_Color.RED}Saved Result Files{_Color.STOP}'
+        line = (_Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + _Color.STOP)
         self.print_header(header, line)
 
     # def print_saved_result(self):
@@ -259,14 +259,14 @@ class OptimizationReporter():
 
     def print_random_points_header(self):
         """Print a header signifying that random point evaluation rounds are starting"""
-        header = F'{Color.RED}Random Point Evaluation{Color.STOP}'
-        line = (Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + Color.STOP)
+        header = F'{_Color.RED}Random Point Evaluation{_Color.STOP}'
+        line = (_Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + _Color.STOP)
         self.print_header(header, line)
 
     def print_optimization_header(self):
         """Print a header signifying that Optimization rounds are starting"""
-        header = F'{Color.RED}Hyperparameter Optimization{Color.STOP}'
-        line = (Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + Color.STOP)
+        header = F'{_Color.RED}Hyperparameter Optimization{_Color.STOP}'
+        line = (_Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + _Color.STOP)
         self.print_header(header, line)
 
     def print_header(self, header, line):
@@ -305,8 +305,8 @@ class OptimizationReporter():
 
         if self.y_max is None or self.y_max < evaluation:
             self.y_max, self.x_max = evaluation, hyperparameters
-            self.print_target_value(evaluation, pre=Color.MAGENTA, post=Color.STOP)
-            self.print_input_values(hyperparameters, pre=Color.GREEN, post=Color.STOP)
+            self.print_target_value(evaluation, pre=_Color.MAGENTA, post=_Color.STOP)
+            self.print_input_values(hyperparameters, pre=_Color.GREEN, post=_Color.STOP)
         else:
             self.print_target_value(evaluation)
             self.print_input_values(hyperparameters)

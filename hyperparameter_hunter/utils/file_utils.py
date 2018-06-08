@@ -135,5 +135,54 @@ def clear_file(file_path):
     clear_target.close()
 
 
+##################################################
+# Display Utilities
+##################################################
+def real_name(path, root=None):
+    if root is not None:
+        path = os.path.join(root, path)
+
+    result = os.path.basename(path)
+
+    if os.path.islink(path):
+        real_path = os.readlink(path)
+        result = '{} -> {}'.format(os.path.basename(path), real_path)
+
+    return result
+
+
+def print_tree(start_path, depth=-1):
+    prefix = 0
+
+    if start_path != '/':
+        if start_path.endswith('/'):  # If True, the last dir in start_path will be treated as root, rather than the whole thing
+            start_path = start_path[:-1]
+            prefix = len(start_path)
+
+    for root, dirs, files in os.walk(start_path):
+        level = root[prefix:].count(os.sep)
+        if level > depth > -1:
+            continue
+
+        indent = ''
+
+        if level > 0:
+            indent = '|   ' * (level - 1) + '|-- '
+        sub_indent = '|   ' * (level) + '|-- '
+
+        content = '{}{}/'.format(indent, real_name(root))
+        content = '\u001b[;1m' + content + '\u001b[0m'
+        print(content)
+
+        for d in dirs:
+            if os.path.islink(os.path.join(root, d)):
+                content = '{}{}'.format(sub_indent, real_name(d, root=root))
+                print(content)
+
+        for f in files:
+            content = '{}{}'.format(sub_indent, real_name(f, root=root))
+            print(content)
+
+
 if __name__ == '__main__':
     pass
