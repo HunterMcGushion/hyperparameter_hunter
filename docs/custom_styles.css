@@ -1,6 +1,13 @@
-@import url('_build/html/_static/nature.css');
+/*@import url('_build/html/_static/nature.css');*/
+/*@import url('_build/html/_static/basic.css');*/
+/*@import url('_build/html/_static/css/theme.css');*/
 
+.wy-nav-content {
+    max-width: none; !important;
+}
+
+/*
 div.related {
     background-color: #a80b00;
-    /*line-height: 132px;*/
 }
+*/
