@@ -1,7 +1,6 @@
 File Structure Overview
 ***********************
-
-This is an overview of the result file structure created and updated when ``Experiment``\s are completed.
+This section is an overview of the result file structure created and updated when ``Experiment``\s are completed.
 For an example illustrating when and why certain files are created, see `Extended Example <../examples/extended_example.ipynb>`__ .
 
 HyperparameterHunterAssets/

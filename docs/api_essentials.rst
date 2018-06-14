@@ -1,5 +1,6 @@
 HyperparameterHunter API Essentials
 ***********************************
+This section exposes the API for all the HyperparameterHunter functionality that will be necessary for most users.
 
 Environment
 ===========
@@ -22,8 +23,11 @@ Hyperparameter Optimization
    :noindex:
 
    .. automethod:: __init__
+      :noindex:
    .. automethod:: set_experiment_guidelines
+      :noindex:
    .. automethod:: go
+      :noindex:
 
 ----------------------------------------
 
@@ -31,8 +35,11 @@ Hyperparameter Optimization
    :noindex:
 
    .. automethod:: __init__
+      :noindex:
    .. automethod:: set_experiment_guidelines
+      :noindex:
    .. automethod:: go
+      :noindex:
 
 ----------------------------------------
 
@@ -40,8 +47,11 @@ Hyperparameter Optimization
    :noindex:
 
    .. automethod:: __init__
+      :noindex:
    .. automethod:: set_experiment_guidelines
+      :noindex:
    .. automethod:: go
+      :noindex:
 
 ----------------------------------------
 
@@ -49,8 +59,11 @@ Hyperparameter Optimization
    :noindex:
 
    .. automethod:: __init__
+      :noindex:
    .. automethod:: set_experiment_guidelines
+      :noindex:
    .. automethod:: go
+      :noindex:
 
 ----------------------------------------
 
@@ -58,8 +71,11 @@ Hyperparameter Optimization
    :noindex:
 
    .. automethod:: __init__
+      :noindex:
    .. automethod:: set_experiment_guidelines
+      :noindex:
    .. automethod:: go
+      :noindex:
 
 
 Indices and tables
