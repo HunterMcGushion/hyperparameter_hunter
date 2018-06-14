@@ -1,74 +1,17 @@
-.. hyperparameter_hunter documentation master file, created by
-   sphinx-quickstart on Mon Jun  4 20:28:43 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-HyperparameterHunter Documentation
-**********************************
+Welcome to HyperparameterHunter's Documentation
+***********************************************
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
 
-Environment
-===========
-
-.. autoclass:: hyperparameter_hunter.environment.Environment
-   :noindex:
-   :members:
-
-Experiment Execution
-====================
-
-.. autoclass:: hyperparameter_hunter.experiments.CrossValidationExperiment
-   :noindex:
-   :members: __init__
-
-Hyperparameter Optimization
-===========================
-
-.. autoclass:: hyperparameter_hunter.optimization.BayesianOptimization
-   :noindex:
-
-   .. automethod:: __init__
-   .. automethod:: set_experiment_guidelines
-   .. automethod:: go
-
-----------------------------------------
-
-.. autoclass:: hyperparameter_hunter.optimization.GradientBoostedRegressionTreeOptimization
-   :noindex:
-
-   .. automethod:: __init__
-   .. automethod:: set_experiment_guidelines
-   .. automethod:: go
-
-----------------------------------------
-
-.. autoclass:: hyperparameter_hunter.optimization.RandomForestOptimization
-   :noindex:
-
-   .. automethod:: __init__
-   .. automethod:: set_experiment_guidelines
-   .. automethod:: go
-
-----------------------------------------
-
-.. autoclass:: hyperparameter_hunter.optimization.ExtraTreesOptimization
-   :noindex:
-
-   .. automethod:: __init__
-   .. automethod:: set_experiment_guidelines
-   .. automethod:: go
-
-----------------------------------------
-
-.. autoclass:: hyperparameter_hunter.optimization.DummySearch
-   :noindex:
-
-   .. automethod:: __init__
-   .. automethod:: set_experiment_guidelines
-   .. automethod:: go
+    Why Use HyperparameterHunter? <why_use_hyperparameter_hunter>
+    Installation <installation>
+    Quick Start <quick_start>
+    API Essentials <api_essentials>
+    Complete API <complete_api>
+    File Structure Overview <file_structure_overview>
+    Examples <examples>
+    Library Compatibility <library_compatibility>
 
 
 Indices and tables
