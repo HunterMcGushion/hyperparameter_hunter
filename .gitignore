@@ -13,3 +13,7 @@ HyperparameterHunterAssets/
 _build
 _static
 _templates
+
+# PyPI
+build/
+dist/

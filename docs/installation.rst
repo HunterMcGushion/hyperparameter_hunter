@@ -6,7 +6,7 @@ For the latest stable release, execute:
 
 .. code::
 
-    # TODO: ... HyperparameterHunter will soon be available on the Python Package Index...
+    pip install hyperparameter_hunter
 
 For the bleeding-edge version, execute:
 
