@@ -197,6 +197,7 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
     # Helper Methods:
     ##################################################
     def _optimization_loop(self, iteration=0):
+        # TODO: Add documentation
         self.logger.print_optimization_header()
 
         while iteration < self.iterations:
@@ -265,6 +266,7 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
         self.successful_iterations += 1
 
     def _update_current_hyperparameters(self):
+        # TODO: Add documentation
         current_hyperparameters = self._get_current_hyperparameters()
 
         init_params = {_k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == 'model_init_params'}
@@ -278,15 +280,18 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
     ##################################################
     @abstractmethod
     def _set_hyperparameter_space(self):
+        # TODO: Add documentation
         raise NotImplementedError()
 
     @abstractmethod
     def _get_current_hyperparameters(self):
+        # TODO: Add documentation
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def search_space_size(self):
+        # TODO: Add documentation
         raise NotImplementedError()
 
     ##################################################
@@ -528,7 +533,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         # TODO: Add 'EIps', and 'PIps' to the allowable `acquisition_function` values - Will need to return execution times
 
         #################### Optimizer Parameters ####################
-        self.dimensions = dimensions  # FLAG: Technically, this is just represented differently than uninformed bounds
+        self.dimensions = dimensions
         self.base_estimator = base_estimator
         self.n_initial_points = n_initial_points
         self.acquisition_function = acquisition_function
@@ -560,11 +565,13 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         )
 
     def _set_hyperparameter_space(self):
+        # TODO: Add documentation
         self.hyperparameter_space = Space(dimensions=self.dimensions)
         self._prepare_estimator()
         self._build_optimizer()
 
     def _prepare_estimator(self):
+        # TODO: Add documentation
         self.base_estimator = cook_estimator(self.base_estimator, space=self.hyperparameter_space, **self.base_estimator_kwargs)
 
     def _build_optimizer(self):
@@ -582,6 +589,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         )
 
     def _execute_experiment(self):
+        # TODO: Add documentation
         super()._execute_experiment()
 
         # FLAG: BIG BREAKING TEST BELOW
@@ -593,6 +601,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             return
 
     def _get_current_hyperparameters(self):
+        # TODO: Add documentation
         _current_hyperparameters = self.optimizer.ask()
 
         if _current_hyperparameters == self.current_hyperparameters_list:
@@ -611,6 +620,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         return current_hyperparameters
 
     def _find_similar_experiments(self):
+        # TODO: Add documentation
         super()._find_similar_experiments()
 
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
@@ -633,6 +643,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             # FLAG: Could wrap above `tell` call in try/except, then attempt `_tell` with improper dimensions
 
     def _validate_parameters(self):
+        # TODO: Add documentation
         super()._validate_parameters()
 
         #################### callbacks ####################
@@ -661,6 +672,7 @@ class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta
         )
 
     def _get_current_hyperparameters(self):
+        # TODO: Add documentation
         current_hyperparameters = next(self.hyperparameter_space)
         return current_hyperparameters
 

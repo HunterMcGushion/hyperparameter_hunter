@@ -370,9 +370,8 @@ class BaseExperiment(ScoringMixIn):
     def update_model_params(self):
         """Update random state of :attr:`model_init_params` according to :attr:`current_seed`"""
         # TODO: Add this to some workflow in Experiment class. For now it is never used, unless the subclass decides to...
+        # `model_init_params` initialized to all algorithm hyperparameters - Works even if 'random_state' not explicitly given
         try:
-            # :attr:`model_init_params` was initialized first to all of the hyperparameters identified as valid for the algorithm
-            # ... So below will work even if 'random_state', or 'seed' were not explicitly given
             if 'random_state' in self.model_init_params:
                 self.model_init_params['random_state'] = self.current_seed
             elif 'seed' in self.model_init_params:

@@ -61,6 +61,7 @@ class AggregatorTimes(BaseAggregatorCallback):
         super().on_experiment_end()
 
     def __to_elapsed(self, agg_key):
+        # TODO: Add documentation
         start_val = self.stat_aggregates['times'][agg_key]
         if isinstance(start_val, list):
             self.stat_aggregates['times'][agg_key][-1] = (datetime.now() - start_val[-1]).total_seconds()
@@ -114,6 +115,7 @@ class AggregatorEvaluations(BaseAggregatorCallback):
         super().on_experiment_end()
 
     def __loop_helper(self, agg_key):
+        # TODO: Add documentation
         for dataset_key, metric_results in self.last_evaluation_results.items():
             if metric_results is not None:
                 for metric_key, metric_value in metric_results.items():

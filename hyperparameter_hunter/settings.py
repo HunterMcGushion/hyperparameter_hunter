@@ -12,6 +12,7 @@ ASSETS_KEY_ATTRIBUTE_LOOKUP_DIRNAME = 'KeyAttributeLookup'
 ASSETS_LEADERBOARDS_DIRNAME = 'Leaderboards'
 
 RESULT_FILE_SUB_DIR_PATHS = {
+    #################### Experiments ####################
     'checkpoint': '{}/Checkpoints'.format(ASSETS_EXPERIMENTS_DIRNAME),
     'description': '{}/Descriptions'.format(ASSETS_EXPERIMENTS_DIRNAME),
     'heartbeat': '{}/Heartbeats'.format(ASSETS_EXPERIMENTS_DIRNAME),
@@ -20,10 +21,14 @@ RESULT_FILE_SUB_DIR_PATHS = {
     'predictions_oof': '{}/PredictionsOOF'.format(ASSETS_EXPERIMENTS_DIRNAME),
     'predictions_test': '{}/PredictionsTest'.format(ASSETS_EXPERIMENTS_DIRNAME),
     'script_backup': '{}/ScriptBackups'.format(ASSETS_EXPERIMENTS_DIRNAME),
+    #################### Tested Keys ####################
     'tested_keys': '{}'.format(ASSETS_TESTED_KEYS_DIRNAME),
+    #################### Key Attribute Lookup ####################
     'key_attribute_lookup': '{}'.format(ASSETS_KEY_ATTRIBUTE_LOOKUP_DIRNAME),
+    #################### Leaderboards ####################
     'leaderboards': '{}'.format(ASSETS_LEADERBOARDS_DIRNAME),
     'global_leaderboard': '{}/GlobalLeaderboard.csv'.format(ASSETS_LEADERBOARDS_DIRNAME),
+    #################### Other ####################
     # 'analytics': '{}'.format(),
     # 'ensembles': '{}'.format(),
     # 'optimization_rounds': '{}'.format(),
@@ -75,6 +80,7 @@ class G(object):
 
     @classmethod
     def reset_attributes(cls):
+        # TODO: Add documentation
         cls.Env = None
         cls.log = print
         cls.debug = print

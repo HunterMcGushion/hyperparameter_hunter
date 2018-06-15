@@ -6,6 +6,7 @@ from inspect import signature, _empty
 
 
 class KerasTracer(type):
+    # TODO: Add documentation
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
         namespace = dict(

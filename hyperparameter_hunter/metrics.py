@@ -136,7 +136,6 @@ class ScoringMixIn(object):
         -----
         The required types of `target` and `prediction` are entirely dependent on the metric callable's expectations"""
         # TODO: Fix documentation of "Returns" section to be in line with those of the rest of the project
-        # TODO: Can probably remove "return_list" kwarg
         if self.do_score is False:
             return
 
@@ -163,6 +162,7 @@ class ScoringMixIn(object):
 
 
 def get_clean_prediction(target, prediction):
+    # TODO: Add documentation
     try:
         target_is_int = (target.values.dtype == np.int)
     except AttributeError:

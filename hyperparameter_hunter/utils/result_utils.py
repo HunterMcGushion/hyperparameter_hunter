@@ -26,7 +26,6 @@ def format_predictions(raw_predictions: np.array, dataset_df: pd.DataFrame, targ
     -------
     predictions: pd.DataFrame
         Dataframe containing the formatted predictions"""
-
     predictions = pd.DataFrame()
     if id_column is not None:
         predictions[id_column] = dataset_df[id_column]
@@ -60,5 +59,4 @@ def default_do_full_save(result_description: dict) -> bool:
     Notes
     -----
     This function is useless. It is included as an example for proper implementation of custom `do_full_save` functions"""
-
     return True

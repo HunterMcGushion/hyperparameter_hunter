@@ -5,6 +5,7 @@ from inspect import signature
 
 
 def keras_callback_to_key(callback):
+    # TODO: Add documentation
     signature_args = sorted(signature(callback.__class__).parameters.items())
     string_args = []
 
@@ -20,6 +21,7 @@ def keras_callback_to_key(callback):
 
 
 def parameterize_compiled_keras_model(model):
+    # TODO: Add documentation
     # Expect compiled architecture result of "build_fn", like "define_architecture"
     # NOTE: Tested optimizer and loss with both callable and string inputs - Converted to callables automatically
 

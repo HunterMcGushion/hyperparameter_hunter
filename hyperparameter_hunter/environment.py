@@ -11,13 +11,11 @@ from hyperparameter_hunter.utils.result_utils import format_predictions, default
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from datetime import datetime
-from inspect import signature, getfullargspec, isclass
+from inspect import signature, isclass
 import numpy as np
 import os
 import os.path
 import pandas as pd
-import shutil
 
 ##################################################
 # Import Learning Assets
@@ -61,8 +59,7 @@ class Environment():
             self,
             train_dataset,  # TODO: Allow providing separate train_input, train_target dataframes, or the full df
             environment_params_path=None,
-            *,  # FLAG: ORIGINAL
-            # *args,  # FLAG: TEST AUTODOCS COMPATIBILITY
+            *,
             root_results_path=None,
             holdout_dataset=None,  # TODO: Allow providing separate holdout_input, holdout_target dataframes, or the full df
             test_dataset=None,  # TODO: Allow providing separate test_input, test_target dataframes, or the full df

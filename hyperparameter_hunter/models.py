@@ -111,7 +111,7 @@ class Model(object):
             ).with_traceback(sys.exc_info()[2])
 
     def fit(self):
-        # FLAG: TEST BELOW
+        # TODO: Add documentation
         expected_fit_parameters = list(inspect.signature(self.model.fit).parameters)
         fit_kwargs = {}
         if 'verbose' in expected_fit_parameters:
@@ -122,7 +122,6 @@ class Model(object):
         fit_kwargs = dict(
             fit_kwargs, **{_k: _v for _k, _v in self.extra_params.get('fit', {}).items() if _k not in ['X', 'y', 'eval_set']}
         )
-        # FLAG: TEST ABOVE
 
         try:
             self.model = self.model.fit(self.train_input, self.train_target, **fit_kwargs)
@@ -133,6 +132,7 @@ class Model(object):
                 raise _ex
 
     def predict(self, input_data):
+        # TODO: Add documentation
         if input_data is None:
             return None
 
@@ -194,6 +194,7 @@ class XGBoostModel(Model):
         )
 
     def fit(self):
+        # TODO: Add documentation
         #################### Build eval_set ####################
         eval_set = [(self.train_input, self.train_target)]
         if (self.validation_input is not None) and (self.validation_target is not None):
@@ -249,10 +250,12 @@ class KerasModel(Model):
         )
 
     def initialize_model(self):
+        # TODO: Add documentation
         self.validate_keras_params()
         self.model = self.initialize_keras_neural_network()
 
     def fit(self):
+        # TODO: Add documentation
         try:
             self.model.fit(self.train_input, self.train_target)
         except Exception as _ex:
@@ -271,6 +274,7 @@ class KerasModel(Model):
                     self.model = load_model(callback.filepath)
 
     def get_input_dim(self):
+        # TODO: Add documentation
         if self.train_input is not None:
             return self.train_input.shape[1]
         elif self.validation_input is not None:
@@ -279,6 +283,7 @@ class KerasModel(Model):
             raise ValueError('To initialize a KerasModel, train_input data, or input_dim must be provided')
 
     def validate_keras_params(self):
+        # TODO: Add documentation
         #################### Check Keras Import Hooks ####################
         necessary_import_hooks = ['keras_layer']
         for hook in necessary_import_hooks:
@@ -304,6 +309,7 @@ class KerasModel(Model):
             raise KeyError(F'extra_params may not contain the following keys: {bad_extra_keys}.\nFound: {bad_keys_found}')
 
     def initialize_keras_neural_network(self):
+        # TODO: Add documentation
         validation_data = None
         if (self.validation_input is not None) and (self.validation_target is not None):
             validation_data = (self.validation_input, self.validation_target)

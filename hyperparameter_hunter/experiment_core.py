@@ -17,6 +17,8 @@ import os
 
 
 class ExperimentMeta(type):
+    # TODO: Add documentation
+
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
         # Separate to preserve MRO of original base classes, after adding and sorting new bases

@@ -14,7 +14,6 @@ import inspect
 import logging
 import os.path
 import re
-import warnings
 
 
 class ReportingHandler(object):
@@ -46,6 +45,7 @@ class ReportingHandler(object):
         self.configure_reporting_type()
 
     def validate_parameters(self):
+        # TODO: Add documentation
         #################### reporting_type ####################
         valid_types = ['logging', 'standard', 'advanced']
         if not isinstance(self.reporting_type, str):
@@ -80,6 +80,7 @@ class ReportingHandler(object):
             raise TypeError('heartbeat_params must be a dict or None. Received {}'.format(type(self.heartbeat_params)))
 
     def configure_reporting_type(self):
+        # TODO: Add documentation
         if self.reporting_type == 'standard':
             raise ValueError('Standard logging is not yet implemented. Please choose "logging"')
             # setattr(self, 'log', self._standard_log)
@@ -95,6 +96,7 @@ class ReportingHandler(object):
             raise ValueError('Advanced logging is not yet implemented. Please choose one of: ["logging", "standard"]')
 
     def initialize_logging_logging(self):
+        # TODO: Add documentation
         exception_handler.hook_exception_handler()
 
         logger = logging.getLogger(__name__)
@@ -112,6 +114,7 @@ class ReportingHandler(object):
 
     @staticmethod
     def configure_console_logger_handler(level='INFO', fmt=None, datefmt=None, style='%', **kwargs):
+        # TODO: Add documentation
         console_handler = logging.StreamHandler()
         console_handler.setLevel(level)
 
@@ -121,6 +124,7 @@ class ReportingHandler(object):
         return console_handler
 
     def configure_heartbeat_logger_handler(self, level='DEBUG', fmt=None, datefmt=None, style='%', **kwargs):
+        # TODO: Add documentation
         # fmt = '<%(asctime)s> %(levelname)-8s - %(lineno)4d %(module)20s .%(funcName)10s - %(message)s'
         if self.heartbeat_path is None:
             raise FileExistsError
@@ -149,6 +153,7 @@ class ReportingHandler(object):
     # Logging-Logging Methods:
     ##################################################
     def _logging_log(self, content, previous_frame=None, add_time=False, **kwargs):
+        # TODO: Add documentation
         if self.add_frame is True:
             previous_frame = inspect.currentframe().f_back if previous_frame is None else previous_frame
             try:
@@ -161,6 +166,7 @@ class ReportingHandler(object):
         logging.info(content)
 
     def _logging_debug(self, content, previous_frame=None, add_time=False, **kwargs):
+        # TODO: Add documentation
         if self.add_frame is True:
             previous_frame = inspect.currentframe().f_back if previous_frame is None else previous_frame
             try:
@@ -173,6 +179,7 @@ class ReportingHandler(object):
         logging.debug(content)
 
     def _logging_warn(self, content, **kwargs):
+        # TODO: Add documentation
         if self.add_frame is True:
             previous_frame = inspect.currentframe().f_back
             try:
@@ -271,6 +278,7 @@ class OptimizationReporter():
 
     def print_header(self, header, line):
         """Utility to perform actual printing of headers given formatted inputs"""
+        # TODO: Fill in documentation
         print(header)
         print(line)
 
@@ -283,6 +291,7 @@ class OptimizationReporter():
         print('')
 
     def print_column_name(self, value, size):
+        # TODO: Add documentation
         print('{0:>{1}}'.format(value, size), end=self.end)
 
     def print_result(self, hyperparameters, evaluation):
@@ -316,10 +325,12 @@ class OptimizationReporter():
         self.iteration += 1
 
     def print_target_value(self, value, pre='', post=''):
+        # TODO: Add documentation
         content = pre + '{: >10.5f}'.format(value) + post
         print(content, end=self.end)
 
     def print_input_values(self, values, pre='', post=''):
+        # TODO: Add documentation
         for index in self.sorted_indexes:
             if isinstance(values[index], float):
                 content = '{0: >{1}.{2}f}'.format(
@@ -335,10 +346,12 @@ class OptimizationReporter():
             print(pre + content + post, end=self.end)
 
     def reset_timer(self):
+        # TODO: Add documentation
         self.start_time = datetime.now()
         self.last_round = datetime.now()
 
     def print_summary(self):
+        # TODO: Add documentation
         # TODO: Finish this
         if not self.verbose:
             return
@@ -346,6 +359,7 @@ class OptimizationReporter():
 
 
 def format_frame_source(previous_frame, **kwargs):
+    # TODO: Add documentation
     source = inspect.getframeinfo(previous_frame)
     source_script, source_line_no, source_func, source_class = source[0], source[1], source[2], None
 
@@ -356,6 +370,7 @@ def format_frame_source(previous_frame, **kwargs):
 
 
 def stringify_frame_source(src_file, src_line_no, src_func, src_class, add_line_no=True, max_line_no_size=4, total_max_size=80):
+    # TODO: Add documentation
     source_content = ''
 
     if add_line_no is True:
@@ -376,6 +391,7 @@ def stringify_frame_source(src_file, src_line_no, src_func, src_class, add_line_
 
 
 def add_time_to_content(content, add_time=False):
+    # TODO: Add documentation
     add_content = ''
     add_time = now_time() if add_time is True else add_time
     add_content += 'Time: {}'.format(add_time) if add_time else ''
@@ -389,6 +405,7 @@ def add_time_to_content(content, add_time=False):
 
 
 def format_fold_run(fold=None, run=None, mode='concise'):
+    # TODO: Add documentation
     content = ''
     valid_fold, valid_run = isinstance(fold, int), isinstance(run, int)
 
@@ -438,6 +455,7 @@ def format_fold_run(fold=None, run=None, mode='concise'):
 
 
 def format_evaluation_results(results, separator='  |  ', float_format='{:.5f}'):
+    # TODO: Add documentation
     if isinstance(results, list):
         raise TypeError('Sorry, I can\'t deal with results of type list. Please send me an OrderedDict, instead')
 

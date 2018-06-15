@@ -13,19 +13,15 @@ from hyperparameter_hunter.utils.file_utils import write_json, add_to_json
 ##################################################
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
-from contextlib import suppress
 import os
 from platform import node
 import shutil
 from sys import exc_info
 
-##################################################
-# Declare Global Variables
-##################################################
-
 
 class BaseRecorder(metaclass=ABCMeta):
     def __init__(self):
+        # TODO: Add documentation
         self.result_path = None
         self.result = None
 

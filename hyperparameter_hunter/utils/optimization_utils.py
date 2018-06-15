@@ -180,6 +180,7 @@ class AskingOptimizer(Optimizer):
     # FLAG: TEST ABOVE
 
     def _ask(self):
+        # TODO: Add documentation
         ask_result = super()._ask()
 
         do_retell = self.__repeated_ask_kwargs.get('do_retell', True)
@@ -212,6 +213,7 @@ class AskingOptimizer(Optimizer):
         Returns
         -------
         ask_result"""
+        # TODO: Fill in documentation description
         if self._n_initial_points > 0 or self.base_estimator_ is None:
             ask_result = self.space.rvs(random_state=self.rng)[0]
         else:

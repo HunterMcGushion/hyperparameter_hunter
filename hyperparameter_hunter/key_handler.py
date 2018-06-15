@@ -33,10 +33,8 @@ from keras.callbacks import Callback as base_keras_callback
 # KeyMaker Base Class:
 ##################################################
 class KeyMaker(metaclass=ABCMeta):
-    """
-    # TODO: Fix documentation to reflect HyperparameterHunterAssets structure changes
-    """
     def __init__(self, parameters, **kwargs):
+        # TODO: Add documentation
         self.parameters = deepcopy(parameters)
         self.key = None
         self.exists = False
@@ -91,6 +89,7 @@ class KeyMaker(metaclass=ABCMeta):
         dataframe_hashes = {}
 
         def visit(path, key, value):
+            # TODO: Add documentation
             if isinstance(value, base_keras_callback):
                 return (key, keras_callback_to_key(value))
             elif callable(value) or isinstance(value, pd.DataFrame):
@@ -125,7 +124,7 @@ class KeyMaker(metaclass=ABCMeta):
 
         if isclass(value) or (key in shelve_params):
             with shelve.open(os.path.join(self.key_attribute_lookup_dir, F'{key}'), flag='c') as shelf:
-                # TODO: When reading from shelve file, DO NOT add the ".db" file extension
+                # FLAG: When reading from shelve file, DO NOT add the ".db" file extension
                 shelf[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
             os.makedirs(os.path.join(self.key_attribute_lookup_dir, key), exist_ok=True)
@@ -161,6 +160,7 @@ class KeyMaker(metaclass=ABCMeta):
     @property
     @abstractmethod
     def key_type(self) -> str:
+        # TODO: Add documentation
         raise NotImplementedError()
 
     @abstractmethod
@@ -178,6 +178,7 @@ class CrossExperimentKeyMaker(KeyMaker):
     key_type = 'cross_experiment'
 
     def __init__(self, parameters, **kwargs):
+        # TODO: Add documentation
         KeyMaker.__init__(self, parameters, **kwargs)
 
     def does_key_exist(self):
@@ -205,11 +206,13 @@ class HyperparameterKeyMaker(KeyMaker):
     key_type = 'hyperparameter'
 
     def __init__(self, parameters, cross_experiment_key, **kwargs):
+        # TODO: Add documentation
         self.cross_experiment_key = cross_experiment_key
         KeyMaker.__init__(self, parameters, **kwargs)
 
     @staticmethod
     def filter_parameters_to_hash(parameters):
+        # TODO: Add documentation
         reject_keys = {
             'verbose', 'verbosity', 'silent',
             'random_state', 'random_seed', 'seed',

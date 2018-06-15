@@ -18,6 +18,7 @@ from skopt.space import space as skopt_space
 
 class Real(skopt_space.Real):
     def __init__(self, low, high, prior='uniform', transform=None, name=None):
+        # TODO: Add documentation
         if name is None:
             raise ValueError('Please provide a `name` for the hyperparameter dimensions being set: {}(low={}, high={})'.format(
                 self.__class__.__name__, low, high
@@ -27,6 +28,7 @@ class Real(skopt_space.Real):
 
 class Integer(skopt_space.Integer):
     def __init__(self, low, high, transform=None, name=None):
+        # TODO: Add documentation
         if name is None:
             raise ValueError('Please provide a `name` for the hyperparameter dimensions being set: {}(low={}, high={})'.format(
                 self.__class__.__name__, low, high
@@ -36,6 +38,7 @@ class Integer(skopt_space.Integer):
 
 class Categorical(skopt_space.Categorical):
     def __init__(self, categories, prior=None, transform=None, name=None):
+        # TODO: Add documentation
         if name is None:
             raise ValueError('Please provide a `name` for the hyperparameter dimensions being set: {}(categories={})'.format(
                 self.__class__.__name__, categories
@@ -45,11 +48,13 @@ class Categorical(skopt_space.Categorical):
 
 class Space(skopt_space.Space):
     def __init__(self, dimensions, random_state=None):
+        # TODO: Add documentation
         # self.space_random_state = check_random_state(None)  # FLAG: THIS BREAKS AND REPEATS RESULTS OF `rvs`
         self.space_random_state = check_random_state(32)  # FLAG: THIS WORKS
         super().__init__(dimensions=dimensions)
 
     def rvs(self, n_samples=1, random_state=None):
+        # TODO: Add documentation
         return super().rvs(n_samples=n_samples, random_state=self.space_random_state)
 
     def __len__(self):

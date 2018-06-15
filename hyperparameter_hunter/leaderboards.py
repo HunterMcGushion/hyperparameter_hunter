@@ -103,6 +103,7 @@ class Leaderboard(metaclass=ABCMeta):
 
 class GlobalLeaderboard(Leaderboard):
     def add_entry(self, experiment, **kwargs):
+        # TODO: Add documentation
         final_evaluations = experiment.last_evaluation_results
 
         entry_columns, entry_data = [], []
