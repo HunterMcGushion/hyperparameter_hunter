@@ -156,10 +156,10 @@ def high_cardinality_categorical_encode(
 ##################################################
 # Dataset Utilities
 ##################################################
-def get_breast_cancer_data():
+def get_breast_cancer_data(target='diagnosis'):
     data = load_breast_cancer()
     df = pd.DataFrame(data=data.data, columns=data.feature_names)
-    df['diagnosis'] = data.target
+    df[target] = data.target
     return df
 
 

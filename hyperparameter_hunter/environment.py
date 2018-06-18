@@ -20,7 +20,8 @@ import pandas as pd
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.model_selection import KFold
+# noinspection PyProtectedMember
+from sklearn.model_selection import _split as sk_cv
 
 
 class Environment():
@@ -35,7 +36,7 @@ class Environment():
         metrics_map=None,
         metrics_params=dict(),
 
-        cross_validation_type=KFold,
+        cross_validation_type='KFold',
         runs=1,
         global_random_seed=32,
         random_seeds=None,
@@ -133,13 +134,16 @@ class Environment():
             either 1) as an input kwarg to :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
             but not both. An Exception will be raised if both are given, or if neither is given
             # TODO: Move metrics_map/metrics_params closer to the top of arguments, since one is required
-        cross_validation_type: Class, default=:class:`sklearn.model_selection.KFold`
-            The class to define cross-validation splits. It must implement the following methods: [`__init__`, `split`]. If
-            using a custom class, see the following tested `sklearn` classes for proper implementations: [`KFold`,
-            `StratifiedKFold`, `RepeatedKFold`, `RepeatedStratifiedKFold`]. The arguments provided to
-            :meth:`cross_validation_type.__init__` will be :attr:`Environment.cross_validation_params`, which should include the
-            following: ["n_splits" <int>, "n_repeats" <int> (if applicable)]. :meth:`cross_validation_type.split` will receive the
-            following arguments: [:attr:`BaseExperiment.train_input_data`, :attr:`BaseExperiment.train_target_data`]
+        cross_validation_type: Class or str, default='KFold'
+            The class to define cross-validation splits. If str, it must be an attribute of `sklearn.model_selection._split`, and
+            it must be a cross-validation class that inherits one of the following `sklearn` classes: `BaseCrossValidator`, or
+            `_RepeatedSplits`. Valid str values include 'KFold', and 'RepeatedKFold', although there are many more. It must
+            implement the following methods: [`__init__`, `split`]. If using a custom class, see the following tested `sklearn`
+            classes for proper implementations: [`KFold`, `StratifiedKFold`, `RepeatedKFold`, `RepeatedStratifiedKFold`]. The
+            arguments provided to :meth:`cross_validation_type.__init__` will be :attr:`Environment.cross_validation_params`,
+            which should include the following: ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
+            :meth:`cross_validation_type.split` will receive the following arguments:
+            [:attr:`BaseExperiment.train_input_data`, :attr:`BaseExperiment.train_target_data`]
         runs: Int, default=1
             The number of times to fit a model within each fold to perform multiple-run-averaging with different random seeds
         global_random_seed: Int, default=32
@@ -308,6 +312,13 @@ class Environment():
             if self.metrics_map is None:
                 self.metrics_map = self.metrics_params['metrics_map']
             self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
+
+        #################### cross_validation_type ####################
+        if isinstance(self.cross_validation_type, str):
+            try:
+                self.cross_validation_type = sk_cv.__getattribute__(self.cross_validation_type)
+            except AttributeError:
+                raise AttributeError('`sklearn.model_selection._split` has no attribute "{}".'.format(self.cross_validation_type))
 
         #################### to_csv_params ####################
         self.to_csv_params = {_k: _v for _k, _v in self.to_csv_params.items() if _k != 'path_or_buf'}

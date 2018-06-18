@@ -215,7 +215,7 @@ class ReportingHandler(object):
 
 
 class _Color():
-    BLUE = '\033[94m'
+    BLUE = '\033[34m'
     CYAN = '\033[36m'
     GREEN = '\033[32m'
     MAGENTA = '\033[35m'
