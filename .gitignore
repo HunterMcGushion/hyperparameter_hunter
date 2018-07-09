@@ -17,3 +17,6 @@ _templates
 # PyPI
 build/
 dist/
+
+# Internal Tools
+simple_profiler.py

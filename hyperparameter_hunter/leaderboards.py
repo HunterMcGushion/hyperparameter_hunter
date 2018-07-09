@@ -105,7 +105,6 @@ class GlobalLeaderboard(Leaderboard):
     def add_entry(self, experiment, **kwargs):
         # TODO: Add documentation
         final_evaluations = experiment.last_evaluation_results
-
         entry_columns, entry_data = [], []
         # TODO: Resolve cases where `data` contains an aliased column for a metric, but the current experiment uses the
         # TODO: ... standard metric name. EX) 'oof_roc' vs 'oof_roc_auc_score' - They should be considered the same - Use alias
@@ -121,6 +120,8 @@ class GlobalLeaderboard(Leaderboard):
                 val = val.key
             entry_data.append(val)
 
+        entry_columns.append('experiment_#')
+        entry_data.append(self.data.shape[0])
         entry = pd.DataFrame(data=[entry_data], columns=entry_columns)
 
         self.data = self.data.append(

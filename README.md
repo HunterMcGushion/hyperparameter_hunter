@@ -1,6 +1,10 @@
 HyperparameterHunter
 ====================
 
+![HyperparameterHunter Overview](docs/media/overview_1000x474.gif)
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Q3EX3PQUV256G)
+
 HyperparameterHunter provides wrappers for executing machine learning algorithms that
 automatically save the testing conditions/hyperparameters, results, predictions, and
 other data for a wide range of algorithms from many different libraries in a unified

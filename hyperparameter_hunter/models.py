@@ -193,26 +193,29 @@ class XGBoostModel(Model):
             target_metric=target_metric, metrics_map=metrics_map,
         )
 
-    def fit(self):
-        # TODO: Add documentation
-        #################### Build eval_set ####################
-        eval_set = [(self.train_input, self.train_target)]
-        if (self.validation_input is not None) and (self.validation_target is not None):
-            eval_set.append((self.validation_input, self.validation_target))
-
-        #################### Combine Fit Parameters ####################
-        fit_kwargs = dict(dict(
-            eval_set=eval_set,
-            verbose=False,  # Default to verbose=False (in contradiction with XGBoost docs) if not explicitly given
-        ), **{_k: _v for _k, _v in self.extra_params.get('fit', {}).items() if _k not in ['X', 'y', 'eval_set']})
-
-        #################### Build eval_metric ####################
-        if 'eval_metric' not in fit_kwargs:
-            target_metric_name = self.target_metric[-1]
-            fit_kwargs['eval_metric'] = wrap_xgboost_metric(self.metrics_map[target_metric_name], target_metric_name)
-            # eval_metric scores may be higher than reported scores depending on predict/predict_proba
-
-        self.model.fit(self.train_input, self.train_target, **fit_kwargs)
+    # FLAG: ORIGINAL BELOW
+    # TODO: Shouldn't be default behavior to include `eval_set` below - Results in unexpectedly long execution times - Rework
+    # def fit(self):
+    #     # TODO: Add documentation
+    #     #################### Build eval_set ####################
+    #     eval_set = [(self.train_input, self.train_target)]
+    #     if (self.validation_input is not None) and (self.validation_target is not None):
+    #         eval_set.append((self.validation_input, self.validation_target))
+    #
+    #     #################### Combine Fit Parameters ####################
+    #     fit_kwargs = dict(dict(
+    #         eval_set=eval_set,
+    #         verbose=False,  # Default to verbose=False (in contradiction with XGBoost docs) if not explicitly given
+    #     ), **{_k: _v for _k, _v in self.extra_params.get('fit', {}).items() if _k not in ['X', 'y', 'eval_set']})
+    #
+    #     #################### Build eval_metric ####################
+    #     if 'eval_metric' not in fit_kwargs:
+    #         target_metric_name = self.target_metric[-1]
+    #         fit_kwargs['eval_metric'] = wrap_xgboost_metric(self.metrics_map[target_metric_name], target_metric_name)
+    #         # eval_metric scores may be higher than reported scores depending on predict/predict_proba
+    #
+    #     self.model.fit(self.train_input, self.train_target, **fit_kwargs)
+    # FLAG: ORIGINAL ABOVE
 
 
 class KerasModel(Model):
