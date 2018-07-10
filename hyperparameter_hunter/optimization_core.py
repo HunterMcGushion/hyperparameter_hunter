@@ -457,7 +457,7 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
 
 class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
-    # TODO: Reorganize kwargs to start with `target_metric`, `dimensions`, `iterations` - The only really important ones
+    # TODO: Reorganize kwargs to start with `dimensions`, `target_metric`, `iterations` - The only really important ones
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
 

@@ -359,7 +359,18 @@ class OptimizationReporter():
 
 
 def format_frame_source(previous_frame, **kwargs):
-    # TODO: Add documentation
+    """Construct a string describing the location at which a call was made
+
+    Parameters
+    ----------
+    previous_frame: Frame
+        A frame depicting the location at which a call was made
+    **kwargs: Dict
+        Any additional kwargs to supply to :func:`reporting.stringify_frame_source`
+
+    Returns
+    -------
+    The stringified frame source information of `previous_frame`"""
     source = inspect.getframeinfo(previous_frame)
     source_script, source_line_no, source_func, source_class = source[0], source[1], source[2], None
 
@@ -370,7 +381,30 @@ def format_frame_source(previous_frame, **kwargs):
 
 
 def stringify_frame_source(src_file, src_line_no, src_func, src_class, add_line_no=True, max_line_no_size=4, total_max_size=80):
-    # TODO: Add documentation
+    """Construct a string that neatly displays the location in the code at which a call was made
+
+    Parameters
+    ----------
+    src_file: Str
+        A filepath
+    src_line_no: Int
+        The line number in `src_file` at which the call was made
+    src_func: Str
+        The name of the function in `src_file` in which the call was made
+    src_class: Str, or None
+        If not None, the class in `src_file` in which the call was made
+    add_line_no: Boolean, default=False
+        If True, the line number will be included in the `source_content` result
+    max_line_no_size: Int, default=4
+        The total number (including padding) of characters to be occupied by `src_line_no`. For example, if `src_line_no`=32, and
+        `max_line_no_size`=4, `src_line_no` will be padded to become '32  ' in order to occupy four characters
+    total_max_size: Int, default=80
+        The total number (including padding) of characters to be occupied by the `source_content` result
+
+    Returns
+    -------
+    source_content: Str
+        A formatted string containing the location in the code at which a call was made"""
     source_content = ''
 
     if add_line_no is True:
@@ -391,7 +425,19 @@ def stringify_frame_source(src_file, src_line_no, src_func, src_class, add_line_
 
 
 def add_time_to_content(content, add_time=False):
-    # TODO: Add documentation
+    """Construct a string containing the original `content`, in addition to the current time
+
+    Parameters
+    ----------
+    content: Str
+        The original string, to which the current time will be concatenated
+    add_time: Boolean, default=False
+        If True, the current time will be concatenated onto the end of `content`
+
+    Returns
+    -------
+    content: Str
+         A string containing the original `content`, along with the current time, and any additional formatting"""
     add_content = ''
     add_time = now_time() if add_time is True else add_time
     add_content += 'Time: {}'.format(add_time) if add_time else ''
@@ -405,7 +451,21 @@ def add_time_to_content(content, add_time=False):
 
 
 def format_fold_run(fold=None, run=None, mode='concise'):
-    # TODO: Add documentation
+    """Construct a string to display the fold, and run currently being executed
+
+    Parameters
+    ----------
+    fold: Int, or None, default=None
+        The fold number currently being executed
+    run: Int, or None, default=None
+        The run number currently being executed
+    mode: Str in ['concise', 'verbose'], default='concise'
+        If 'concise', the result will contain abbreviations for fold/run
+
+    Returns
+    -------
+    content: Str
+        A clean display of the current fold/run"""
     content = ''
     valid_fold, valid_run = isinstance(fold, int), isinstance(run, int)
 
@@ -455,7 +515,22 @@ def format_fold_run(fold=None, run=None, mode='concise'):
 
 
 def format_evaluation_results(results, separator='  |  ', float_format='{:.5f}'):
-    # TODO: Add documentation
+    """Construct a string to neatly display the results of a model evaluation
+
+    Parameters
+    ----------
+    results: Dict
+        The results of a model evaluation, in which keys represent the dataset type evaluated, and values are dicts containing
+        metrics as keys, and metric values as values
+    separator: Str, default='  |  '
+        The string used to join all the metric values into a single string
+    float_format: Str, default='{:.5f}'
+        A python string float formatter, applied to floating metric values
+
+    Returns
+    -------
+    content: Str
+        The model's evaluation results"""
     if isinstance(results, list):
         raise TypeError('Sorry, I can\'t deal with results of type list. Please send me an OrderedDict, instead')
 
