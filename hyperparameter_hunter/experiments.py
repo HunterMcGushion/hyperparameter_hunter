@@ -70,9 +70,6 @@ DEFAULT_CROSS_VALIDATION_PARAMS = dict(
 class BaseExperiment(ScoringMixIn):
     def __init__(
             # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
-            # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
-            # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
-            # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
             self, model_initializer, model_init_params, model_extra_params=None, feature_selector=None,
             preprocessing_pipeline=None, preprocessing_params=None, notes=None, do_raise_repeated=False, auto_start=True,
             target_metric=None,
@@ -81,7 +78,7 @@ class BaseExperiment(ScoringMixIn):
 
         Parameters
         ----------
-        model_initializer: functools.partial, or class, or class instance
+        model_initializer: class, or functools.partial, or class instance
             The algorithm class being used to initialize a model
         model_init_params: dict
             The dictionary of arguments given when creating a model instance with `model_initializer` via the `__init__` method
@@ -95,9 +92,9 @@ class BaseExperiment(ScoringMixIn):
             the second argument for calls to `pandas.DataFrame.loc` in :meth:`BaseExperiment.initial_preprocessing`. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less :attr:`target_column`, and :attr:`id_column`
         preprocessing_pipeline: ...
-            ...
+            ... Experimental...
         preprocessing_params: ...
-            ...
+            ... Experimental...
         notes: String, or None, default=None
             Additional information about the Experiment that will be saved with the Experiment's description result file. This
             serves no purpose other than to facilitate saving Experiment details in a more readable format
@@ -108,8 +105,13 @@ class BaseExperiment(ScoringMixIn):
             If True, after the Experiment is initialized, it will automatically call :meth:`BaseExperiment.preparation_workflow`,
             followed by :meth:`BaseExperiment.experiment_workflow`, effectively completing all essential tasks without requiring
             additional method calls
-        target_metric: # TODO: ...
-            # TODO: ..."""
+        target_metric: Tuple, or str, default=('oof', <first key in :attr:`environment.Environment.metrics_map`>)
+            A path denoting the metric to be used to compare completed Experiments or to use for certain early stopping
+            procedures in some model classes. The first value should be one of ['oof', 'holdout', 'in_fold']. The second value
+            should be the name of a metric being recorded according to the values supplied in
+            :attr:`environment.Environment.metrics_params`. See the documentation for :func:`metrics.get_formatted_target_metric`
+            for more info. Any values returned by, or used as the `target_metric` input to this function are acceptable values
+            for :attr:`BaseExperiment.target_metric`"""
         self.model_initializer = model_initializer
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)  # FLAG: Play nice with Keras
         try:
