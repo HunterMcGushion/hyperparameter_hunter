@@ -25,7 +25,6 @@ import pandas as pd
 # Import Learning Assets
 ##################################################
 from sklearn.model_selection import StratifiedKFold
-
 from skopt.callbacks import check_callback
 # noinspection PyProtectedMember
 from skopt.utils import cook_estimator, eval_callbacks
@@ -53,26 +52,6 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
             :attr:`algorithm_name`, and match the current guidelines, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default=None
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
-
-        Examples
-        --------
-        >>> from hyperparameter_hunter.environment import Environment
-        >>> from xgboost import XGBClassifier
-        >>> env = Environment(
-        ...     train_dataset=pd.DataFrame(),
-        ...     root_results_path='./HyperparameterHunterAssets',
-        ...     metrics_map=dict(roc='roc_auc_score'),
-        ...     cross_validation_type=StratifiedKFold,
-        ...     cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
-        ... )
-        >>> optimizer = RandomizedGridSearch(target_metric=('oof', 'roc'))
-        >>> optimizer.set_experiment_guidelines(
-        ...     model_initializer=XGBClassifier,
-        ...     model_init_params=dict(objective='reg:linear', learning_rate=0.1, subsample=0.5)
-        ... )
-        >>> optimizer.add_init_selection('max_depth', [2, 3, 4, 5])
-        >>> optimizer.add_init_selection(('n_estimators', ), [90, 100, 110])
-        >>> optimizer.go()
 
         Notes
         -----
@@ -197,41 +176,34 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
     # Helper Methods:
     ##################################################
     def _optimization_loop(self, iteration=0):
-        # TODO: Add documentation
+        """Perform Experiment execution loop while `iteration` < `iterations`. At each iteration, an Experiment will be executed,
+        its results will be logged, and it will be compared to the current best experiment
+
+        Parameters
+        ----------
+        iteration: Int, default=0
+            The current iteration in the optimization loop"""
         self.logger.print_optimization_header()
 
         while iteration < self.iterations:
-            # print(iteration)
             try:
-                # print(F'try         {iteration}')
                 self._execute_experiment()
-                # print(F'success     {iteration}')
             except RepeatedExperimentError:
-                # print(F'repeated    {iteration}')
                 # G.debug_(F'Skipping repeated Experiment: {_ex!s}\n')
                 self.skipped_iterations += 1
                 continue
             except StopIteration:
-                # print(F'stopped     {iteration}')
                 if len(self.tested_keys) >= self.search_space_size:
                     G.log_(F'Hyperparameter search space has been exhausted after testing {len(self.tested_keys)} keys')
                     break
                 # G.debug_(F'Re-initializing hyperparameter grid after testing {len(self.tested_keys)} keys')
-                # print(F'resetting     {iteration}')
                 self._set_hyperparameter_space()
                 continue
 
-            # print(F'after     {iteration}')
-            # FLAG: TEST BELOW - :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            # FLAG: TEST BELOW - :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            # FLAG: TEST BELOW - :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            # FLAG: TEST BELOW - :attr:`current_hyperparameters_list` only exists in Informed Protocols
+            # TODO: :attr:`current_hyperparameters_list` only exists in Informed Protocols
             self.logger.print_result(self.current_hyperparameters_list, self.current_score)  # FLAG: TEST
             # G.log_(F'Iteration {iteration}, Experiment "{self.current_experiment.experiment_id}": {self.current_score}')  # FLAG: ORIGINAL
-            # FLAG: TEST ABOVE - :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            # FLAG: TEST ABOVE - :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            # FLAG: TEST ABOVE - :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            # FLAG: TEST ABOVE - :attr:`current_hyperparameters_list` only exists in Informed Protocols
+            # TODO: :attr:`current_hyperparameters_list` only exists in Informed Protocols
 
             if (self.best_experiment is None) or (self.current_score > self.best_score):
                 self.best_experiment = self.current_experiment.experiment_id
@@ -266,7 +238,8 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
         self.successful_iterations += 1
 
     def _update_current_hyperparameters(self):
-        # TODO: Add documentation
+        """Update :attr:`current_init_params`, and :attr:`current_extra_params` according to the upcoming set of hyperparameters
+        to be searched"""
         current_hyperparameters = self._get_current_hyperparameters()
 
         init_params = {_k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == 'model_init_params'}
@@ -280,18 +253,23 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
     ##################################################
     @abstractmethod
     def _set_hyperparameter_space(self):
-        # TODO: Add documentation
+        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search dimensions"""
         raise NotImplementedError()
 
     @abstractmethod
     def _get_current_hyperparameters(self):
-        # TODO: Add documentation
+        """Retrieve the upcoming set of hyperparameters to be searched
+
+        Returns
+        -------
+        current_hyperparameters: Dict
+            The next set of hyperparameters that will be searched"""
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def search_space_size(self):
-        # TODO: Add documentation
+        """The number of different hyperparameter permutations possible given the current hyperparameter search space"""
         raise NotImplementedError()
 
     ##################################################
@@ -363,12 +341,10 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
                 raise ValueError(F'Expected the first element of `choices` to be less than the second. Received: {choices}')
 
         # TODO: If `bound_type` == 'range', create the range and set `choices` to it
-
-        # self.search_bounds[hyperparameter] = (bound_type, choices)  # FLAG: ORIGINAL
-        self.search_bounds[hyperparameter] = choices  # FLAG: TEST
+        self.search_bounds[hyperparameter] = choices
 
     # def _add_rule(self):
-    #     # TODO: Supply callables declaring valid/invalid relationships between hyperparameters to filter the total choices
+    #     """Supply callables declaring valid/invalid relationships between hyperparameters to filter the total choices"""
     #     pass
 
     ##################################################
@@ -457,7 +433,7 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
 
 class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
-    # TODO: Reorganize kwargs to start with `dimensions`, `target_metric`, `iterations` - The only really important ones
+    # TODO: Reorganize kwargs to start with `dimensions`, `target_metric`, `iterations`
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
 
@@ -467,7 +443,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             n_initial_points=10,
             acquisition_function='gp_hedge',
             acquisition_optimizer='auto',
-            random_state=32,  # FLAG: ORIGINAL
+            random_state=32,
             acquisition_function_kwargs=None,
             acquisition_optimizer_kwargs=None,
 
@@ -546,9 +522,8 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         self.acquisition_optimizer_kwargs.update(acquisition_optimizer_kwargs or {})
 
         #################### Minimizer Parameters ####################
-        # TODO: This does nothing currently - Fix that
-        self.n_random_starts = n_random_starts  # TODO: This does nothing currently - Fix that
-        # TODO: This does nothing currently - Fix that
+        # TODO: n_random_starts does nothing currently - Fix that
+        self.n_random_starts = n_random_starts
         self.callbacks = callbacks or []
 
         #################### Other Parameters ####################
@@ -565,13 +540,15 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         )
 
     def _set_hyperparameter_space(self):
-        # TODO: Add documentation
+        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search dimensions, and
+        :attr:`base_estimator` and :attr:`optimizer`"""
         self.hyperparameter_space = Space(dimensions=self.dimensions)
         self._prepare_estimator()
         self._build_optimizer()
 
     def _prepare_estimator(self):
-        # TODO: Add documentation
+        """Initialize :attr:`base_estimator` with :attr:`hyperparameter_space` and any other kwargs, using
+        `skopt.utils.cook_estimator`"""
         self.base_estimator = cook_estimator(self.base_estimator, space=self.hyperparameter_space, **self.base_estimator_kwargs)
 
     def _build_optimizer(self):
@@ -589,19 +566,26 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         )
 
     def _execute_experiment(self):
-        # TODO: Add documentation
+        """After executing parent's :meth:`_execute_experiment`, fit :attr:`optimizer` with the set of hyperparameters that
+        were used, and the utility of those hyperparameters"""
         super()._execute_experiment()
 
-        # FLAG: BIG BREAKING TEST BELOW
-        # self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, self.current_score, fit=True)  # FLAG: ORIGINAL
-        self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, -self.current_score, fit=True)  # FLAG: TEST
-        # FLAG: BIG BREAKING TEST ABOVE
+        # FLAG: Resolve switching between below options depending on `target_metric`
+        # self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, self.current_score, fit=True)
+        self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, -self.current_score, fit=True)
+        # FLAG: Resolve switching between above options depending on `target_metric`
 
         if eval_callbacks(self.callbacks, self.optimizer_result):
             return
 
     def _get_current_hyperparameters(self):
-        # TODO: Add documentation
+        """Ask :attr:`optimizer` for the upcoming set of hyperparameters that should be searched, then format them to be used
+        in the next Experiment
+
+        Returns
+        -------
+        current_hyperparameters: Dict
+            The next set of hyperparameters that will be searched"""
         _current_hyperparameters = self.optimizer.ask()
 
         if _current_hyperparameters == self.current_hyperparameters_list:
@@ -620,7 +604,8 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         return current_hyperparameters
 
     def _find_similar_experiments(self):
-        # TODO: Add documentation
+        """After locating similar experiments by way of the parent's :meth:`_find_similar_experiments`, fit :attr:`optimizer`
+        with the hyperparameters and results of each located experiment"""
         super()._find_similar_experiments()
 
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
@@ -629,10 +614,10 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
             self.logger.print_result(_hyperparameters, _evaluation)
 
-            # FLAG: BIG BREAKING TEST BELOW
-            # self.optimizer_result = self.optimizer.tell(_hyperparameters, _evaluation)  # FLAG: ORIGINAL
-            self.optimizer_result = self.optimizer.tell(_hyperparameters, -_evaluation)  # FLAG: TEST
-            # FLAG: BIG BREAKING TEST ABOVE
+            # FLAG: Resolve switching between below options depending on `target_metric`
+            # self.optimizer_result = self.optimizer.tell(_hyperparameters, _evaluation)
+            self.optimizer_result = self.optimizer.tell(_hyperparameters, -_evaluation)
+            # FLAG: Resolve switching between above options depending on `target_metric`
 
             # self.optimizer_result = self.optimizer.tell(
             #     _hyperparameters, _evaluation, fit=(_i == len(self.similar_experiments) - 1)
@@ -643,7 +628,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             # FLAG: Could wrap above `tell` call in try/except, then attempt `_tell` with improper dimensions
 
     def _validate_parameters(self):
-        # TODO: Add documentation
+        """Ensure provided input parameters are properly formatted"""
         super()._validate_parameters()
 
         #################### callbacks ####################
@@ -672,7 +657,8 @@ class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta
         )
 
     def _get_current_hyperparameters(self):
-        # TODO: Add documentation
+        """Retrieve the upcoming set of hyperparameters to be searched"""
+        # TODO: Finish documentation once UninformedOptimizationProtocol bugs have been squished
         current_hyperparameters = next(self.hyperparameter_space)
         return current_hyperparameters
 
