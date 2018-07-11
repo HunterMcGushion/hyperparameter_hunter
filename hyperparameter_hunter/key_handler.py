@@ -34,7 +34,29 @@ from keras.callbacks import Callback as base_keras_callback
 ##################################################
 class KeyMaker(metaclass=ABCMeta):
     def __init__(self, parameters, **kwargs):
-        # TODO: Add documentation
+        """Base class to handle making key hashes and checking for their existence. Additionally, this class handles saving
+        entries for complex-typed parameters, along with their hashes to ensure experiments are reproducible
+
+        Parameters
+        ----------
+        parameters: Dict
+            All the parameters to be included when creating the key hash. Keys should correspond to parameter names, and values
+            should be the values of the corresponding keys
+        **kwargs: Dict
+            Additional arguments
+
+        Attributes
+        ----------
+        parameters: Dict
+            A deep copy of the given `parameters` input
+        key: Str, or None
+            If a key has been generated for `parameters`, it is saved here. Else, None
+        exists: Boolean
+            If `key` is not None, and was found to already exist in `tested_keys_dir`, `exists` = True. Else, False
+        key_attribute_lookup_dir: Str
+            The directory in which complex-typed parameter entries will be saved
+        tested_keys_dir: Str, or None
+            The directory is which `key` will be saved if it does not already contain `key`"""
         self.parameters = deepcopy(parameters)
         self.key = None
         self.exists = False
@@ -89,7 +111,22 @@ class KeyMaker(metaclass=ABCMeta):
         dataframe_hashes = {}
 
         def visit(path, key, value):
-            # TODO: Add documentation
+            """Check whether a parameter is of a complex type. If not, return it unchanged. Otherwise, 1) create a hash for its
+            value; 2) save a complex type lookup entry linking `key`, `value`, and the hash for `value`; and 3) return the hashed
+            value with `key`, instead of the original complex-typed `value`
+
+            Parameters
+            ----------
+            path: Tuple
+                The path of keys that leads to `key`
+            key: Str
+                The parameter name
+            value: *
+                The value of the parameter `key`
+
+            Returns
+            -------
+            Tuple of (`key`, value), in which value is either unchanged or a hash for the original `value`"""
             if isinstance(value, base_keras_callback):
                 return (key, keras_callback_to_key(value))
             elif callable(value) or isinstance(value, pd.DataFrame):
@@ -118,7 +155,19 @@ class KeyMaker(metaclass=ABCMeta):
                 )
 
     def add_complex_type_lookup_entry(self, path, key, value, hashed_value):
-        """Add lookup entry for a complex-typed parameter, linking the parameter `key`, its `value`, and its `hashed_value`"""
+        """Add lookup entry in `key_attribute_lookup_dir` for a complex-typed parameter, linking the parameter `key`, its
+        `value`, and its `hashed_value`
+
+        Parameters
+        ----------
+        path: Tuple
+            The path of keys that leads to `key`
+        key: Str
+            The parameter name
+        value: *
+            The value of the parameter `key`
+        hashed_value: Str
+            The hash produced for `value`"""
         # TODO: Combine `path` and `key` to produce actual filepaths
         shelve_params = ['model_initializer', 'cross_validation_type']
 
@@ -160,7 +209,7 @@ class KeyMaker(metaclass=ABCMeta):
     @property
     @abstractmethod
     def key_type(self) -> str:
-        # TODO: Add documentation
+        """A string in ['hyperparameter', 'cross_experiment'] denoting which type of key is being processed"""
         raise NotImplementedError()
 
     @abstractmethod
@@ -178,7 +227,17 @@ class CrossExperimentKeyMaker(KeyMaker):
     key_type = 'cross_experiment'
 
     def __init__(self, parameters, **kwargs):
-        # TODO: Add documentation
+        """A KeyMaker class dedicated to creating cross-experiment keys, which determine when experiments were executed under
+        sufficiently similar conditions to permit proper comparison. Two separate instances of :class:`environment.Environment`
+        should produce identical `cross_experiment_key` s if their arguments are the same (or close enough)
+
+        Parameters
+        ----------
+        parameters: Dict
+            All the parameters to be included when creating the key hash. Keys should correspond to parameter names, and values
+            should be the values of the corresponding keys
+        **kwargs: Dict
+            Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         KeyMaker.__init__(self, parameters, **kwargs)
 
     def does_key_exist(self):
@@ -206,13 +265,38 @@ class HyperparameterKeyMaker(KeyMaker):
     key_type = 'hyperparameter'
 
     def __init__(self, parameters, cross_experiment_key, **kwargs):
-        # TODO: Add documentation
+        """A KeyMaker class dedicated to creating hyperparameter keys, which determine when experiments were executed using
+        identical hyperparameters. Two separate instances of :class:`experiments.CrossValidationExperiment` should produce
+        identical `hyperparameter_key` s if their hyperparameters are the same (or close enough)
+
+        Parameters
+        ----------
+        parameters: Dict
+            All the parameters to be included when creating the key hash. Keys should correspond to parameter names, and values
+            should be the values of the corresponding keys
+        cross_experiment_key: Str
+            The key produced by the active Environment via :class:`key_handler.CrossExperimentKeyMaker`, used for determining
+            when a hyperparameter key has already been tested under the same cross-experiment parameters
+        **kwargs: Dict
+            Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         self.cross_experiment_key = cross_experiment_key
         KeyMaker.__init__(self, parameters, **kwargs)
 
     @staticmethod
     def filter_parameters_to_hash(parameters):
-        # TODO: Add documentation
+        """Produce a filtered version of `parameters` that does not include hyperparameters that should be ignored during hashing,
+        such as those pertaining to verbosity, seeds, and random states, as they have no effect on the results of experiments
+        when within the confines of hyperparameter_hunter
+
+        Parameters
+        ----------
+        parameters: dict
+            The full dictionary of initial parameters to be filtered
+
+        Returns
+        -------
+        parameters: dict
+            The filtered version of the given `parameters`"""
         reject_keys = {
             'verbose', 'verbosity', 'silent',
             'random_state', 'random_seed', 'seed',
