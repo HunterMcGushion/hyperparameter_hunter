@@ -106,51 +106,51 @@ class TestHashing(TestCase):
         # FLAG: The below test cases are highly sensitive. Any changes to their declarations above (including comments), ...
         # FLAG: ... or to the module name can cause them to break. This behavior is intentional.
         'lambda': [
-            [lambda_0, 'pZYl_IsqB5MMm8iaZtryMmRiQwXEgveyP7MnBuR3KQc='],
-            [lambda_1, 'pfzVFiAOQXGcG9Qnmpuw_OrjI8JmaDm0MpobOlRmQXY='],
-            [lambda_2, 'zUQuaMxoN5at9MAiVlSk87nUKamOFW72mIlgogvSWGk='],
+            [lambda_0, 'jVqMujmZrfTQ_ghu45UEQCsiojoW1XA2-UxnzmVYqPw='],
+            [lambda_1, 'vEXfVnK7iQLNc_dWGRLKmzq0UYeH202dT0YKF1a6Jtg='],
+            [lambda_2, '4tXhp4qQ0s2_19igDvhF6so9Q0wbvxsOE8V7ZV2N2TQ='],
         ],
         'partial': [
-            [partial_0, 'ix-NxHEi1InXZzfeCdYLbRazxExPGKteEVJP0TJTsag='],
-            [partial_1, 'hDFMxFvgPLYLjmzT9_ZAi3v7uTyKWrRZagOiwd-EZr8='],
-            [partial_2, 'Hi--SQLUhkKB_yF4rN_qC-qbK4SMM-PGYkU4AoXkACU='],
-            [partial_3, 'jE89Bzy9scurKLMjdgjMRVoF1zHhXFDMuDatiPtVoqw='],
-            [partial_4, 'oKIzjtlpPPZDDzgRz-mxBJ2FkItj9n43zesWR2tnsiQ='],
+            [partial_0, 'Lzy_FgITj6cPqmpO4Z4czbSXB86o3stIBGIRqJAXG4c='],
+            [partial_1, 'WNE7m5W5pFlM1e0Ewnf9KpaffM5JVhCoJB6dEbeP7Y4='],
+            [partial_2, 'OYNt0N4MSprG7II088xQQ2xidEaBZoV2IDNsZ2hpTN4='],
+            [partial_3, 'xs-EaoYaXDUKF1u0GmFUJQH7YlIxnAK67VPtvN_f3GM='],
+            [partial_4, 'oosun9ZXISNyKmzK9xx28pAK-YALEGkLwUID7sCrwNQ='],
         ],
         'function': [
-            [function_0, '9PkHuRTFknZE83BVcskJwDFxEAhbXG7Cbg8wobqEWig=', params_0],  # 0.0 (0)
-            [function_0, '9PkHuRTFknZE83BVcskJwDFxEAhbXG7Cbg8wobqEWig=', params_1],  # 0.1 (1)
-            [function_0, '9PkHuRTFknZE83BVcskJwDFxEAhbXG7Cbg8wobqEWig=', params_2],  # 0.2 (2)
-            [function_0, 'pPZpRweGkug3bTtUtS1yW-ohSLYYlWzpmbicmUpojL0=', params_3],  # 0.3 (3)
-            [function_0, 'tbujIQT5rI2DuvHIJ5LUvriypxttngYUROBCsZTC1lU=', params_4],  # 0.4 (4)
+            [function_0, 'rNXPNHNeXt75nRmtBwcgexq4r6_HSo8lHVT36RGLVVU=', params_0],  # 0.0 (0)
+            [function_0, 'rNXPNHNeXt75nRmtBwcgexq4r6_HSo8lHVT36RGLVVU=', params_1],  # 0.1 (1)
+            [function_0, 'rNXPNHNeXt75nRmtBwcgexq4r6_HSo8lHVT36RGLVVU=', params_2],  # 0.2 (2)
+            [function_0, 'YxUI9Pc7QVIPC2JluLqpiTWH4_Q9vxzi13xKsgGXhEA=', params_3],  # 0.3 (3)
+            [function_0, 'oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=', params_4],  # 0.4 (4)
             [function_0, 'LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=', params_5],  # 0.5 (5)
 
-            [function_1, 'XyuWnaeg5qlPhibFMfZoGLn-uAcBDdvSuT5nO6xWRRI=', params_0],  # 1.0 (6)
-            [function_1, 'XyuWnaeg5qlPhibFMfZoGLn-uAcBDdvSuT5nO6xWRRI=', params_1],  # 1.1 (7)
-            [function_1, 'XyuWnaeg5qlPhibFMfZoGLn-uAcBDdvSuT5nO6xWRRI=', params_2],  # 1.2 (8)
-            [function_1, 'k4USKBTkLbhl8jNhMf8otlN1RkjDB3FFoZR_9XW-Udk=', params_3],  # 1.3 (9)
-            [function_1, 'tbujIQT5rI2DuvHIJ5LUvriypxttngYUROBCsZTC1lU=', params_4],  # 1.4 (10)
+            [function_1, 'TcISnIxBYdmJLI7gFvAy1u16Iz-QSOz0CYH3A1dA8uI=', params_0],  # 1.0 (6)
+            [function_1, 'TcISnIxBYdmJLI7gFvAy1u16Iz-QSOz0CYH3A1dA8uI=', params_1],  # 1.1 (7)
+            [function_1, 'TcISnIxBYdmJLI7gFvAy1u16Iz-QSOz0CYH3A1dA8uI=', params_2],  # 1.2 (8)
+            [function_1, '6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=', params_3],  # 1.3 (9)
+            [function_1, 'oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=', params_4],  # 1.4 (10)
             [function_1, 'LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=', params_5],  # 1.5 (11)
 
-            [function_2, 'V6f8Febob8ecZxu1LWyNE5jVxHNM2G3ceAlzbVP7J_s=', params_0],  # 2.0 (12)
-            [function_2, 'V6f8Febob8ecZxu1LWyNE5jVxHNM2G3ceAlzbVP7J_s=', params_1],  # 2.1 (13)
-            [function_2, 'WKkcP8xonNz7Du1xSij8hUZzzh3Fa2mnLGq5YcIXX9Y=', params_2],  # 2.2 (14)
-            [function_2, 'k4USKBTkLbhl8jNhMf8otlN1RkjDB3FFoZR_9XW-Udk=', params_3],  # 2.3 (15)
-            [function_2, 'tbujIQT5rI2DuvHIJ5LUvriypxttngYUROBCsZTC1lU=', params_4],  # 2.4 (16)
+            [function_2, 'aGpU6pHp_nMAVLR2IauGWFF1kQxwf1bDBASs_zloSsQ=', params_0],  # 2.0 (12)
+            [function_2, 'aGpU6pHp_nMAVLR2IauGWFF1kQxwf1bDBASs_zloSsQ=', params_1],  # 2.1 (13)
+            [function_2, 'kbdhcPeNmPc3p8mHCKYux3x3OZSC2YawePmur47s_x0=', params_2],  # 2.2 (14)
+            [function_2, '6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=', params_3],  # 2.3 (15)
+            [function_2, 'oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=', params_4],  # 2.4 (16)
             [function_2, 'LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=', params_5],  # 2.5 (17)
 
-            [function_3, 'JTeE_5-NIs1d4-TMW4U31ovzw8UGluVkTz5eTVJUU8U=', params_0],  # 3.0 (18)
-            [function_3, 'JTeE_5-NIs1d4-TMW4U31ovzw8UGluVkTz5eTVJUU8U=', params_1],  # 3.1 (19)
-            [function_3, 'zTRFBXoVIpDb9cnzR7D1WgLCh8jWuxPJkdCyB5Eww3c=', params_2],  # 3.2 (20)
-            [function_3, 'k4USKBTkLbhl8jNhMf8otlN1RkjDB3FFoZR_9XW-Udk=', params_3],  # 3.3 (21)
-            [function_3, 'tbujIQT5rI2DuvHIJ5LUvriypxttngYUROBCsZTC1lU=', params_4],  # 3.4 (22)
+            [function_3, 'T6ey_hqPgB5CkxHI6PV3mK01kKIhMieuJBkJNJv9szM=', params_0],  # 3.0 (18)
+            [function_3, 'T6ey_hqPgB5CkxHI6PV3mK01kKIhMieuJBkJNJv9szM=', params_1],  # 3.1 (19)
+            [function_3, '2y6ZrKlE0v2xSGqUklnLhiYuimji3YdFHX-aq0XEVi4=', params_2],  # 3.2 (20)
+            [function_3, '6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=', params_3],  # 3.3 (21)
+            [function_3, 'oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=', params_4],  # 3.4 (22)
             [function_3, 'LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=', params_5],  # 3.5 (23)
 
-            [function_4, 'PNvDDzgP_KD0wPmilJNKO3zH9176ePOPUJwoa4ElFvI=', params_0],  # 4.0 (24)
-            [function_4, 'PNvDDzgP_KD0wPmilJNKO3zH9176ePOPUJwoa4ElFvI=', params_1],  # 4.1 (25)
-            [function_4, 'li3b2exY3njaZIAzxrGJDrIZivczkt7yoTOVHrZGrtM=', params_2],  # 4.2 (26)
-            [function_4, 'k4USKBTkLbhl8jNhMf8otlN1RkjDB3FFoZR_9XW-Udk=', params_3],  # 4.3 (27)
-            [function_4, 'tbujIQT5rI2DuvHIJ5LUvriypxttngYUROBCsZTC1lU=', params_4],  # 4.4 (28)
+            [function_4, 'q951DymktgCBsp_fihNrVUEjldwqGgrATIIv0XKAiRo=', params_0],  # 4.0 (24)
+            [function_4, 'q951DymktgCBsp_fihNrVUEjldwqGgrATIIv0XKAiRo=', params_1],  # 4.1 (25)
+            [function_4, 'LAM0_0uqb1LD1EnnTYdaAu5aQ5aFTft45-LH-tjKDFI=', params_2],  # 4.2 (26)
+            [function_4, '6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=', params_3],  # 4.3 (27)
+            [function_4, 'oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=', params_4],  # 4.4 (28)
             [function_4, 'LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=', params_5],  # 4.5 (29)
 
             # Notes:

@@ -84,7 +84,7 @@ class TestCrossExperimentKeyMaker(TestCase):
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'QXkeQc5JdA1-dm0bib5eyGM4HF_P_sySsyZvWuHtEGE='],
+            ), 'lBRwq_chyQQO-MUjgXARn722LF-jCxlXtdDUWvocWgU='],
             [dict(
                 train_dataset=train_dataset,
                 environment_params_path=None,
@@ -100,7 +100,7 @@ class TestCrossExperimentKeyMaker(TestCase):
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'xyA9FG-O_UPj1uY3DzNAQGiAueAcrnRRhWLUNYOrPso=']
+            ), 'y5mLyEKIVu-ltcTUlb8aVlr0Tl8GQoX9WBi9AzIL2XY=']
         ],
         'metrics_params': [
             [dict(
@@ -121,7 +121,7 @@ class TestCrossExperimentKeyMaker(TestCase):
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'UYwk_wmbCYGEAuflG_klJ54p2KHqytgQ-_xAD6wpNw4='],
+            ), 'S-nnaDra31mhTAH4VZJVp4_vpDcDVDEwZiVLXNpbTck='],
             [dict(
                 train_dataset=train_dataset,
                 environment_params_path=None,
@@ -141,7 +141,7 @@ class TestCrossExperimentKeyMaker(TestCase):
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), 'jptf0CLgzEWEybDmbQO34exyGrJ0s1JJAj4iR3U0tbE='],
+            ), 'Ht7Jly9d9Y_BqnwEF8KDPK164FLD9eNwkU64n4NLrmc='],
         ],
         'cross_experiment_params': [
             [dict(
@@ -161,7 +161,7 @@ class TestCrossExperimentKeyMaker(TestCase):
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), '9fj2B3LbX2zw-I7Fw_lLVkSWbKjrVOMKqEsqtNYS4_I='],
+            ), 'nXs5qd119KVyKzHKlAr7WcGaHzQJ-2i02ORgUWO3eEY='],
             [dict(
                 train_dataset=train_dataset,
                 environment_params_path=None,
@@ -179,7 +179,7 @@ class TestCrossExperimentKeyMaker(TestCase):
                 verbose=True,
                 file_blacklist=None,
                 reporting_handler_params=dict(add_frame=False)
-            ), '7CLaIVYDzzJ46xoX2iBtQRRh9xHTW3TO1T5YGvvcDlU=']
+            ), '6f5sZMiO8fvN58Yv-_ZQzoI0_pXPW5Mmlann3ayT7_Q=']
         ],
     }
 
