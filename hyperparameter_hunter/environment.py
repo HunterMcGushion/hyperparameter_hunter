@@ -153,10 +153,10 @@ class Environment():
             If None, `random_seeds` of the appropriate shape will be created automatically. Else, must be a list of ints of shape
             (`cross_validation_params['n_repeats']`, `cross_validation_params['n_splits']`, `runs`). If `cross_validation_params`
             does not have the key `n_repeats` (because standard cross-validation is being used), the value will default to 1.
-            See :meth:`.experiments.BaseExperiment.random_seed_initializer` for more info on the expected shape
+            See :meth:`.experiments.BaseExperiment._random_seed_initializer` for more info on the expected shape
         random_seed_bounds: List, default=[0, 100000]
             A list containing two integers: the lower and upper bounds, respectively, for generating an Experiment's random seeds
-            in :meth:`.experiments.BaseExperiment.random_seed_initializer`. Generally, leave this kwarg alone
+            in :meth:`.experiments.BaseExperiment._random_seed_initializer`. Generally, leave this kwarg alone
         cross_validation_params: dict, or None, default=dict()
             Dict of parameters provided upon initialization of cross_validation_type. Keys may be any args accepted by
             :meth:`cross_validation_type.__init__`. Number of fold splits must be provided here via "n_splits", and number of

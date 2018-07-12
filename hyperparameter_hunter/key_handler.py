@@ -186,10 +186,10 @@ class KeyMaker(metaclass=ABCMeta):
 
     def make_key(self):
         """Set :attr:`key` to an sha256 hash for :attr:`parameters`"""
-        self.key = make_hash_sha256(self.filter_parameters_to_hash(deepcopy(self.parameters)))
+        self.key = make_hash_sha256(self._filter_parameters_to_hash(deepcopy(self.parameters)))
 
     @staticmethod
-    def filter_parameters_to_hash(parameters):
+    def _filter_parameters_to_hash(parameters):
         """Produce a filtered version of `parameters` that does not include values that should be ignored during hashing
 
         Parameters
@@ -283,7 +283,7 @@ class HyperparameterKeyMaker(KeyMaker):
         KeyMaker.__init__(self, parameters, **kwargs)
 
     @staticmethod
-    def filter_parameters_to_hash(parameters):
+    def _filter_parameters_to_hash(parameters):
         """Produce a filtered version of `parameters` that does not include hyperparameters that should be ignored during hashing,
         such as those pertaining to verbosity, seeds, and random states, as they have no effect on the results of experiments
         when within the confines of hyperparameter_hunter

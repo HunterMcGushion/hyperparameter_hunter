@@ -27,9 +27,9 @@ class ReportingHandler(object):
         float_format: String, default='{:.5f}'
             If not default, must be a valid formatting string for floating point values. If invalid, default will be used
         console_params: Dict, or None, default=None
-            Parameters passed to :meth:`configure_console_logger_handler`
+            Parameters passed to :meth:`_configure_console_logger_handler`
         heartbeat_params: Dict, or None, default=None
-            Parameters passed to :meth:`configure_heartbeat_logger_handler`
+            Parameters passed to :meth:`_configure_heartbeat_logger_handler`
         add_frame: Boolean, default=False
             If True, whenever :meth:`log` is called, the source of the call will be prepended to the content being logged"""
         self.reporting_type = 'logging'  # TODO: Add `reporting_type` as kwarg to `__init__`, with options: logging, advanced
@@ -39,12 +39,10 @@ class ReportingHandler(object):
         self.heartbeat_params = heartbeat_params or {}
         self.add_frame = add_frame
 
-        self.validate_parameters()
+        self._validate_parameters()
+        self._configure_reporting_type()
 
-        #################### Configure Reporting ####################
-        self.configure_reporting_type()
-
-    def validate_parameters(self):
+    def _validate_parameters(self):
         # TODO: Add documentation
         #################### reporting_type ####################
         valid_types = ['logging', 'standard', 'advanced']
@@ -79,7 +77,7 @@ class ReportingHandler(object):
         if not isinstance(self.heartbeat_params, dict):
             raise TypeError('heartbeat_params must be a dict or None. Received {}'.format(type(self.heartbeat_params)))
 
-    def configure_reporting_type(self):
+    def _configure_reporting_type(self):
         # TODO: Add documentation
         if self.reporting_type == 'standard':
             raise ValueError('Standard logging is not yet implemented. Please choose "logging"')
@@ -91,29 +89,29 @@ class ReportingHandler(object):
             setattr(self, 'debug', self._logging_debug)
             setattr(self, 'warn', self._logging_warn)
 
-            self.initialize_logging_logging()
+            self._initialize_logging_logging()
         elif self.reporting_type == 'advanced':
             raise ValueError('Advanced logging is not yet implemented. Please choose one of: ["logging", "standard"]')
 
-    def initialize_logging_logging(self):
+    def _initialize_logging_logging(self):
         # TODO: Add documentation
         exception_handler.hook_exception_handler()
 
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
 
-        logger_handlers = [self.configure_console_logger_handler(**self.console_params)]
+        logger_handlers = [self._configure_console_logger_handler(**self.console_params)]
 
         # Suppress FileExistsError because it is raised when self.heartbeat_path is None, which means heartbeat is blacklisted
         with suppress(FileExistsError):
-            logger_handlers.append(self.configure_heartbeat_logger_handler(**self.heartbeat_params))
+            logger_handlers.append(self._configure_heartbeat_logger_handler(**self.heartbeat_params))
 
         logging.basicConfig(handlers=logger_handlers, level=logging.DEBUG)
 
         self.debug('Logging Logging has been initialized!')
 
     @staticmethod
-    def configure_console_logger_handler(level='INFO', fmt=None, datefmt=None, style='%', **kwargs):
+    def _configure_console_logger_handler(level='INFO', fmt=None, datefmt=None, style='%', **kwargs):
         # TODO: Add documentation
         console_handler = logging.StreamHandler()
         console_handler.setLevel(level)
@@ -123,7 +121,7 @@ class ReportingHandler(object):
         console_handler.setFormatter(formatter)
         return console_handler
 
-    def configure_heartbeat_logger_handler(self, level='DEBUG', fmt=None, datefmt=None, style='%', **kwargs):
+    def _configure_heartbeat_logger_handler(self, level='DEBUG', fmt=None, datefmt=None, style='%', **kwargs):
         # TODO: Add documentation
         # fmt = '<%(asctime)s> %(levelname)-8s - %(lineno)4d %(module)20s .%(funcName)10s - %(message)s'
         if self.heartbeat_path is None:
@@ -282,15 +280,15 @@ class OptimizationReporter():
         print(header)
         print(line)
 
-        self.print_column_name('Step', 5)  # TODO: Change to 'Iteration', 'Epoch', 'Round', '#', ...
-        self.print_column_name('Time', 6)
-        self.print_column_name('Value', 10)
+        self._print_column_name('Step', 5)  # TODO: Change to 'Iteration', 'Epoch', 'Round', '#', ...
+        self._print_column_name('Time', 6)
+        self._print_column_name('Value', 10)
 
         for index in self.sorted_indexes:
-            self.print_column_name(self.parameter_names[index], self.sizes[index] + 2)
+            self._print_column_name(self.parameter_names[index], self.sizes[index] + 2)
         print('')
 
-    def print_column_name(self, value, size):
+    def _print_column_name(self, value, size):
         # TODO: Add documentation
         print('{0:>{1}}'.format(value, size), end=self.end)
 
@@ -314,22 +312,22 @@ class OptimizationReporter():
 
         if self.y_max is None or self.y_max < evaluation:
             self.y_max, self.x_max = evaluation, hyperparameters
-            self.print_target_value(evaluation, pre=_Color.MAGENTA, post=_Color.STOP)
-            self.print_input_values(hyperparameters, pre=_Color.GREEN, post=_Color.STOP)
+            self._print_target_value(evaluation, pre=_Color.MAGENTA, post=_Color.STOP)
+            self._print_input_values(hyperparameters, pre=_Color.GREEN, post=_Color.STOP)
         else:
-            self.print_target_value(evaluation)
-            self.print_input_values(hyperparameters)
+            self._print_target_value(evaluation)
+            self._print_input_values(hyperparameters)
 
         print('')
         self.last_round = datetime.now()
         self.iteration += 1
 
-    def print_target_value(self, value, pre='', post=''):
+    def _print_target_value(self, value, pre='', post=''):
         # TODO: Add documentation
         content = pre + '{: >10.5f}'.format(value) + post
         print(content, end=self.end)
 
-    def print_input_values(self, values, pre='', post=''):
+    def _print_input_values(self, values, pre='', post=''):
         # TODO: Add documentation
         for index in self.sorted_indexes:
             if isinstance(values[index], float):
@@ -610,7 +608,7 @@ class AdvancedFitLogging(object):
     def __init__(self, display_layout=None, ):
         self.display_layout = display_layout or ADVANCED_FIT_LOGGING_DISPLAY_LAYOUT
 
-    def validate_parameters(self):
+    def _validate_parameters(self):
         pass
 
     def validate_display_layout(self):
