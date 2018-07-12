@@ -51,8 +51,6 @@ class ScoringMixIn(object):
         -----
         For each kwarg in [`in_fold`, `oof`, `holdout`], the following must be true: if the value of the kwarg is a list, its
         contents must be a subset of `metrics_map`"""
-
-        # FLAG: Add callback to handle recording metrics like "confusion_matrix", that aren't number types
         self.metrics_map = metrics_map
 
         #################### Mangle Below Attributes - Should Only be Used by ScoringMixIn ####################
@@ -71,7 +69,6 @@ class ScoringMixIn(object):
 
     def _validate_metrics_map(self):
         """Ensure `metrics_map` input parameter is properly formatted and yields callable functions for all metrics"""
-
         if not (isinstance(self.metrics_map, dict) or isinstance(self.metrics_map, list)):
             raise TypeError('metrics_map must be one of: [dict, list]. Received type: {}.'.format(type(self.metrics_map)))
 
@@ -94,7 +91,6 @@ class ScoringMixIn(object):
 
     def _validate_metrics_list_parameters(self):
         """Ensure metrics lists input parameters are of correct types and are compatible with each other"""
-
         for (_d_type, _m_val) in [(_, getattr(self, '_ScoringMixIn{}'.format(_))) for _ in data_types]:
             if _m_val == 'all':
                 setattr(self, _d_type, list(self.metrics_map.keys()))
@@ -129,13 +125,13 @@ class ScoringMixIn(object):
 
         Returns
         -------
-        A dict whose keys are all metric keys supplied for data_type, and whose values are the results of each metric.
-        If return_list is True, returns a list of tuples of: (<data_type metric str>, <metric result>)
+        _result: OrderedDict, or list
+            A dict whose keys are all metric keys supplied for `data_type`, and whose values are the results of each metric. If
+            `return_list` is True, returns a list of tuples of: (<`data_type` metric str>, <metric result>)
 
         Notes
         -----
         The required types of `target` and `prediction` are entirely dependent on the metric callable's expectations"""
-        # TODO: Fix documentation of "Returns" section to be in line with those of the rest of the project
         if self.do_score is False:
             return
 
@@ -162,7 +158,20 @@ class ScoringMixIn(object):
 
 
 def get_clean_prediction(target, prediction):
-    # TODO: Add documentation
+    """Create `prediction` that is of a form comparable to `target`
+
+    Parameters
+    ----------
+    target: Array-like
+        True labels for the data. Should be same shape as `prediction`
+    prediction: Array-like
+        Predicted labels for the data. Should be same shape as `target`
+
+    Returns
+    -------
+    prediction: Array-like
+        If `target` types are ints, and `prediction` types are not, given predicted labels clipped between the min, and max of
+        `target`, then rounded to the nearest integer. Else, original predicted labels"""
     try:
         target_is_int = (target.values.dtype == np.int)
     except AttributeError:
