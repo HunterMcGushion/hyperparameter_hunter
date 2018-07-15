@@ -81,4 +81,11 @@ Tested Libraries
 
 Installation
 ------------
+```
+pip install hyperparameter-hunter
+```
+If you like being on the cutting-edge, and you want all the latest developments, run:
+```
+pip install git+https://github.com/HunterMcGushion/hyperparameter_hunter.git
+```
 
