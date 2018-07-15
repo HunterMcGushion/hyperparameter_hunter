@@ -69,16 +69,6 @@ HyperparameterHunter features can be found in the
 [examples](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples)
 directory.
 
-Tested Libraries
-----------------
-* [Keras](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/keras_example.py)
-* [scikit-learn](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/sklearn_example.py)
-* [LightGBM](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lightgbm_example.py)
-* [CatBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/catboost_example.py)
-* [XGBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/simple_example.py)
-* [rgf_python](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/rgf_example.py)
-* ... More on the way
-
 Installation
 ------------
 ```
@@ -89,3 +79,12 @@ If you like being on the cutting-edge, and you want all the latest developments,
 pip install git+https://github.com/HunterMcGushion/hyperparameter_hunter.git
 ```
 
+Tested Libraries
+----------------
+* [Keras](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/keras_example.py)
+* [scikit-learn](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/sklearn_example.py)
+* [LightGBM](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lightgbm_example.py)
+* [CatBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/catboost_example.py)
+* [XGBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/simple_example.py)
+* [rgf_python](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/rgf_example.py)
+* ... More on the way
