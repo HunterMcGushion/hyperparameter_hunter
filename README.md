@@ -12,6 +12,9 @@ format. HyperparameterHunter aims to simplify the experimentation and hyperparam
 tuning process by allowing you to spend less time doing the annoying tasks, and more time
 doing the important ones.
 
+* **Source:** https://github.com/HunterMcGushion/hyperparameter_hunter
+* **Documentation:** [https://hyperparameter-hunter.readthedocs.io](https://hyperparameter-hunter.readthedocs.io/en/latest/index.html)
+
 Features
 --------
 * Truly informed hyperparameter optimization that automatically uses past Experiments

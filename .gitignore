@@ -1,23 +1,42 @@
-.ipynb_checkpoints
+# Byte-Compiled Files
 *.pyc
-.idea/
-.DS_Store
-*.egg-info/
 
+# Environments
 env/
 env3/
 requirements.txt
 
-HyperparameterHunterAssets/
+# Repository Demo Assets
+*HyperparameterHunterAssets/
 
 # Documentation
 _build
 _static
 _templates
 
-# PyPI
+# Distribution/Packaging
 build/
 dist/
+*.egg-info/
+
+# Unit Tests/Coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
 
 # Internal Tools
 simple_profiler.py
+
+# Miscellaneous
+.idea/
+.DS_Store
