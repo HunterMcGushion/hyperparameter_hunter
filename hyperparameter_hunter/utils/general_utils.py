@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.utils.boltons_utils import remap
+from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 
 ##################################################
 # Import Miscellaneous Assets
@@ -11,16 +11,20 @@ from datetime import datetime
 import string
 
 
-def deep_restricted_update(default_vals, new_vals):
+def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     """Return an updated dictionary that mirrors `default_vals`, except where the key in `new_vals` matches the path in
     `default_vals`, in which case the `new_vals` value is used
 
     Parameters
     ----------
-    default_vals: Dict, or None
+    default_vals: Dict
         Dict containing the values to return if an alternative is not found in `new_vals`
     new_vals: Dict
         Dict whose keys are expected to be tuples corresponding to key paths in `default_vals`
+    iter_attrs: Callable, list of callables, or None, default=None
+        If callable, must evaluate to True or False when given three inputs: (path, key, value). Callable should return True if
+        the current value should be entered by `remap`. If callable returns False, `default_enter` will be called. If `iter_attrs`
+        is a list of callables, the value will be entered if any evaluates to True. If None, `default_enter` will be called
 
     Returns
     -------
@@ -31,15 +35,25 @@ def deep_restricted_update(default_vals, new_vals):
     >>> deep_restricted_update({'a': 1, 'b': 2}, {('b',): 'foo', ('c',): 'bar'})
     {'a': 1, 'b': 'foo'}
     >>> deep_restricted_update({'a': 1, 'b': {'b1': 2, 'b2': 3}}, {('b', 'b1'): 'foo', ('c', 'c1'): 'bar'})
-    {'a': 1, 'b': {'b1': 'foo', 'b2': 3}}
-    """
-    def _visit_init(path, key, value):
+    {'a': 1, 'b': {'b1': 'foo', 'b2': 3}}"""
+    iter_attrs = iter_attrs or [lambda *_args: False]
+    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
+
+    def _visit(path, key, value):
+        """If (`path` + `key`) is a key in `new_vals`, return its value. Else, default return"""
         for _current_key, _current_val in new_vals.items():
             if path + (key,) == _current_key:
                 return (key, _current_val)
         return (key, value)
 
-    return remap(default_vals, visit=_visit_init) if default_vals else default_vals
+    def _enter(path, key, value):
+        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic attributes. Else, `default_enter`"""
+        if any([_(path, key, value) for _ in iter_attrs]):
+            included_attrs = [_ for _ in dir(value) if not _.startswith('__')]
+            return dict(), [(_, getattr(value, _)) for _ in included_attrs]
+        return default_enter(path, key, value)
+
+    return remap(default_vals, visit=_visit, enter=_enter) if default_vals else default_vals
 
 
 def now_time():
@@ -62,7 +76,6 @@ def sec_to_hms(seconds, ms_places=5, as_str=False):
         return result
     else:
         return (t_hour, t_min, t_sec)
-    # print('Time taken: %i hours %i minutes and %s seconds.' % (t_hour, t_min, round(t_sec, 2)))
 
 
 def flatten(l):

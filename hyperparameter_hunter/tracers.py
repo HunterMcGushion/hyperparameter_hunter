@@ -1,3 +1,6 @@
+from hyperparameter_hunter.space import Real, Integer, Categorical
+from hyperparameter_hunter.settings import G
+
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -35,7 +38,12 @@ class KerasTracer(type):
         return class_obj
 
     def __call__(cls, *args, **kwargs):
-        instance = super().__call__(*args, **kwargs)
+        if getattr(G, 'use_dummy_keras_tracer', False) is True:
+            _args = [_ if not isinstance(_, (Real, Integer, Categorical)) else _.bounds[0] for _ in args]
+            _kwargs = {_k: _v if not isinstance(_v, (Real, Integer, Categorical)) else _v.bounds[0] for _k, _v in kwargs.items()}
+            instance = super().__call__(*_args, **_kwargs)
+        else:
+            instance = super().__call__(*args, **kwargs)
 
         setattr(instance, '__hh_used_args', args)
         setattr(instance, '__hh_used_kwargs', kwargs)

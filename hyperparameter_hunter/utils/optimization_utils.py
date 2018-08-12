@@ -2,8 +2,8 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.space import dimension_subset, Space
-from hyperparameter_hunter.utils.boltons_utils import get_path, remap
+from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
+from hyperparameter_hunter.utils.boltons_utils import get_path, remap, default_enter
 from hyperparameter_hunter.utils.file_utils import read_json
 
 ##################################################
@@ -16,14 +16,17 @@ import pandas as pd
 ##################################################
 from skopt.optimizer.optimizer import Optimizer
 
+try:
+    from hyperparameter_hunter.library_helpers.keras_optimization_helper import consolidate_layers
+except ImportError:
+    pass
+
 # FLAG: TEMP IMPORTS BELOW
 import sys
 import warnings
 from math import log
 from numbers import Number
-
 import numpy as np
-
 from scipy.optimize import fmin_l_bfgs_b
 
 from sklearn.base import clone, is_regressor
@@ -177,6 +180,7 @@ class AskingOptimizer(Optimizer):
         # Initialize cache for `ask` method responses
         # This ensures that multiple calls to `ask` with n_points set return same sets of points. Reset to {} at call to `tell`
         self.cache_ = {}
+
     # FLAG: TEST ABOVE
 
     def _ask(self):
@@ -237,6 +241,9 @@ class AskingOptimizer(Optimizer):
         return ask_result
 
 
+##################################################
+# Optimization Utility Functions
+##################################################
 def get_ids_by(leaderboard_path, algorithm_name=None, cross_experiment_key=None, hyperparameter_key=None, drop_duplicates=True):
     """Get a list of experiment_ids that match the provided criteria
 
@@ -260,7 +267,10 @@ def get_ids_by(leaderboard_path, algorithm_name=None, cross_experiment_key=None,
     -------
     matching_ids: List
         A list of experiment_id strings"""
-    leaderboard = pd.read_csv(leaderboard_path, index_col=None)
+    try:
+        leaderboard = pd.read_csv(leaderboard_path, index_col=None)
+    except FileNotFoundError:
+        return []
 
     if algorithm_name is not None:
         leaderboard = leaderboard.loc[leaderboard['algorithm_name'] == algorithm_name]
@@ -289,18 +299,24 @@ def get_scored_params(experiment_description_path, target_metric):
 
     Returns
     -------
-    Tuple double, containing the following: 1) a dict of the hyperparameters used, and 2) the value of the Experiment's
-    `target_metric`"""
+    all_hyperparameters: Dict
+        A dict of the hyperparameters used by the Experiment
+    evaluation: Float
+        Value of the Experiment's `target_metric`"""
     description = read_json(file_path=experiment_description_path)
     evaluation = get_path(description['final_evaluations'], target_metric)
     all_hyperparameters = description['hyperparameters']
+
+    if description['module_name'].lower() == 'keras':
+        all_hyperparameters.update(description['keras_architecture'])
+        all_hyperparameters['layers'] = consolidate_layers(
+            all_hyperparameters['layers'], class_name_key=False, separate_args=False
+        )
+
     return (all_hyperparameters, evaluation)
 
 
-def filter_by_space(
-        hyperparameters_and_scores, hyperparameter_space, model_init_params, model_extra_params,
-        preprocessing_pipeline, preprocessing_params, feature_selector,
-):
+def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
     """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not fit within `hyperparameter_space`
 
     Parameters
@@ -311,21 +327,12 @@ def filter_by_space(
         'preprocessing_params', 'feature_selector']
     hyperparameter_space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
-    model_init_params: Dict
-    model_extra_params: Dict, or None
-    preprocessing_pipeline: Dict, or None
-    preprocessing_params: Dict, or None
-    feature_selector: List of column names, callable, list of booleans, or None
 
     Returns
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters fit within the `hyperparameter_space`"""
-    dimension_names = [_.name for _ in hyperparameter_space.dimensions]
-
-    for dimension_name in dimension_names:
-        if dimension_name not in list(model_init_params.keys()):
-            raise ValueError(F'Tuning is only supported for model-initializing hyperparameters. "{dimension_name}" is invalid')
+    dimension_names = [_.location if hasattr(_, 'location') else _.name for _ in hyperparameter_space.dimensions]
 
     hyperparameters_and_scores = list(filter(
         lambda _: dimension_subset(_[0], dimension_names) in hyperparameter_space, hyperparameters_and_scores
@@ -336,7 +343,7 @@ def filter_by_space(
 
 def filter_by_guidelines(
         hyperparameters_and_scores, hyperparameter_space, model_init_params, model_extra_params,
-        preprocessing_pipeline, preprocessing_params, feature_selector
+        preprocessing_pipeline, preprocessing_params, feature_selector, **kwargs
 ):
     """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not match the guideline hyperparameters (all
     hyperparameters not in `hyperparameter_space`), after ignoring unimportant hyperparameters
@@ -344,9 +351,8 @@ def filter_by_guidelines(
     Parameters
     ----------
     hyperparameters_and_scores: List of tuples
-        Each tuple in list should be a pair of form (hyperparameters <dict>, evaluation <float>), where the hyperparameter dict
-        should contain at least the following keys: ['model_init_params', 'model_extra_params', 'preprocessing_pipeline',
-        'preprocessing_params', 'feature_selector']
+        Each tuple should be of form (hyperparameters <dict>, evaluation <float>), in which hyperparameters contains at least the
+        keys: ['model_init_params', 'model_extra_params', 'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
     hyperparameter_space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
     model_init_params: Dict
@@ -354,47 +360,100 @@ def filter_by_guidelines(
     preprocessing_pipeline: Dict, or None
     preprocessing_params: Dict, or None
     feature_selector: List of column names, callable, list of booleans, or None
+    **kwargs: Dict
+        Extra parameter dicts to include in `guidelines`. For example, if filtering the hyperparameters of a Keras neural
+        network, this should contain the following keys: 'layers', 'compile_params'
 
     Returns
     -------
     hyperparameters_and_scores: List of tuples
-        Filtered to include only those whose hyperparameters matched the guideline hyperparameters (all hyperparameters that are
-        not in `hyperparameter_space`), after ignoring unimportant hyperparameters"""
-    dimensions = [_.name for _ in hyperparameter_space.dimensions]
+        Filtered to include only those whose hyperparameters matched the guideline hyperparameters"""
+    dimensions = [_.location if hasattr(_, 'location') else _.name for _ in hyperparameter_space.dimensions]
     dimensions = [('model_init_params', _) if isinstance(_, str) else _ for _ in dimensions]
-    # `dimensions` represents the hyperparameters to be ignored. Filter by all remaining
+    # `dimensions` = hyperparameters to be ignored. Filter by all remaining
 
     dimensions_to_ignore = [
         ('model_initializer',),
-        ('model_init_params', 'verbose'),
-        ('model_init_params', 'silent'),
-        ('model_init_params', 'random_state'),
-        ('model_init_params', 'seed'),
+        ('model_init_params', 'build_fn'),
+        (None, 'verbose'),
+        (None, 'silent'),
+        (None, 'random_state'),
+        (None, 'seed'),
         ('model_init_params', 'n_jobs'),
         ('model_init_params', 'nthread'),
-        ('model_extra_params', 'fit', 'verbose'),
-        ('model_extra_params', 'fit', 'silent')
+        ('compile_params', 'loss_functions'),  # TODO: Remove this once loss_functions are hashed in description files
     ]
 
-    current_guidelines = dict(
+    temp_guidelines = dict(
         model_init_params=model_init_params, model_extra_params=model_extra_params, preprocessing_pipeline=preprocessing_pipeline,
-        preprocessing_params=preprocessing_params, feature_selector=feature_selector,
+        preprocessing_params=preprocessing_params, feature_selector=feature_selector, **kwargs
     )
 
     # noinspection PyUnusedLocal
     def _visit(path, key, value):
+        """Return False if element in hyperparameter_space dimensions, or in dimensions being ignored. Else, return True"""
         for dimension in dimensions + dimensions_to_ignore:
-            if path + (key,) == dimension:
+            if (path + (key,) == dimension) or (dimension[0] is None and dimension[1] == key):
                 return False
         return True
 
-    filtered_guidelines = remap(current_guidelines, visit=_visit)
+    guidelines = remap(temp_guidelines, visit=_visit)  # (Hyperparameters that were set values and affect Experiment results)
+    # `guidelines` = `temp_guidelines` that are neither `hyperparameter_space` choices, nor in `dimensions_to_ignore`
+
+    # TODO: Bug when matching `guidelines['compile_params']['optimizer_params']` while `optimizer` is a choice
+    # TODO: If `optimizer=Categorical(['adam', 'rmsprop'])`, the dummy `optimizer_params` will be the defaults for 'adam', ...
+    # TODO: which means those will be the required guidelines, and any experiments that used 'rmsprop' will fail to match ...
+    # TODO: because the default `optimizer_params` are different. Need way to all guidelines to be one of a selection of ...
+    # TODO: guidelines. But it might require compiling a different dummy for each `optimizer` choice given to find its defaults
+    # TODO: And this problem is currently limited to `optimizer`-`optimizer_params`, so there might not be a general solution
 
     hyperparameters_and_scores = list(filter(
-        lambda _: remap(_[0], visit=_visit) == filtered_guidelines, hyperparameters_and_scores
+        lambda _: remap(_[0], visit=_visit) == guidelines, hyperparameters_and_scores
     ))
 
     return hyperparameters_and_scores
+
+
+def get_choice_dimensions(params, iter_attrs=None):
+    """Compile a list of all elements in the nested structure `params` that are hyperparameter space choices
+
+    Parameters
+    ----------
+    params: Dict
+        A dictionary of params that may be nested and that may contain hyperparameter space choices to collect
+    iter_attrs: Callable, list of callables, or None, default=None
+        If callable, must evaluate to True or False when given three inputs: (path, key, value). Callable should return True if
+        the current value should be entered by `remap`. If callable returns False, `default_enter` will be called. If `iter_attrs`
+        is a list of callables, the value will be entered if any evaluates to True. If None, `default_enter` will be called
+
+    Returns
+    -------
+    choices: List
+        A list of tuple pairs, in which `choices[<index>][0]` is a tuple path specifying the location of the hyperparameter given
+        a choice, and `choices[<index>][1]` is the space choice instance for that hyperparameter"""
+    choices = []
+    iter_attrs = iter_attrs or [lambda *_args: False]
+    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
+
+    def _visit(path, key, value):
+        """If `value` is a descendant of :class:`space.Dimension`, collect inputs, and return True. Else, return False"""
+        if isinstance(value, (Real, Integer, Categorical)):
+            choices.append((
+                (path + (key,)),
+                value
+            ))
+            return True
+        return False
+
+    def _enter(path, key, value):
+        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic attributes. Else, `default_enter`"""
+        if any([_(path, key, value) for _ in iter_attrs]):
+            included_attrs = [_ for _ in dir(value) if not _.startswith('__')]
+            return dict(), [(_, getattr(value, _)) for _ in included_attrs]
+        return default_enter(path, key, value)
+
+    _ = remap(params, visit=_visit, enter=_enter)
+    return choices
 
 
 if __name__ == '__main__':

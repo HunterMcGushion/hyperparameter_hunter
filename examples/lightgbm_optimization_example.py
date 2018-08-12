@@ -1,7 +1,7 @@
-from hyperparameter_hunter import Environment, Real, Integer, Categorical, BayesianOptimization
+from hyperparameter_hunter import Environment, Real, Integer, Categorical, RandomForestOptimization
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from sklearn.model_selection import StratifiedKFold
-from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 
 
 def _execute():
@@ -12,27 +12,23 @@ def _execute():
         metrics_map=['roc_auc_score'],
         cross_validation_type=StratifiedKFold,
         cross_validation_params=dict(n_splits=10, shuffle=True, random_state=32),
-        runs=2,
+        runs=1,
     )
 
-    optimizer = BayesianOptimization(iterations=100, read_experiments=True, random_state=None)
-
+    optimizer = RandomForestOptimization(
+        iterations=100,
+        read_experiments=True,
+    )
     optimizer.set_experiment_guidelines(
-        model_initializer=XGBClassifier,
+        model_initializer=LGBMClassifier,
         model_init_params=dict(
-            max_depth=Integer(2, 20),
-            learning_rate=Real(0.0001, 0.5),
-            n_estimators=200,
-            subsample=0.5,
-            booster=Categorical(['gbtree', 'gblinear', 'dart']),
-        ),
-        model_extra_params=dict(
-            fit=dict(
-                eval_metric=Categorical(['auc', 'rmse', 'mae'])
-            )
+            boosting_type=Categorical(['gbdt', 'dart']),
+            num_leaves=Integer(5, 20),
+            max_depth=-1,
+            min_child_samples=5,
+            subsample=0.5
         ),
     )
-
     optimizer.go()
 
 

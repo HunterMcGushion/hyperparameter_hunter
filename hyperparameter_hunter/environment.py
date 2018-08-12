@@ -248,7 +248,6 @@ class Environment():
             'leaderboards': None,
             'global_leaderboard': None,
         }
-
         self.current_task = None
         self.cross_experiment_key = None
 
@@ -265,6 +264,49 @@ class Environment():
 
     # def __exit__(self):
     #     G.reset_attributes()
+
+    ##################################################
+    # Dataset Sentinels for Use as Extra Parameters
+    ##################################################
+    # @property
+    # def train_input(self):
+    #     return 'SENTINEL***train_input***{}_{}'.format(
+    #         self.cross_experiment_key.parameters['train_dataset'],
+    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
+    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
+    #     )
+
+    # @property
+    # def train_target(self):
+    #     return 'SENTINEL***train_target***{}_{}'.format(
+    #         self.cross_experiment_key.parameters['train_dataset'],
+    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
+    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
+    #     )
+
+    # @property
+    # def validation_input(self):
+    #     return 'SENTINEL***validation_input***{}_{}'.format(
+    #         self.cross_experiment_key.parameters['train_dataset'],
+    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
+    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
+    #     )
+
+    # @property
+    # def validation_target(self):
+    #     return 'SENTINEL***validation_target***{}_{}'.format(
+    #         self.cross_experiment_key.parameters['train_dataset'],
+    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
+    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
+    #     )
+
+    # @property
+    # def holdout_input(self):
+    #     return 'SENTINEL***holdout_input***{}'.format(self.cross_experiment_key.parameters['holdout_dataset'])
+
+    # @property
+    # def holdout_target(self):
+    #     return 'SENTINEL***holdout_target***{}'.format(self.cross_experiment_key.parameters['holdout_dataset'])
 
     def environment_workflow(self):
         """Execute all methods required to validate the environment and run Experiments"""

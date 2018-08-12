@@ -1,6 +1,7 @@
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+import re
 from unittest import TestCase, TestSuite
 
 
@@ -144,7 +145,9 @@ def get_module(filename, current_class):
 
 def do_module_override(override, current):
     if isinstance(override, str) and (not current.startswith(override)):
+        current = re.sub(re.compile("\*\*\*[^*]+\*\*\*"), '', current)
         return '{}{}'.format(override, current)
+
     return current
 
 

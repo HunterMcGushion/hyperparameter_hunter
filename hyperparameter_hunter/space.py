@@ -6,8 +6,10 @@ from hyperparameter_hunter.utils.boltons_utils import get_path
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from abc import ABCMeta
 from functools import reduce
 import numpy as np
+from uuid import uuid4 as uuid
 
 ##################################################
 # Import Learning Assets
@@ -16,36 +18,56 @@ from sklearn.utils import check_random_state
 from skopt.space import space as skopt_space
 
 
-class Real(skopt_space.Real):
+##################################################
+# Dimensions
+##################################################
+class Dimension(skopt_space.Dimension, metaclass=ABCMeta):
+    def __init__(self, **kwargs):
+        self.id = str(uuid())
+        super().__init__(**kwargs)
+
+    # noinspection PyMethodOverriding
+    @skopt_space.Dimension.name.setter
+    def name(self, value):
+        if isinstance(value, (str, tuple)) or value is None:
+            self._name = value
+        else:
+            raise ValueError("Dimension's name must be one of: string, tuple, or None.")
+
+
+class Real(Dimension, skopt_space.Real):
     def __init__(self, low, high, prior='uniform', transform=None, name=None):
         # TODO: Add documentation
-        if name is None:
-            raise ValueError('Please provide a `name` for the hyperparameter dimensions being set: {}(low={}, high={})'.format(
-                self.__class__.__name__, low, high
-            ))
         super().__init__(low=low, high=high, prior=prior, transform=transform, name=name)
 
+    def __contains__(self, item):
+        try:
+            return super().__contains__(item)
+        except TypeError:
+            return False
 
-class Integer(skopt_space.Integer):
+
+class Integer(Dimension, skopt_space.Integer):
     def __init__(self, low, high, transform=None, name=None):
         # TODO: Add documentation
-        if name is None:
-            raise ValueError('Please provide a `name` for the hyperparameter dimensions being set: {}(low={}, high={})'.format(
-                self.__class__.__name__, low, high
-            ))
         super().__init__(low=low, high=high, transform=transform, name=name)
 
+    def __contains__(self, item):
+        try:
+            return super().__contains__(item)
+        except TypeError:
+            return False
 
-class Categorical(skopt_space.Categorical):
+
+class Categorical(Dimension, skopt_space.Categorical):
     def __init__(self, categories, prior=None, transform=None, name=None):
         # TODO: Add documentation
-        if name is None:
-            raise ValueError('Please provide a `name` for the hyperparameter dimensions being set: {}(categories={})'.format(
-                self.__class__.__name__, categories
-            ))
         super().__init__(categories=categories, prior=prior, transform=transform, name=name)
 
 
+##################################################
+# Space
+##################################################
 class Space(skopt_space.Space):
     def __init__(self, dimensions, random_state=None):
         # TODO: Add documentation
@@ -75,6 +97,9 @@ class Space(skopt_space.Space):
         return search_space_size
 
 
+##################################################
+# Space Utilities
+##################################################
 def normalize_dimensions(dimensions):
     """Create a `Space` where all dimensions are normalized to unit range. This is a modified version of
     :func:`skopt.utils.normalize_dimensions`
@@ -113,6 +138,10 @@ def normalize_dimensions(dimensions):
             else:
                 raise RuntimeError(F'Unknown dimension type: {type(dimension)}')
 
+            #################### Replace Lost Attributes ####################
+            if hasattr(dimension, 'location'):
+                transformed_dimensions[-1].location = dimension.location
+
     return Space(transformed_dimensions)
 
 
@@ -136,7 +165,8 @@ def dimension_subset(hyperparameters, dimensions):
     if not all(isinstance(_, tuple) for _ in dimensions):
         raise TypeError(F'All dimensions should be strings or tuples. Received: {dimensions}')
 
-    values = [get_path(hyperparameters, _) for _ in dimensions]
+    values = [get_path(hyperparameters, _, default=None) for _ in dimensions]
+    # FLAG: Might need to set `default`=<some sentinel str> in above `get_path` call - In case `None` is an accepted value
     return values
 
 

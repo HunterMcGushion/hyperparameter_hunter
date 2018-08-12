@@ -1,7 +1,6 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.algorithm_handlers import identify_algorithm
 from hyperparameter_hunter.exception_handler import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
@@ -86,7 +85,6 @@ class RecorderList(object):
         file_blacklist: List, or None, default=None
             If list, used to reject any elements of :attr:`RecorderList.recorders` whose :attr:`BaseRecorder.result_path_key` is
             in file_blacklist"""
-
         # WARNING: Take care if modifying the order/contents of :attr:`recorders`. See :meth:`save_result` documentation for info
         self.recorders = [
             TestedKeyRecorder,
@@ -125,7 +123,6 @@ class RecorderList(object):
         can be useful when there are storage constraints, because it ensures that essential data - including keys and the results
         of the experiment - are saved (to ensure the experiment is not duplicated, and to provide some utility to Hyperparameter
         Optimization algorithms), while extra results like Predictions are not saved."""
-
         for recorder in self.recorders:
             G.log(F'Saving result file for "{type(recorder).__name__}"')
             exit_code = recorder.save_result()
@@ -179,7 +176,12 @@ class DescriptionRecorder(BaseRecorder):
         if self.module_name == 'keras':
             layers, compile_params = parameterize_compiled_keras_model(self.model.model.model)
 
-            del compile_params['loss_functions']
+            # TODO: Bug when recording `compile_params['optimizer_params']['lr']` when decay/scheduling used
+            # TODO: Model's `get_config()` returns the final learning rate, rather than the initial one, so experiment description
+            # TODO: files are misleading by not displaying the actual value used, and leads to failed similar experiment matches
+            # TODO: See experiment "f408beed-87ed-44a3-8672-c1171dc41bbe" - Started with default adam lr=0.001 - Ended with 0.0001
+
+            del compile_params['loss_functions']  # TODO: Try to hash this, instead
 
             self.result['keras_architecture'] = dict(
                 compile_params=compile_params,

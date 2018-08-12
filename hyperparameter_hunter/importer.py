@@ -10,14 +10,8 @@ from hyperparameter_hunter.tracers import KerasTracer
 from functools import partial, wraps
 from importlib.machinery import PathFinder, ModuleSpec, SourceFileLoader
 from inspect import ismodule, isclass, ismethod, isfunction
+from pkg_resources import get_distribution
 import sys
-
-
-# def patcher(a_function):
-#     def wrapper(*args, **kwargs):
-#         print(F'Patcher called with args: {args}...   kwargs: {kwargs}')
-#         return a_function(*args, **kwargs)
-#     return wrapper
 
 
 class Interceptor(PathFinder):
@@ -41,20 +35,56 @@ class KerasLayerLoader(SourceFileLoader):
     def exec_module(self, module):
         # TODO: Add documentation
         super().exec_module(module)
-        # module.function = patcher(module.function)
         module.Layer = KerasTracer(module.Layer.__name__, module.Layer.__bases__, module.Layer.__dict__)
         return module
 
 
 def hook_keras_layer():
-    # TODO: Add documentation
+    """If Keras has yet to be imported, modify the inheritance structure of its base `Layer` class to inject attributes that
+    keep track of the parameters provided to each layer"""
     if 'keras' in sys.modules:
         raise ImportError('{} must be executed before importing Keras or other hyperparameter_hunter assets'.format(
             'hyperparameter_hunter.importer.hook_keras_layer()'
         ))
-    # sys.meta_path.insert(0, Interceptor('keras.layers.core'))
-    sys.meta_path.insert(0, Interceptor('keras.engine.topology', KerasLayerLoader))
+
+    if get_distribution('keras').version >= '2.2.0':
+        sys.meta_path.insert(0, Interceptor('keras.engine.base_layer', KerasLayerLoader))  # Keras == 2.2.0
+    else:
+        sys.meta_path.insert(0, Interceptor('keras.engine.topology', KerasLayerLoader))  # Keras == 2.1.3
+        # Determine version number at which this becomes untrue (Minimum Keras version requirement)
+
     G.import_hooks.append('keras_layer')
+
+
+# class KerasOptimizerGetLoader(SourceFileLoader):
+#     def exec_module(self, module):
+#         super().exec_module(module)
+#
+#         def safe_get_builder(f):
+#             @wraps(f)
+#             def safe_get(identifier):
+#                 # def safe_get(*args, **kwargs):
+#                 if isinstance(identifier, (Real, Integer, Categorical)):
+#                     safe_identifier = identifier.bounds[0]
+#                     get_result = f(safe_identifier)
+#                 else:
+#                     get_result = f(identifier)
+#
+#                 setattr(get_result, '__original_hh_identifier', identifier)
+#                 return get_result
+#
+#             return safe_get
+#
+#         setattr(module, 'get', safe_get_builder(module.get))
+#
+#
+# def hook_keras_optimizer_get():
+#     if 'keras' in sys.modules:
+#         raise ImportError('{} must be executed before importing Keras or other hyperparameter_hunter assets'.format(
+#             'hyperparameter_hunter.importer.hook_keras_optimizer_get()'
+#         ))
+#     sys.meta_path.insert(0, Interceptor('keras.optimizers', KerasOptimizerGetLoader))
+#     G.import_hooks.append('keras_optimizer_get')
 
 
 ##################################################

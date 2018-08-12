@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.exception_handler import EnvironmentInvalidError, EnvironmentInactiveError
-from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_key
+from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_key, keras_callback_to_dict
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json
 from hyperparameter_hunter.utils.boltons_utils import remap
@@ -26,7 +26,16 @@ import shelve
 ##################################################
 # Import Learning Assets
 ##################################################
-from keras.callbacks import Callback as base_keras_callback
+try:
+    from keras.callbacks import Callback as BaseKerasCallback
+except ModuleNotFoundError:
+    class BaseKerasCallback():
+        placeholder_attribute = """
+        Hello, there! I am a `placeholder_attribute` for `BaseKerasCallback` if attempting to import `Keras` raised a 
+        `ModuleNotFoundError`. You might be wondering what I'm doing here. I'm special because no normal/sane person would make a
+        class, or an attribute just like me! That means that if anyone checks to see if something is an instance of yours truly, 
+        hopefully it won't be! :) Nice to meet you! &*%#))(%#(*&@*HIOV0(#*W*Q()UFIJW_Q)_#R*(*(T{_E_QWO_))T+VMS"W)|GO{>A?C<A/woe0
+        """
 
 
 ##################################################
@@ -127,8 +136,9 @@ class KeyMaker(metaclass=ABCMeta):
             Returns
             -------
             Tuple of (`key`, value), in which value is either unchanged or a hash for the original `value`"""
-            if isinstance(value, base_keras_callback):
-                return (key, keras_callback_to_key(value))
+            if isinstance(value, BaseKerasCallback):
+                # return (key, keras_callback_to_key(value))
+                return (key, keras_callback_to_dict(value))
             elif callable(value) or isinstance(value, pd.DataFrame):
                 hashed_value = make_hash_sha256(value)
 
@@ -173,7 +183,7 @@ class KeyMaker(metaclass=ABCMeta):
 
         if isclass(value) or (key in shelve_params):
             with shelve.open(os.path.join(self.key_attribute_lookup_dir, F'{key}'), flag='c') as shelf:
-                # FLAG: When reading from shelve file, DO NOT add the ".db" file extension
+                # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
                 shelf[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
             os.makedirs(os.path.join(self.key_attribute_lookup_dir, key), exist_ok=True)
@@ -304,8 +314,10 @@ class HyperparameterKeyMaker(KeyMaker):
         }
 
         for k in reject_keys:
-            if k in parameters['model_init_params'].keys():
+            if parameters['model_init_params'] and (k in parameters['model_init_params'].keys()):
                 del parameters['model_init_params'][k]
+            if parameters['model_extra_params'] and (k in parameters['model_extra_params'].keys()):
+                del parameters['model_extra_params'][k]
 
         return parameters
 
@@ -429,11 +441,17 @@ def hash_callable(
         name = obj.func.__name__
         keywords = obj.keywords
         source_lines = getsourcelines(obj.func)[0]
-    # elif isfunction(obj):
     elif callable(obj):
         module = obj.__module__
         name = obj.__name__
-        source_lines = getsourcelines(obj)[0]
+        # TODO: Below only works on modified Keras `build_fn` during optimization if temp file still exists
+        try:
+            source_lines = getsourcelines(obj)[0]
+        except Exception as _ex:
+            print(_ex)
+            print()
+            raise
+        # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
     else:
         raise TypeError('Expected obj of type functools.partial, or function. Received {}'.format(type(obj)))
 

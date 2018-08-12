@@ -1,3 +1,21 @@
+"""This module contains the classes used for constructing and conducting an Experiment (most notably,
+:class:`CrossValidationExperiment`). Any class contained herein whose name starts with 'Base' should not be used directly.
+:class:`CrossValidationExperiment` is the preferred means of conducting one-off experimentation
+
+Related
+-------
+:mod:`hyperparameter_hunter.experiment_core`
+    Defines :meta:`ExperimentMeta`, an understanding of which is critical to being able to understand :mod:`experiments`
+:mod:`hyperparameter_hunter.metrics`
+    Defines :class:`ScoringMixIn`, a parent of :class:`experiments.BaseExperiment` that enables scoring and evaluating models
+:mod:`hyperparameter_hunter.models`
+    Used to instantiate the actual learning models, which are a single part of the entire experimentation workflow, albeit the
+    most significant part
+
+Notes
+-----
+As mentioned above, the inner workings of :mod:`experiments` will be very confusing without a grasp on whats going on in
+    :mod:`experiment_core`, and its related modules"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -14,6 +32,7 @@ from hyperparameter_hunter.settings import G
 # Import Miscellaneous Assets
 ##################################################
 from abc import abstractmethod
+from copy import copy, deepcopy
 from inspect import isclass, signature
 import numpy as np
 import os
@@ -39,34 +58,7 @@ warnings.simplefilter(action='ignore', category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=sklearn_utils.DataConversionWarning)
 np.random.seed(32)
 
-DEFAULT_EXPERIMENT_PARAMS = dict(
-    global_random_seed=32,
-    runs=1,
-    cross_validation_type='kfold',
-    random_seed_bounds=[0, 100000],
-    random_seeds=None,
-    # random_seeds=[
-    #     [99742, 86209],  # , 65952],
-    #     [11564, 93352],  # , 37308],
-    #     [87703, 56117],  # , 38918],
-    #     [10547, 30230],  # , 42108],
-    #     [12142, 50553],  # , 72007],
-    #     [50636, 33379],  # , 59780],
-    #     [53001, 73738],  # , 32651],
-    #     [41257, 13553],  # , 27583],
-    #     [51489, 71089],  # , 55757],
-    #     [55510, 15180],  # , 47633]
-    # ],
-)
-DEFAULT_CROSS_VALIDATION_PARAMS = dict(
-    n_splits=2,
-    shuffle=True,
-    random_state=32,
-)
 
-
-# Using "metaclass=ABCMeta" (below in "class BaseExperiment(ScoringMixIn, metaclass=ABCMeta)") raises following TypeError...
-# "metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases"
 class BaseExperiment(ScoringMixIn):
     def __init__(
             # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
@@ -80,7 +72,7 @@ class BaseExperiment(ScoringMixIn):
         ----------
         model_initializer: class, or functools.partial, or class instance
             The algorithm class being used to initialize a model
-        model_init_params: dict
+        model_init_params: dict, or object
             The dictionary of arguments given when creating a model instance with `model_initializer` via the `__init__` method
             of :class:`.models.Model`. Any kwargs that are considered valid by the `__init__` method of `model_initializer` are
             valid in `model_init_params`
@@ -312,6 +304,8 @@ class BaseExperiment(ScoringMixIn):
 
     def _generate_hyperparameter_key(self):
         """Set :attr:`hyperparameter_key` to a key to describe the experiment's hyperparameters"""
+        # TODO: Create `Keras` key based on compiled model architecture, which is far more accurate
+        # TODO: This will improve duplicate experiment detection, since two different `build_fn` s can yield the same architecture
         parameters = dict(
             model_initializer=self.model_initializer,
             model_init_params=self.model_init_params,
@@ -321,6 +315,14 @@ class BaseExperiment(ScoringMixIn):
             feature_selector=self.feature_selector,
             # FLAG: Should probably add :attr:`target_metric` to key - With option to ignore it?
         )
+
+        #################### Remove Delivery Dict for Build Function ####################
+        if self.module_name == 'keras':
+            if 'params' in parameters['model_extra_params']:
+                parameters['model_extra_params'] = {
+                    _k: _v for _k, _v in self.model_extra_params.items() if _k != 'params'
+                }
+
         self.hyperparameter_key = HyperparameterKeyMaker(parameters, self.cross_experiment_key)
         G.log('Generated hyperparameter key: {}'.format(self.hyperparameter_key))
 

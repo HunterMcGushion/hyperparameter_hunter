@@ -125,8 +125,9 @@ def write_file(file_path, data, do_clear=False, txt=False):
 
 
 def read_file(file_path):
-    read_target = open(file_path, 'r')
-    return read_target.read()
+    with open(file_path, 'r') as f:
+        read_target = f.read()
+    return read_target
 
 
 def clear_file(file_path):

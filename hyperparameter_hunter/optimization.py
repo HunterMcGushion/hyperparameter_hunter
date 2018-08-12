@@ -24,9 +24,10 @@ from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
 ##################################################
 class BayesianOptimization(InformedOptimizationProtocol):
     """Bayesian optimization with Gaussian Processes"""
+
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            dimensions=None, base_estimator='GP', n_initial_points=10,
+            base_estimator='GP', n_initial_points=10,
             acquisition_function='gp_hedge', acquisition_optimizer='auto', random_state=32,
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
@@ -40,18 +41,23 @@ class BayesianOptimization(InformedOptimizationProtocol):
         super().__init__(
             target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            dimensions=normalize_dimensions(dimensions), base_estimator=base_estimator, n_initial_points=n_initial_points,
+            base_estimator=base_estimator, n_initial_points=n_initial_points,
             acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
             acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
             n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
         )
 
+    def go(self):
+        self.dimensions = normalize_dimensions(self.dimensions)
+        super().go()
+
 
 class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
     """Sequential optimization with gradient boosted regression trees"""
+
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            dimensions=None, base_estimator='GBRT', n_initial_points=10,
+            base_estimator='GBRT', n_initial_points=10,
             acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
@@ -64,7 +70,7 @@ class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
         super().__init__(
             target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            dimensions=dimensions, base_estimator=base_estimator, n_initial_points=n_initial_points,
+            base_estimator=base_estimator, n_initial_points=n_initial_points,
             acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
             acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
             n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
@@ -73,9 +79,10 @@ class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
 
 class RandomForestOptimization(InformedOptimizationProtocol):
     """Sequential optimization with random forest regressor decision trees"""
+
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            dimensions=None, base_estimator='RF', n_initial_points=10,
+            base_estimator='RF', n_initial_points=10,
             acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
@@ -88,7 +95,7 @@ class RandomForestOptimization(InformedOptimizationProtocol):
         super().__init__(
             target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            dimensions=dimensions, base_estimator=base_estimator, n_initial_points=n_initial_points,
+            base_estimator=base_estimator, n_initial_points=n_initial_points,
             acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
             acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
             n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
@@ -97,9 +104,10 @@ class RandomForestOptimization(InformedOptimizationProtocol):
 
 class ExtraTreesOptimization(InformedOptimizationProtocol):
     """Sequential optimization with extra trees regressor decision trees"""
+
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            dimensions=None, base_estimator='ET', n_initial_points=10,
+            base_estimator='ET', n_initial_points=10,
             acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
@@ -112,7 +120,7 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
         super().__init__(
             target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            dimensions=dimensions, base_estimator=base_estimator, n_initial_points=n_initial_points,
+            base_estimator=base_estimator, n_initial_points=n_initial_points,
             acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
             acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
             n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
@@ -122,9 +130,10 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
 class DummySearch(InformedOptimizationProtocol):
     """Random search by uniform sampling. Technically this is not "Informed", but it fits better as an Informed subclass due to
     its reliance on `Scikit-Optimize`"""
+
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            dimensions=None, base_estimator='DUMMY', n_initial_points=10,
+            base_estimator='DUMMY', n_initial_points=10,
             acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
             acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
             n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
@@ -137,7 +146,7 @@ class DummySearch(InformedOptimizationProtocol):
         super().__init__(
             target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            dimensions=dimensions, base_estimator=base_estimator, n_initial_points=n_initial_points,
+            base_estimator=base_estimator, n_initial_points=n_initial_points,
             acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
             acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
             n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,

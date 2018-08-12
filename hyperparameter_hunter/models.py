@@ -11,17 +11,16 @@ from hyperparameter_hunter.utils.metrics_utils import wrap_xgboost_metric
 from contextlib import suppress
 import inspect
 import sys
+from types import MethodType
 import warnings
-
-warnings.filterwarnings('ignore')
 
 ##################################################
 # Import Learning Assets
 ##################################################
 import sklearn.utils as sklearn_utils
-from keras.models import load_model
-# from keras.callbacks import Callback, EarlyStopping, ModelCheckpoint, History, LearningRateScheduler, ReduceLROnPlateau
-# from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+
+warnings.filterwarnings('ignore')
+load_model = lambda _: _
 
 
 def model_selector(model_initializer):
@@ -67,7 +66,9 @@ class Model(object):
             otherwise in a child class's documentation - like :class:`KerasModel`. Arguments pertaining to random seeds will be
             ignored
         extra_params: Dict, default={}
-            # TODO: ...
+            A dict of special parameters that are passed to a model's non-initialization methods in special cases (such as `fit`,
+            `predict`, `predict_proba`, and `score`). `extra_params` are not used for all models. See the documentation for the
+            appropriate descendant of :class:`models.Model` for information about how it handles `extra_params`
         train_input: `pandas.DataFrame`
             The model's training input data
         train_target: `pandas.DataFrame`
@@ -111,7 +112,7 @@ class Model(object):
             ).with_traceback(sys.exc_info()[2])
 
     def fit(self):
-        # TODO: Add documentation
+        """Train a model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
         expected_fit_parameters = list(inspect.signature(self.model.fit).parameters)
         fit_kwargs = {}
         if 'verbose' in expected_fit_parameters:
@@ -132,7 +133,12 @@ class Model(object):
                 raise _ex
 
     def predict(self, input_data):
-        # TODO: Add documentation
+        """Generate model predictions for `input_data`
+
+        Parameters
+        ----------
+        input_data: Array-like
+            Data containing the same number of features as were trained on, for which the model will predict output values"""
         if input_data is None:
             return None
 
@@ -196,7 +202,6 @@ class XGBoostModel(Model):
     # FLAG: ORIGINAL BELOW
     # TODO: Shouldn't be default behavior to include `eval_set` below - Results in unexpectedly long execution times - Rework
     # def fit(self):
-    #     # TODO: Add documentation
     #     #################### Build eval_set ####################
     #     eval_set = [(self.train_input, self.train_target)]
     #     if (self.validation_input is not None) and (self.validation_target is not None):
@@ -229,18 +234,20 @@ class KerasModel(Model):
         Parameters
         ----------
         model_initializer: :class:`keras.wrappers.scikit_learn.KerasClassifier`, or `keras.wrappers.scikit_learn.KerasRegressor`
-            See :class:`Model`
-        initialization_params: # TODO: ...
-            # TODO: ...
+            :mirror:`hyperparameter_hunter.models.Model.__init__(param:model_initializer)`
+        initialization_params: Dict containing `build_fn`
+            A dictionary containing the single key: `build_fn`, which is a callable function that returns a compiled Keras model
         extra_params: Dict, default={}
-            # TODO: ...
-        train_input: See :class:`Model`
-        train_target: See :class:`Model`
-        validation_input: See :class:`Model`
-        validation_target: See :class:`Model`
-        do_predict_proba: See :class:`Model`
-        target_metric: See :class:`Model`
-        metrics_map: See :class:`Model`"""
+            The parameters expected to be passed to the extra methods of the compiled Keras model. Such methods include (but are
+            not limited to) `fit`, `predict`, and `predict_proba`. Some of the common parameters given here include `epochs`,
+            `batch_size`, and `callbacks`
+        train_input: :mirror:`hyperparameter_hunter.models.Model.__init__(param:train_input)`
+        train_target: :mirror:`hyperparameter_hunter.models.Model.__init__(param:train_target)`
+        validation_input: :mirror:`hyperparameter_hunter.models.Model.__init__(param:validation_input)`
+        validation_target: :mirror:`hyperparameter_hunter.models.Model.__init__(param:validation_target)`
+        do_predict_proba: :mirror:`hyperparameter_hunter.models.Model.__init__(param:do_predict_proba)`
+        target_metric: :mirror:`hyperparameter_hunter.models.Model.__init__(param:target_metric)`
+        metrics_map: :mirror:`hyperparameter_hunter.models.Model.__init__(param:metrics_map)`"""
         if model_initializer.__name__ not in ('KerasClassifier', 'KerasRegressor'):
             raise ValueError('KerasModel given invalid model_initializer: {} - {}\nTry using the standard Model class'.format(
                 type(model_initializer), (model_initializer.__name__ or model_initializer)
@@ -252,13 +259,16 @@ class KerasModel(Model):
             target_metric=target_metric, metrics_map=metrics_map,
         )
 
+        global load_model
+        from keras.models import load_model
+
     def initialize_model(self):
-        # TODO: Add documentation
+        """:mirror:`hyperparameter_hunter.models.Model.initialize_model`"""
         self.validate_keras_params()
         self.model = self.initialize_keras_neural_network()
 
     def fit(self):
-        # TODO: Add documentation
+        """:mirror:`hyperparameter_hunter.models.Model.fit`"""
         try:
             self.model.fit(self.train_input, self.train_target)
         except Exception as _ex:
@@ -270,23 +280,38 @@ class KerasModel(Model):
                 self.epochs_elapsed = len(self.model.epoch)
 
             #################### Load Model Checkpoint if Possible ####################
-            # FLAG: This might not work after changing callbacks
-            for callback in getattr(self.extra_params, 'callbacks', []):  # FLAG: This might not work after changing callbacks
-                # FLAG: This might not work after changing callbacks
+            for callback in self.extra_params.get('callbacks', []):
                 if callback.__class__.__name__ == 'ModelCheckpoint':
+                    # TODO: Grab all '__hh' attrs from `model.layers` - `load_model` fucks with '<kernel/bias>_initializer'
+                    # TODO: After setting `self.model` to result of `load_model`, revert the '__hh' attrs to saved values
                     self.model = load_model(callback.filepath)
+                    # TODO: Revert '__hh' attrs to their original states - Saved above - Before `load_model` call
 
-    def get_input_dim(self):
-        # TODO: Add documentation
+    def get_input_shape(self, get_dim=False):
+        """Calculate the shape of the input that should be expected by the model
+
+        Parameters
+        ----------
+        get_dim: Boolean, default=False
+            If True, instead of returning an input_shape tuple, an input_dim scalar will be returned
+
+        Returns
+        -------
+        Tuple, or scalar
+            If get_dim=False, an input_shape tuple. Else, an input_dim scalar"""
         if self.train_input is not None:
-            return self.train_input.shape[1]
+            if get_dim:
+                return self.train_input.shape[1]
+            return self.train_input.shape[1:]
         elif self.validation_input is not None:
-            return self.validation_input.shape[1]
+            if get_dim:
+                return self.validation_input.shape[1]
+            return self.validation_input.shape[1:]
         else:
             raise ValueError('To initialize a KerasModel, train_input data, or input_dim must be provided')
 
     def validate_keras_params(self):
-        # TODO: Add documentation
+        """Ensure provided input parameters are properly formatted"""
         #################### Check Keras Import Hooks ####################
         necessary_import_hooks = ['keras_layer']
         for hook in necessary_import_hooks:
@@ -299,27 +324,21 @@ class KerasModel(Model):
         if 'build_fn' not in self.initialization_params.keys():
             raise KeyError(F'initialization_params must contain the "build_fn" key.\nReceived: {self.initialization_params}')
 
-        build_fn_parameters = inspect.signature(self.initialization_params['build_fn']).parameters
-        if 'input_dim' not in list(build_fn_parameters):
-            raise UnboundLocalError(
-                "build_fn must include 'input_dim' as an argument to be given to the model's first layer." +
-                "\nPlease see the documentation on using hyperparameter_hunter with Keras for help"
-            )
-
-        bad_extra_keys = {'build_fn', 'input_dim', 'validation_data', 'validation_split', 'x', 'y'}
+        bad_extra_keys = {'build_fn', 'input_shape', 'input_dim', 'validation_data', 'validation_split', 'x', 'y'}
         bad_keys_found = bad_extra_keys.intersection(self.extra_params)
         if len(bad_keys_found) > 0:
             raise KeyError(F'extra_params may not contain the following keys: {bad_extra_keys}.\nFound: {bad_keys_found}')
 
     def initialize_keras_neural_network(self):
-        # TODO: Add documentation
+        """Initialize Keras model wrapper (:attr:`model_initializer`) with :attr:`initialization_params`, :attr:`extra_params`,
+        and validation_data if it can be found, as well as the input dimensions for the model"""
         validation_data = None
         if (self.validation_input is not None) and (self.validation_target is not None):
             validation_data = (self.validation_input, self.validation_target)
 
         return self.model_initializer(
             build_fn=self.initialization_params['build_fn'],
-            input_dim=self.get_input_dim(),
+            input_shape=self.get_input_shape(),
             validation_data=validation_data,
             **self.extra_params,
         )

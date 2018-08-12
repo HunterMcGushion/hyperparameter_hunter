@@ -234,7 +234,7 @@ class OptimizationReporter():
         show_experiment_id: Boolean or 'partial', default=True
             If True, the experiment_id will be printed in each result row. If False, it will not. If string 'partial', the first
             eight characters of each experiment_id will be printed in each row"""
-        self.parameter_names = parameter_names
+        self.original_parameter_names = parameter_names
         self.verbose = verbose
         self.show_experiment_id = show_experiment_id
 
@@ -245,6 +245,10 @@ class OptimizationReporter():
 
         self.start_time = datetime.now()
         self.last_round = datetime.now()
+
+        _skip = ('model_init_params', 'model_extra_params', 'preprocessing_pipeline', 'preprocessing_params', 'feature_selector')
+        self.parameter_names = [_[1:] if _[0] in _skip else _ for _ in self.original_parameter_names]
+        self.parameter_names = [_[0] if len(_) == 1 else str(_).replace("'", '').replace('"', '') for _ in self.parameter_names]
 
         self.sizes = [max(len(_), 7) for _ in self.parameter_names]
         self.sorted_indexes = sorted(
@@ -280,7 +284,7 @@ class OptimizationReporter():
         print(header)
         print(line)
 
-        self._print_column_name('Step', 5)  # TODO: Change to 'Iteration', 'Epoch', 'Round', '#', ...
+        self._print_column_name('Step', 5)
         self._print_column_name('Time', 6)
         self._print_column_name('Value', 10)
 
@@ -290,7 +294,14 @@ class OptimizationReporter():
 
     def _print_column_name(self, value, size):
         # TODO: Add documentation
-        print('{0:>{1}}'.format(value, size), end=self.end)
+        try:
+            print('{0:>{1}}'.format(value, size), end=self.end)
+        except TypeError:  # Probably received a tuple including where param came from (init_params, extra_params, etc.)
+            # print('{0:>{1}}'.format(value[-1], size), end=self.end)
+            if len(value) == 1:
+                print('{0:>{1}}'.format(value[0], size), end=self.end)
+            else:
+                print('{0:>{1}}'.format(str(value), size), end=self.end)
 
     def print_result(self, hyperparameters, evaluation):
         """Print a row containing the results of an Experiment just executed

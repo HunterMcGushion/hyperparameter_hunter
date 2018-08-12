@@ -1,7 +1,7 @@
 ##################################################
 # Nullify Excess Documentation
 ##################################################
-from .importer import nullify_module_docstrings
+from .importer import nullify_module_docstrings, hook_keras_layer
 
 # try:
 #     importer.nullify_module_docstrings('hyperparameter_hunter.utils.boltons_utils')
@@ -11,7 +11,12 @@ from .importer import nullify_module_docstrings
 ##################################################
 # Execute Import Interceptors
 ##################################################
-# TODO: importer.hook_keras_layer
+try:
+    hook_keras_layer()
+except Exception as _ex:
+    # TODO: Probably need to raise only certain exceptions - If keras is even available to import
+    # TODO: If keras isn't available at all, `pass` - Wasn't installed by user
+    raise
 
 
 ##################################################

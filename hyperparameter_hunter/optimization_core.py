@@ -4,21 +4,26 @@
 from hyperparameter_hunter.algorithm_handlers import identify_algorithm, identify_algorithm_hyperparameters
 from hyperparameter_hunter.exception_handler import EnvironmentInactiveError, EnvironmentInvalidError, RepeatedExperimentError
 from hyperparameter_hunter.experiments import CrossValidationExperiment
+from hyperparameter_hunter.library_helpers.keras_helper import reinitialize_callbacks
+from hyperparameter_hunter.library_helpers.keras_optimization_helper import keras_prep_workflow, link_choice_ids
 from hyperparameter_hunter.metrics import get_formatted_target_metric
 from hyperparameter_hunter.reporting import OptimizationReporter
+from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.space import Space, dimension_subset
 from hyperparameter_hunter.utils.boltons_utils import get_path, PathAccessError
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update
 from hyperparameter_hunter.utils.optimization_utils import get_ids_by, get_scored_params, filter_by_space, filter_by_guidelines
-from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer
+from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
+import inspect
 import numpy as np
+import os
 import pandas as pd
 
 ##################################################
@@ -30,7 +35,26 @@ from skopt.callbacks import check_callback
 from skopt.utils import cook_estimator, eval_callbacks
 
 
-class BaseOptimizationProtocol(metaclass=ABCMeta):
+class OptimizationProtocolMeta(type):
+    """Metaclass to accurately set :attr:`source_script` for its descendants even if the original call was the product of scripts
+    calling other scripts that eventually instantiated an optimization protocol"""
+
+    @classmethod
+    def __prepare__(mcs, name, bases, **kwargs):
+        namespace = dict(source_script=None)
+        return namespace
+
+    def __call__(cls, *args, **kwargs):
+        setattr(cls, 'source_script', os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]))
+        return super().__call__(*args, **kwargs)
+
+
+class MergedOptimizationMeta(OptimizationProtocolMeta, ABCMeta):
+    """Metaclass to combine :meta:`OptimizationProtocolMeta`, and :meta:`ABCMeta`"""
+    pass
+
+
+class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     def __init__(self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None):
         """Base class for :class:`InformedOptimizationProtocol`, and :class:`UninformedOptimizationProtocol`
 
@@ -76,8 +100,8 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
         self.do_raise_repeated = True
 
         #################### Search Parameters ####################
+        self.dimensions = []
         self.search_bounds = dict()
-        self.search_rules = []
 
         self.hyperparameter_space = None
         self.similar_experiments = []
@@ -97,13 +121,14 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
         self.current_experiment = None
         self.current_score = None
 
-        self._preparation_workflow()
+        #################### Keras-Specific Attributes ####################
+        self.dummy_layers = []
+        self.dummy_compile_params = dict()
+        self.init_iter_attrs = []
+        self.extra_iter_attrs = []
 
-        self.logger = OptimizationReporter(
-            [_.name for _ in self.dimensions] if hasattr(self, 'dimensions') else [],
-            **self.reporter_parameters
-            # verbose=1
-        )
+        self.logger = None
+        self._preparation_workflow()
 
     ##################################################
     # Core Methods:
@@ -117,14 +142,14 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
         Parameters
         ----------
-        model_initializer: See :class:`experiments.BaseExperiment`
-        model_init_params: See :class:`experiments.BaseExperiment`
-        model_extra_params: See :class:`experiments.BaseExperiment`
-        feature_selector: See :class:`experiments.BaseExperiment`
-        preprocessing_pipeline: See :class:`experiments.BaseExperiment`
-        preprocessing_params: See :class:`experiments.BaseExperiment`
-        notes: See :class:`experiments.BaseExperiment`
-        do_raise_repeated: See :class:`experiments.BaseExperiment`
+        model_initializer: :mirror:`experiments.BaseExperiment.__init__(param:model_initializer)`
+        model_init_params: :mirror:`experiments.BaseExperiment.__init__(param:model_init_params)`
+        model_extra_params: :mirror:`experiments.BaseExperiment.__init__(param:model_extra_params)`
+        feature_selector: :mirror:`experiments.BaseExperiment.__init__(param:feature_selector)`
+        preprocessing_pipeline: :mirror:`experiments.BaseExperiment.__init__(param:preprocessing_pipeline)`
+        preprocessing_params: :mirror:`experiments.BaseExperiment.__init__(param:preprocessing_params)`
+        notes: :mirror:`experiments.BaseExperiment.__init__(param:notes)`
+        do_raise_repeated: :mirror:`experiments.BaseExperiment.__init__(param:do_raise_repeated)`
 
         Notes
         -----
@@ -151,8 +176,46 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
         self.algorithm_name, self.module_name = identify_algorithm(self.model_initializer)
 
+        #################### Deal with Keras ####################
         if self.module_name == 'keras':
-            raise ValueError('Sorry, Hyperparameter Optimization algorithms are not yet equipped to work with Keras. Stay tuned')
+            reusable_build_fn, reusable_wrapper_params, dummy_layers, dummy_compile_params = keras_prep_workflow(
+                self.model_initializer, self.model_init_params['build_fn'], self.model_extra_params, self.source_script
+            )
+            self.model_init_params = dict(build_fn=reusable_build_fn)
+            self.model_extra_params = reusable_wrapper_params
+            self.dummy_layers = dummy_layers
+            self.dummy_compile_params = dummy_compile_params
+            # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
+
+        self.set_dimensions()
+
+    def set_dimensions(self):
+        """Locate given hyperparameters that are `space` choice declarations and add them to :attr:`dimensions`"""
+        all_dimension_choices = []
+
+        #################### Remap Extra Objects ####################
+        if self.module_name == 'keras':
+            from keras.callbacks import Callback as BaseKerasCallback
+            self.extra_iter_attrs.append(lambda _path, _key, _value: isinstance(_value, BaseKerasCallback))
+
+        #################### Collect Choice Dimensions ####################
+        init_dimension_choices = get_choice_dimensions(self.model_init_params, iter_attrs=self.init_iter_attrs)
+        extra_dimension_choices = get_choice_dimensions(self.model_extra_params, iter_attrs=self.extra_iter_attrs)
+
+        for (path, choice) in init_dimension_choices:
+            choice._name = ('model_init_params',) + path
+            all_dimension_choices.append(choice)
+
+        for (path, choice) in extra_dimension_choices:
+            choice._name = ('model_extra_params',) + path
+            all_dimension_choices.append(choice)
+
+        self.dimensions = all_dimension_choices
+
+        if self.module_name == 'keras':
+            self.model_extra_params = link_choice_ids(
+                self.dummy_layers, self.dummy_compile_params, self.model_extra_params, self.dimensions
+            )
 
     def go(self):
         """Begin hyperparameter optimization process after experiment guidelines have been set and search dimensions are in place.
@@ -161,6 +224,8 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
         sets off the Experiment execution process"""
         if self.model_initializer is None:
             raise ValueError('Experiment guidelines and options must be set before hyperparameter optimization can be started')
+
+        self.logger = OptimizationReporter([_.name for _ in self.dimensions], **self.reporter_parameters)
 
         self.tested_keys = []
         self._set_hyperparameter_space()
@@ -201,9 +266,8 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
                 continue
 
             # TODO: :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            self.logger.print_result(self.current_hyperparameters_list, self.current_score)  # FLAG: TEST
-            # G.log_(F'Iteration {iteration}, Experiment "{self.current_experiment.experiment_id}": {self.current_score}')  # FLAG: ORIGINAL
-            # TODO: :attr:`current_hyperparameters_list` only exists in Informed Protocols
+            self.logger.print_result(self.current_hyperparameters_list, self.current_score)
+            # G.log_(F'Iteration {iteration}, Experiment "{self.current_experiment.experiment_id}": {self.current_score}')
 
             if (self.best_experiment is None) or (self.current_score > self.best_score):
                 self.best_experiment = self.current_experiment.experiment_id
@@ -229,8 +293,8 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
         self.current_experiment.preparation_workflow()
 
+        # Future Hunter, if multi-cross_experiment_keys ever supported, this will be a problem. Should've fixed it earlier, dummy
         if self.current_experiment.hyperparameter_key.key not in self.tested_keys:
-            # If support for multiple cross_experiment_keys is ever added, this will be a problem
             self.tested_keys.append(self.current_experiment.hyperparameter_key.key)
 
         self.current_experiment.experiment_workflow()
@@ -245,8 +309,15 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
         init_params = {_k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == 'model_init_params'}
         extra_params = {_k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == 'model_extra_params'}
 
-        self.current_init_params = deep_restricted_update(self.model_init_params, init_params)
-        self.current_extra_params = deep_restricted_update(self.model_extra_params, extra_params)
+        self.current_init_params = deep_restricted_update(
+            self.model_init_params, init_params, iter_attrs=self.init_iter_attrs
+        )
+        self.current_extra_params = deep_restricted_update(
+            self.model_extra_params, extra_params, iter_attrs=self.extra_iter_attrs
+        )
+
+        if (self.module_name == 'keras') and ('callbacks' in self.current_extra_params):
+            self.current_extra_params['callbacks'] = reinitialize_callbacks(self.current_extra_params['callbacks'])
 
     ##################################################
     # Abstract Methods:
@@ -271,81 +342,6 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
     def search_space_size(self):
         """The number of different hyperparameter permutations possible given the current hyperparameter search space"""
         raise NotImplementedError()
-
-    ##################################################
-    # Hyperparameter Search Declaration Methods:
-    ##################################################
-    def add_init_range(self, hyperparameter, bounds):
-        hyperparameter = (hyperparameter,) if not isinstance(hyperparameter, tuple) else hyperparameter
-        self._add_option((('model_init_params',) + hyperparameter), 'range', bounds)
-
-    def add_init_selection(self, hyperparameter, selection):
-        hyperparameter = (hyperparameter,) if not isinstance(hyperparameter, tuple) else hyperparameter
-        self._add_option((('model_init_params',) + hyperparameter), 'selection', selection)
-
-    def add_extra_range(self, hyperparameter, bounds):
-        hyperparameter = (hyperparameter,) if not isinstance(hyperparameter, tuple) else hyperparameter
-        self._add_option((('model_extra_params',) + hyperparameter), 'range', bounds)
-
-    def add_extra_selection(self, hyperparameter, selection):
-        hyperparameter = (hyperparameter,) if not isinstance(hyperparameter, tuple) else hyperparameter
-        self._add_option((('model_extra_params',) + hyperparameter), 'selection', selection)
-
-    def add_default_options(self, hyperparameter):
-        # TODO: Add default acceptable selections/ranges for algorithms' hyperparameters and add "default" kwargs to "add" methods
-        # TODO: Check :attr:`module_name`'s library_helper for :attr:`model_initializer` for a default `hyperparameter` list
-        # FLAG: If above fails, raise below ValueError
-        raise ValueError(F'Could not find default options in {self.algorithm_name} for the hyperparameter "{hyperparameter}"')
-
-    def _add_option(self, hyperparameter, bound_type, choices):
-        """Declare a hyperparameter as a variable that is allowed to be changed during the optimization process
-
-        Parameters
-        ----------
-        hyperparameter: Tuple
-            Path location of the hyperparameter for which choices are being provided. Should start with the containing attribute's
-            name ('model_init_params', or 'model_extra_params'). Subsequent items will be looked up in order within the attribute
-        bound_type: String in: ['range', 'selection']
-            How to interpret the contents of `choices`. If 'range', `choices` should contain two numbers: a lower bound, and an
-            upper bound. If 'selection', `choices` should contain all the permitted values for `hyperparameter`
-        choices: List
-            The permitted values for `hyperparameter`. If `bound_type` == 'range', list of two numbers: a lower bound, and an
-            upper bound. If `bound_type` == 'selection', a list of all permitted values for `hyperparameter`"""
-        if self.model_initializer is None:
-            raise ValueError('Experiment guidelines must be set before adding hyperparameter options')
-
-        #################### Validate Hyperparameter Path ####################
-        if not self._is_valid_hyperparameter_path(hyperparameter):
-            _err_message = F'Received nonexistent hyperparameter path: {hyperparameter}. '
-            if not hasattr(self, hyperparameter[0]):
-                _err_message += F'"{hyperparameter[0]}" is not an attribute of :class:`BaseOptimizationProtocol`'
-            raise KeyError(_err_message)
-
-        if hyperparameter[0] not in ['model_init_params', 'model_extra_params']:
-            raise KeyError(F'"{hyperparameter}" is not tunable. Please review guidelines on tunable hyperparameters')
-
-        #################### Validate Bound Type and Choices ####################
-        if not isinstance(choices, (list, tuple)):
-            raise TypeError(F'`choices` must be a list. Received {type(choices)}: {choices}')
-
-        valid_bound_types = ['range', 'selection']
-        if bound_type not in valid_bound_types:
-            raise ValueError(F'Received invalid `bound_type`: "{bound_type}". Expected string in: {valid_bound_types}')
-
-        if bound_type == 'range':
-            if not all([isinstance(_, (int, float)) for _ in choices]):
-                raise TypeError(F'Expected `choices` to contain numbers given `bound_type` == "range". Received: {choices}')
-            if len(choices) != 2:
-                raise ValueError(F'Expected `choices` to contain two numbers: an upper and lower bound. Received: {choices}')
-            if choices[0] >= choices[1]:
-                raise ValueError(F'Expected the first element of `choices` to be less than the second. Received: {choices}')
-
-        # TODO: If `bound_type` == 'range', create the range and set `choices` to it
-        self.search_bounds[hyperparameter] = choices
-
-    # def _add_rule(self):
-    #     """Supply callables declaring valid/invalid relationships between hyperparameters to filter the total choices"""
-    #     pass
 
     ##################################################
     # Utility Methods:
@@ -378,30 +374,22 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
         self.logger.print_saved_results_header()
 
-        experiment_ids = get_ids_by(
-            G.Env.result_paths['global_leaderboard'], algorithm_name=self.algorithm_name,
-            cross_experiment_key=G.Env.cross_experiment_key, hyperparameter_key=None,
+        model_params = dict(
+            model_init_params=self.model_init_params, model_extra_params=self.model_extra_params,
+            preprocessing_pipeline=self.preprocessing_pipeline, preprocessing_params=self.preprocessing_params,
+            feature_selector=self.feature_selector,
         )
 
-        G.debug_(F'Experiments found with matching cross-experiment key and algorithm:   {len(experiment_ids)}')
+        if self.module_name == 'keras':
+            model_params['layers'] = self.dummy_layers
+            model_params['compile_params'] = self.dummy_compile_params
 
-        hyperparameters_and_scores = [get_scored_params(
-            F'{G.Env.result_paths["description"]}/{_}.json', self.target_metric
-        ) for _ in experiment_ids]
-
-        hyperparameters_and_scores = filter_by_space(
-            hyperparameters_and_scores, self.hyperparameter_space, self.model_init_params, self.model_extra_params,
-            self.preprocessing_pipeline, self.preprocessing_params, self.feature_selector,
+        experiment_finder = finder_selector(self.module_name)(
+            self.algorithm_name, G.Env.cross_experiment_key, self.target_metric, self.hyperparameter_space,
+            G.Env.result_paths['global_leaderboard'], G.Env.result_paths["description"], model_params,
         )
-        G.debug_(F'Experiments whose hyperparameters fit in the currently defined space:   {len(hyperparameters_and_scores)}')
-
-        hyperparameters_and_scores = filter_by_guidelines(
-            hyperparameters_and_scores, self.hyperparameter_space, self.model_init_params, self.model_extra_params,
-            self.preprocessing_pipeline, self.preprocessing_params, self.feature_selector,
-        )
-        G.debug_(F'Experiments whose hyperparameters matched the current guidelines:   {len(hyperparameters_and_scores)}')
-
-        self.similar_experiments = hyperparameters_and_scores
+        experiment_finder.find()
+        self.similar_experiments = experiment_finder.hyperparameters_and_scores
 
     def _is_valid_hyperparameter_path(self, hyperparameter):
         """Determine whether the given hyperparameter path is valid
@@ -433,12 +421,10 @@ class BaseOptimizationProtocol(metaclass=ABCMeta):
 
 
 class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
-    # TODO: Reorganize kwargs to start with `dimensions`, `target_metric`, `iterations`
     def __init__(
             self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
 
             #################### Optimizer Class Parameters ####################
-            dimensions=None,
             base_estimator='GP',
             n_initial_points=10,
             acquisition_function='gp_hedge',
@@ -458,15 +444,11 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         Parameters
         ----------
-        target_metric: See :class:`optimization_core.BaseOptimizationProtocol`
-        iterations: See :class:`optimization_core.BaseOptimizationProtocol`
-        verbose: See :class:`optimization_core.BaseOptimizationProtocol`
-        read_experiments: See :class:`optimization_core.BaseOptimizationProtocol`
-        reporter_parameters: See :class:`optimization_core.BaseOptimizationProtocol`
-        dimensions: List
-            List of hyperparameter search space dimensions, in which each dimension is an instance of :class:`space.Real`, or
-            :class:`space.Integer`, or :class:`space.Categorical`. Additionally, each of the `Dimension` classes MUST be given a
-            valid `name` kwarg that corresponds to the hyperparameter name for which dimensions are being provided
+        target_metric: :mirror:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.__init__(param:target_metric)`
+        iterations: :mirror:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.__init__(param:iterations)`
+        verbose: :mirror:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.__init__(param:verbose)`
+        read_experiments: :mirror:`optimization_core.BaseOptimizationProtocol.__init__(param:read_experiments)`
+        reporter_parameters: :mirror:`optimization_core.BaseOptimizationProtocol.__init__(param:reporter_parameters)`
         base_estimator: String in ['GP', 'GBRT', 'RF', 'ET', 'DUMMY'], or an `sklearn` regressor, default='GP'
             If one of the above strings, a default model of that type will be used. Else, should inherit from
             :class:`sklearn.base.RegressorMixin`, and its :meth:`predict` should have an optional `return_std` argument, which
@@ -509,7 +491,6 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         # TODO: Add 'EIps', and 'PIps' to the allowable `acquisition_function` values - Will need to return execution times
 
         #################### Optimizer Parameters ####################
-        self.dimensions = dimensions
         self.base_estimator = base_estimator
         self.n_initial_points = n_initial_points
         self.acquisition_function = acquisition_function
@@ -589,18 +570,16 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         _current_hyperparameters = self.optimizer.ask()
 
         if _current_hyperparameters == self.current_hyperparameters_list:
-            # G.debug_('Repeated hyperparameters selected. Switching to random selection for this iteration')
             new_parameters = self.hyperparameter_space.rvs(random_state=None)[0]
             G.debug_('REPEATED     asked={}     new={}'.format(_current_hyperparameters, new_parameters))
             _current_hyperparameters = new_parameters
 
         self.current_hyperparameters_list = _current_hyperparameters
-        current_hyperparameters = zip([_.name for _ in self.hyperparameter_space.dimensions], self.current_hyperparameters_list)
 
-        current_hyperparameters = {
-            (('model_init_params' if _k in self.model_init_params else 'model_extra_params'), _k): _v
-            for _k, _v in dict(current_hyperparameters).items()
-        }
+        current_hyperparameters = dict(zip(
+            [_.name for _ in self.hyperparameter_space.dimensions], self.current_hyperparameters_list
+        ))
+
         return current_hyperparameters
 
     def _find_similar_experiments(self):
@@ -620,8 +599,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             # FLAG: Resolve switching between above options depending on `target_metric`
 
             # self.optimizer_result = self.optimizer.tell(
-            #     _hyperparameters, _evaluation, fit=(_i == len(self.similar_experiments) - 1)
-            # )
+            #     _hyperparameters, _evaluation, fit=(_i == len(self.similar_experiments) - 1))
 
             if eval_callbacks(self.callbacks, self.optimizer_result):
                 return self.optimizer_result
