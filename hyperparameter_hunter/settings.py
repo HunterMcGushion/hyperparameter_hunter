@@ -80,7 +80,7 @@ class G(object):
 
     @classmethod
     def reset_attributes(cls):
-        # TODO: Add documentation
+        """Return the attributes of :class:`settings.G` to their original values"""
         cls.Env = None
         cls.log = print
         cls.debug = print

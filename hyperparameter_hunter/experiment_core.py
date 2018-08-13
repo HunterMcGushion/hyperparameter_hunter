@@ -1,3 +1,28 @@
+"""This module is the core of all of the experimentation in `hyperparameter_hunter`, hence its name. It is impossible to
+understand :mod:`hyperparameter_hunter.experiments` without first having a grasp on what
+:meta:`hyperparameter_hunter.experiment_core.ExperimentMeta` is doing. This module serves to bridge the gap between Experiments,
+and :mod:`hyperparameter_hunter.callbacks` by dynamically making Experiments inherit various callbacks depending on the inputs
+given in order to make Experiments completely functional
+
+Related
+-------
+:mod:`hyperparameter_hunter.experiments`
+    Defines the structure of the experimentation process. While certainly very important, :mod:`hyperparameter_hunter.experiments`
+    wouldn't do much at all without :mod:`hyperparameter_hunter.callbacks`, or :mod:`hyperparameter_hunter.experiment_core`
+:mod:`hyperparameter_hunter.callbacks`
+    Defines classes used as parents to the classes defined in :mod:`hyperparameter_hunter.experiments`. This not only makes it
+    very easy to find the entire workflow for a given task, but also ensures that each instance of an Experiment inherits exactly
+    the functionality that it needs. For example, if no holdout data was given, then :meta:`experiment_core.ExperimentMeta` will
+    not add :class:`callbacks.evaluators.EvaluatorHoldout`, and :class:`callbacks.predictors.PredictorHoldout` to the list of
+    callbacks inherited by the Experiment. This means that the Experiment never needs to check for the existence of holdout data
+    in order to determine how it should proceed because it literally doesn't have the code that deals with holdout data
+
+Notes
+-----
+Was a metaclass really necessary here? Probably not, but it's being used for two reasons: 1) metaclasses are fun, and programming
+    (especially artificial intelligence) should be fun; and 2) it allowed for a very clean separation between the various
+    functions demanded by Experiments that are provided by :mod:`hyperparameter_hunter.callbacks`. Having each of the callbacks
+    separated in their own classes makes it very easy to debug existing functionality, and to add new callbacks in the future"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -17,11 +42,13 @@ import os
 
 
 class ExperimentMeta(type):
-    # TODO: Add documentation
+    """Metaclass that determines which callbacks should be inherited by an Experiment in order to complete its functionality"""
 
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
-        # Separate to preserve MRO of original base classes, after adding and sorting new bases
+        """Prepare the namespace for the Experiment by separating its parent classes according to those that were originally
+        provided, those that are provided on a class-wide basis, and those that are provided on an instance-wide basis. This is
+        done in order to preserve the intended MRO of the original base classes, after adding and sorting new bases"""
         namespace = dict(
             __original_bases=bases,
             __class_wide_bases=[],
@@ -32,6 +59,7 @@ class ExperimentMeta(type):
         return namespace
 
     def __new__(mcs, name, bases, namespace, **kwargs):
+        """Create a new class object that stores necessary class-wide callbacks to :attr:`__class_wide_bases`"""
         class_obj = super().__new__(mcs, name, bases, namespace)
 
         # Add cross-validation-related bases to inheritance tree
@@ -50,6 +78,8 @@ class ExperimentMeta(type):
         return class_obj
 
     def __call__(cls, *args, **kwargs):
+        """Store necessary instance-wide callbacks to :attr:`__instance_bases`, sort all dynamically added callback base classes,
+        then add them to the instance"""
         original_bases = getattr(cls, '__original_bases')
         class_wide_bases = getattr(cls, '__class_wide_bases')
         instance_bases = []
@@ -90,6 +120,33 @@ class ExperimentMeta(type):
 
 
 def base_callback_class_sorter(auxiliary_bases, parent_class_order=None):
+    """Sort callback classes in order to preserve the intended MRO of their descendant, and to enable callbacks that may depend
+    on one another to function properly
+
+    Parameters
+    ----------
+    auxiliary_bases: List
+        The callback classes to be sorted according to the order in which their parent is found in `parent_class_order`. For
+        example, if a class (x) in `auxiliary_bases` is the only descendant of the last class in `parent_class_order`, then
+        class x will be moved to the last position in `sorted_auxiliary_bases`. If multiple classes in `auxiliary_bases` are
+        descendants of the same parent in `parent_class_order`, they will be sorted alphabetically (from A-Z)
+    parent_class_order: List, or None, default=<See description>
+        List of base callback classes that define the sort order for `auxiliary_bases`. Note that these are not the normal
+        callback classes that add to the functionality of an Experiment, but the base classes from which the callback classes are
+        descendants. All the classes in `parent_class_order` should be defined in :mod:`hyperparameter_hunter.callbacks.bases`.
+        The last class in `parent_class_order` should be :class:`hyperparameter_hunter.callbacks.bases.BaseCallback`, which is the
+        parent class for all other base classes. This ensures that custom callbacks defined by
+        :func:`hyperparameter_hunter.callbacks.bases.lambda_callback` will be recognized as valid and executed last
+
+    Returns
+    -------
+    sorted_auxiliary_bases: List
+        The contents of `auxiliary_bases` sorted according to their parents' location in `parent_class_order`, then alphabetically
+
+    Raises
+    ------
+    ValueError
+        If `auxiliary_bases` contains a class that is not a descendant of any of the classes in `parent_class_order`"""
     if parent_class_order is None:
         parent_class_order = [
             BasePredictorCallback, BaseEvaluatorCallback, BaseAggregatorCallback, BaseLoggerCallback, BaseCallback

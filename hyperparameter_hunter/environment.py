@@ -58,18 +58,18 @@ class Environment():
 
     def __init__(
             self,
-            train_dataset,  # TODO: Allow providing separate train_input, train_target dataframes, or the full df
+            train_dataset,  # TODO: Allow providing separate (train_input, train_target) dataframes, or the full df
             environment_params_path=None,
             *,
             root_results_path=None,
-            holdout_dataset=None,  # TODO: Allow providing separate holdout_input, holdout_target dataframes, or the full df
-            test_dataset=None,  # TODO: Allow providing separate test_input, test_target dataframes, or the full df
+            metrics_map=None,
+            holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dataframes, or the full df
+            test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dataframes, or the full df
 
             target_column=None,
             id_column=None,
             do_predict_proba=None,
             prediction_formatter=None,
-            metrics_map=None,
             metrics_params=None,
 
             cross_validation_type=None,
@@ -100,6 +100,14 @@ class Environment():
             If valid directory path and the results directory has not yet been created, it will be created here. If this does not
             end with <ASSETS_DIRNAME>, it will be appended. If <ASSETS_DIRNAME>
             already exists at this path, new results will also be stored here. If None or invalid, results will not be stored
+        metrics_map: Dict, List, or None, default=None
+            Specifies all metrics to be used by their id keys, along with a means to compute the metric. If list, all values must
+            be strings that are attributes in :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
+            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the metric. Its corresponding
+            value must be one of: 1) a callable to calculate the metric, 2) None if the "id" key is an attribute in
+            `sklearn.metrics` and should be used to fetch a callable, 3) a string that is an attribute in `sklearn.metrics` and
+            should be used to fetch a callable. Metric callable functions should expect inputs of form (target, prediction), and
+            should return floats. See `metrics_params` for details on how these two are related
         holdout_dataset: Pandas.DataFrame, callable, str path, or None, default=None
             If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes (self.train: DataFrame,
             self.target_column: str) as input and returns the new (self.train: DataFrame, self.holdout: DataFrame). If str,
@@ -120,20 +128,10 @@ class Environment():
             will receive (raw_predictions: np.array, dataset_df: pd.DataFrame, target_column: str, id_column: str or None) as
             input and should return a properly formatted prediction DataFrame. The callable uses raw_predictions as the content,
             dataset_df to provide any id column, and target_column to identify the column in which to place raw_predictions
-            # TODO: Move metrics_map/metrics_params closer to the top of arguments, since one is required
-        metrics_map: Dict, List, or None, default=None
-            Specifies all metrics to be used by their id keys, along with a means to compute the metric. If list, all values must
-            be strings that are attributes in :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
-            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the metric. Its corresponding
-            value must be one of: 1) a callable to calculate the metric, 2) None if the "id" key is an attribute in
-            `sklearn.metrics` and should be used to fetch a callable, 3) a string that is an attribute in `sklearn.metrics` and
-            should be used to fetch a callable. Metric callable functions should expect inputs of form (target, prediction), and
-            should return floats. See `metrics_params` for details on how these two are related
         metrics_params: Dict, or None, default=dict()
             Dictionary of extra parameters to provide to :meth:`.metrics.ScoringMixIn.__init__`. `metrics_map` must be provided
             either 1) as an input kwarg to :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
             but not both. An Exception will be raised if both are given, or if neither is given
-            # TODO: Move metrics_map/metrics_params closer to the top of arguments, since one is required
         cross_validation_type: Class or str, default='KFold'
             The class to define cross-validation splits. If str, it must be an attribute of `sklearn.model_selection._split`, and
             it must be a cross-validation class that inherits one of the following `sklearn` classes: `BaseCrossValidator`, or

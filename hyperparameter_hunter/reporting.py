@@ -43,7 +43,7 @@ class ReportingHandler(object):
         self._configure_reporting_type()
 
     def _validate_parameters(self):
-        # TODO: Add documentation
+        """Ensure all logging parameters are properly formatted"""
         #################### reporting_type ####################
         valid_types = ['logging', 'standard', 'advanced']
         if not isinstance(self.reporting_type, str):
@@ -78,7 +78,7 @@ class ReportingHandler(object):
             raise TypeError('heartbeat_params must be a dict or None. Received {}'.format(type(self.heartbeat_params)))
 
     def _configure_reporting_type(self):
-        # TODO: Add documentation
+        """Update the placeholder logging methods to those specified by :attr:`reporting_type`, and initialize logging"""
         if self.reporting_type == 'standard':
             raise ValueError('Standard logging is not yet implemented. Please choose "logging"')
             # setattr(self, 'log', self._standard_log)
@@ -94,7 +94,7 @@ class ReportingHandler(object):
             raise ValueError('Advanced logging is not yet implemented. Please choose one of: ["logging", "standard"]')
 
     def _initialize_logging_logging(self):
-        # TODO: Add documentation
+        """Initialize and configure logging to be handled by the `logging` library"""
         exception_handler.hook_exception_handler()
 
         logger = logging.getLogger(__name__)
@@ -112,7 +112,25 @@ class ReportingHandler(object):
 
     @staticmethod
     def _configure_console_logger_handler(level='INFO', fmt=None, datefmt=None, style='%', **kwargs):
-        # TODO: Add documentation
+        """Configure the console handler in charge of printing log messages
+
+        Parameters
+        ----------
+        level: String, or Int, default='DEBUG'
+            The acceptable minimum message level for the console. Will be passed to :meth:`logging.StreamHandler.setlevel`
+        fmt: String, or None, default=None
+            The message formatting string for the console. Will be passed to :meth:`logging.Formatter.__init__`
+        datefmt: String, or None, default=None
+            The date formatting string for the console. Will be passed to :meth:`logging.Formatter.__init__`
+        style: String, default='%'
+            Specifies the type of string formatting used. Will be passed to :meth:`logging.Formatter.__init__`
+        **kwargs: Dict
+            Extra keyword arguments
+
+        Returns
+        -------
+        console_handler: `logging.StreamHandler` instance
+            The instantiated handler for the console"""
         console_handler = logging.StreamHandler()
         console_handler.setLevel(level)
 
@@ -122,7 +140,25 @@ class ReportingHandler(object):
         return console_handler
 
     def _configure_heartbeat_logger_handler(self, level='DEBUG', fmt=None, datefmt=None, style='%', **kwargs):
-        # TODO: Add documentation
+        """Configure the file handler in charge of adding log messages to the heartbeat file
+
+        Parameters
+        ----------
+        level: String, or Int, default='DEBUG'
+            The acceptable minimum message level for the heartbeat file. Will be passed to :meth:`logging.FileHandler.setlevel`
+        fmt: String, or None, default=None
+            The message formatting string for the heartbeat file. Will be passed to :meth:`logging.Formatter.__init__`
+        datefmt: String, or None, default=None
+            The date formatting string for the heartbeat file. Will be passed to :meth:`logging.Formatter.__init__`
+        style: String, default='%'
+            Specifies the type of string formatting used. Will be passed to :meth:`logging.Formatter.__init__`
+        **kwargs: Dict
+            Extra keyword arguments
+
+        Returns
+        -------
+        file_handler: `logging.FileHandler` instance
+            The instantiated handler for the heartbeat file"""
         # fmt = '<%(asctime)s> %(levelname)-8s - %(lineno)4d %(module)20s .%(funcName)10s - %(message)s'
         if self.heartbeat_path is None:
             raise FileExistsError
@@ -139,19 +175,33 @@ class ReportingHandler(object):
     # Placeholder Methods:
     ##################################################
     def log(self, content, **kwargs):
+        """Placeholder method before properly initialization"""
         pass
 
     def debug(self, content, **kwargs):
+        """Placeholder method before properly initialization"""
         pass
 
     def warn(self, content, **kwargs):
+        """Placeholder method before properly initialization"""
         pass
 
     ##################################################
     # Logging-Logging Methods:
     ##################################################
     def _logging_log(self, content, previous_frame=None, add_time=False, **kwargs):
-        # TODO: Add documentation
+        """Log an info message via the `logging` library
+
+        Parameters
+        ----------
+        content: String
+            The message to log
+        previous_frame: Frame, or None, default=None
+            The frame preceding the log call. If not provided, it will be inferred
+        add_time: Boolean, default=False
+            If True, the current time will be added to `content` before logging
+        **kwargs: Dict
+            Extra keyword arguments"""
         if self.add_frame is True:
             previous_frame = inspect.currentframe().f_back if previous_frame is None else previous_frame
             try:
@@ -164,7 +214,18 @@ class ReportingHandler(object):
         logging.info(content)
 
     def _logging_debug(self, content, previous_frame=None, add_time=False, **kwargs):
-        # TODO: Add documentation
+        """Log a debug message via the `logging` library
+
+        Parameters
+        ----------
+        content: String
+            The message to log
+        previous_frame: Frame, or None, default=None
+            The frame preceding the debug call. If not provided, it will be inferred
+        add_time: Boolean, default=False
+            If True, the current time will be added to `content` before logging
+        **kwargs: Dict
+            Extra keyword arguments"""
         if self.add_frame is True:
             previous_frame = inspect.currentframe().f_back if previous_frame is None else previous_frame
             try:
@@ -177,7 +238,14 @@ class ReportingHandler(object):
         logging.debug(content)
 
     def _logging_warn(self, content, **kwargs):
-        # TODO: Add documentation
+        """Log a warning message via the `logging` library
+
+        Parameters
+        ----------
+        content: String
+            The message to log
+        **kwargs: Dict
+            Extra keyword arguments"""
         if self.add_frame is True:
             previous_frame = inspect.currentframe().f_back
             try:
@@ -213,6 +281,7 @@ class ReportingHandler(object):
 
 
 class _Color():
+    """Object defining color codes for use with logging"""
     BLUE = '\033[34m'
     CYAN = '\033[36m'
     GREEN = '\033[32m'
@@ -279,8 +348,14 @@ class OptimizationReporter():
         self.print_header(header, line)
 
     def print_header(self, header, line):
-        """Utility to perform actual printing of headers given formatted inputs"""
-        # TODO: Fill in documentation
+        """Utility to perform actual printing of headers given formatted inputs
+
+        Parameters
+        ----------
+        header: String
+            Specifies the stage of optimization being entered, and the type of results to follow
+        line: String
+            The underlining to follow `header`"""
         print(header)
         print(line)
 
@@ -293,7 +368,14 @@ class OptimizationReporter():
         print('')
 
     def _print_column_name(self, value, size):
-        # TODO: Add documentation
+        """Print a column name within a specified `size` constraint
+
+        Parameters
+        ----------
+        value: String
+            The name of the column to print
+        size: Int
+            The number of characters that `value` should span"""
         try:
             print('{0:>{1}}'.format(value, size), end=self.end)
         except TypeError:  # Probably received a tuple including where param came from (init_params, extra_params, etc.)
@@ -334,12 +416,30 @@ class OptimizationReporter():
         self.iteration += 1
 
     def _print_target_value(self, value, pre='', post=''):
-        # TODO: Add documentation
+        """Print the utility of an Experiment
+
+        Parameters
+        ----------
+        value: String
+            The utility value to print
+        pre: String, default=''
+            Content to prepend to the formatted `value` string before printing
+        post: String, default=''
+            Content to append to the formatted `value` string before printing"""
         content = pre + '{: >10.5f}'.format(value) + post
         print(content, end=self.end)
 
     def _print_input_values(self, values, pre='', post=''):
-        # TODO: Add documentation
+        """Print the value of a hyperparameter used by an Experiment
+
+        Parameters
+        ----------
+        value: String
+            The hyperparameter value to print
+        pre: String, default=''
+            Content to prepend to the formatted `value` string before printing
+        post: String, default=''
+            Content to append to the formatted `value` string before printing"""
         for index in self.sorted_indexes:
             if isinstance(values[index], float):
                 content = '{0: >{1}.{2}f}'.format(
@@ -355,12 +455,12 @@ class OptimizationReporter():
             print(pre + content + post, end=self.end)
 
     def reset_timer(self):
-        # TODO: Add documentation
+        """Set :attr:`start_time`, and :attr:`last_round` to the current time"""
         self.start_time = datetime.now()
         self.last_round = datetime.now()
 
     def print_summary(self):
-        # TODO: Add documentation
+        """Print a summary of the results of hyperparameter optimization upon completion"""
         # TODO: Finish this
         if not self.verbose:
             return
@@ -570,60 +670,60 @@ def format_evaluation_results(results, separator='  |  ', float_format='{:.5f}')
     return content
 
 
-ADVANCED_FIT_LOGGING_DISPLAY_LAYOUT = [
-    {
-        "column_name": "General",
-        "sub_columns_names": [
-            ["fold", "Fold"],
-            ["run", "Run"],
-            ["seed", "Seed"],
-            ["step", "Step"],
-            ["start_time", "Start Time"],
-            ["end_time", "End Time"],
-            ["time_elapsed", "Time Elapsed"]
-        ],
-        "sub_column_min_sizes": [10, 10, 10, 20, 12, 12, 12]
-    },
-    # Will need to alter default "Score" sub-columns according to what metrics are actually being used
-    {
-        "column_name": "OOF Scores",
-        "sub_columns_names": [
-            ["oof_f1", "F1"],
-            ["oof_roc_auc", "ROC_AUC"]
-        ]
-    },
-    # Check that Holdout dataset is in use before adding "Holdout Scores" column
-    {
-        "column_name": "Holdout Scores",
-        "sub_columns_names": [
-            ["holdout_f1", "F1"],
-            ["holdout_roc_auc", "ROC_AUC"]
-        ]
-    },
-    {
-        "column_name": "Losses",
-        "sub_columns_names": [
-            ["train_loss", "Train"],
-            ["validation_loss", "Validation"]
-        ]
-    },
-]
-
-
-class AdvancedDisplayLayout(object):
-    def __init__(self):
-        pass
-
-
-class AdvancedFitLogging(object):
-    def __init__(self, display_layout=None, ):
-        self.display_layout = display_layout or ADVANCED_FIT_LOGGING_DISPLAY_LAYOUT
-
-    def _validate_parameters(self):
-        pass
-
-    def validate_display_layout(self):
-        pass
+# ADVANCED_FIT_LOGGING_DISPLAY_LAYOUT = [
+#     {
+#         "column_name": "General",
+#         "sub_columns_names": [
+#             ["fold", "Fold"],
+#             ["run", "Run"],
+#             ["seed", "Seed"],
+#             ["step", "Step"],
+#             ["start_time", "Start Time"],
+#             ["end_time", "End Time"],
+#             ["time_elapsed", "Time Elapsed"]
+#         ],
+#         "sub_column_min_sizes": [10, 10, 10, 20, 12, 12, 12]
+#     },
+#     # Will need to alter default "Score" sub-columns according to what metrics are actually being used
+#     {
+#         "column_name": "OOF Scores",
+#         "sub_columns_names": [
+#             ["oof_f1", "F1"],
+#             ["oof_roc_auc", "ROC_AUC"]
+#         ]
+#     },
+#     # Check that Holdout dataset is in use before adding "Holdout Scores" column
+#     {
+#         "column_name": "Holdout Scores",
+#         "sub_columns_names": [
+#             ["holdout_f1", "F1"],
+#             ["holdout_roc_auc", "ROC_AUC"]
+#         ]
+#     },
+#     {
+#         "column_name": "Losses",
+#         "sub_columns_names": [
+#             ["train_loss", "Train"],
+#             ["validation_loss", "Validation"]
+#         ]
+#     },
+# ]
+#
+#
+# class AdvancedDisplayLayout(object):
+#     def __init__(self):
+#         pass
+#
+#
+# class AdvancedFitLogging(object):
+#     def __init__(self, display_layout=None, ):
+#         self.display_layout = display_layout or ADVANCED_FIT_LOGGING_DISPLAY_LAYOUT
+#
+#     def _validate_parameters(self):
+#         pass
+#
+#     def validate_display_layout(self):
+#         pass
 
 
 def log(*contents, blocks=True, pad='#', size=80, sep='   ', pre_embed='', post_embed='', log_pad=1, float_format='{:.5f}'):
@@ -731,26 +831,25 @@ def log(*contents, blocks=True, pad='#', size=80, sep='   ', pre_embed='', post_
     print('{}\n{}\n{}'.format(pre_line, message, post_line))
 
 
-def warn(*contents, blocks=True, pad='!', size=80, sep='   ', pre_embed='', post_embed='', log_pad=1, float_format='{:.5f}'):
-    log(
-        *contents, blocks=blocks, pad=pad, size=size, sep=sep, pre_embed=pre_embed, post_embed=post_embed,
-        log_pad=log_pad, float_format=float_format
-    )
-
-
-def run_log_examples():
-    contents = ['OOF RMSLE: ', 0.385923758920757201, 'HOLDOUT_RMSLE: ', 0.4875906098329498035430, 'TIME: ', now_time()]
-
-    log(*contents)
-    print('\n\n\n')
-    log(*contents, size=70, pre_embed=now_time())
-    print('\n\n\n')
-    log(*contents, pre_embed=now_time(), post_embed=inspect.stack()[0][1])
-    print('\n\n\n')
-    log(*contents, pre_embed=now_time(), post_embed=inspect.stack()[0][1].split('/')[-1])
-    print('\n\n\n')
-    warn(*contents, pre_embed=now_time(), post_embed=inspect.stack()[0][1].split('/')[-1])
-    print('')
+# def warn(*contents, blocks=True, pad='!', size=80, sep='   ', pre_embed='', post_embed='', log_pad=1, float_format='{:.5f}'):
+#     log(
+#         *contents, blocks=blocks, pad=pad, size=size, sep=sep, pre_embed=pre_embed, post_embed=post_embed,
+#         log_pad=log_pad, float_format=float_format
+#     )
+#
+#
+# def run_log_examples():
+#     contents = ['OOF RMSLE: ', 0.385923758920757201, 'HOLDOUT_RMSLE: ', 0.4875906098329498035430, 'TIME: ', now_time()]
+#     log(*contents)
+#     print('\n\n\n')
+#     log(*contents, size=70, pre_embed=now_time())
+#     print('\n\n\n')
+#     log(*contents, pre_embed=now_time(), post_embed=inspect.stack()[0][1])
+#     print('\n\n\n')
+#     log(*contents, pre_embed=now_time(), post_embed=inspect.stack()[0][1].split('/')[-1])
+#     print('\n\n\n')
+#     warn(*contents, pre_embed=now_time(), post_embed=inspect.stack()[0][1].split('/')[-1])
+#     print('')
 
 
 if __name__ == '__main__':

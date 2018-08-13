@@ -49,9 +49,6 @@ import warnings
 from sklearn.model_selection import KFold, StratifiedKFold, RepeatedKFold, RepeatedStratifiedKFold
 import sklearn.utils as sklearn_utils
 
-##################################################
-# Declare Global Variables
-##################################################
 pd.set_option('display.expand_frame_repr', False)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=DeprecationWarning)

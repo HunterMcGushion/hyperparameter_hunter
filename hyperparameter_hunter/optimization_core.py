@@ -1,3 +1,19 @@
+"""This module defines the base Optimization Protocol classes. The classes defined herein are not intended for direct use, but are
+rather parent classes to those defined in :mod:`hyperparameter_hunter.optimization`
+
+Related
+-------
+:mod:`hyperparameter_hunter.optimization`
+    Defines the optimization classes that are intended for direct use. All classes defined in
+    :mod:`hyperparameter_hunter.optimization` should be descendants of :class:`optimization_core.BaseOptimizationProtocol`
+:mod:`hyperparameter_hunter.result_reader`
+    Used to locate result files for Experiments that may be similar to the current optimization constraints, and produce data to
+    learn from (in the case of :class:`InformedOptimizationProtocol`)
+:mod:`hyperparameter_hunter.space`
+    Defines the child classes of `hyperparameter_hunter.space.Dimension`, which are used to define the hyperparameters to optimize
+:mod:`hyperparameter_hunter.utils.optimization_utils`:
+    Provides utility functions for locating saved Experiments that fit within the constraints currently being optimized, as well
+    as :class:`AskingOptimizer`, which guides the search of :class:`optimization_core.InformedOptimizationProtocol`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -41,10 +57,12 @@ class OptimizationProtocolMeta(type):
 
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
+        """Prepare `namespace` to include :attr:`source_script`"""
         namespace = dict(source_script=None)
         return namespace
 
     def __call__(cls, *args, **kwargs):
+        """Set the instance's :attr:`source_script` to the absolute path of the file that instantiated the OptimizationProtocol"""
         setattr(cls, 'source_script', os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]))
         return super().__call__(*args, **kwargs)
 
@@ -636,7 +654,6 @@ class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta
 
     def _get_current_hyperparameters(self):
         """Retrieve the upcoming set of hyperparameters to be searched"""
-        # TODO: Finish documentation once UninformedOptimizationProtocol bugs have been squished
         current_hyperparameters = next(self.hyperparameter_space)
         return current_hyperparameters
 

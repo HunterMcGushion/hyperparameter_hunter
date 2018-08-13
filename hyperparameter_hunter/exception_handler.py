@@ -13,7 +13,21 @@ logger.addHandler(stream_handler)
 
 
 def handle_exception(exception_type, exception_value, exception_traceback):
-    # TODO: Add documentation
+    """Intercept raised exceptions to ensure they are included in an Experiment's log files
+
+    Parameters
+    ----------
+    exception_type: Exception
+        The class type of the exception that was raised
+    exception_value: Str
+        The message produced by the exception
+    exception_traceback: Exception.traceback
+        The traceback provided by the raised exception
+
+    Raises
+    ------
+    SystemExit
+        If `exception_type` is a subclass of KeyboardInterrupt"""
     if issubclass(exception_type, KeyboardInterrupt):
         logging.error('KEYBOARD INTERRUPT!')
         sys.__excepthook__(exception_type, exception_value, exception_traceback)
@@ -26,13 +40,20 @@ def handle_exception(exception_type, exception_value, exception_traceback):
 
 
 def hook_exception_handler():
-    # TODO: Add documentation
+    """Set `sys.excepthook` to :func:`hyperparameter_hunter.exception_handler.handle_exception`"""
     sys.excepthook = handle_exception
 
 
 class EnvironmentInactiveError(Exception):
     def __init__(self, message=None, extra=''):
-        # TODO: Add documentation
+        """Exception raised when an active instance of :class:`hyperparameter_hunter.environments.Environment` is not detected
+
+        Parameters
+        ----------
+        message: String, or None, default=None
+            A message to provide upon raising `EnvironmentExceptionError`
+        extra: String, default=''
+            Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
             message = 'You must activate a valid instance of :class:`environment.Environment`'
         super(EnvironmentInactiveError, self).__init__(message + extra)
@@ -40,7 +61,15 @@ class EnvironmentInactiveError(Exception):
 
 class EnvironmentInvalidError(Exception):
     def __init__(self, message=None, extra=''):
-        # TODO: Add documentation
+        """Exception raised when there is an active instance of :class:`hyperparameter_hunter.environments.Environment`, but it is
+        invalid for some reason
+
+        Parameters
+        ----------
+        message: String, or None, default=None
+            A message to provide upon raising `EnvironmentInvalidError`
+        extra: String, default=''
+            Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
             message = 'The currently active Environment is invalid. Please review proper Environment instantiation'
         super(EnvironmentInvalidError, self).__init__(message + extra)
@@ -48,7 +77,14 @@ class EnvironmentInvalidError(Exception):
 
 class RepeatedExperimentError(Exception):
     def __init__(self, message=None, extra=''):
-        # TODO: Add documentation
+        """Exception raised when a saved Experiment is found with the same hyperparameters as the Experiment being executed
+
+        Parameters
+        ----------
+        message: String, or None, default=None
+            A message to provide upon raising `RepeatedExperimentError`
+        extra: String, default=''
+            Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
             message = 'An Experiment with identical hyperparameters has already been conducted and has saved results'
         super(RepeatedExperimentError, self).__init__(message + extra)

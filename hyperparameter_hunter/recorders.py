@@ -1,3 +1,10 @@
+"""This module handles recording and properly formatting the various result files requested for a completed Experiment.
+Coincidentally, if a particular result file was blacklisted by the active Environment, that is also handled here
+
+Related
+-------
+:mod:`hyperparameter_hunter.experiments`
+    This is the intended user of the contents of :mod:`hyperparameter_hunter.recorders`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -20,7 +27,22 @@ from sys import exc_info
 
 class BaseRecorder(metaclass=ABCMeta):
     def __init__(self):
-        # TODO: Add documentation
+        """Base class for other classes that record various Experiment result files. Critical attributes of the descendants of
+        :class`recorders.BaseRecorder` are set here, enabling them to function properly
+
+        Returns
+        -------
+        None
+            If :attr:`result_path` is None, which means the present result file was blacklisted by the active Environment
+
+        Raises
+        ------
+        EnvironmentInactiveError
+            If :attr:`settings.G.Env` is None
+        EnvironmentInvalidError
+            If any of the following occur: 1) :attr:`settings.G.Env` does not have an attribute named 'result_paths',
+            2) :attr:`settings.G.Env.result_paths` does not contain the current `result_path_key`,
+            3) :attr:`settings.G.Env.current_task` is None"""
         self.result_path = None
         self.result = None
 
@@ -154,6 +176,8 @@ class DescriptionRecorder(BaseRecorder):
     ]
 
     def format_result(self):
+        """Format an OrderedDict containing the Experiment's identifying attributes, results, hyperparameters used, and other
+        stats or information that may be useful"""
         self.result = OrderedDict([
             ('experiment_id', self.experiment_id),
             ('algorithm_name', self.algorithm_name),
@@ -196,6 +220,15 @@ class DescriptionRecorder(BaseRecorder):
         }
 
     def save_result(self):
+        """Save the Experiment description as a .json file, named after :attr:`experiment_id`. If :attr:`do_full_save` is a
+        callable and returns False when given the description object, the result recording loop will be broken, and the remaining
+        result files will not be saved
+
+        Returns
+        -------
+        'break'
+            This string will be returned if :attr:`do_full_save` is a callable and returns False when given the description
+            object. This is the signal for :class:`recorders.RecorderList` to stop recording result files"""
         try:
             write_json(F'{self.result_path}/{self.experiment_id}.json', self.result, do_clear=False)
         except FileNotFoundError:
@@ -215,9 +248,11 @@ class HeartbeatRecorder(BaseRecorder):
     required_attributes = ['experiment_id']
 
     def format_result(self):
+        """Do nothing"""
         pass
 
     def save_result(self):
+        """Copy the global heartbeat log, and add it to the results dir as a .log file, named after :attr:`experiment_id`"""
         try:
             shutil.copyfile(F'{G.Env.result_paths["root"]}/Heartbeat.log', F'{self.result_path}/{self.experiment_id}.log')
         except FileNotFoundError:
@@ -236,11 +271,13 @@ class PredictionsHoldoutRecorder(BaseRecorder):
     required_attributes = ['final_holdout_predictions', 'holdout_dataset'] + prediction_recorder_attributes
 
     def format_result(self):
+        """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
             self.final_holdout_predictions, self.holdout_dataset, self.target_column, id_column=self.id_column
         )
 
     def save_result(self):
+        """Save holdout predictions to a .csv file, named after :attr:`experiment_id`"""
         try:
             self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
         except FileNotFoundError:
@@ -253,11 +290,13 @@ class PredictionsOOFRecorder(BaseRecorder):
     required_attributes = ['final_oof_predictions', 'train_dataset'] + prediction_recorder_attributes
 
     def format_result(self):
+        """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
             self.final_oof_predictions, self.train_dataset, self.target_column, id_column=self.id_column
         )
 
     def save_result(self):
+        """Save out-of-fold predictions to a .csv file, named after :attr:`experiment_id`"""
         try:
             self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
         except FileNotFoundError:
@@ -270,11 +309,13 @@ class PredictionsTestRecorder(BaseRecorder):
     required_attributes = ['final_test_predictions', 'test_dataset'] + prediction_recorder_attributes
 
     def format_result(self):
+        """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
             self.final_test_predictions, self.test_dataset, self.target_column, id_column=self.id_column
         )
 
     def save_result(self):
+        """Save test predictions to a .csv file, named after :attr:`experiment_id`"""
         try:
             self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
         except FileNotFoundError:
@@ -295,9 +336,11 @@ class TestedKeyRecorder(BaseRecorder):
     required_attributes = ['experiment_id', 'hyperparameter_key', 'cross_experiment_key']
 
     def format_result(self):
+        """Do nothing"""
         pass
 
     def save_result(self):
+        """Save the cross-experiment, and hyperparameter keys, and update their tested keys entries"""
         self.cross_experiment_key.save_key()
         self.hyperparameter_key.save_key()
         add_to_json(
@@ -309,16 +352,6 @@ class TestedKeyRecorder(BaseRecorder):
         )
 
 
-# class CrossExperimentKeyLookupRecorder(BaseRecorder):
-#     result_path_key = 'tested_keys'
-#     required_attributes = ['experiment_id', 'hyperparameter_key', 'cross_experiment_key']
-
-
-# class HyperparameterKeyLookupRecorder(BaseRecorder):
-#     result_path_key = 'tested_keys'
-#     required_attributes = ['experiment_id', 'hyperparameter_key', 'cross_experiment_key']
-
-
 ##################################################
 # Leaderboard
 ##################################################
@@ -327,11 +360,13 @@ class LeaderboardEntryRecorder(BaseRecorder):
     required_attributes = ['result_paths', 'current_task']
 
     def format_result(self):
+        """Read the existing global leaderboard, add the current entry, then sort the updated leaderboard"""
         self.result = GlobalLeaderboard.from_path(path=self.result_paths['global_leaderboard'])
         self.result.add_entry(self.current_task)
         self.result.sort(by=list(self.result.data.columns))
 
     def save_result(self):
+        """Save the updated leaderboard file"""
         try:
             self.result.save(path=self.result_paths['global_leaderboard'])
         except FileNotFoundError:

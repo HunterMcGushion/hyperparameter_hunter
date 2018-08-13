@@ -5,8 +5,9 @@ from hyperparameter_hunter.settings import G
 
 
 class BaseCallback(object):
-    """Callback classes' :meth:`__init__` will not be called, so any tasks that must be performed at the onset of an experiment
-    should be placed in :meth:`on_experiment_start`
+    """The base class from which all callbacks and all intermediate base callbacks are descendants. Callback classes'
+    :meth:`__init__` will not be called, so any tasks that must be performed at the onset of an experiment should be placed in
+    :meth:`on_experiment_start`
 
     Notes
     -----
@@ -21,9 +22,7 @@ class BaseCallback(object):
     executing the method of the same name in their parent classes, then the below debug messages should be visible in the
     "Heartbeat.log" file. Conversely, if any of the below debug messages are not printed to "Heartbeat.log", it is likely that a
     callback class's implementation of the corresponding method does not end with "super().<method_name>()". Such cases should be
-    remedied immediately, as the callback stream could be skipping any number of other callbacks
-    """
-
+    remedied immediately, as the callback stream could be skipping any number of other callbacks"""
     # FLAG: Try to implement something like below to ensure other attributes aren't modified (except predictions by Predictors)
     # FLAG: However, since ExperimentMeta makes BaseCallback a superclass of the Experiment classes, they would all pick up...
     # FLAG: ... this method, which would break everything.
@@ -39,27 +38,35 @@ class BaseCallback(object):
         print('I should not be printed. Ever.')
 
     def on_experiment_start(self):
+        """Perform tasks when an Experiment is started"""
         G.debug('BaseCallback.on_experiment_start()')
 
     def on_experiment_end(self):
+        """Perform tasks when an Experiment ends"""
         G.debug('BaseCallback.on_experiment_end()')
 
     def on_repetition_start(self):
+        """Perform tasks when a repetition is started during an Experiment's repeated cross-validation scheme"""
         G.debug('BaseCallback.on_repetition_start()')
 
     def on_repetition_end(self):
+        """Perform tasks when a repetition ends during an Experiment's repeated cross-validation scheme"""
         G.debug('BaseCallback.on_repetition_end()')
 
     def on_fold_start(self):
+        """Perform tasks when a fold is started during an Experiment's cross-validation scheme"""
         G.debug('BaseCallback.on_fold_start()')
 
     def on_fold_end(self):
+        """Perform tasks when a fold ends during an Experiment's cross-validation scheme"""
         G.debug('BaseCallback.on_fold_end()')
 
     def on_run_start(self):
+        """Perform tasks when a run is started during an Experiment's multiple-run-averaging phase"""
         G.debug('BaseCallback.on_run_start()')
 
     def on_run_end(self):
+        """Perform tasks when a run ends during an Experiment's multiple-run-averaging phase"""
         G.debug('BaseCallback.on_run_end()')
 
 
@@ -127,7 +134,9 @@ def lambda_callback(
     for method_name, method_content in methods:
         if callable(method_content):
             def _method_factory(_method_name=method_name, _method_content=method_content):
+                """Provide `_method_name` and `_method_content` for :func:`_method` to be executed properly"""
                 def _method(self):
+                    """Perform the tasks given in `_method_content`, then call parent's method of name `_method_name`"""
                     _method_content(*[getattr(self, _) for _ in required_attributes])
                     getattr(super(LambdaCallback, self), _method_name)()
 
@@ -139,18 +148,22 @@ def lambda_callback(
 
 
 class BasePredictorCallback(BaseCallback):
+    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.predictors` are descendants"""
     pass
 
 
 class BaseLoggerCallback(BaseCallback):
+    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.loggers` are descendants"""
     pass
 
 
 class BaseAggregatorCallback(BaseCallback):
+    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.aggregators` are descendants"""
     pass
 
 
 class BaseEvaluatorCallback(BaseCallback):
+    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.evaluators` are descendants"""
     pass
 
 
