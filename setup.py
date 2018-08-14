@@ -20,7 +20,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         # 'h5py',  # ?
-        'keras',  # TODO: Move to extras_require, with 'tensorflow'?
+        # 'keras',  # TODO: Move to extras_require, with 'tensorflow'?
         'numpy',
         'pandas',
         'scikit-learn',
