@@ -32,7 +32,7 @@ setup(
     ],
     extras_require={
         'docs': [
-            'hyperparamter_hunter',
+            'hyperparameter-hunter',
             'keras',
             'nbconvert'
         ]
