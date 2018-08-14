@@ -9,9 +9,8 @@
 # directory is relative to the documentation root, use os.path.abspath to make it absolute, like shown here.
 import os
 import sys
-from sphinx import addnodes
-from docutils.core import publish_string
-from docutils import nodes
+# from sphinx import addnodes
+# from docutils import nodes
 
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
@@ -151,27 +150,27 @@ texinfo_documents = [
 ##################################################
 # Extension Configuration
 ##################################################
-def docstring_processor(app, what, name, obj, options, lines):
-    # See http://www.sphinx-doc.org/en/master/ext/autodoc.html#event-autodoc-process-docstring
-    # Expected to modify `lines` in-place
-    print(app)  # Sphinx obj - Unnecessary
-    print(what)  # Type of object (method, class, module, function, ...)
-    print(name)  # Full name of object ('hyperparameter_hunter.environment.validate_file_blacklist')
-    print(obj)  # The literal <function>, <class>, ... object
-    print(options)  # Dict of options for docstring, like 'undoc-members', 'show-inheritance'
-    print(lines)  # List of strings, where each string is one line of the documentation
+# def docstring_processor(app, what, name, obj, options, lines):
+#     # See http://www.sphinx-doc.org/en/master/ext/autodoc.html#event-autodoc-process-docstring
+#     # Expected to modify `lines` in-place
+#     print(app)  # Sphinx obj - Unnecessary
+#     print(what)  # Type of object (method, class, module, function, ...)
+#     print(name)  # Full name of object ('hyperparameter_hunter.environment.validate_file_blacklist')
+#     print(obj)  # The literal <function>, <class>, ... object
+#     print(options)  # Dict of options for docstring, like 'undoc-members', 'show-inheritance'
+#     print(lines)  # List of strings, where each string is one line of the documentation
 
 
-def signature_processor(app, what, name, obj, options, signature, return_annotation):
-    # See http://www.sphinx-doc.org/en/master/ext/autodoc.html#event-autodoc-process-signature
-    # Expected to return tuple (`signature`, `return_annotation`) to change Sphinx output
-    print(app)  # Same as 'autodoc-process-docstring'
-    print(what)  # Same as 'autodoc-process-docstring'
-    print(name)  # Same as 'autodoc-process-docstring'
-    print(obj)  # Same as 'autodoc-process-docstring'
-    print(options)  # Same as 'autodoc-process-docstring'
-    print(signature)  # Function signature string - Looks like long named tuple
-    print(return_annotation)  # Function return annotation string if given (which it isn't), else None
+# def signature_processor(app, what, name, obj, options, signature, return_annotation):
+#     # See http://www.sphinx-doc.org/en/master/ext/autodoc.html#event-autodoc-process-signature
+#     # Expected to return tuple (`signature`, `return_annotation`) to change Sphinx output
+#     print(app)  # Same as 'autodoc-process-docstring'
+#     print(what)  # Same as 'autodoc-process-docstring'
+#     print(name)  # Same as 'autodoc-process-docstring'
+#     print(obj)  # Same as 'autodoc-process-docstring'
+#     print(options)  # Same as 'autodoc-process-docstring'
+#     print(signature)  # Function signature string - Looks like long named tuple
+#     print(return_annotation)  # Function return annotation string if given (which it isn't), else None
 
 
 # def mirror_role(role_name, raw_text, text, line_num, inliner, options=None, content=None):
@@ -258,8 +257,8 @@ def signature_processor(app, what, name, obj, options, signature, return_annotat
 #         return docstring
 
 
-def setup(app):
-    # app.add_role('mirror', mirror_role)
-    # app.connect('autodoc-process-docstring', docstring_processor)
-    # app.connect('autodoc-process-signature', signature_processor)
-    pass
+# def setup(app):
+#     # app.add_role('mirror', mirror_role)
+#     # app.connect('autodoc-process-docstring', docstring_processor)
+#     # app.connect('autodoc-process-signature', signature_processor)
+#     pass
