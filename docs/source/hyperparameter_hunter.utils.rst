@@ -52,6 +52,14 @@ hyperparameter\_hunter.utils.optimization\_utils module
     :undoc-members:
     :show-inheritance:
 
+hyperparameter\_hunter.utils.parsing\_utils module
+--------------------------------------------------
+
+.. automodule:: hyperparameter_hunter.utils.parsing_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 hyperparameter\_hunter.utils.result\_utils module
 -------------------------------------------------
 

@@ -133,6 +133,14 @@ hyperparameter\_hunter.reporting module
     :undoc-members:
     :show-inheritance:
 
+hyperparameter\_hunter.result\_reader module
+--------------------------------------------
+
+.. automodule:: hyperparameter_hunter.result_reader
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 hyperparameter\_hunter.settings module
 --------------------------------------
 
