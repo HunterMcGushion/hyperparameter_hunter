@@ -67,16 +67,16 @@ class BaseExperiment(ScoringMixIn):
 
         Parameters
         ----------
-        model_initializer: class, or functools.partial, or class instance
+        model_initializer: Class, or functools.partial, or class instance
             The algorithm class being used to initialize a model
-        model_init_params: dict, or object
+        model_init_params: Dict, or object
             The dictionary of arguments given when creating a model instance with `model_initializer` via the `__init__` method
-            of :class:`.models.Model`. Any kwargs that are considered valid by the `__init__` method of `model_initializer` are
+            of :class:`models.Model`. Any kwargs that are considered valid by the `__init__` method of `model_initializer` are
             valid in `model_init_params`
-        model_extra_params: dict, or None, default=None
-            A dictionary of extra parameters passed to :class:`.models.Model`. This is generally only used when
-            `model_initializer` is for a neural network, or some other algorithm that requires more complicated hyperparameters
-        feature_selector: List of column names, callable, list of booleans, default=None
+        model_extra_params: Dict, or None, default=None
+            A dictionary of extra parameters passed to :class:`models.Model`. This is used to provide parameters to models'
+            non-initialization methods (like `fit`, `predict`, `predict_proba`, etc.), and for neural networks
+        feature_selector: List of str, callable, list of booleans, default=None
             The value provided when splitting apart the input data for all provided DataFrames. `feature_selector` is provided as
             the second argument for calls to `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less :attr:`target_column`, and :attr:`id_column`

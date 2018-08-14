@@ -160,14 +160,29 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         Parameters
         ----------
-        model_initializer: :mirror:`experiments.BaseExperiment.__init__(param:model_initializer)`
-        model_init_params: :mirror:`experiments.BaseExperiment.__init__(param:model_init_params)`
-        model_extra_params: :mirror:`experiments.BaseExperiment.__init__(param:model_extra_params)`
-        feature_selector: :mirror:`experiments.BaseExperiment.__init__(param:feature_selector)`
-        preprocessing_pipeline: :mirror:`experiments.BaseExperiment.__init__(param:preprocessing_pipeline)`
-        preprocessing_params: :mirror:`experiments.BaseExperiment.__init__(param:preprocessing_params)`
-        notes: :mirror:`experiments.BaseExperiment.__init__(param:notes)`
-        do_raise_repeated: :mirror:`experiments.BaseExperiment.__init__(param:do_raise_repeated)`
+        model_initializer: Class, or functools.partial, or class instance
+            The algorithm class being used to initialize a model
+        model_init_params: Dict, or object
+            The dictionary of arguments given when creating a model instance with `model_initializer` via the `__init__` method
+            of :class:`models.Model`. Any kwargs that are considered valid by the `__init__` method of `model_initializer` are
+            valid in `model_init_params`
+        model_extra_params: Dict, or None, default=None
+            A dictionary of extra parameters passed to :class:`models.Model`. This is used to provide parameters to models'
+            non-initialization methods (like `fit`, `predict`, `predict_proba`, etc.), and for neural networks
+        feature_selector: List of str, callable, list of booleans, default=None
+            The value provided when splitting apart the input data for all provided DataFrames. `feature_selector` is provided as
+            the second argument for calls to `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
+            `feature_selector` is set to all columns in :attr:`train_dataset`, less :attr:`target_column`, and :attr:`id_column`
+        preprocessing_pipeline: ...
+            ... Experimental...
+        preprocessing_params: ...
+            ... Experimental...
+        notes: String, or None, default=None
+            Additional information about the Experiment that will be saved with the Experiment's description result file. This
+            serves no purpose other than to facilitate saving Experiment details in a more readable format
+        do_raise_repeated: Boolean, default=False
+            If True and this Experiment locates a previous Experiment's results with matching Environment and Hyperparameter Keys,
+            a RepeatedExperimentError will be raised. Else, a warning will be logged
 
         Notes
         -----
@@ -462,11 +477,22 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         Parameters
         ----------
-        target_metric: :mirror:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.__init__(param:target_metric)`
-        iterations: :mirror:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.__init__(param:iterations)`
-        verbose: :mirror:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.__init__(param:verbose)`
-        read_experiments: :mirror:`optimization_core.BaseOptimizationProtocol.__init__(param:read_experiments)`
-        reporter_parameters: :mirror:`optimization_core.BaseOptimizationProtocol.__init__(param:reporter_parameters)`
+        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics_map`>)
+            A path denoting the metric to be used to compare completed Experiments within the Optimization Protocol. The first
+            value should be one of ['oof', 'holdout', 'in_fold']. The second value should be the name of a metric being recorded
+            according to the values supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
+            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or used as the `target_metric`
+            input to this function are acceptable values for :attr:`BaseOptimizationProtocol.target_metric`
+        iterations: Int, default=1
+            The number of distinct experiments to execute
+        verbose: Int 0, 1, or 2, default=1
+            Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization Protocol. 2: In addition to
+            logs shown when verbose=1, also show the logs from individual Experiments
+        read_experiments: Boolean, default=True
+            If True, all Experiment records that fit within the current :attr:`hyperparameter_space`, and are for the same
+            :attr:`algorithm_name`, and match the current guidelines, will be read in and used to fit any optimizers
+        reporter_parameters: Dict, or None, default=None
+            Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
         base_estimator: String in ['GP', 'GBRT', 'RF', 'ET', 'DUMMY'], or an `sklearn` regressor, default='GP'
             If one of the above strings, a default model of that type will be used. Else, should inherit from
             :class:`sklearn.base.RegressorMixin`, and its :meth:`predict` should have an optional `return_std` argument, which

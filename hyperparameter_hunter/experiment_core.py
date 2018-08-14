@@ -20,9 +20,9 @@ Related
 Notes
 -----
 Was a metaclass really necessary here? Probably not, but it's being used for two reasons: 1) metaclasses are fun, and programming
-    (especially artificial intelligence) should be fun; and 2) it allowed for a very clean separation between the various
-    functions demanded by Experiments that are provided by :mod:`hyperparameter_hunter.callbacks`. Having each of the callbacks
-    separated in their own classes makes it very easy to debug existing functionality, and to add new callbacks in the future"""
+(especially artificial intelligence) should be fun; and 2) it allowed for a very clean separation between the various
+functions demanded by Experiments that are provided by :mod:`hyperparameter_hunter.callbacks`. Having each of the callbacks
+separated in their own classes makes it very easy to debug existing functionality, and to add new callbacks in the future"""
 ##################################################
 # Import Own Assets
 ##################################################

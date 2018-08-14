@@ -49,7 +49,7 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
     Parameters
     ----------
     model_initializer: :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
-        :mirror:`hyperparameter_hunter.library_helpers.keras_optimization_helper.initialize_dummy_model(param:model_initializer)`
+        A descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper` used to construct a Keras model
     build_fn: Callable
         The `build_fn` value provided to :meth:`keras.wrappers.scikit_learn.BaseWrapper.__init__`. Expected to return a compiled
         Keras model. May contain hyperparameter space choices

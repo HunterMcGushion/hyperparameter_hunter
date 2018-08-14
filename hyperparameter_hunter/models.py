@@ -234,20 +234,32 @@ class KerasModel(Model):
         Parameters
         ----------
         model_initializer: :class:`keras.wrappers.scikit_learn.KerasClassifier`, or `keras.wrappers.scikit_learn.KerasRegressor`
-            :mirror:`hyperparameter_hunter.models.Model.__init__(param:model_initializer)`
+            Expected to implement at least the following methods: 1) `__init__`, to which :attr:`initialization_params` will
+            usually be provided unless stated otherwise in a child class's documentation - like :class:`KerasModel`. 2) `fit`, to
+            which :attr:`train_input`, and :attr:`train_target` will be provided, in addition to the contents of
+            :attr:`extra_params['fit']` in some child classes - like :class:`XGBoostModel`. 3) `predict`, or `predict_proba` if
+            applicable, which should accept any array-like input of shape: (<num_samples>, `train_input.shape[1]`)
         initialization_params: Dict containing `build_fn`
             A dictionary containing the single key: `build_fn`, which is a callable function that returns a compiled Keras model
         extra_params: Dict, default={}
             The parameters expected to be passed to the extra methods of the compiled Keras model. Such methods include (but are
             not limited to) `fit`, `predict`, and `predict_proba`. Some of the common parameters given here include `epochs`,
             `batch_size`, and `callbacks`
-        train_input: :mirror:`hyperparameter_hunter.models.Model.__init__(param:train_input)`
-        train_target: :mirror:`hyperparameter_hunter.models.Model.__init__(param:train_target)`
-        validation_input: :mirror:`hyperparameter_hunter.models.Model.__init__(param:validation_input)`
-        validation_target: :mirror:`hyperparameter_hunter.models.Model.__init__(param:validation_target)`
-        do_predict_proba: :mirror:`hyperparameter_hunter.models.Model.__init__(param:do_predict_proba)`
-        target_metric: :mirror:`hyperparameter_hunter.models.Model.__init__(param:target_metric)`
-        metrics_map: :mirror:`hyperparameter_hunter.models.Model.__init__(param:metrics_map)`"""
+        train_input: `pandas.DataFrame`
+            The model's training input data
+        train_target: `pandas.DataFrame`
+            The true labels corresponding to the rows of :attr:`train_input`
+        validation_input: `pandas.DataFrame`, or None
+            The model's validation input data to evaluate performance during fitting
+        validation_target: `pandas.DataFrame`, or None
+            The true labels corresponding to the rows of :attr:`validation_input`
+        do_predict_proba: Boolean, default=False
+            If True, :meth:`Model.fit` will call :meth:`models.Model.model.predict_proba`. Else, it will
+            call :meth:`models.Model.model.predict`
+        target_metric: Tuple
+            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`
+        metrics_map: Dict
+            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`"""
         if model_initializer.__name__ not in ('KerasClassifier', 'KerasRegressor'):
             raise ValueError('KerasModel given invalid model_initializer: {} - {}\nTry using the standard Model class'.format(
                 type(model_initializer), (model_initializer.__name__ or model_initializer)
@@ -263,12 +275,12 @@ class KerasModel(Model):
         from keras.models import load_model
 
     def initialize_model(self):
-        """:mirror:`hyperparameter_hunter.models.Model.initialize_model`"""
+        """Create an instance of a model using :attr:`model_initializer`, with :attr:`initialization_params` as input"""
         self.validate_keras_params()
         self.model = self.initialize_keras_neural_network()
 
     def fit(self):
-        """:mirror:`hyperparameter_hunter.models.Model.fit`"""
+        """Train a model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
         try:
             self.model.fit(self.train_input, self.train_target)
         except Exception as _ex:
