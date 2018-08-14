@@ -30,6 +30,13 @@ setup(
         'dill',  # New
         'tensorflow==1.5.0',  # TODO: Might want to include in extras_require with 'keras'?
     ],
+    extras_require={
+        'docs': [
+            'hyperparamter_hunter',
+            'keras',
+            'nbconvert'
+        ]
+    },
     include_package_data=True,
     zip_safe=False,
     test_suite='nose.collector',
