@@ -5,7 +5,7 @@
 Related
 -------
 :mod:`hyperparameter_hunter.experiment_core`
-    Defines :meta:`ExperimentMeta`, an understanding of which is critical to being able to understand :mod:`experiments`
+    Defines :class:`ExperimentMeta`, an understanding of which is critical to being able to understand :mod:`experiments`
 :mod:`hyperparameter_hunter.metrics`
     Defines :class:`ScoringMixIn`, a parent of :class:`experiments.BaseExperiment` that enables scoring and evaluating models
 :mod:`hyperparameter_hunter.models`

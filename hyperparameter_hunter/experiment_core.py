@@ -1,6 +1,6 @@
 """This module is the core of all of the experimentation in `hyperparameter_hunter`, hence its name. It is impossible to
 understand :mod:`hyperparameter_hunter.experiments` without first having a grasp on what
-:meta:`hyperparameter_hunter.experiment_core.ExperimentMeta` is doing. This module serves to bridge the gap between Experiments,
+:class:`hyperparameter_hunter.experiment_core.ExperimentMeta` is doing. This module serves to bridge the gap between Experiments,
 and :mod:`hyperparameter_hunter.callbacks` by dynamically making Experiments inherit various callbacks depending on the inputs
 given in order to make Experiments completely functional
 
@@ -12,7 +12,7 @@ Related
 :mod:`hyperparameter_hunter.callbacks`
     Defines classes used as parents to the classes defined in :mod:`hyperparameter_hunter.experiments`. This not only makes it
     very easy to find the entire workflow for a given task, but also ensures that each instance of an Experiment inherits exactly
-    the functionality that it needs. For example, if no holdout data was given, then :meta:`experiment_core.ExperimentMeta` will
+    the functionality that it needs. For example, if no holdout data was given, then :class:`experiment_core.ExperimentMeta` will
     not add :class:`callbacks.evaluators.EvaluatorHoldout`, and :class:`callbacks.predictors.PredictorHoldout` to the list of
     callbacks inherited by the Experiment. This means that the Experiment never needs to check for the existence of holdout data
     in order to determine how it should proceed because it literally doesn't have the code that deals with holdout data

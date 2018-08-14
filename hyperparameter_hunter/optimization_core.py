@@ -68,7 +68,7 @@ class OptimizationProtocolMeta(type):
 
 
 class MergedOptimizationMeta(OptimizationProtocolMeta, ABCMeta):
-    """Metaclass to combine :meta:`OptimizationProtocolMeta`, and :meta:`ABCMeta`"""
+    """Metaclass to combine :class:`OptimizationProtocolMeta`, and `ABCMeta`"""
     pass
 
 
