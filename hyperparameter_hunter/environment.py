@@ -547,13 +547,3 @@ def validate_file_blacklist(blacklist):
             G.warn(F'Including {a_file!r} in file_blacklist will severely impede the functionality of this library')
 
     return blacklist
-
-
-def _execute():
-    # invalid_blacklist = ['foo', 'bar', 14, {'a': 10, 'b': 20}]
-    # validate_file_blacklist(invalid_blacklist)
-    pass
-
-
-if __name__ == '__main__':
-    _execute()
