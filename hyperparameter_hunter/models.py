@@ -294,10 +294,7 @@ class KerasModel(Model):
             #################### Load Model Checkpoint if Possible ####################
             for callback in self.extra_params.get('callbacks', []):
                 if callback.__class__.__name__ == 'ModelCheckpoint':
-                    # TODO: Grab all '__hh' attrs from `model.layers` - `load_model` fucks with '<kernel/bias>_initializer'
-                    # TODO: After setting `self.model` to result of `load_model`, revert the '__hh' attrs to saved values
-                    self.model = load_model(callback.filepath)
-                    # TODO: Revert '__hh' attrs to their original states - Saved above - Before `load_model` call
+                    self.model.model.load_weights(callback.filepath)
 
     def get_input_shape(self, get_dim=False):
         """Calculate the shape of the input that should be expected by the model
