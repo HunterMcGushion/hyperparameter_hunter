@@ -196,22 +196,6 @@ class DescriptionRecorder(BaseRecorder):
             ('aggregates', self.stat_aggregates),
         ])
 
-        #################### Describe Keras Model ####################
-        if self.module_name == 'keras':
-            layers, compile_params = parameterize_compiled_keras_model(self.model.model.model)
-
-            # TODO: Bug when recording `compile_params['optimizer_params']['lr']` when decay/scheduling used
-            # TODO: Model's `get_config()` returns the final learning rate, rather than the initial one, so experiment description
-            # TODO: files are misleading by not displaying the actual value used, and leads to failed similar experiment matches
-            # TODO: See experiment "f408beed-87ed-44a3-8672-c1171dc41bbe" - Started with default adam lr=0.001 - Ended with 0.0001
-
-            del compile_params['loss_functions']  # TODO: Try to hash this, instead
-
-            self.result['keras_architecture'] = dict(
-                compile_params=compile_params,
-                layers=layers,
-            )
-
         #################### Filter hyperparameters' model_init_params ####################
         bad_keys = {'random_state', 'seed'}
 

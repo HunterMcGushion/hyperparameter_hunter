@@ -29,6 +29,7 @@ from hyperparameter_hunter.utils.parsing_utils import stringify_model_builder, w
 ##################################################
 from collections import OrderedDict
 from contextlib import suppress
+from copy import deepcopy
 import os
 import re
 import sys
@@ -209,7 +210,7 @@ def merge_compile_params(compile_params, dummified_params):
     merged_params: Dict
         A dictionary that mirrors `compile_params`, except where an element of `dummified_params` has the same path/key, in which
         case the hyperparameter space choice value in `dummified_params` is used"""
-    # FLAG: Will need to deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
+    # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
     _dummified_params = {
         (_k[1:] if _k[0] == 'params' else _k): _v for _k, _v in dummified_params.copy().items()
     }
@@ -286,13 +287,15 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
         Mirrors the given `extra_params`, except any descendants of :class:`space.Dimension` now have a 'location' attribute"""
     def visit_builder(param_type):
         """Define a visit function that prepends `param_type` to the 'location' tuple added in `_visit`"""
+        param_type = (param_type,) if not isinstance(param_type, tuple) else param_type
+
         def _visit(path, key, value):
             """If `value` is a descendant of :class:`space.Dimension`, add 'location' to itself and its copy in `dimensions`"""
             if isinstance(value, (Real, Integer, Categorical)):
                 for i in range(len(dimensions)):
                     if dimensions[i].id == value.id:
-                        setattr(dimensions[i], 'location', ((param_type,) + path + (key,)))
-                        setattr(value, 'location', ((param_type,) + path + (key,)))
+                        setattr(dimensions[i], 'location', (param_type + path + (key,)))
+                        setattr(value, 'location', (param_type + path + (key,)))
             return (key, value)
         return _visit
 
@@ -304,14 +307,13 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
         return default_enter(path, key, value)
 
     # noinspection PyUnusedLocal
-    _new_layers = remap(layers.copy(), visit=visit_builder('layers'))
+    _new_layers = remap(layers.copy(), visit=visit_builder(('model_init_params', 'layers')))
     # noinspection PyUnusedLocal
-    _new_compile_params = remap(compile_params.copy(), visit=visit_builder('compile_params'))
+    _new_compile_params = remap(compile_params.copy(), visit=visit_builder(('model_init_params', 'compile_params')))
     # noinspection PyUnusedLocal
     _new_extra_params = remap(
         {_k: _v for _k, _v in extra_params.items() if _k != 'params'},
         visit=visit_builder('model_extra_params'), enter=extra_enter
-        # visit=visit_builder('extra_params'), enter=extra_enter
     )
 
     # `extra_params` has locations for `layers`, `compile_params`, `extra_params` - Of form expected by `build_fn` (less choices)
@@ -343,6 +345,14 @@ def initialize_dummy_model(model_initializer, build_fn, wrapper_params):
     dummy: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
         An initialized and compiled descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper`"""
     setattr(G, 'use_dummy_keras_tracer', True)  # `use_dummy_keras_tracer`=True handles dummifying params via `KerasTracer`
+
+    wrapper_params = deepcopy(wrapper_params)
+
+    if 'input_dim' in wrapper_params:
+        wrapper_params['input_shape'] = (wrapper_params['input_dim'],)
+        del wrapper_params['input_dim']
+    if ('input_shape' not in wrapper_params) or (wrapper_params['input_shape'][0] <= 0):
+        wrapper_params['input_shape'] = (1,)
 
     dummy = model_initializer(build_fn=build_fn, **wrapper_params)
 

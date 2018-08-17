@@ -14,10 +14,7 @@ def execute():
 
     experiment = CrossValidationExperiment(
         model_initializer=XGBClassifier,
-        model_init_params=dict(objective='reg:linear', max_depth=3, n_estimators=100, subsample=0.5),
-        model_extra_params=dict(
-            fit=dict(eval_set=[(env.validation_input, env.validation_target)]),
-        )
+        model_init_params=dict(objective='reg:linear', max_depth=3, n_estimators=100, subsample=0.5)
     )
 
 

@@ -192,6 +192,26 @@ class Space(skopt_space.Space):
 
         return search_space_size
 
+    def get_names(self, use_location=True):
+        """Retrieve the names, or locations of all dimensions in the hyperparameter search space
+
+        Parameters
+        ----------
+        use_location: Boolean, default=True
+            If True and a dimension has a non-null attribute called 'location', its value will be used instead of 'name'
+
+        Returns
+        -------
+        names: List
+            A list of strings or tuples, in which each value is the name or location of the dimension at that index"""
+        names = []
+        for dimension in self.dimensions:
+            if use_location and hasattr(dimension, 'location') and dimension.location:
+                names.append(dimension.location)
+            else:
+                names.append(dimension.name)
+        return names
+
 
 ##################################################
 # Space Utilities

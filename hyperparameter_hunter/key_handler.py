@@ -2,7 +2,8 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.exception_handler import EnvironmentInvalidError, EnvironmentInactiveError
-from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_key, keras_callback_to_dict
+from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_dict, parameterize_compiled_keras_model
+from hyperparameter_hunter.library_helpers.keras_optimization_helper import initialize_dummy_model
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json
 from hyperparameter_hunter.utils.boltons_utils import remap
@@ -137,7 +138,6 @@ class KeyMaker(metaclass=ABCMeta):
             -------
             Tuple of (`key`, value), in which value is either unchanged or a hash for the original `value`"""
             if isinstance(value, BaseKerasCallback):
-                # return (key, keras_callback_to_key(value))
                 return (key, keras_callback_to_dict(value))
             elif callable(value) or isinstance(value, pd.DataFrame):
                 hashed_value = make_hash_sha256(value)
@@ -290,6 +290,33 @@ class HyperparameterKeyMaker(KeyMaker):
         **kwargs: Dict
             Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         self.cross_experiment_key = cross_experiment_key
+
+        if hasattr(G.Env, 'current_task') and G.Env.current_task and G.Env.current_task.module_name == 'keras':
+            parameters = deepcopy(parameters)
+
+            #################### Initialize and Parameterize Dummy Model ####################
+            temp_model = initialize_dummy_model(
+                parameters['model_initializer'], parameters['model_init_params']['build_fn'], parameters['model_extra_params']
+            )
+
+            temp_layers, temp_compile_params = parameterize_compiled_keras_model(temp_model)
+
+            #################### Process Parameters ####################
+            # noinspection PyUnusedLocal
+            def _visit(path, key, value):
+                """If `key` is not in ('input_shape', 'input_dim'), return True. Else, return False"""
+                return key not in ('input_shape', 'input_dim')
+
+            temp_layers = remap(temp_layers, visit=_visit)
+
+            parameters['model_init_params']['layers'] = temp_layers
+            parameters['model_init_params']['compile_params'] = temp_compile_params
+
+            if 'params' in parameters['model_extra_params']:
+                parameters['model_extra_params'] = {
+                    _k: _v for _k, _v in parameters['model_extra_params'].items() if _k != 'params'
+                }
+
         KeyMaker.__init__(self, parameters, **kwargs)
 
     @staticmethod
@@ -312,6 +339,9 @@ class HyperparameterKeyMaker(KeyMaker):
             'random_state', 'random_seed', 'seed',
             'n_jobs', 'nthread',
         }
+
+        if hasattr(G.Env, 'current_task') and G.Env.current_task and G.Env.current_task.module_name == 'keras':
+            reject_keys.add('build_fn')
 
         for k in reject_keys:
             if parameters['model_init_params'] and (k in parameters['model_init_params'].keys()):

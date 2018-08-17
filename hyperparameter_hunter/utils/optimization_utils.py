@@ -308,9 +308,8 @@ def get_scored_params(experiment_description_path, target_metric):
     all_hyperparameters = description['hyperparameters']
 
     if description['module_name'].lower() == 'keras':
-        all_hyperparameters.update(description['keras_architecture'])
-        all_hyperparameters['layers'] = consolidate_layers(
-            all_hyperparameters['layers'], class_name_key=False, separate_args=False
+        all_hyperparameters['model_init_params']['layers'] = consolidate_layers(
+            all_hyperparameters['model_init_params']['layers'], class_name_key=False, separate_args=False
         )
 
     return (all_hyperparameters, evaluation)
@@ -332,8 +331,7 @@ def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters fit within the `hyperparameter_space`"""
-    dimension_names = [_.location if hasattr(_, 'location') else _.name for _ in hyperparameter_space.dimensions]
-
+    dimension_names = hyperparameter_space.get_names()
     hyperparameters_and_scores = list(filter(
         lambda _: dimension_subset(_[0], dimension_names) in hyperparameter_space, hyperparameters_and_scores
     ))
@@ -368,8 +366,7 @@ def filter_by_guidelines(
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters matched the guideline hyperparameters"""
-    dimensions = [_.location if hasattr(_, 'location') else _.name for _ in hyperparameter_space.dimensions]
-    dimensions = [('model_init_params', _) if isinstance(_, str) else _ for _ in dimensions]
+    dimensions = [('model_init_params', _) if isinstance(_, str) else _ for _ in hyperparameter_space.get_names()]
     # `dimensions` = hyperparameters to be ignored. Filter by all remaining
 
     dimensions_to_ignore = [
@@ -381,7 +378,7 @@ def filter_by_guidelines(
         (None, 'seed'),
         ('model_init_params', 'n_jobs'),
         ('model_init_params', 'nthread'),
-        ('compile_params', 'loss_functions'),  # TODO: Remove this once loss_functions are hashed in description files
+        ('model_init_params', 'compile_params', 'loss_functions'),  # TODO: Remove this once loss_functions are hashed in description files
     ]
 
     temp_guidelines = dict(

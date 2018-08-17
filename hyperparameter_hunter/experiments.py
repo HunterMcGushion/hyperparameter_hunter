@@ -248,11 +248,6 @@ class BaseExperiment(ScoringMixIn):
         #     G.log('Dataset: "{}" {} updated'.format(dataset_name, 'was not' if old_val.equals(new_val) else 'was'))
         #     setattr(self, dataset_name, new_val)
 
-        #################### Feature Selection ####################
-        if self.feature_selector is None:
-            restricted_cols = [_ for _ in [self.target_column, self.id_column] if _ is not None]
-            self.feature_selector = [_ for _ in self.train_dataset.columns.values if _ not in restricted_cols]
-
         self.train_input_data = self.train_dataset.copy().loc[:, self.feature_selector]
         self.train_target_data = self.train_dataset.copy()[[self.target_column]]
 
@@ -272,6 +267,11 @@ class BaseExperiment(ScoringMixIn):
         """Ensure provided input parameters are properly formatted"""
         #################### target_metric ####################
         self.target_metric = get_formatted_target_metric(self.target_metric, self.metrics_map)
+
+        #################### feature_selector ####################
+        if self.feature_selector is None:
+            restricted_cols = [_ for _ in [self.target_column, self.id_column] if _ is not None]
+            self.feature_selector = [_ for _ in self.train_dataset.columns.values if _ not in restricted_cols]
 
         G.debug('Experiment parameters have been validated')
 
@@ -312,13 +312,6 @@ class BaseExperiment(ScoringMixIn):
             feature_selector=self.feature_selector,
             # FLAG: Should probably add :attr:`target_metric` to key - With option to ignore it?
         )
-
-        #################### Remove Delivery Dict for Build Function ####################
-        if self.module_name == 'keras':
-            if 'params' in parameters['model_extra_params']:
-                parameters['model_extra_params'] = {
-                    _k: _v for _k, _v in self.model_extra_params.items() if _k != 'params'
-                }
 
         self.hyperparameter_key = HyperparameterKeyMaker(parameters, self.cross_experiment_key)
         G.log('Generated hyperparameter key: {}'.format(self.hyperparameter_key))

@@ -208,6 +208,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             G.warn_('WARNING: Setting `do_raise_repeated`=False will allow Experiments to be unnecessarily duplicated')
 
         self.algorithm_name, self.module_name = identify_algorithm(self.model_initializer)
+        self._validate_guidelines()
 
         #################### Deal with Keras ####################
         if self.module_name == 'keras':
@@ -400,6 +401,16 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         """Ensure provided input parameters are properly formatted"""
         self.target_metric = get_formatted_target_metric(self.target_metric, G.Env.metrics_map, default_dataset='oof')
 
+    def _validate_guidelines(self):
+        """Ensure provided Experiment guideline parameters are properly formatted"""
+        target_column = G.Env.target_column
+        id_column = G.Env.id_column
+        train_dataset = G.Env.train_dataset.copy()
+
+        if self.feature_selector is None:
+            restricted_cols = [_ for _ in [target_column, id_column] if _ is not None]
+            self.feature_selector = [_ for _ in train_dataset.columns.values if _ not in restricted_cols]
+
     def _find_similar_experiments(self):
         """Look for Experiments that were performed under similar conditions (algorithm and cross-experiment parameters)"""
         if self.read_experiments is False:
@@ -414,8 +425,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         )
 
         if self.module_name == 'keras':
-            model_params['layers'] = self.dummy_layers
-            model_params['compile_params'] = self.dummy_compile_params
+            model_params['model_init_params']['layers'] = self.dummy_layers
+            model_params['model_init_params']['compile_params'] = self.dummy_compile_params
 
         experiment_finder = finder_selector(self.module_name)(
             self.algorithm_name, G.Env.cross_experiment_key, self.target_metric, self.hyperparameter_space,
@@ -621,7 +632,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         self.current_hyperparameters_list = _current_hyperparameters
 
         current_hyperparameters = dict(zip(
-            [_.name for _ in self.hyperparameter_space.dimensions], self.current_hyperparameters_list
+            self.hyperparameter_space.get_names(use_location=False), self.current_hyperparameters_list
         ))
 
         return current_hyperparameters
@@ -632,7 +643,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         super()._find_similar_experiments()
 
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
-            _hyperparameters = dimension_subset(_experiment[0], [_.name for _ in self.hyperparameter_space.dimensions])
+            _hyperparameters = dimension_subset(_experiment[0], self.hyperparameter_space.get_names())
             _evaluation = _experiment[1]
 
             self.logger.print_result(_hyperparameters, _evaluation)

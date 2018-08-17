@@ -84,7 +84,6 @@ def reinitialize_callbacks(callbacks):
             callbacks[i] = callback_initializer(
                 **{_: current_callback.get(_, None) for _ in callback_parameters}
             )
-            print()
     return callbacks
 
 
