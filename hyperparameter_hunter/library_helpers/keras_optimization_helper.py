@@ -452,6 +452,7 @@ def is_space_match(string):
         True if `string` begins with a valid hyperparameter space declaration. Else, False"""
     starting_sequences = ['Real(', 'Integer(', 'Categorical(']
     # prefix_regex = r"[_\.A-Za-z0-9]"  # TODO: Support prefixes - To cover import aliases or importing modules to call classes
+    # r"((?=([_\.A-Za-z0-9]+\.)?(?:(Real|Integer|Categorical)\()))"
     return any(string.startswith(_) for _ in starting_sequences)
 
 

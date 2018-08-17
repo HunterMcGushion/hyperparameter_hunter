@@ -429,11 +429,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             model_params['model_init_params']['compile_params'] = self.dummy_compile_params
 
         experiment_finder = finder_selector(self.module_name)(
-            self.algorithm_name, G.Env.cross_experiment_key, self.target_metric, self.hyperparameter_space,
-            G.Env.result_paths['global_leaderboard'], G.Env.result_paths["description"], model_params,
+            self.algorithm_name, self.module_name, G.Env.cross_experiment_key, self.target_metric, self.hyperparameter_space,
+            G.Env.result_paths['global_leaderboard'], G.Env.result_paths["description"], model_params
         )
         experiment_finder.find()
-        self.similar_experiments = experiment_finder.hyperparameters_and_scores
+        self.similar_experiments = experiment_finder.similar_experiments
 
     def _is_valid_hyperparameter_path(self, hyperparameter):
         """Determine whether the given hyperparameter path is valid
