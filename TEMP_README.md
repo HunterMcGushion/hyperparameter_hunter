@@ -15,7 +15,6 @@ doing the important ones.
 * **Source:** https://github.com/HunterMcGushion/hyperparameter_hunter
 * **Documentation:** [https://hyperparameter-hunter.readthedocs.io](https://hyperparameter-hunter.readthedocs.io/en/latest/index.html)
 
-
 Features
 --------
 * Truly informed hyperparameter optimization that automatically uses past Experiments
@@ -47,5 +46,6 @@ env = Environment(
 ```
 
 <div height=100%>
-<iframe src="docs/extras/readme_code_examples.html" frameborder=0 style="overflow:hidden; display:block; position:absolute" width=100% height=1200></iframe>
+<object data="docs/extras/readme_code_examples.html" style="overflow:hidden; display:block; position:absolute" width=100% height=1200></object>
+<!--<iframe src="docs/extras/readme_code_examples.html" frameborder=0 style="overflow:hidden; display:block; position:absolute" width=100% height=1200></iframe>-->
 </div>
