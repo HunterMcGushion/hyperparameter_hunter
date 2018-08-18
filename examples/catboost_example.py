@@ -18,8 +18,9 @@ def execute():
 
     experiment = CrossValidationExperiment(
         model_initializer=CatBoostClassifier,
-        model_init_params=dict(iterations=500, learning_rate=0.01, depth=7, save_snapshot=False),
+        model_init_params=dict(iterations=500, learning_rate=0.01, depth=7, allow_writing_files=False),
         # NOTE: Inside `model_init_params` can be any of the many kwargs accepted by :meth:`CatBoostClassifier.__init__`
+        model_extra_params=dict(fit=dict(verbose=True))
     )
 
 

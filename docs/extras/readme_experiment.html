@@ -1,0 +1,171 @@
+<html>
+<head>
+    <link rel="stylesheet" href="./scripts/styles/github.css"/>
+</head>
+<body>
+<button class="experiment-library" value="xgboost" id="experiment-library-xgboost">XGBoost</button>
+<button class="experiment-library" value="keras" id="experiment-library-keras">Keras</button>
+<button class="experiment-library" value="sklearn" id="experiment-library-sklearn">SKLearn</button>
+<button class="experiment-library" value="lightgbm" id="experiment-library-lightgbm">LightGBM</button>
+<button class="experiment-library" value="catboost" id="experiment-library-catboost">CatBoost</button>
+<button class="experiment-library" value="rgf" id="experiment-library-rgf">RGF</button>
+<div style="font-size: 10px; display: inline">(Click your favorite library for an example)</div>
+
+<div id="experimentLibraryContent" style="width: 100%;"></div>
+
+<script type="text/javascript" src="scripts/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="scripts/highlight.pack.js"></script>
+<script type="text/javascript">
+    var activeButtonTextColor = '#3ECAE8';
+    var defaultButtonTextColor = 'black';
+    var selectedExperimentLibrary = 'xgboost';
+    var experimentLibraryLookup = {
+        'xgboost': (
+            'experiment = CrossValidationExperiment(\n' +
+            '   model_initializer=XGBClassifier,\n' +
+            "   model_init_params=dict(objective='reg:linear', max_depth=3, n_estimators=100, subsample=0.5)\n" +
+            ')'
+        ),
+        'keras': (
+            '# Same format used by `keras.wrappers.scikit_learn`. Nothing new to learn\n' +
+            'def build_fn(input_shape):  # `input_shape` calculated for you\n' +
+            '   model = Sequential([\n' +
+            "       Dense(100, kernel_initializer='uniform', input_shape=input_shape, activation='relu'),\n" +
+            '       Dropout(0.5),\n' +
+            "       Dense(1, kernel_initializer='uniform', activation='sigmoid'),\n" +
+            '   ])  # All layer arguments saved (whether explicit or Keras default) for future use\n' +
+            "   model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])\n" +
+            '   return model\n' +
+            '\n' +
+            'experiment = CrossValidationExperiment(\n' +
+            '   model_initializer=KerasClassifier,\n' +
+            '   model_init_params=build_fn,  # We interpret your build_fn to save hyperparameters in a useful, readable format\n' +
+            '   model_extra_params=dict(\n' +
+            '       callbacks=[ReduceLROnPlateau(patience=5)],  # Use Keras callbacks\n' +
+            '       batch_size=32, epochs=10, verbose=0  # Fit/predict arguments\n' +
+            '   )\n' +
+            ')'
+        ),
+        'sklearn': (
+            // '```python\n' +
+            'experiment = CrossValidationExperiment(\n' +
+            '   model_initializer=LinearSVC,  # (Or any of the dozens of other SK-Learn algorithms)\n' +
+            "   model_init_params=dict(penalty='l1', C=0.9)  # Default values used and recorded for kwargs not given\n" +
+            ')'
+            // '```'
+        ),
+        'lightgbm': (
+            'experiment = CrossValidationExperiment(\n' +
+            '   model_initializer=LGBMClassifier,\n' +
+            "   model_init_params=dict(boosting_type='gbdt', num_leaves=31, max_depth=-1, min_child_samples=5, subsample=0.5)\n" +
+            ')'
+        ),
+        'catboost': (
+            'experiment = CrossValidationExperiment(\n' +
+            '   model_initializer=CatboostClassifier,\n' +
+            "   model_init_params=dict(iterations=500, learning_rate=0.01, depth=7, allow_writing_files=False),\n" +
+            '   model_extra_params=dict(fit=dict(verbose=True))  # Send kwargs to `fit` and other extra methods\n' +
+            ')'
+        ),
+        'rgf': (
+            'experiment = CrossValidationExperiment(\n' +
+            '   model_initializer=RGFClassifier,\n' +
+            "   model_init_params=dict(max_leaf=1000, algorithm='RGF', min_samples_leaf=10)\n" +
+            ')'
+        )
+    };
+
+    $(document).ready(function () {
+        // On Load:
+        processExperimentLibrarySelection();
+
+        // FLAG: ORIGINAL BELOW
+        // var buttonList = ['keras', 'sklearn', 'lightgbm', 'catboost', 'rgf', 'xgboost'];  // xgboost last because it starts there
+        // var i = 0;
+        // var experimentInterval = setInterval(function() {
+        //     selectedExperimentLibrary = buttonList[i];
+        //     processExperimentLibrarySelection();
+        //     i = (i < 5 ? i + 1 : 0);
+        // }, 3000);
+        // FLAG: ORIGINAL ABOVE
+        // FLAG: TEST BELOW
+        var experimentInterval = null;
+        var alreadyScrolled = false;
+        var buttonList = ['keras', 'sklearn', 'lightgbm', 'catboost', 'rgf', 'xgboost'];
+        var i = 0;
+        // FLAG: TEST ABOVE
+
+        // On Event:
+        $("button[class=experiment-library]").click(function () {
+            if (experimentInterval != null) {
+                clearInterval(experimentInterval);
+            }
+            selectedExperimentLibrary = getButtonValue($(this));
+            processExperimentLibrarySelection();
+        });
+
+        $(window).on('resize scroll', function () {
+            if ((alreadyScrolled === false) && ($('#experimentLibraryContent').isInViewport())) {
+                alreadyScrolled = true;
+
+                experimentInterval = setInterval(function () {
+                    selectedExperimentLibrary = buttonList[i];
+                    processExperimentLibrarySelection();
+                    i = (i < 5 ? i + 1 : 0);
+                }, 3000);
+            }
+        });
+    });
+
+    var processExperimentLibrarySelection = function () {
+        experimentLibraryButtonsToDefault();
+        var $activeExperimentButton = $('#experiment-library-' + selectedExperimentLibrary);
+        // Update Button Style
+        $activeExperimentButton.css('color', activeButtonTextColor);
+        $activeExperimentButton.css('font-weight', 'bold');
+        // Update Span Content
+        updateExperimentLibraryContent();
+    };
+
+    var updateExperimentLibraryContent = function () {
+        var content = '';
+        content += '<pre><code class="python">';
+        content += experimentLibraryLookup[selectedExperimentLibrary];
+        content += '</code></pre>';
+        // Set Content
+        $('#experimentLibraryContent').html(content);
+        // Apply Syntax Highlighting
+        $('pre code').each(function (i, block) {
+            hljs.highlightBlock(block);
+        });
+    };
+
+    var experimentLibraryButtonsToDefault = function () {
+        $("button[class=experiment-library]").each(function () {
+            $(this).css('color', defaultButtonTextColor);
+            $(this).css('font-weight', 'normal');
+        });
+    };
+
+    var getButtonValue = function ($button) {
+        var label = $button.text();
+        $button.text('');
+        var buttonValue = $button.val();
+        $button.text(label);
+        return buttonValue;
+    };
+
+    // $.fn.isFullyInViewport = function () {
+    $.fn.isInViewport = function () {
+        var elementTop = $(this).offset().top;
+        var elementBottom = elementTop + $(this).outerHeight();
+
+        var viewportTop = $(window).scrollTop();
+        var viewportBottom = viewportTop + $(window).height();
+
+        return elementBottom > viewportTop && elementTop < viewportBottom;
+        //return elementTop >= viewportTop && elementBottom <= viewportBottom;
+    };
+</script>
+</body>
+</html>
