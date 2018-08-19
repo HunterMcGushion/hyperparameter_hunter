@@ -183,12 +183,12 @@ optimizer.go()
 ```python
 optimizer = DummySearch(iterations=42)
 optimizer.set_experiment_guidelines(
-	model_initializer=AdaBoostClassifier,  # (Or any of the dozens of other SKLearn algorithms)
-	model_init_params=dict(
-		n_estimators=Integer(75, 150),
-		learning_rate=Real(0.8, 1.3),
-		algorithm='SAMME.R'
-	)
+    model_initializer=AdaBoostClassifier,  # (Or any of the dozens of other SKLearn algorithms)
+    model_init_params=dict(
+        n_estimators=Integer(75, 150),
+        learning_rate=Real(0.8, 1.3),
+        algorithm='SAMME.R'
+    )
 )
 optimizer.go()
 ```
@@ -200,14 +200,14 @@ optimizer.go()
 ```python
 optimizer = BayesianOptimization(iterations=10)
 optimizer.set_experiment_guidelines(
-	model_initializer=XGBClassifier,
-	model_init_params=dict(
-		max_depth=Integer(low=2, high=20),
-		learning_rate=Real(0.0001, 0.5),
-		n_estimators=200,
-		subsample=0.5,
-		booster=Categorical(['gbtree', 'gblinear', 'dart']),
-	)
+    model_initializer=XGBClassifier,
+    model_init_params=dict(
+        max_depth=Integer(low=2, high=20),
+        learning_rate=Real(0.0001, 0.5),
+        n_estimators=200,
+        subsample=0.5,
+        booster=Categorical(['gbtree', 'gblinear', 'dart']),
+    )
 )
 optimizer.go()
 ```
@@ -219,14 +219,14 @@ optimizer.go()
 ```python
 optimizer = BayesianOptimization(iterations=100)
 optimizer.set_experiment_guidelines(
-	model_initializer=LGBMClassifier,
-	model_init_params=dict(
-		boosting_type=Categorical(['gbdt', 'dart']),
-		num_leaves=Integer(5, 20),
-		max_depth=-1,
-		min_child_samples=5,
-		subsample=0.5
-	)
+    model_initializer=LGBMClassifier,
+    model_init_params=dict(
+        boosting_type=Categorical(['gbdt', 'dart']),
+        num_leaves=Integer(5, 20),
+        max_depth=-1,
+        min_child_samples=5,
+        subsample=0.5
+    )
 )
 optimizer.go()
 ```
@@ -238,14 +238,14 @@ optimizer.go()
 ```python
 optimizer = GradientBoostedRegressionTreeOptimization(iterations=32)
 optimizer.set_experiment_guidelines(
-	model_initializer=CatBoostClassifier,
-	model_init_params=dict(
-		iterations=100,
-		eval_metric=Categorical(['Logloss', 'Accuracy', 'AUC']),
-		learning_rate=Real(low=0.0001, high=0.5),
-		depth=Integer(4, 7),
-		allow_writing_files=False
-	)
+    model_initializer=CatBoostClassifier,
+    model_init_params=dict(
+        iterations=100,
+        eval_metric=Categorical(['Logloss', 'Accuracy', 'AUC']),
+        learning_rate=Real(low=0.0001, high=0.5),
+        depth=Integer(4, 7),
+        allow_writing_files=False
+    )
 )
 optimizer.go()
 ```
@@ -257,15 +257,15 @@ optimizer.go()
 ```python
 optimizer = ExtraTreesOptimization(iterations=10)
 optimizer.set_experiment_guidelines(
-	model_initializer=RGFClassifier,
-	model_init_params=dict(
-		max_leaf=1000,
-		algorithm=Categorical(['RGF', 'RGF_Opt', 'RGF_Sib']),
-		l2=Real(0.01, 0.3),
-		normalize=Categorical([True, False]),
-		learning_rate=Real(0.3, 0.7),
-		loss=Categorical(['LS', 'Expo', 'Log', 'Abs'])
-	)
+    model_initializer=RGFClassifier,
+    model_init_params=dict(
+        max_leaf=1000,
+        algorithm=Categorical(['RGF', 'RGF_Opt', 'RGF_Sib']),
+        l2=Real(0.01, 0.3),
+        normalize=Categorical([True, False]),
+        learning_rate=Real(0.3, 0.7),
+        loss=Categorical(['LS', 'Expo', 'Log', 'Abs'])
+    )
 )
 optimizer.go()
 ```
