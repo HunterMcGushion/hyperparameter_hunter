@@ -158,7 +158,7 @@ def build_fn(input_shape):
 	])
 	model.compile(
 		optimizer=Categorical(['adam', 'rmsprop', 'sgd', 'adadelta']),
-		loss='binary_crossentropy', metrics=['accuracy'],
+		loss='binary_crossentropy', metrics=['accuracy']
 	)
 	return model
 
