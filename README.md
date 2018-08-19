@@ -53,8 +53,9 @@ env = Environment(
 
 Perform Experiments with your favorite libraries simply by providing model initializers and hyperparameters
 <!-- Keras -->
+
 <details>
-<summary>Keras</summary>
+    <summary>Keras</summary>
 
     ```python
     # Same format used by `keras.wrappers.scikit_learn`. Nothing new to learn
@@ -78,6 +79,7 @@ Perform Experiments with your favorite libraries simply by providing model initi
     ```
 
 </details>
+
 <!-- SKLearn -->
 <details>
 <summary>SKLearn</summary>
