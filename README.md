@@ -174,6 +174,7 @@ optimizer.set_experiment_guidelines(
 )
 optimizer.go()
 ```
+
 </details>
 <!-- SKLearn -->
 <details>
