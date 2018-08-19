@@ -56,26 +56,26 @@ Perform Experiments with your favorite libraries simply by providing model initi
 <details>
 <summary>Keras</summary>
 
-```python
-# Same format used by `keras.wrappers.scikit_learn`. Nothing new to learn
-def build_fn(input_shape):  # `input_shape` calculated for you
-    model = Sequential([
-        Dense(100, kernel_initializer='uniform', input_shape=input_shape, activation='relu'),
-        Dropout(0.5),
-		Dense(1, kernel_initializer='uniform', activation='sigmoid'),
-    ])  # All layer arguments saved (whether explicit or Keras default) for future use
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    return model
+    ```python
+    # Same format used by `keras.wrappers.scikit_learn`. Nothing new to learn
+    def build_fn(input_shape):  # `input_shape` calculated for you
+        model = Sequential([
+            Dense(100, kernel_initializer='uniform', input_shape=input_shape, activation='relu'),
+            Dropout(0.5),
+            Dense(1, kernel_initializer='uniform', activation='sigmoid'),
+        ])  # All layer arguments saved (whether explicit or Keras default) for future use
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        return model
 
-experiment = CrossValidationExperiment(
-	model_initializer=KerasClassifier,
-    model_init_params=build_fn,  # We interpret your build_fn to save hyperparameters in a useful, readable format
-    model_extra_params=dict(
-		callbacks=[ReduceLROnPlateau(patience=5)],  # Use Keras callbacks
-        batch_size=32, epochs=10, verbose=0  # Fit/predict arguments
+    experiment = CrossValidationExperiment(
+        model_initializer=KerasClassifier,
+        model_init_params=build_fn,  # We interpret your build_fn to save hyperparameters in a useful, readable format
+        model_extra_params=dict(
+            callbacks=[ReduceLROnPlateau(patience=5)],  # Use Keras callbacks
+            batch_size=32, epochs=10, verbose=0  # Fit/predict arguments
+        )
     )
-)
-```
+    ```
 
 </details>
 <!-- SKLearn -->
