@@ -146,6 +146,7 @@ from hyperparameter_hunter import Real, Integer, Categorical
 ```
 
 <!-- Keras -->
+
 <details>
 <summary>Keras</summary>
 
@@ -176,6 +177,7 @@ optimizer.go()
 ```
 
 </details>
+
 <!-- SKLearn -->
 <details>
 <summary>SKLearn</summary>
