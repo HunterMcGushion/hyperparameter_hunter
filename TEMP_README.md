@@ -45,6 +45,18 @@ env = Environment(
 )
 ```
 
+<details>
+<summary>I Am a Dropdown</summary>
+
+```python
+def sample_function(x):
+	print(x)
+	
+sample_function('hello')
+```
+
+</details>
+
 <div height=100%>
     <object data="docs/extras/readme_code_examples.html" style="overflow:hidden; display:block; position:absolute" width=100% height=1200>
     </object>
