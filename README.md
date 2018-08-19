@@ -41,11 +41,11 @@ df = pd.DataFrame(data=data.data, columns=data.feature_names)
 df['target'] = data.target
 
 env = Environment(
-	train_dataset=df,  # Add holdout/test dataframes, too
-	root_results_path='path/to/results/directory',  # Where your result files will go
-	metrics_map=['roc_auc_score'],  # Callables, or strings referring to `sklearn.metrics`
-	cross_validation_type=StratifiedKFold,  # Class, or string in `sklearn.model_selection`
-	cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32)
+    train_dataset=df,  # Add holdout/test dataframes, too
+    root_results_path='path/to/results/directory',  # Where your result files will go
+    metrics_map=['roc_auc_score'],  # Callables, or strings referring to `sklearn.metrics`
+    cross_validation_type=StratifiedKFold,  # Class, or string in `sklearn.model_selection`
+    cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32)
 )
 ```
 
