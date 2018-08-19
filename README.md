@@ -149,7 +149,7 @@ from hyperparameter_hunter import Real, Integer, Categorical
 
 <details>
 <summary>Keras</summary>
-
+ 
 ```python
 def build_fn(input_shape):
 	model = Sequential([
