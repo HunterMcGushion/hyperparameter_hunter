@@ -24,7 +24,7 @@ Features
 Getting Started
 ---------------
 
-###1) Environment:
+### 1) Environment:
 
 Set up an Environment to organize Experiments and Optimization results.
 <br>
@@ -49,7 +49,7 @@ env = Environment(
 )
 ```
 
-###2) Individual Experimentation:
+### 2) Individual Experimentation:
 
 Perform Experiments with your favorite libraries simply by providing model initializers and hyperparameters
 <!-- Keras -->
@@ -134,7 +134,7 @@ experiment = CrossValidationExperiment(
 ```
 </details>
 
-###3) Hyperparameter Optimization:
+### 3) Hyperparameter Optimization:
 
 Just like Experiments, but if you want to optimize a hyperparameter, use the classes imported below
 
