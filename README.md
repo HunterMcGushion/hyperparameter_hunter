@@ -86,8 +86,8 @@ experiment = CrossValidationExperiment(
 
 ```python
 experiment = CrossValidationExperiment(
-	model_initializer=LinearSVC,  # (Or any of the dozens of other SK-Learn algorithms)
-	model_init_params=dict(penalty='l1', C=0.9)  # Default values used and recorded for kwargs not given
+    model_initializer=LinearSVC,  # (Or any of the dozens of other SK-Learn algorithms)
+    model_init_params=dict(penalty='l1', C=0.9)  # Default values used and recorded for kwargs not given
 )
 ```
 </details>
@@ -97,8 +97,8 @@ experiment = CrossValidationExperiment(
 
 ```python
 experiment = CrossValidationExperiment(
-	model_initializer=XGBClassifier,
-	model_init_params=dict(objective='reg:linear', max_depth=3, n_estimators=100, subsample=0.5)
+    model_initializer=XGBClassifier,
+    model_init_params=dict(objective='reg:linear', max_depth=3, n_estimators=100, subsample=0.5)
 )
 ```
 </details>
@@ -108,8 +108,8 @@ experiment = CrossValidationExperiment(
 
 ```python
 experiment = CrossValidationExperiment(
-	model_initializer=LGBMClassifier,
-	model_init_params=dict(boosting_type='gbdt', num_leaves=31, max_depth=-1, min_child_samples=5, subsample=0.5)
+    model_initializer=LGBMClassifier,
+    model_init_params=dict(boosting_type='gbdt', num_leaves=31, max_depth=-1, min_child_samples=5, subsample=0.5)
 )
 ```
 </details>
@@ -119,9 +119,9 @@ experiment = CrossValidationExperiment(
 
 ```python
 experiment = CrossValidationExperiment(
-	model_initializer=CatboostClassifier,
-	model_init_params=dict(iterations=500, learning_rate=0.01, depth=7, allow_writing_files=False),
-	model_extra_params=dict(fit=dict(verbose=True))  # Send kwargs to `fit` and other extra methods
+    model_initializer=CatboostClassifier,
+    model_init_params=dict(iterations=500, learning_rate=0.01, depth=7, allow_writing_files=False),
+    model_extra_params=dict(fit=dict(verbose=True))  # Send kwargs to `fit` and other extra methods
 )
 ```
 </details>
@@ -131,8 +131,8 @@ experiment = CrossValidationExperiment(
 
 ```python
 experiment = CrossValidationExperiment(
-	model_initializer=RGFClassifier,
-	model_init_params=dict(max_leaf=1000, algorithm='RGF', min_samples_leaf=10)
+    model_initializer=RGFClassifier,
+    model_init_params=dict(max_leaf=1000, algorithm='RGF', min_samples_leaf=10)
 )
 ```
 </details>
