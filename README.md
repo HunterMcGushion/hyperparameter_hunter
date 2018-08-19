@@ -154,7 +154,7 @@ def build_fn(input_shape):
 	model = Sequential([
 		Dense(Integer(50, 150), input_shape=input_shape, activation='relu'),
 		Dropout(Real(0.2, 0.7)),
-		Dense(1, activation=Categorical(['sigmoid', 'softmax'])),
+		Dense(1, activation=Categorical(['sigmoid', 'softmax']))
 	])
 	model.compile(
 		optimizer=Categorical(['adam', 'rmsprop', 'sgd', 'adadelta']),
