@@ -3,6 +3,7 @@ HyperparameterHunter
 
 ![HyperparameterHunter Overview](docs/media/overview.gif)
 
+[![Build Status](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter.svg?branch=master)](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter)
 [![Documentation Status](https://readthedocs.org/projects/hyperparameter-hunter/badge/?version=latest)](https://hyperparameter-hunter.readthedocs.io/en/latest/?badge=latest)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ef0d004a10ede0b228cc/maintainability)](https://codeclimate.com/github/HunterMcGushion/hyperparameter_hunter/maintainability)
 [![PyPI version](https://badge.fury.io/py/hyperparameter-hunter.svg)](https://badge.fury.io/py/hyperparameter-hunter)
