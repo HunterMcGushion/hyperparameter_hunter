@@ -45,6 +45,7 @@ setup(
             'nose',
             'hyperparameter-hunter',
             'keras',
+            'tensorflow',
             'nbconvert',
             'nbformat'
         ]
