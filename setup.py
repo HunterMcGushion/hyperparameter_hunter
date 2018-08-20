@@ -42,6 +42,7 @@ setup(
             'nbformat'
         ],
         'travis': [
+            'nose',
             'hyperparameter-hunter',
             'keras',
             'nbconvert',
