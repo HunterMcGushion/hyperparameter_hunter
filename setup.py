@@ -28,7 +28,7 @@ setup(
         'scipy',
         'simplejson',
         'dill',  # New
-        'tensorflow==1.5.0',  # TODO: Might want to include in extras_require with 'keras'?
+        # 'tensorflow==1.5.0',  # TODO: Might want to include in extras_require with 'keras'?
     ],
     extras_require={
         'docs': [
