@@ -34,10 +34,12 @@ setup(
         'docs': [
             'hyperparameter-hunter',
             'keras',
-            'nbconvert'
+            'nbconvert',
+            'nbformat'
         ],
         'ipynb': [
-            'nbconvert'
+            'nbconvert',
+            'nbformat'
         ]
     },
     include_package_data=True,
