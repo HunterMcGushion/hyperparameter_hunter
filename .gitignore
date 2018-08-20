@@ -4,7 +4,7 @@
 # Environments
 env/
 env3/
-requirements.txt
+# requirements.txt
 
 # Repository Demo Assets
 *HyperparameterHunterAssets/
