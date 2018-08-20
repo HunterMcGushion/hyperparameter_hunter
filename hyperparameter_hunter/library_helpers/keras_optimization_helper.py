@@ -78,8 +78,7 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
         is not explicitly given, its default value is included in `dummy_compile_params`"""
     #################### Prepare Model-Builder String ####################
     temp_builder_name = '__temp_model_builder'
-    stringified_build_fn = stringify_model_builder(build_fn)
-    reusable_build_fn, expected_params = rewrite_model_builder(stringified_build_fn)
+    reusable_build_fn, expected_params = rewrite_model_builder(stringify_model_builder(build_fn))
     temp_model_file_str = build_temp_model_file(reusable_build_fn, source_script)
 
     #################### Save and Import Temporary Model Builder ####################
@@ -91,7 +90,6 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
     try:
         from __temp_model_builder import build_fn as temp_build_fn
     except:
-        G.warn('Unexpected error when attempting to import `__temp_model_builder.build_fn`: {}'.format(sys.exc_info()[0]))
         raise
 
     # FLAG: Dirty fix `key_handler.hash_callable` bug when trying to hash `build_fn` - Figure out way to remove files
@@ -105,15 +103,7 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
     wrapper_params, dummified_params = check_dummy_params(wrapper_params)
 
     if ('optimizer_params' in dummified_params) and ('optimizer' in dummified_params):
-        # Need to handle what to check for `dummy_compile_params['optimizer_params']` when `optimizer` is a choice
-        # EX) When `optimizer=Categorical(['adam', 'rmsprop'])`, there are two different possible dicts of `optimizer_params`
-        # ... But, as a result of manual dummification, `optimizer='adam'`, and the possible `optimizer_params` for 'rmsprop'...
-        # ... are lost, which means a compatibility check may succeed at finding `optimizer=='rmsprop'`, but it would then...
-        # ... fail because the associated `optimizer_params` are still those found for 'adam', which is impossible for 'rmsprop'
-        raise ValueError(''.join([
-            'Unable to optimize both `optimizer` and element of `optimizer_params` in Keras because optimizers expect different',
-            ' arguments. Sorry about that! Please try optimizing them separately'
-        ]))
+        raise ValueError('Unable to optimize both `optimizer` and `optimizer_params`. Please try optimizing them separately')
 
     compiled_dummy = initialize_dummy_model(model_initializer, temp_build_fn, wrapper_params)
     dummy_layers, dummy_compile_params = parameterize_compiled_keras_model(compiled_dummy)
@@ -150,7 +140,7 @@ def consolidate_layers(layers, class_name_key=True, separate_args=True):
     consolidated_layers = []
 
     for layer in layers:
-        arg_vals, kwarg_vals = {}, {}
+        arg_vals = {}
 
         #################### Gather Args ####################
         for i, expected_arg in enumerate(layer['__hh_default_args']):
@@ -166,21 +156,10 @@ def consolidate_layers(layers, class_name_key=True, separate_args=True):
         # Merge default and used kwargs with constraints: only include if k in default, and give priority to used values
         # This means that kwargs like `input_shape` won't make it through because they have no default values, also
         # nonsensical kwargs won't make it through because the defaults are the point of reference
-        for k, v in layer['__hh_default_kwargs'].items():
-            if k in layer['__hh_used_kwargs']:
-                kwarg_vals[k] = layer['__hh_used_kwargs'][k]
-            else:
-                kwarg_vals[k] = v
+        kwarg_vals = {_k: layer['__hh_used_kwargs'].get(_k, _v) for _k, _v in layer['__hh_default_kwargs'].items()}
 
         #################### Consolidate ####################
-        new_layer_dict = {}
-
-        if separate_args:
-            new_layer_dict['arg_vals'] = arg_vals
-            new_layer_dict['kwarg_vals'] = kwarg_vals
-        else:
-            new_layer_dict.update(arg_vals)
-            new_layer_dict.update(kwarg_vals)
+        new_layer_dict = dict(arg_vals=arg_vals, kwarg_vals=kwarg_vals) if separate_args else {**arg_vals, **kwarg_vals}
 
         if class_name_key:
             new_layer_dict['class_name'] = layer['class_name']
@@ -299,11 +278,10 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
             return (key, value)
         return _visit
 
-    def extra_enter(path, key, value):
+    def _enter(path, key, value):
         """If `value` is in `keras.callbacks`, enter as a dict, iterating over non-magic attributes. Else, `default_enter`"""
         if isinstance(value, base_keras_callback):
-            included_attrs = [_ for _ in dir(value) if not _.startswith('__')]
-            return dict(), [(_, getattr(value, _)) for _ in included_attrs]
+            return dict(), [(_, getattr(value, _)) for _ in dir(value) if not _.startswith('__')]
         return default_enter(path, key, value)
 
     # noinspection PyUnusedLocal
@@ -312,8 +290,7 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
     _new_compile_params = remap(compile_params.copy(), visit=visit_builder(('model_init_params', 'compile_params')))
     # noinspection PyUnusedLocal
     _new_extra_params = remap(
-        {_k: _v for _k, _v in extra_params.items() if _k != 'params'},
-        visit=visit_builder('model_extra_params'), enter=extra_enter
+        {_k: _v for _k, _v in extra_params.items() if _k != 'params'}, visit=visit_builder('model_extra_params'), enter=_enter
     )
 
     # `extra_params` has locations for `layers`, `compile_params`, `extra_params` - Of form expected by `build_fn` (less choices)
