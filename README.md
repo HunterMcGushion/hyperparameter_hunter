@@ -146,6 +146,7 @@ Just like Experiments, but if you want to optimize a hyperparameter, use the cla
 
 ```python
 from hyperparameter_hunter import Real, Integer, Categorical
+from hyperparameter_hunter import optimization as opt
 ```
 
 <!-- Keras -->
@@ -165,7 +166,7 @@ def build_fn(input_shape):
     )
     return model
 
-optimizer = RandomForestOptimization(iterations=7)
+optimizer = opt.RandomForestOptimization(iterations=7)
 optimizer.set_experiment_guidelines(
     model_initializer=KerasClassifier,
     model_init_params=build_fn,
@@ -184,7 +185,7 @@ optimizer.go()
 <summary>SKLearn</summary>
 
 ```python
-optimizer = DummySearch(iterations=42)
+optimizer = opt.DummySearch(iterations=42)
 optimizer.set_experiment_guidelines(
     model_initializer=AdaBoostClassifier,  # (Or any of the dozens of other SKLearn algorithms)
     model_init_params=dict(
@@ -201,7 +202,7 @@ optimizer.go()
 <summary>XGBoost</summary>
 
 ```python
-optimizer = BayesianOptimization(iterations=10)
+optimizer = opt.BayesianOptimization(iterations=10)
 optimizer.set_experiment_guidelines(
     model_initializer=XGBClassifier,
     model_init_params=dict(
@@ -220,7 +221,7 @@ optimizer.go()
 <summary>LightGBM</summary>
 
 ```python
-optimizer = BayesianOptimization(iterations=100)
+optimizer = opt.BayesianOptimization(iterations=100)
 optimizer.set_experiment_guidelines(
     model_initializer=LGBMClassifier,
     model_init_params=dict(
@@ -239,7 +240,7 @@ optimizer.go()
 <summary>CatBoost</summary>
 
 ```python
-optimizer = GradientBoostedRegressionTreeOptimization(iterations=32)
+optimizer = opt.GradientBoostedRegressionTreeOptimization(iterations=32)
 optimizer.set_experiment_guidelines(
     model_initializer=CatBoostClassifier,
     model_init_params=dict(
@@ -258,7 +259,7 @@ optimizer.go()
 <summary>RGF</summary>
 
 ```python
-optimizer = ExtraTreesOptimization(iterations=10)
+optimizer = opt.ExtraTreesOptimization(iterations=10)
 optimizer.set_experiment_guidelines(
     model_initializer=RGFClassifier,
     model_init_params=dict(

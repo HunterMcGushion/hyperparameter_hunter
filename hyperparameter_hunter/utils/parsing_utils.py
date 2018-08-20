@@ -17,7 +17,6 @@ Many of these utilities are modified versions of utilities originally from the `
 ##################################################
 from ast import NodeVisitor, parse
 from inspect import getsource
-from nbconvert import PythonExporter
 import nbformat
 from operator import attrgetter
 import os
@@ -85,6 +84,8 @@ def read_source_script(filepath):
         The contents of `filepath`"""
     if filepath.endswith('.ipynb'):
         with open(filepath, 'r') as f:
+            from nbconvert import PythonExporter
+
             notebook = nbformat.reads(f.read(), nbformat.NO_CONVERT)
             exporter = PythonExporter()
             source, _ = exporter.from_notebook_node(notebook)
