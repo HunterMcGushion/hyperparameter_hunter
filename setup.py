@@ -40,6 +40,12 @@ setup(
         'ipynb': [
             'nbconvert',
             'nbformat'
+        ],
+        'travis': [
+            'hyperparameter-hunter',
+            'keras',
+            'nbconvert',
+            'nbformat'
         ]
     },
     include_package_data=True,
