@@ -5,6 +5,7 @@ HyperparameterHunter
 
 [![Documentation Status](https://readthedocs.org/projects/hyperparameter-hunter/badge/?version=latest)](https://hyperparameter-hunter.readthedocs.io/en/latest/?badge=latest)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ef0d004a10ede0b228cc/maintainability)](https://codeclimate.com/github/HunterMcGushion/hyperparameter_hunter/maintainability)
+[![PyPI version](https://badge.fury.io/py/hyperparameter-hunter.svg)](https://badge.fury.io/py/hyperparameter-hunter)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Q3EX3PQUV256G)
 
 HyperparameterHunter provides a wrapper for machine learning algorithms that automatically save all the important data in a
