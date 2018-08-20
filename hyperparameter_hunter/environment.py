@@ -174,7 +174,12 @@ class Environment():
             items are supplied directly to :meth:`to_csv`, including kwargs it might not be expecting if they are given
         do_full_save: None, or callable, default=:func:`utils.result_utils.default_do_full_save`
             If callable, expected to take an Experiment's result description dict as input and return a boolean. If None, treated
-            as a callable that returns True
+            as a callable that returns True. This parameter is used by :class:`recorders.DescriptionRecorder` to determine whether
+            the Experiment result files following the description should also be created. If `do_full_save` returns False, result
+            file-saving is stopped early, and only the description is saved. If `do_full_save` returns True, all files not in
+            `file_blacklist` are saved normally. This allows you to skip creation of an Experiment's predictions, logs, and
+            heartbeats if its score does not meet some threshold you set, for example. `do_full_save` receives the Experiment
+            description dict as input, so for help setting `do_full_save`, just look into one of your Experiment descriptions
         experiment_callbacks: :class:`LambdaCallback`, list of :class:`LambdaCallback`, or None, default=None
             If not None, should be a :class:`LambdaCallback` produced by :func:`.callbacks.bases.lambda_callback`, or a list of
             such classes. The contents will be added to the MRO of the executed Experiment class by

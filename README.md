@@ -6,20 +6,23 @@ HyperparameterHunter
 [![Documentation Status](https://readthedocs.org/projects/hyperparameter-hunter/badge/?version=latest)](https://hyperparameter-hunter.readthedocs.io/en/latest/?badge=latest)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Q3EX3PQUV256G)
 
-HyperparameterHunter provides wrappers for machine learning algorithms that
-automatically save the testing conditions/hyperparameters, results, predictions, and
-other data in a unified format. HyperparameterHunter simplifies the experimentation and hyperparameter
-tuning process by allowing you to spend less time setting stuff up, and more time
-doing the important stuff.
+HyperparameterHunter provides a wrapper for machine learning algorithms that automatically save all the important data in a
+unified format. Simplify the experimentation and hyperparameter tuning process by letting HyperparameterHunter do the hard work
+of recording, organizing, and learning from your tests — all while using the same libraries you already do — with no need to
+provide extra information. Don't let any of your experiments go to waste, and start doing hyperparameter optimization the way it
+was meant to be.
 
+* **Installation:** `pip install hyperparameter-hunter`
 * **Source:** https://github.com/HunterMcGushion/hyperparameter_hunter
 * **Documentation:** [https://hyperparameter-hunter.readthedocs.io](https://hyperparameter-hunter.readthedocs.io/en/latest/index.html)
 
 Features
 --------
+* Automatically record Experiment results
 * Truly informed hyperparameter optimization that automatically uses past Experiments
 * Eliminate boilerplate code for cross-validation loops, predicting, and scoring
 * Stop worrying about keeping track of hyperparameters, scores, or re-running the same Experiments
+* Use the libraries and utilities you already love
 
 Getting Started
 ---------------
@@ -270,6 +273,43 @@ optimizer.set_experiment_guidelines(
 optimizer.go()
 ```
 </details>
+
+Output File Structure
+---------------------
+This is a simple illustration of the file structure you can expect your `Experiment`s to generate. For an in-depth description of the directory structure and the contents of the various files, see the [File Structure Overview](https://hyperparameter-hunter.readthedocs.io/en/latest/file_structure_overview.html) section in the documentation. However, the essentials are as follows:
+
+1. An `Experiment` adds a file to each *HyperparameterHunterAssets/Experiments* subdirectory, named by `experiment_id`
+2. Each `Experiment` also adds an entry to *HyperparameterHunterAssets/Leaderboards/GlobalLeaderboard.csv*
+3. Customize which files are created via `Environment`'s `file_blacklist` and `do_full_save` kwargs (documented [here](https://hyperparameter-hunter.readthedocs.io/en/latest/api_essentials.html#environment))
+
+```
+HyperparameterHunterAssets
+|   Heartbeat.log
+|
+└───Experiments
+|   |
+|   └───Descriptions
+|   |   |   <Files describing Experiment results, conditions, etc.>.json
+|   |
+|   └───Predictions<OOF/Holdout/Test>
+|   |   |   <Files containing Experiment predictions for the indicated dataset>.csv
+|   |
+|   └───Heartbeats
+|   |   |   <Files containing the log produced by the Experiment>.log
+|   |
+|   └───ScriptBackups
+|       |   <Files containing a copy of the script that created the Experiment>.py
+|
+└───Leaderboards
+|   |   GlobalLeaderboard.csv
+|   |   <Other leaderboards>.csv
+|
+└───TestedKeys
+|   |   <Files named by Environment key, containing hyperparameter keys>.json
+|
+└───KeyAttributeLookup
+    |   <Files linking complex objects used in Experiments to their hashes>
+```
 
 Installation
 ------------

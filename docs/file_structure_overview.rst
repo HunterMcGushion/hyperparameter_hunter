@@ -9,8 +9,8 @@ HyperparameterHunterAssets/
 * Contains one file (**'Heartbeat.log'**), and four subdirectories (**'Experiments/'**, **'KeyAttributeLookup/'**,
   **'Leaderboards/'**, and **'TestedKeys/'**).
 * **'Heartbeat.log'** is the log file for the current/most recently executed ``Experiment``. It will look very much like the
-  printed output of `CrossValidationExperiment`, with some additional debug messages thrown in. When the `Experiment` is
-  completed, a copy of this file is saved as the `Experiment`'s own Heartbeat file, which will be discussed below.
+  printed output of ``CrossValidationExperiment``, with some additional debug messages thrown in. When the ``Experiment`` is
+  completed, a copy of this file is saved as the ``Experiment``'s own Heartbeat file, which will be discussed below.
 
 /**Experiments/**
 -----------------
@@ -92,7 +92,7 @@ experiments would be created by the same file.
 
     * This means that you may see entries named after attributes other than those shown in this example along the course of your
       own project.
-    * They are created whenever ``Environment``s or ``Experiment``s are provided arguments too complex to neatly display in the
+    * They are created whenever ``Environment``\s or ``Experiment``\s are provided arguments too complex to neatly display in the
       ``Experiment``'s **'Descriptions/'** entry file.
     * Some other complex attributes you may come across that are given **'KeyAttributeLookup/'** entries include: custom metrics
       provided via ``Environment``'s ``metrics_map`` and ``metrics_params`` kwargs, and Keras Neural Network ``callbacks`` and
