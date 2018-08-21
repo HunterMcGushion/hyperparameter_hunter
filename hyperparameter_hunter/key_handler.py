@@ -1,3 +1,17 @@
+"""This module handles the creation of `cross_experiment_key`\s and `hyperparameter_key`\s for
+:class:`hyperparameter_hunter.environment.Environment`, and :class:`hyperparameter_hunter.experiments.BaseExperiment`,
+respectively. It also handles the treatment of complex-typed inputs and their storage in the 'KeyAttributeLookup' subdirectory.
+The descendants of :class:`hyperparameter_hunter.key_handler.KeyMaker` defined herein are each responsible for the generation and
+saving of their keys, as well as determining whether such a key already exists
+
+Related
+-------
+:mod:`hyperparameter_hunter.environment`
+    This module uses :class:`hyperparameter_hunter.key_handler.CrossExperimentKeyMaker` to set
+    :attr:`hyperparameter_hunter.environment.Environment.cross_experiment_key`
+:mod:`hyperparameter_hunter.experiments`
+    This module uses :class:`hyperparameter_hunter.key_handler.HyperparameterKeyMaker` to set
+    :attr:`hyperparameter_hunter.experiments.BaseExperiment.hyperparameter_key`"""
 ##################################################
 # Import Own Assets
 ##################################################

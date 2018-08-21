@@ -1,3 +1,12 @@
+"""This module defines :class:`hyperparameter_hunter.metrics.ScoringMixIn` which enables
+:class:`hyperparameter_hunter.experiments.BaseExperiment` to score predictions and collect the results of those evaluations
+
+Related
+-------
+:mod:`hyperparameter_hunter.experiments`
+    This module uses :class:`hyperparameter_hunter.metrics.ScoringMixIn` as the only explicit parent class to
+    :class:`hyperparameter_hunter.experiments.BaseExperiment` (that is, the only parent class that isn't bestowed upon it by
+    :class:`hyperparameter_hunter.experiment_core.ExperimentMeta`)"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -19,9 +28,6 @@ from sklearn import metrics as sk_metrics
 # Declare Global Variables
 ##################################################
 data_types = ('__in_fold', '__oof', '__holdout')
-
-# standard_classification_metrics_map = dict(roc_auc=sk_metrics.roc_auc_score)
-# standard_regression_metrics_map = dict(mse=sk_metrics.mean_squared_error)
 
 
 class ScoringMixIn(object):
@@ -188,8 +194,8 @@ def get_clean_prediction(target, prediction):
         if (len(target_min) == 1) and (len(target_max) == 1):
             target_min, target_max = target_min[0], target_max[0]
         else:
-            # FLAG: If len(min/max) > 1: multi-class classification, or other multi-output problem
-            # FLAG: Then each prediction value must be clipped to its specific min/max
+            # TODO: If len(min/max) > 1: multi-class classification, or other multi-output problem
+            # TODO: Then each prediction value must be clipped to its specific min/max
             raise ValueError(F'Cannot handle multi-output problems. Received bounds of: {target_min}, {target_max}.')
 
         prediction = np.clip(prediction, target_min, target_max)
@@ -256,7 +262,7 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset='oof
             except AttributeError:
                 first_metric_key = metrics_map[0]
             target_metric = target_metric + (first_metric_key,)
-            # FLAG: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
+            # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
         else:
             # Just a metric name was provided - Need dataset type
             target_metric = (default_dataset,) + target_metric

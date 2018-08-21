@@ -1,3 +1,23 @@
+"""This module defines the default helper functions used during an Experiment's result-saving process
+
+Related
+-------
+:mod:`hyperparameter_hunter.environment`
+    Uses the contents of :mod:`hyperparameter_hunter.utils.result_utils` to set default values to help process Experiments'
+    result files if they are not explicitly provided. These values are then used by :mod:`hyperparameter_hunter.recorders`
+:mod:`hyperparameter_hunter.recorders`
+    This module uses certain attributes set by :class:`hyperparameter_hunter.environment.Environment`
+    (:attr:`Environment.prediction_formatter`, and :attr:`Environment.do_full_save`) for the purpose of
+    formatting and saving Experiment result files. Those attributes are, by default, the utilities defined in
+    :mod:`hyperparameter_hunter.utils.result_utils`
+
+Notes
+-----
+The utilities defined herein are weird for a couple reasons: 1) They don't do much, and 2) Despite the fact that they don't do
+much, they are extremely sensitive. Because they are default values for :class:`Environment` attributes that are included when
+generating :attr:`Environment.cross_experiment_key`, any seemingly insignificant change to them is likely to result in an entirely
+different cross_experiment_key. This will, in turn, result in Experiments not matching with other similar Experiments during
+hyperparameter optimization, despite the fact that the changes may not have done anything at all. So be careful, here"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################

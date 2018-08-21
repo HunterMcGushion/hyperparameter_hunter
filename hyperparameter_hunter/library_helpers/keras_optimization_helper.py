@@ -487,11 +487,3 @@ def clean_parenthesized_string(string):
                 return string[:i + 1]
 
     raise ValueError('No closing paren for """\n{}\n"""\nRemaining extra_closing_parens: {}'.format(string, extra_closing_parens))
-
-
-def _execute():
-    pass
-
-
-if __name__ == '__main__':
-    _execute()

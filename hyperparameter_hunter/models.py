@@ -1,3 +1,12 @@
+"""This module provides wrapper classes around the raw algorithms being executed to facilitate use by
+:class:`hyperparameter_hunter.experiments.BaseExperiment`. The algorithms created by most libraries can be handled by
+:class:`hyperparameter_hunter.models.Model`, but some need special attention, hence :class:`KerasModel`, and
+:class:`XGBoostModel`. The model classes defined herein handle algorithm instantiation, as well as fitting and predicting
+
+Related
+-------
+:mod:`hyperparameter_hunter.experiments`
+    This module is the primary user of the Model classes defined in :mod:`hyperparameter_hunter.models`"""
 ##################################################
 # Import Own Assets
 ##################################################

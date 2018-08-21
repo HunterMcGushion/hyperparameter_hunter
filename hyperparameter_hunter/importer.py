@@ -1,3 +1,11 @@
+"""This module provides utilities to intercept certain external imports and load them using custom logic
+
+Related
+-------
+:mod:`hyperparameter_hunter.__init__`
+    Executes the import hooks to ensure assets are properly imported prior to starting any real work
+:mod:`hyperparameter_hunter.tracers`
+    Defines tracing metaclasses applied by :mod:`hyperparameter_hunter.importer` to targeted imports"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -16,12 +24,20 @@ import sys
 
 class Interceptor(PathFinder):
     def __init__(self, module_name, custom_loader):
-        # TODO: Add documentation
+        """Class to intercept the loading of an external module in order to provide custom loading logic
+
+        Parameters
+        ----------
+        module_name: String
+            The path of the module, for which loading should be handled by `custom_loader`
+        custom_loader: Descendant of `importlib.machinery.SourceFileLoader`
+            Should implement :meth:`exec_module`, which should call its superclass's :meth:`exec_module`, then perform the custom
+            loading logic, and return `module`"""
         self.module_name = module_name
         self.custom_loader = custom_loader
 
     def find_spec(self, full_name, path=None, target=None):
-        # TODO: Add documentation
+        """Perform custom loading logic if `full_name` == :attr:`module_name`"""
         if full_name == self.module_name:
             spec = super().find_spec(full_name, path, target)
             loader = self.custom_loader(full_name, spec.origin)
@@ -29,11 +45,12 @@ class Interceptor(PathFinder):
             return ModuleSpec(full_name, loader)
 
 
+##################################################
+# Keras Layer Interception
+##################################################
 class KerasLayerLoader(SourceFileLoader):
-    # TODO: Add documentation
-
     def exec_module(self, module):
-        # TODO: Add documentation
+        """Set `module.Layer` a traced version of itself via :class:`hyperparameter_hunter.tracers.KerasTracer`"""
         super().exec_module(module)
         module.Layer = KerasTracer(module.Layer.__name__, module.Layer.__bases__, module.Layer.__dict__)
         return module
@@ -56,6 +73,9 @@ def hook_keras_layer():
     G.import_hooks.append('keras_layer')
 
 
+##################################################
+# Keras Optimizer Interception
+##################################################
 # class KerasOptimizerGetLoader(SourceFileLoader):
 #     def exec_module(self, module):
 #         super().exec_module(module)
@@ -76,8 +96,8 @@ def hook_keras_layer():
 #             return safe_get
 #
 #         setattr(module, 'get', safe_get_builder(module.get))
-#
-#
+
+
 # def hook_keras_optimizer_get():
 #     if 'keras' in sys.modules:
 #         raise ImportError('{} must be executed before importing Keras or other hyperparameter_hunter assets'.format(
@@ -90,46 +110,38 @@ def hook_keras_layer():
 ##################################################
 # Docstring Modification
 ##################################################
-class ModuleMultiWrapper(SourceFileLoader):
-    def __init__(self, fullname, path, wrappers=None, checks=None):
-        # TODO: Add documentation
-        self.wrappers = wrappers or []
-        self.checks = checks or [lambda _: True]
-        super().__init__(fullname, path)
-
-    # noinspection PyMethodOverriding
-    def exec_module(self, module):
-        # TODO: Add documentation
-        super().exec_module(module)
-
-        for attr in module.__dict__:
-            obj = getattr(module, attr)
-
-            if any([_(obj) for _ in self.checks]):
-                for wrapper in self.wrappers:
-                    obj = wrapper(obj)
-
-                setattr(module, attr, obj)
+# class ModuleMultiWrapper(SourceFileLoader):
+#     def __init__(self, fullname, path, wrappers=None, checks=None):
+#         self.wrappers = wrappers or []
+#         self.checks = checks or [lambda _: True]
+#         super().__init__(fullname, path)
+#
+#     # noinspection PyMethodOverriding
+#     def exec_module(self, module):
+#         super().exec_module(module)
+#
+#         for attr in module.__dict__:
+#             obj = getattr(module, attr)
+#
+#             if any([_(obj) for _ in self.checks]):
+#                 for wrapper in self.wrappers:
+#                     obj = wrapper(obj)
+#
+#                 setattr(module, attr, obj)
 
 
-def nullify_docstring(f):
-    # TODO: Add documentation
-    @wraps(f)
-    def new_func(*args, **kwargs):
-        return f(*args, **kwargs)
-
-    new_func.__doc__ = None
-    return new_func
-
-
-def nullify_module_docstrings(module_name):
-    # TODO: Add documentation
-    sys.meta_path.insert(0, Interceptor(
-        module_name, partial(
-            ModuleMultiWrapper, wrappers=[nullify_docstring], checks=[ismodule, isclass, ismethod, isfunction]
-        )
-    ))
+# def nullify_docstring(f):
+#     @wraps(f)
+#     def new_func(*args, **kwargs):
+#         return f(*args, **kwargs)
+#
+#     new_func.__doc__ = None
+#     return new_func
 
 
-if __name__ == '__main__':
-    pass
+# def nullify_module_docstrings(module_name):
+#     sys.meta_path.insert(0, Interceptor(
+#         module_name, partial(
+#             ModuleMultiWrapper, wrappers=[nullify_docstring], checks=[ismodule, isclass, ismethod, isfunction]
+#         )
+#     ))

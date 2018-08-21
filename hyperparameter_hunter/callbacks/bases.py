@@ -77,7 +77,7 @@ def lambda_callback(
         on_fold_start=None, on_fold_end=None,
         on_run_start=None, on_run_end=None,
 ):
-    """Utility for creating custom callbacks to be declared by :class:`Environment`, and used by Experiments
+    """Utility for creating custom callbacks to be declared by :class:`Environment` and used by Experiments
 
     Parameters
     ----------

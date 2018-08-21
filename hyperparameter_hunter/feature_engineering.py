@@ -1,3 +1,5 @@
+"""This module is still in an experimental stage and should not be assumed to be "reliable", or "useful", or anything else that
+might be expected of a normal module"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -443,6 +445,7 @@ class Sampler():
 
 
 def _execute():
+    """EXPERIMENTAL"""
     test_parameters = [
         dict(
             target_feature='target',

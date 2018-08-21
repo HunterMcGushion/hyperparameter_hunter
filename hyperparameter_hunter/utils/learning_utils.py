@@ -1,3 +1,4 @@
+"""This module defines some simple utilities for setting up toy datasets to be used in testing and examples"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -45,6 +46,7 @@ def get_toy_classification_data(target='target', n_samples=300, n_classes=2, shu
 # Pay no attention to these
 ##################################################
 def upsample(input_df, target_df, target_feature, target_value, **kwargs):
+    """EXPERIMENTAL"""
     ##################################################
     # Get Samples Matching target_value
     ##################################################
@@ -184,15 +186,3 @@ def upsample(input_df, target_df, target_feature, target_value, **kwargs):
 #         data.drop(['is_setosa', 'is_versicolor', 'is_virginica'], axis=1),
 #         data[['is_setosa', 'is_versicolor', 'is_virginica']]
 #     )
-
-
-def _execute():
-    # (input_data, target_data) = test_iris_upsample()
-    # upsampled_input, upsampled_target = upsample(input_data, target_data, target_feature='is_setosa', target_value=1.0)
-    # upsampled_target_counts = zip(np.unique(upsampled_target.values, return_counts=True, axis=0))
-    # print(upsampled_target_counts)
-    pass
-
-
-if __name__ == '__main__':
-    _execute()

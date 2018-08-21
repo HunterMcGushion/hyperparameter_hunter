@@ -15,7 +15,7 @@ Related
 Notes
 -----
 As mentioned above, the inner workings of :mod:`experiments` will be very confusing without a grasp on whats going on in
-    :mod:`experiment_core`, and its related modules"""
+:mod:`experiment_core`, and its related modules"""
 ##################################################
 # Import Own Assets
 ##################################################

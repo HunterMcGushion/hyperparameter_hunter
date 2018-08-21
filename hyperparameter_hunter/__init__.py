@@ -1,16 +1,8 @@
 ##################################################
-# Nullify Excess Documentation
-##################################################
-from .importer import nullify_module_docstrings, hook_keras_layer
-
-# try:
-#     importer.nullify_module_docstrings('hyperparameter_hunter.utils.boltons_utils')
-# except Exception:
-#     pass
-
-##################################################
 # Execute Import Interceptors
 ##################################################
+from .importer import hook_keras_layer
+
 try:
     hook_keras_layer()
 except Exception as _ex:
@@ -32,6 +24,7 @@ from .optimization import DummySearch
 from .space import Real
 from .space import Integer
 from .space import Categorical
+from .callbacks.bases import lambda_callback
 
 __all__ = [
     'Environment',
@@ -47,4 +40,6 @@ __all__ = [
     'Real',
     'Integer',
     'Categorical',
+
+    'lambda_callback',
 ]

@@ -1,3 +1,9 @@
+"""This module contains utilities for building and executing unit tests, as well as for reporting the results
+
+Related
+-------
+:mod:`hyperparameter_hunter.tests`
+    This module contains all unit tests for the library, and it uses :mod:`hyperparameter_hunter.utils.test_utils` throughout"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -66,14 +72,17 @@ def suite_builder(test_type, test_function, test_cases, targets, case_ids, overr
 
 
 def equals_suite(test_function, test_cases, targets, case_ids, override_module):
+    """A test suite for asserting object equality"""
     return suite_builder(TestAssertEquals, test_function, test_cases, targets, case_ids, override_module)
 
 
 def truth_suite(test_function, test_cases, targets, case_ids, override_module):
+    """A test suite for asserting boolean values"""
     return suite_builder(TestAssertTrue, test_function, test_cases, targets, case_ids, override_module)
 
 
 def exception_suite(test_function, test_cases, targets, case_ids, override_module):
+    """A test suite for ensuring that some Exception is raised"""
     return suite_builder(TestAssertException, test_function, test_cases, targets, case_ids, override_module)
 
 
@@ -201,17 +210,3 @@ def format_suites(test_suites, group_format, reindex=True):
         all_cases.extend(test_cases)
 
     return all_cases, all_keys
-
-
-def _execute():
-    suites = {
-        'a': [[None], [None]],
-        'b': [[None], [None]],
-    }
-    print(format_suites(suites, 'suites_{}_', reindex=True)[1])
-    print(format_suites(suites, 'suites_{}_', reindex=False)[1])
-    print('')
-
-
-if __name__ == '__main__':
-    _execute()

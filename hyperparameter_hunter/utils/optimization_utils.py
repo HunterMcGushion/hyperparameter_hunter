@@ -1,3 +1,17 @@
+"""This module defines utility functions used to organize hyperparameter optimization, specifically the gathering of saved
+Experiment files in order to identify similar Experiments that can be used as learning material for the current
+OptimizationProtocol. Additionally, :class:`AskingOptimizer` is defined here, which is used to direct OptimizationProtocols'
+searches through hyperparameter space
+
+Related
+-------
+:mod:`hyperparameter_hunter.optimization_core`
+    The primary user of the utilities defined in :mod:`hyperparameter_hunter.utils.optimization_utils`
+
+Notes
+-----
+:class:`AskingOptimizer` is a blatant adaptation of Scikit-Optimize's `optimizer.optimizer.Optimizer` class. This situation is
+far from ideal, but the creators and contributors of SKOpt deserve all the credit for their excellent work"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -396,13 +410,6 @@ def filter_by_guidelines(
 
     guidelines = remap(temp_guidelines, visit=_visit)  # (Hyperparameters that were set values and affect Experiment results)
     # `guidelines` = `temp_guidelines` that are neither `hyperparameter_space` choices, nor in `dimensions_to_ignore`
-
-    # TODO: Bug when matching `guidelines['compile_params']['optimizer_params']` while `optimizer` is a choice
-    # TODO: If `optimizer=Categorical(['adam', 'rmsprop'])`, the dummy `optimizer_params` will be the defaults for 'adam', ...
-    # TODO: which means those will be the required guidelines, and any experiments that used 'rmsprop' will fail to match ...
-    # TODO: because the default `optimizer_params` are different. Need way to all guidelines to be one of a selection of ...
-    # TODO: guidelines. But it might require compiling a different dummy for each `optimizer` choice given to find its defaults
-    # TODO: And this problem is currently limited to `optimizer`-`optimizer_params`, so there might not be a general solution
 
     hyperparameters_and_scores = list(filter(
         lambda _: remap(_[0], visit=_visit) == guidelines, hyperparameters_and_scores

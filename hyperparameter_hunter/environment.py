@@ -1,3 +1,21 @@
+"""This module is central to the proper functioning of the entire library. It defines :class:`Environment`, which (when activated)
+is used by the vast majority of the other operation-critical modules in the library. :class:`Environment` can be viewed as a
+simple storage container that defines settings that characterize the Experiments/OptimizationProtocols to be conducted, and
+influence how those processes are carried out
+
+Related
+-------
+:mod:`hyperparameter_hunter.settings`
+    This module is the doorway for other modules to access the settings defined by :class:`environment.Environment`, which sets
+    :attr:`hyperparameter_hunter.settings.G.Env` to itself as its first action. This allows other modules to access any
+    information they need from the active :class:`environment.Environment` via :attr:`hyperparameter_hunter.settings.G.Env`.
+    :class:`hyperparameter_hunter.settings.G` also provides other modules with access to the logging methods that are initialized
+    by :class:`hyperparameter_hunter.environment.Environment`
+
+Notes
+-----
+Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module listed as being "related", pretty much all the
+other modules in the library are related to :class:`hyperparameter_hunter.environment.Environment` by way of this relation"""
 ##################################################
 # Import Own Assets
 ##################################################

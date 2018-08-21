@@ -1,3 +1,13 @@
+"""This module is the doorway for other modules to access the information set by the active
+:class:`hyperparameter_hunter.environment.Environment`, and to access the appropriate logging methods. Specifically, other
+modules will most often use :class:`hyperparameter_hunter.settings.G` to access the aforementioned information. Additionally,
+this module defines several variables to assist in navigating the 'HyperparameterHunterAssets' directory structure
+
+Related
+-------
+:mod:`hyperparameter_hunter.environment`
+    This module sets :attr:`hyperparameter_hunter.settings.G.Env` to itself, creating the primary gateway used by other modules
+    to access the active Environment's information"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################

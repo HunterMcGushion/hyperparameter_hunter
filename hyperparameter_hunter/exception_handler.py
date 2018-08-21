@@ -1,3 +1,12 @@
+"""This module defines a few custom Exception classes, and it provides the means for Exceptions to be added to the Heartbeat
+result files of Experiments
+
+Related
+-------
+:mod:`hyperparameter_hunter.reporting`
+    This module executes :func:`hyperparameter_hunter.exception_handler.hook_exception_handler` to ensure that any raised
+    Exceptions are also recorded in the Heartbeat files of the Experiment for which the Exception was raised in order to assist
+    in debugging"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################

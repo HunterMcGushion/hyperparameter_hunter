@@ -1,3 +1,6 @@
+"""This module defines helper functions for assisting in the evaluation of metrics"""
+
+
 def wrap_xgboost_metric(metric, metric_name):
     """Create a function to use as the `eval_metric` kwarg for :meth:`xgboost.sklearn.XGBModel.fit`
 

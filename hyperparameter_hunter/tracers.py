@@ -1,5 +1,19 @@
-from hyperparameter_hunter.space import Real, Integer, Categorical
+"""This module defines metaclasses used to trace the parameters passed through operation-critical classes that are members of
+other libraries. These are only used in cases where it is impractical or impossible to effectively retrieve the arguments
+explicitly provided by a user, as well as the default arguments for the classes being traced. Generally, tracer metaclasses will
+aim to add some attributes to the class, that will collect default values, and provided arguments on the class's creation, and an
+instance's call
+
+Related
+-------
+:mod:`hyperparameter_hunter.importer`
+    This module handles the interception of certain imports in order to inject the tracer metaclasses defined in
+    :mod:`hyperparameter_hunter.tracers` into the inheritance structure of objects that need to be traced"""
+##################################################
+# Import Own Assets
+##################################################
 from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.space import Real, Integer, Categorical
 
 ##################################################
 # Import Miscellaneous Assets
@@ -9,7 +23,8 @@ from inspect import signature, _empty
 
 
 class KerasTracer(type):
-    # TODO: Add documentation
+    """This metaclass traces the default arguments and explicitly provided arguments of descendants of
+    `keras.engine.base_layer.Layer`. It also has special provisions for instantiating dummy Keras models if directed to"""
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
         namespace = dict(

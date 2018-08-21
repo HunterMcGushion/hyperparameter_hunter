@@ -1,3 +1,10 @@
+"""This module defines the Leaderboard classes that are saved to the 'HyperparameterHunterAssets/Leaderboards' subdirectory. It
+provides the ability to compare all Experiment results at a glance
+
+Related
+-------
+:mod:`hyperparameter_hunter.recorders`
+    This module initiates the saving of Experiment entries to Leaderboards"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -13,7 +20,8 @@ import pandas as pd
 
 class Leaderboard(metaclass=ABCMeta):
     def __init__(self, data=None):
-        """ # TODO: ... Description...
+        """The Leaderboard class is used for reading, updating, and saving leaderboard files within the
+         'HyperparameterHunterAssets/Leaderboards' subdirectory
 
         Parameters
         ----------
@@ -50,34 +58,6 @@ class Leaderboard(metaclass=ABCMeta):
             An instance of a completed Experiment from which to construct a Leaderboard entry"""
         raise NotImplementedError()
 
-    # def update_from_old_experiments(self, experiments_dir_path):
-    #     """Update the state of the Leaderboard by ensuring it contains the results of all applicable past Experiments
-    #
-    #     Parameters
-    #     ----------
-    #     experiments_dir_path: str
-    #         The path of the directory containing all completed experiment result files"""
-    #     # raise NotImplementedError()
-    #     # TODO: Update this to iterate through contents of `experiments_dir_path`, for each do:
-    #     # TODO: ... check if `do_add_experiment` is True. If so, `add_entry`. At the end, `sort` and `save`
-
-    # @staticmethod
-    # @abstractmethod
-    # def do_add_experiment(experiment):
-    #     """Determine whether an Experiment should have a place on the Leaderboard
-    #
-    #     Parameters
-    #     ----------
-    #     experiment: :class:`experiments.BaseExperiment`, or str
-    #         If str, the filepath of a completed Experiment's Description .json result file
-    #         # TODO: Make clearer distinction between supplying an Experiment vs a filepath
-    #
-    #     Returns
-    #     -------
-    #     Boolean
-    #         True if `experiment` should be given a place on the Leaderboard. Else False"""
-    #     raise NotImplementedError()
-
     def save(self, path, **kwargs):
         """Save the Leaderboard instance
 
@@ -103,7 +83,14 @@ class Leaderboard(metaclass=ABCMeta):
 
 class GlobalLeaderboard(Leaderboard):
     def add_entry(self, experiment, **kwargs):
-        # TODO: Add documentation
+        """Add an entry row to :attr:`Leaderboard.data` (pandas.DataFrame). This method also handles column conflicts to an extent
+
+        Parameters
+        ----------
+        experiment: Instance of :class:`experiments.BaseExperiment` descendant
+            An Experiment instance for which a leaderboard entry row should be added
+        **kwargs: Dict
+            Extra keyword arguments"""
         final_evaluations = experiment.last_evaluation_results
         entry_columns, entry_data = [], []
         # TODO: Resolve cases where `data` contains an aliased column for a metric, but the current experiment uses the

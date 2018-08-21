@@ -20,15 +20,13 @@ setup(
     packages=find_packages(),
     install_requires=[
         # 'h5py',  # ?
-        # 'keras',  # TODO: Move to extras_require, with 'tensorflow'?
         'numpy',
         'pandas',
         'scikit-learn',
         'scikit-optimize',
         'scipy',
         'simplejson',
-        'dill',  # New
-        # 'tensorflow==1.5.0',  # TODO: Might want to include in extras_require with 'keras'?
+        'dill',
     ],
     extras_require={
         'docs': [
