@@ -1,0 +1,18 @@
+{
+  "root_results_path": "HyperparameterHunterAssets",
+  "target_column": "diagnosis",
+  "metrics_map": [
+    "roc_auc_score",
+    "f1_score"
+  ],
+  "cross_validation_type": "StratifiedKFold",
+  "cross_validation_params": {
+    "n_splits": 10,
+    "shuffle": true,
+    "random_state": 117
+  },
+  "runs": 3,
+  "file_blacklist": [
+    "heartbeat"
+  ]
+}

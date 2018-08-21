@@ -11,7 +11,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticD
 from sklearn.neural_network import MLPClassifier
 
 
-def execute():
+def _execute():
     env = Environment(
         train_dataset=get_breast_cancer_data(),
         root_results_path='HyperparameterHunterAssets',
@@ -38,4 +38,4 @@ def execute():
 
 
 if __name__ == '__main__':
-    execute()
+    _execute()

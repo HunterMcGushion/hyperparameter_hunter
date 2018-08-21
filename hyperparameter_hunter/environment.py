@@ -209,18 +209,14 @@ class Environment():
         Overriding default kwargs at "environment_params_path": If you have any of the above kwargs specified in the .json file
         at environment_params_path (except environment_params_path, which will be ignored), you can override its value by
         passing it as a kwarg when initializing :class:`Environment`. The contents at environment_params_path are only used when
-        the matching kwarg supplied at initialization is None. See the "Examples" section below for details.
+        the matching kwarg supplied at initialization is None. See "/examples/environment_params_path_example.py" for details
 
         The order of precedence for determining the value of each parameter is as follows, with items at the top having the
         highest priority, and deferring only to the items below if their own value is None:
 
         * 1)kwargs passed directly to :meth:`.Environment.__init__` on initialization,
         * 2)keys of the file at environment_params_path (if valid .json object),
-        * 3)keys of the DEFAULT_PARAMS dict
-
-        Examples
-        --------
-        TODO: ADD EXAMPLE FOR OVERRIDING PARAMS WITH KWARGS AND THE ORDER OF PRECEDENCE, AS IN THE FIRST TWO NOTES
+        * 3)keys of :attr:`hyperparameter_hunter.environment.Environment.DEFAULT_PARAMS`
         """
         G.Env = self
         self.environment_params_path = environment_params_path
