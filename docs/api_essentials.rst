@@ -77,6 +77,12 @@ Hyperparameter Optimization
    .. automethod:: go
       :noindex:
 
+Extras
+======
+
+.. autofunction:: hyperparameter_hunter.callbacks.bases.lambda_callback
+    :noindex:
+
 
 Indices and tables
 ==================

@@ -22,6 +22,7 @@ project = 'hyperparameter_hunter'
 copyright = '2018, Hunter McGushion'
 author = 'Hunter McGushion'
 
+
 version = ''  # The short X.Y version
 release = '1.0.1'  # The full version, including alpha/beta/rc tags
 
