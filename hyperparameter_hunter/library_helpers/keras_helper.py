@@ -1,3 +1,4 @@
+"""This module defines utilities for assisting in processing Keras Experiments"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################

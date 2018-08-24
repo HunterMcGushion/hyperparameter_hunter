@@ -14,7 +14,7 @@ import inspect
 
 # TODO: Look into "from tabulate import tabulate" tables for temporary advanced logging
 # TODO: See if there is a way of making a running table, where not all values are given and rows are printed at intervals
-# FLAG: Will need to install tabulate. See "skorch==0.2.0" file "skorch/callbacks/logging.py" in "PyTorchTest" project
+# FLAG: Will need to install tabulate. See "skorch==0.2.0" file "skorch/callbacks/logging.py"
 
 class LoggerFitStatus(BaseLoggerCallback):
     float_format = '{:.5f}'

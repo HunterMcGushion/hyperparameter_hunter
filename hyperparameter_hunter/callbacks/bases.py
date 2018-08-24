@@ -1,3 +1,21 @@
+"""This module defines the base callback classes, from which all other callback classes in :mod:`hyperparameter_hunter.callbacks`
+are descendants. Importantly, the specific base callback classes contained herein are all descendants of
+:class:`hyperparameter_hunter.callbacks.bases.BaseCallback`, ensuring all callbacks descend from the same base class. This module
+also defines :func:`hyperparameter_hunter.callbacks.bases.lambda_callback`, which can be used to define custom callbacks to be
+executed during Experiments when passed to :meth:`hyperparameter_hunter.environment.Environment.__init__` via the
+`experiment_callbacks` argument
+
+Related
+-------
+:mod:`hyperparameter_hunter.callbacks`
+    The rest of the submodules within this module should define classes which all descend from the base callback classes defined
+    in :mod:`hyperparameter_hunter.callbacks.bases`
+:mod:`hyperparameter_hunter.experiment_core`
+    This is where callback classes are added as bases inherited by :class:`hyperparameter_hunter.experiments.BaseExperiment`.
+    This module is the path that links :mod:`hyperparameter_hunter.callbacks` to :mod:`hyperparameter_hunter.experiments`
+:mod:`hyperparameter_hunter.environment`
+    This module provides the means to use custom callbacks made by :func:`hyperparameter_hunter.callbacks.bases.lambda_callback`
+    through the `experiment_callbacks` argument of :meth:`hyperparameter_hunter.environment.Environment.__init__`"""
 ##################################################
 # Import Own Assets
 ##################################################
