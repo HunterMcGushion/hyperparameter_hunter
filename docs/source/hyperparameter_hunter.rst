@@ -141,6 +141,14 @@ hyperparameter\_hunter.result\_reader module
     :undoc-members:
     :show-inheritance:
 
+hyperparameter\_hunter.sentinels module
+---------------------------------------
+
+.. automodule:: hyperparameter_hunter.sentinels
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 hyperparameter\_hunter.settings module
 --------------------------------------
 
