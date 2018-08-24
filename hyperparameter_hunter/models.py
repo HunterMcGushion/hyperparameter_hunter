@@ -6,7 +6,10 @@
 Related
 -------
 :mod:`hyperparameter_hunter.experiments`
-    This module is the primary user of the Model classes defined in :mod:`hyperparameter_hunter.models`"""
+    This module is the primary user of the Model classes defined in :mod:`hyperparameter_hunter.models`
+:mod:`hyperparameter_hunter.sentinels`
+    This module defines the `Sentinel` classes that will be converted to the actual values they represent in
+    :meth:`hyperparameter_hunter.models.Model.__init__`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -212,8 +215,6 @@ class XGBoostModel(Model):
             target_metric=target_metric, metrics_map=metrics_map,
         )
 
-    # FLAG: ORIGINAL BELOW
-    # TODO: Shouldn't be default behavior to include `eval_set` below - Results in unexpectedly long execution times - Rework
     # def fit(self):
     #     #################### Build eval_set ####################
     #     eval_set = [(self.train_input, self.train_target)]
@@ -229,11 +230,11 @@ class XGBoostModel(Model):
     #     #################### Build eval_metric ####################
     #     if 'eval_metric' not in fit_kwargs:
     #         target_metric_name = self.target_metric[-1]
+    #         # TODO: Add Sentinel to handle wrapping of xgboost `eval_metric` if used
     #         fit_kwargs['eval_metric'] = wrap_xgboost_metric(self.metrics_map[target_metric_name], target_metric_name)
     #         # eval_metric scores may be higher than reported scores depending on predict/predict_proba
     #
     #     self.model.fit(self.train_input, self.train_target, **fit_kwargs)
-    # FLAG: ORIGINAL ABOVE
 
 
 class KerasModel(Model):

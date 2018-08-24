@@ -1,3 +1,27 @@
+"""This module defines Sentinel objects that are used to represent data that is not yet available. For example,
+:class:`hyperparameter_hunter.sentinels.DatasetSentinel` is used in :class:`hyperparameter_hunter.environment.Environment` to
+enable a user to pass the fold validation dataset as an argument on Experiment initialization. At the point that the sentinel is
+provided, the training dataset has not yet been split into folds, which is why the Sentinel is necessary
+
+Related
+-------
+:mod:`hyperparameter_hunter.environment`
+    :class:`hyperparameter_hunter.environment.Environment` has the following properties that utilize
+    :class:`hyperparameter_hunter.sentinels.DatasetSentinel`: [`train_input`, `train_target`, `validation_input`,
+    `validation_target`, `holdout_input`, `holdout_target`]. These properties can be passed as arguments to Experiment or
+    OptimizationProtocol initialization in order to provide the dataset to a Model's `fit` call, for example
+:mod:`hyperparameter_hunter.experiments`
+    This is one of the points at which one might want to use the Sentinels exposed by
+    :class:`hyperparameter_hunter.environment.Environment`, specifically as values in the `model_init_params` and
+    `model_extra_params` arguments to a descendant of :class:`hyperparameter_hunter.experiments.BaseExperiment`
+:mod:`hyperparameter_hunter.optimization_core`
+    This is a second point at which one might use the Sentinels exposed by :class:`hyperparameter_hunter.environment.Environment`.
+    In this case, they could be provided as values in the `model_init_params` and `model_extra_params` arguments in a call to
+    :meth:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.set_experiment_guidelines`, the structure of which
+    intentionally mirrors that of :meth:`hyperparameter_hunter.experiments.BaseExperiment.__init__`
+:mod:`hyperparameter_hunter.models`
+    This is ultimately where `Sentinel` instances will be converted to the actual values that they represent via calls to
+    :func:`hyperparameter_hunter.sentinels.locate_sentinels`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -158,6 +182,12 @@ class DatasetSentinel(Sentinel):
         return sentinel
 
     def retrieve_by_sentinel(self):
+        """Retrieve the actual dataset represented by the sentinel
+
+        Returns
+        -------
+        object
+            The dataset for which the sentinel was being used as a placeholder"""
         if self.dataset_type in ('train_input', 'train_target', 'validation_input', 'validation_target'):
             return getattr(G.Env.current_task, 'fold_{}'.format(self.dataset_type))
         else:
