@@ -19,6 +19,7 @@ other modules in the library are related to :class:`hyperparameter_hunter.enviro
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
 from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
@@ -283,48 +284,8 @@ class Environment():
     #     G.reset_attributes()
 
     ##################################################
-    # Dataset Sentinels for Use as Extra Parameters
+    # Core Methods
     ##################################################
-    # @property
-    # def train_input(self):
-    #     return 'SENTINEL***train_input***{}_{}'.format(
-    #         self.cross_experiment_key.parameters['train_dataset'],
-    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
-    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
-    #     )
-
-    # @property
-    # def train_target(self):
-    #     return 'SENTINEL***train_target***{}_{}'.format(
-    #         self.cross_experiment_key.parameters['train_dataset'],
-    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
-    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
-    #     )
-
-    # @property
-    # def validation_input(self):
-    #     return 'SENTINEL***validation_input***{}_{}'.format(
-    #         self.cross_experiment_key.parameters['train_dataset'],
-    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
-    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
-    #     )
-
-    # @property
-    # def validation_target(self):
-    #     return 'SENTINEL***validation_target***{}_{}'.format(
-    #         self.cross_experiment_key.parameters['train_dataset'],
-    #         self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
-    #         # self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
-    #     )
-
-    # @property
-    # def holdout_input(self):
-    #     return 'SENTINEL***holdout_input***{}'.format(self.cross_experiment_key.parameters['holdout_dataset'])
-
-    # @property
-    # def holdout_target(self):
-    #     return 'SENTINEL***holdout_target***{}'.format(self.cross_experiment_key.parameters['holdout_dataset'])
-
     def environment_workflow(self):
         """Execute all methods required to validate the environment and run Experiments"""
         self.update_custom_environment_params()
@@ -463,10 +424,9 @@ class Environment():
         for k, v in user_defaults.items():
             if k not in allowed_parameter_keys:
                 G.warn('\n\t'.join([
-                    'Warning: Invalid key ("{}") in user-defined default Environment parameter file at "{}"',
-                    'If "{}" is expected to do something, it really won\'t, so it is recommended that it be removed or fixed.',
-                    'The following are valid default keys: {}'
-                ]).format(k, self.environment_params_path, k, allowed_parameter_keys))
+                    'Invalid key ({}) in user-defined default Environment parameter file at "{}". If expected to do something,',
+                    'it really won\'t, so it should be removed or fixed. The following are valid default keys: {}'
+                ]).format(k, self.environment_params_path, allowed_parameter_keys))
             elif getattr(self, k) is None:
                 setattr(self, k, v)
                 G.debug('Environment kwarg "{}" was set to user default at "{}"'.format(k, self.environment_params_path))
@@ -504,7 +464,45 @@ class Environment():
         G.debug = reporting_handler.debug
         G.warn = reporting_handler.warn
 
+    ##################################################
+    # Dataset Sentinels for Use as Extra Parameters
+    ##################################################
+    @property
+    def train_input(self):
+        return DatasetSentinel('train_input', **self._dataset_sentinel_helper())
 
+    @property
+    def train_target(self):
+        return DatasetSentinel('train_target', **self._dataset_sentinel_helper())
+
+    @property
+    def validation_input(self):
+        return DatasetSentinel('validation_input', **self._dataset_sentinel_helper())
+
+    @property
+    def validation_target(self):
+        return DatasetSentinel('validation_target', **self._dataset_sentinel_helper())
+
+    @property
+    def holdout_input(self):
+        return DatasetSentinel('holdout_input', self.cross_experiment_key.parameters['holdout_dataset'])
+
+    @property
+    def holdout_target(self):
+        return DatasetSentinel('holdout_target', self.cross_experiment_key.parameters['holdout_dataset'])
+
+    def _dataset_sentinel_helper(self):
+        return dict(
+            dataset_hash=self.cross_experiment_key.parameters['train_dataset'],
+            cross_validation_type=self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
+            global_random_seed=self.cross_experiment_key.parameters['cross_experiment_params']['global_random_seed'],
+            random_seeds=self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
+        )
+
+
+##################################################
+# File Blacklist Utilities
+##################################################
 def validate_file_blacklist(blacklist):
     """Validate contents of blacklist. For most values, the corresponding file is saved upon completion of the experiment. See
     the "Notes" section below for details on some special cases

@@ -73,6 +73,10 @@ class G(object):
         ... # TODO: ...
     warn_: print
         ... # TODO: ...
+    import_hooks: List
+        ... # TODO: ...
+    sentinel_registry: List
+        ... # TODO: ...
     """
     Env = None
 
@@ -87,6 +91,7 @@ class G(object):
     warn_ = warnings.warn
 
     import_hooks = []
+    sentinel_registry = []
 
     @classmethod
     def reset_attributes(cls):

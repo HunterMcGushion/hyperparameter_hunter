@@ -10,6 +10,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.sentinels import locate_sentinels
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import type_val
 from hyperparameter_hunter.utils.metrics_utils import wrap_xgboost_metric
@@ -108,6 +109,9 @@ class Model(object):
         self.model = None
         self.epochs_elapsed = None
 
+        self.initialization_params = locate_sentinels(self.initialization_params)
+        self.extra_params = locate_sentinels(self.extra_params)
+
         self.initialize_model()
 
     def initialize_model(self):
@@ -130,7 +134,7 @@ class Model(object):
             fit_kwargs['silent'] = True
 
         fit_kwargs = dict(
-            fit_kwargs, **{_k: _v for _k, _v in self.extra_params.get('fit', {}).items() if _k not in ['X', 'y', 'eval_set']}
+            fit_kwargs, **{_k: _v for _k, _v in self.extra_params.get('fit', {}).items() if _k not in ['X', 'y']}
         )
 
         try:

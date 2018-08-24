@@ -18,6 +18,7 @@ Related
 from hyperparameter_hunter.exception_handler import EnvironmentInvalidError, EnvironmentInactiveError
 from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_dict, parameterize_compiled_keras_model
 from hyperparameter_hunter.library_helpers.keras_optimization_helper import initialize_dummy_model
+from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json
 from hyperparameter_hunter.utils.boltons_utils import remap
@@ -153,6 +154,8 @@ class KeyMaker(metaclass=ABCMeta):
             Tuple of (`key`, value), in which value is either unchanged or a hash for the original `value`"""
             if isinstance(value, BaseKerasCallback):
                 return (key, keras_callback_to_dict(value))
+            if isinstance(value, Sentinel):
+                return (key, value.sentinel)
             elif callable(value) or isinstance(value, pd.DataFrame):
                 hashed_value = make_hash_sha256(value)
 

@@ -82,7 +82,9 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
     temp_model_file_str = build_temp_model_file(reusable_build_fn, source_script)
 
     #################### Save and Import Temporary Model Builder ####################
+    # TODO: Save this to 'HyperparameterHunterAssets/temp'
     write_python_source(temp_model_file_str, './{}.py'.format(temp_builder_name))
+    # TODO: Save this to 'HyperparameterHunterAssets/temp'
 
     if temp_builder_name in sys.modules:
         del sys.modules[temp_builder_name]
