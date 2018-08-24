@@ -469,29 +469,72 @@ class Environment():
     ##################################################
     @property
     def train_input(self):
+        """Get a `DatasetSentinel` representing an Experiment's `fold_train_input`
+
+        Returns
+        -------
+        DatasetSentinel:
+            A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_train_input` upon
+            `Model` initialization"""
         return DatasetSentinel('train_input', **self._dataset_sentinel_helper())
 
     @property
     def train_target(self):
+        """Get a `DatasetSentinel` representing an Experiment's `fold_train_target`
+
+        Returns
+        -------
+        DatasetSentinel:
+            A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_train_target` upon
+            `Model` initialization"""
         return DatasetSentinel('train_target', **self._dataset_sentinel_helper())
 
     @property
     def validation_input(self):
+        """Get a `DatasetSentinel` representing an Experiment's `fold_validation_input`
+
+        Returns
+        -------
+        DatasetSentinel:
+            A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_validation_input`
+            upon `Model` initialization"""
         return DatasetSentinel('validation_input', **self._dataset_sentinel_helper())
 
     @property
     def validation_target(self):
+        """Get a `DatasetSentinel` representing an Experiment's `fold_validation_target`
+
+        Returns
+        -------
+        DatasetSentinel:
+            A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_validation_target`
+            upon `Model` initialization"""
         return DatasetSentinel('validation_target', **self._dataset_sentinel_helper())
 
     @property
     def holdout_input(self):
+        """Get a `DatasetSentinel` representing an Experiment's `holdout_input_data`
+
+        Returns
+        -------
+        DatasetSentinel:
+            A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_input_data`
+            upon `Model` initialization"""
         return DatasetSentinel('holdout_input', self.cross_experiment_key.parameters['holdout_dataset'])
 
     @property
     def holdout_target(self):
+        """Get a `DatasetSentinel` representing an Experiment's `holdout_target_data`
+
+        Returns
+        -------
+        DatasetSentinel:
+            A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
+            upon `Model` initialization"""
         return DatasetSentinel('holdout_target', self.cross_experiment_key.parameters['holdout_dataset'])
 
     def _dataset_sentinel_helper(self):
+        """Helper method for retrieving train/validation sentinel parameters"""
         return dict(
             dataset_hash=self.cross_experiment_key.parameters['train_dataset'],
             cross_validation_type=self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
