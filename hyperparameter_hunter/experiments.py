@@ -301,8 +301,6 @@ class BaseExperiment(ScoringMixIn):
 
     def _generate_hyperparameter_key(self):
         """Set :attr:`hyperparameter_key` to a key to describe the experiment's hyperparameters"""
-        # TODO: Create `Keras` key based on compiled model architecture, which is far more accurate
-        # TODO: This will improve duplicate experiment detection, since two different `build_fn` s can yield the same architecture
         parameters = dict(
             model_initializer=self.model_initializer,
             model_init_params=self.model_init_params,

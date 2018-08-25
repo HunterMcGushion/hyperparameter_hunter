@@ -50,6 +50,11 @@ from skopt.callbacks import check_callback
 # noinspection PyProtectedMember
 from skopt.utils import cook_estimator, eval_callbacks
 
+try:
+    from keras import backend as K
+except ImportError:
+    K = None
+
 
 class OptimizationProtocolMeta(type):
     """Metaclass to accurately set :attr:`source_script` for its descendants even if the original call was the product of scripts
@@ -105,7 +110,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.iterations = iterations
         self.verbose = verbose
         self.read_experiments = read_experiments
-        self.reporter_parameters = reporter_parameters or {}  # FLAG: PROBABLY DOESN'T NEED TO BE AN ATTRIBUTE
+        self.reporter_parameters = reporter_parameters or {}
 
         #################### Experiment Guidelines ####################
         self.model_initializer = None
@@ -334,6 +339,12 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.current_experiment.experiment_workflow()
         self.current_score = get_path(self.current_experiment.last_evaluation_results, self.target_metric)
         self.successful_iterations += 1
+        self._clean_up_experiment()
+
+    def _clean_up_experiment(self):
+        """Perform any cleanup necessary after completion of an Experiment"""
+        if self.module_name == 'keras':
+            K.clear_session()
 
     def _update_current_hyperparameters(self):
         """Update :attr:`current_init_params`, and :attr:`current_extra_params` according to the upcoming set of hyperparameters

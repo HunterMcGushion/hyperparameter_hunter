@@ -105,9 +105,13 @@ def write_python_source(source_str, filepath='temp_modified.py'):
         The content to write to the file at `filepath`
     filepath: String
         The filepath of the file to which `source_str` should be written"""
-    with open(filepath, 'w') as f:
-        f.write(source_str)
-        f.close()
+    try:
+        with open(filepath, 'w') as f:
+            f.write(source_str)
+            f.close()
+    except FileNotFoundError:
+        os.mkdir(os.path.split(filepath)[0])
+        write_python_source(source_str, filepath=filepath)
 
 
 ##################################################

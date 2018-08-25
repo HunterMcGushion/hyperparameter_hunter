@@ -82,23 +82,15 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
     temp_model_file_str = build_temp_model_file(reusable_build_fn, source_script)
 
     #################### Save and Import Temporary Model Builder ####################
-    # TODO: Save this to 'HyperparameterHunterAssets/temp'
-    write_python_source(temp_model_file_str, './{}.py'.format(temp_builder_name))
-    # TODO: Save this to 'HyperparameterHunterAssets/temp'
+    write_python_source(temp_model_file_str, '{}/{}.py'.format(os.path.split(__file__)[0], temp_builder_name))
 
     if temp_builder_name in sys.modules:
         del sys.modules[temp_builder_name]
 
     try:
-        from __temp_model_builder import build_fn as temp_build_fn
+        from .__temp_model_builder import build_fn as temp_build_fn
     except:
         raise
-
-    # FLAG: Dirty fix `key_handler.hash_callable` bug when trying to hash `build_fn` - Figure out way to remove files
-    # with suppress(OSError):  # FLAG: ORIGINAL - UNCOMMENT ME
-    #     os.remove('./{}.py'.format(temp_builder_name))  # FLAG: ORIGINAL - UNCOMMENT ME
-    #     os.remove('./{}.pyc'.format(temp_builder_name))  # FLAG: ORIGINAL - UNCOMMENT ME
-    # FLAG: Dirty fix `key_handler.hash_callable` bug when trying to hash `build_fn` - Figure out way to remove files
 
     #################### Translate Hyperparameter Names to Universal Paths ####################
     wrapper_params = dict(params={_k: eval(_v) for _k, _v in expected_params.items()}, **extra_params)
