@@ -9,11 +9,10 @@ HyperparameterHunter
 [![PyPI version](https://badge.fury.io/py/hyperparameter-hunter.svg)](https://badge.fury.io/py/hyperparameter-hunter)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Q3EX3PQUV256G)
 
-HyperparameterHunter provides a wrapper for machine learning algorithms that automatically save all the important data in a
-unified format. Simplify the experimentation and hyperparameter tuning process by letting HyperparameterHunter do the hard work
-of recording, organizing, and learning from your tests — all while using the same libraries you already do — with no need to
-provide extra information. Don't let any of your experiments go to waste, and start doing hyperparameter optimization the way it
-was meant to be.
+Automatically save and learn from Experiment results, leading to long-term, persistent optimization that remembers all your tests.
+
+HyperparameterHunter provides a wrapper for machine learning algorithms that saves all the important data. Simplify the experimentation and hyperparameter tuning process by letting HyperparameterHunter do the hard work
+of recording, organizing, and learning from your tests — all while using the same libraries you already do. Don't let any of your experiments go to waste, and start doing hyperparameter optimization the way it was meant to be.
 
 * **Installation:** `pip install hyperparameter-hunter`
 * **Source:** https://github.com/HunterMcGushion/hyperparameter_hunter
@@ -26,6 +25,16 @@ Features
 * Eliminate boilerplate code for cross-validation loops, predicting, and scoring
 * Stop worrying about keeping track of hyperparameters, scores, or re-running the same Experiments
 * Use the libraries and utilities you already love
+
+How to Use HyperparameterHunter
+-------------------------------
+Don’t think of HyperparameterHunter as another optimization library that you bring out only when its time to do hyperparameter optimization. Of course, it does optimization, but its better to view HyperparameterHunter as your own personal machine learning toolbox/assistant.
+
+The idea is to start using HyperparameterHunter immediately. Run all of your benchmark/one-off experiments through it. 
+
+The more you use HyperparameterHunter, the better your results will be. If you just use it for optimization, sure, it’ll do what you want, but that’s missing the point of HyperparameterHunter.
+
+If you’ve been using it for experimentation and optimization along the entire course of your project, then when you decide to do hyperparameter optimization, HyperparameterHunter is already aware of all that you’ve done, and that’s when HyperparameterHunter does something remarkable. It doesn’t start optimization from scratch like other libraries. It starts from all of the Experiments and previous optimization rounds you’ve already run through it.
 
 Getting Started
 ---------------
@@ -337,3 +346,41 @@ Tested Libraries
 * [XGBoost](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/simple_experiment_example.py)
 * [rgf_python](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lib_rgf_example.py)
 * ... More on the way
+
+Gotchas/FAQs
+------------
+These are some things that might "getcha"
+
+### General:
+- **Can't provide initial search points to `OptimizationProtocol`?**
+   - This is intentional. If you want your optimization rounds to start with specific search points (that you haven't recorded yet), simply perform a `CrossValidationExperiment` before initializing your `OptimizationProtocol`
+   - Assuming the two have the same guideline hyperparameters and the `Experiment` fits within the search space defined by your `OptimizationProtocol`, the optimizer will locate and read in the results of the `Experiment`
+   - Keep in mind, you'll probably want to remove the `Experiment` after you've done it once, as the results have been saved. Leaving it there will just execute the same `Experiment` over and over again
+- **After changing things in my "HyperparameterHunterAssets" directory, everything stopped working**
+   - Yeah, don't do that. Especially not with "Descriptions", "Leaderboards", or "TestedKeys"
+   - HyperparameterHunter figures out what's going on by reading these files directly. 
+   - Removing them, or changing their contents can break a lot of HyperparameterHunter's functionality
+
+### Keras:
+- **Can't find similar Experiments with simple Dense/Activation neural networks?**
+   - This is likely caused by switching between using a separate `Activation` layer, and providing a `Dense` layer with the `activation` kwarg
+   - Each layer is treated as its own little set of hyperparameters (as well as being a hyperparameter, itself), which means that as far as HyperparameterHunter is concerned, the following two examples are NOT equivalent:
+      - ```Dense(10, activation=‘sigmoid’)```
+      - ```Dense(10); Activation(‘sigmoid’)```
+   - We’re working on this, but for now, the workaround is just to be consistent with how you add activations to your models
+      - Either use separate `Activation` layers, or provide `activation` kwargs to other layers, and stick with it!
+- **Can't optimize the `model.compile` arguments: `optimizer` and `optimizer_params` at the same time?**
+   - This happens because Keras’ `optimizers` expect different arguments
+   - For example, when `optimizer=Categorical(['adam', 'rmsprop'])`, there are two different possible dicts of `optimizer_params`
+   - For now, you can only optimize `optimizer`, and `optimizer_params` separately
+   - A good way to do this might be to select a few optimizers you want to test, and don’t provide an `optimizer_params` value. That way, each `optimizer` will use its default parameters
+      - Then you can select which `optimizer` was the best, and set `optimizer=<best optimizer>`, then move on to tuning `optimizer_params`, with arguments specific to the `optimizer` you selected
+
+### CatBoost:
+- **Can't find similar Experiments for CatBoost?**
+   - This may be happening because the default values for the kwargs expected in CatBoost’s model `__init__` methods are defined somewhere else, and given placeholder values of `None` in their signatures
+   - Because of this, HyperparameterHunter assumes that the default value for an argument really is `None` if you don’t explicitly provide a value for that argument
+   - This is obviously not the case, but I just can’t seem to figure out where the actual default values used by CatBoost are located, so if anyone knows how to remedy this situation, I would love your help!
+
+
+
