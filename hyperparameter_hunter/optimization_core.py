@@ -29,7 +29,6 @@ from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.space import Space, dimension_subset
 from hyperparameter_hunter.utils.boltons_utils import get_path, PathAccessError
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update
-from hyperparameter_hunter.utils.optimization_utils import get_ids_by, get_scored_params, filter_by_space, filter_by_guidelines
 from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions
 
 ##################################################
@@ -38,14 +37,11 @@ from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 import inspect
-import numpy as np
 import os
-import pandas as pd
 
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.model_selection import StratifiedKFold
 from skopt.callbacks import check_callback
 # noinspection PyProtectedMember
 from skopt.utils import cook_estimator, eval_callbacks
@@ -305,8 +301,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
                 continue
 
             # TODO: :attr:`current_hyperparameters_list` only exists in Informed Protocols
-            self.logger.print_result(self.current_hyperparameters_list, self.current_score)
-            # G.log_(F'Iteration {iteration}, Experiment "{self.current_experiment.experiment_id}": {self.current_score}')
+            self.logger.print_result(
+                self.current_hyperparameters_list, self.current_score, experiment_id=self.current_experiment.experiment_id
+            )
 
             if (self.best_experiment is None) or (self.current_score > self.best_score):
                 self.best_experiment = self.current_experiment.experiment_id
@@ -445,25 +442,6 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         )
         experiment_finder.find()
         self.similar_experiments = experiment_finder.similar_experiments
-
-    def _is_valid_hyperparameter_path(self, hyperparameter):
-        """Determine whether the given hyperparameter path is valid
-
-        Parameters
-        ----------
-        hyperparameter: Tuple
-            Path location of a hyperparameter. Should start with the containing attribute's name ('model_init_params', or
-            'model_extra_params'). Subsequent items will be looked up in order within the attribute
-
-        Returns
-        -------
-        Boolean
-            True if the hyperparameter path exists. Else False"""
-        try:
-            _ = get_path(getattr(self, hyperparameter[0]), hyperparameter[1:])
-            return True
-        except (AttributeError, PathAccessError):
-            return False
 
     def _update_verbosity(self):
         """Update the contents of :attr:`environment.Environment.reporting_handler_params` if required by :attr:`verbose`"""
@@ -656,8 +634,8 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
             _hyperparameters = dimension_subset(_experiment[0], self.hyperparameter_space.get_names())
             _evaluation = _experiment[1]
-
-            self.logger.print_result(_hyperparameters, _evaluation)
+            _experiment_id = _experiment[2] if len(_experiment) > 2 else None
+            self.logger.print_result(_hyperparameters, _evaluation, experiment_id=_experiment_id)
 
             # FLAG: Resolve switching between below options depending on `target_metric`
             # self.optimizer_result = self.optimizer.tell(_hyperparameters, _evaluation)

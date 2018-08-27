@@ -95,9 +95,9 @@ class ResultFinder():
 
     def _get_scored_params(self):
         """For all :attr:`experiment_ids`, add a tuple of the Experiment's hyperparameters, and its :attr:`target_metric` value"""
-        for experiment_id in self.experiment_ids:
+        for _id in self.experiment_ids:
             self.hyperparameters_and_scores.append(
-                get_scored_params('{}/{}.json'.format(self.descriptions_dir, experiment_id), self.target_metric)
+                get_scored_params('{}/{}.json'.format(self.descriptions_dir, _id), self.target_metric) + (_id,)
             )
 
     def _filter_by_space(self):
@@ -118,6 +118,21 @@ class ResultFinder():
         ))
 
     def _filter_by_guidelines_multi(self, location):
+        """Helper to filter by guidelines when one of the guideline hyperparameters is directly affected by a hyperparameter that
+        is given as a space choice.
+
+        Parameters
+        ----------
+        location: Tuple
+            The tuple location of the hyperparameter space choice that affects the acceptable guideline values of a particular
+            hyperparameter. In other words, this is the path of a hyperparameter, which, if changed, would change the expected
+            default value of another hyperparameter
+
+        Notes
+        -----
+        This is used for Keras Experiments when the `optimizer` value in a model's `compile_params` is given as a hyperparameter
+        space choice. Each possible value of `optimizer` prescribes different default values for the `optimizer_params` argument,
+        so special measures need to be taken to ensure the correct Experiments are declared to fit within the constraints"""
         _model_params = deepcopy(self.model_params)
 
         if location == ('model_init_params', 'compile_params', 'optimizer'):
@@ -134,6 +149,7 @@ class ResultFinder():
                 updated_value = k_opt_get(allowed_val).get_config()
 
                 def _visit(path, key, value):
+                    """If `path` + `key` == `update_location`, return default for this choice. Else, default_visit"""
                     if path + (key,) == update_location:
                         return (key, updated_value)
                     return (key, value)
@@ -147,9 +163,31 @@ class ResultFinder():
 
 class KerasResultFinder(ResultFinder):
     def __init__(
-            self, algorithm_name, module_name, cross_experiment_key, target_metric, hyperparameter_space, leaderboard_path, descriptions_dir,
-            model_params,
+            self, algorithm_name, module_name, cross_experiment_key, target_metric, hyperparameter_space, leaderboard_path,
+            descriptions_dir, model_params,
     ):
+        """ResultFinder class for locating saved Keras Experiments that are compatible with the given constraints
+
+        Parameters
+        ----------
+        algorithm_name: String
+            The name of the algorithm whose hyperparameters are being optimized
+        module_name: String
+            The name of the module from whence the algorithm being used came
+        cross_experiment_key: String
+            The cross_experiment_key produced by the currently active :class:`environment.Environment`
+        target_metric: Tuple
+            A path denoting the metric to be used. The first value should be one of ['oof', 'holdout', 'in_fold'], and the
+            second value should be the name of a metric supplied in :attr:`environment.Environment.metrics_params`
+        hyperparameter_space: :class:`space.Space`
+            The hyperparameter search space constraints
+        leaderboard_path: String
+            The path to a leaderboard file, whose listed Experiments will be tested for compatibility
+        descriptions_dir: String
+            The path to a directory containing the description files of saved Experiments
+        model_params: Dict
+            A dict containing concrete hyperparameters for the model. Common keys include 'model_init_params', and
+            'model_extra_params', both of which can be pointers to dicts of hyperparameters"""
         super().__init__(
             algorithm_name=algorithm_name, module_name=module_name, cross_experiment_key=cross_experiment_key,
             target_metric=target_metric, hyperparameter_space=hyperparameter_space, leaderboard_path=leaderboard_path,
@@ -160,6 +198,7 @@ class KerasResultFinder(ResultFinder):
 
         # noinspection PyUnusedLocal
         def _visit(path, key, value):
+            """If `value` is a `BaseKerasCallback`, return its dict representation. Else default_visit"""
             if isinstance(value, BaseKerasCallback):
                 return (key, keras_callback_to_dict(value))
             return (key, value)

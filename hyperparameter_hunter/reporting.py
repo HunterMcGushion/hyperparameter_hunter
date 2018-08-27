@@ -291,7 +291,7 @@ class _Color():
 
 
 class OptimizationReporter():
-    def __init__(self, parameter_names, verbose=1, show_experiment_id=True):
+    def __init__(self, parameter_names, verbose=1, show_experiment_id=8):
         """A MixIn class for reporting the results of hyperparameter optimization rounds
 
         Parameters
@@ -300,12 +300,12 @@ class OptimizationReporter():
             The names of the hyperparameters being evaluated and optimized
         verbose: Int in [0, 1, 2], default=1
             If 0, all but critical logging is silenced. If 1, normal logging is performed. If 2, detailed logging is performed
-        show_experiment_id: Boolean or 'partial', default=True
-            If True, the experiment_id will be printed in each result row. If False, it will not. If string 'partial', the first
-            eight characters of each experiment_id will be printed in each row"""
+        show_experiment_id: Int, or Boolean, default=8
+            If True, the experiment_id will be printed in each result row. If False, it will not. If int, the first
+            `show_experiment_id`-many characters of each experiment_id will be printed in each row"""
         self.original_parameter_names = parameter_names
         self.verbose = verbose
-        self.show_experiment_id = show_experiment_id
+        self.show_experiment_id = 36 if (show_experiment_id is True or show_experiment_id > 36) else show_experiment_id
 
         self.end = ' | '
         self.y_max = None
@@ -317,6 +317,7 @@ class OptimizationReporter():
 
         _skip = ('model_init_params', 'model_extra_params', 'preprocessing_pipeline', 'preprocessing_params', 'feature_selector')
         self.parameter_names = [_[1:] if _[0] in _skip else _ for _ in self.original_parameter_names]
+        self.parameter_names = [_[1:] if _[0] == 'params' else _ for _ in self.parameter_names]
         self.parameter_names = [_[0] if len(_) == 1 else str(_).replace("'", '').replace('"', '') for _ in self.parameter_names]
 
         self.sizes = [max(len(_), 7) for _ in self.parameter_names]
@@ -328,23 +329,22 @@ class OptimizationReporter():
     def print_saved_results_header(self):
         """Print a header signifying that saved Experiment results are being read"""
         header = F'{_Color.RED}Saved Result Files{_Color.STOP}'
-        line = (_Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + _Color.STOP)
+        line_len = (29 + sum([_ + 5 for _ in self.sizes]) + (self.show_experiment_id + 3 if self.show_experiment_id else 0))
+        line = (_Color.RED + '_' * line_len + _Color.STOP)
         self.print_header(header, line)
-
-    # def print_saved_result(self):
-    #     """Print a row containing the results of a saved Experiment read from a file"""
-    #     pass
 
     def print_random_points_header(self):
         """Print a header signifying that random point evaluation rounds are starting"""
         header = F'{_Color.RED}Random Point Evaluation{_Color.STOP}'
-        line = (_Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + _Color.STOP)
+        line_len = (29 + sum([_ + 5 for _ in self.sizes]) + (self.show_experiment_id + 3 if self.show_experiment_id else 0))
+        line = (_Color.RED + '_' * line_len + _Color.STOP)
         self.print_header(header, line)
 
     def print_optimization_header(self):
         """Print a header signifying that Optimization rounds are starting"""
         header = F'{_Color.RED}Hyperparameter Optimization{_Color.STOP}'
-        line = (_Color.RED + '_' * (29 + sum([_ + 5 for _ in self.sizes])) + _Color.STOP)
+        line_len = (29 + sum([_ + 5 for _ in self.sizes]) + (self.show_experiment_id + 3 if self.show_experiment_id else 0))
+        line = (_Color.RED + '_' * line_len + _Color.STOP)
         self.print_header(header, line)
 
     def print_header(self, header, line):
@@ -360,6 +360,8 @@ class OptimizationReporter():
         print(line)
 
         self._print_column_name('Step', 5)
+        if self.show_experiment_id:
+            self._print_column_name('ID', self.show_experiment_id)
         self._print_column_name('Time', 6)
         self._print_column_name('Value', 10)
 
@@ -379,13 +381,12 @@ class OptimizationReporter():
         try:
             print('{0:>{1}}'.format(value, size), end=self.end)
         except TypeError:  # Probably received a tuple including where param came from (init_params, extra_params, etc.)
-            # print('{0:>{1}}'.format(value[-1], size), end=self.end)
             if len(value) == 1:
                 print('{0:>{1}}'.format(value[0], size), end=self.end)
             else:
                 print('{0:>{1}}'.format(str(value), size), end=self.end)
 
-    def print_result(self, hyperparameters, evaluation):
+    def print_result(self, hyperparameters, evaluation, experiment_id=None):
         """Print a row containing the results of an Experiment just executed
 
         Parameters
@@ -393,15 +394,21 @@ class OptimizationReporter():
         hyperparameters: List
             List of hyperparameter values in the same order as :attr:`parameter_names`
         evaluation: Float
-            An evaluation of the performance of `hyperparameters`"""
+            An evaluation of the performance of `hyperparameters`
+        experiment_id: Str, or None, default=None
+            If not None, should be a string that is the UUID of the Experiment"""
         if not self.verbose:
             return
         print('{:>5d}'.format(self.iteration), end=self.end)
 
+        if self.show_experiment_id:
+            if experiment_id is not None:
+                print('{}'.format(experiment_id[:self.show_experiment_id]), end=self.end)
+            else:
+                print(' ' * self.show_experiment_id, end=self.end)
+
         minutes, seconds = divmod((datetime.now() - self.last_round).total_seconds(), 60)
         print('{:>02d}m{:>02d}s'.format(int(minutes), int(seconds)), end=self.end)
-
-        # TODO: Add printing experiment_id to each row (or first ~8 characters)
 
         if self.y_max is None or self.y_max < evaluation:
             self.y_max, self.x_max = evaluation, hyperparameters
