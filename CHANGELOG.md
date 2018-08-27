@@ -1,3 +1,48 @@
+<a name="1.0.2"></a>
+### 1.0.2 (2018-08-26)
+
+#### Features
+* Added `sentinels` module, which includes :class:`DatasetSentinel` that allows users to pass yet-undefined datasets as arguments
+to Experiments or OptimizationProtocols
+    * This functionality can be achieved by using the following new properties of :class:`environment.Environment`:
+    [`train_input`, `train_target`, `validation_input`, `validation_target`, `holdout_input`, `holdout_target`]
+    * Example usage:
+
+    ```python
+    from hyperparameter_hunter import Environment, CrossValidationExperiment
+    from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
+    from xgboost import XGBClassifier
+
+    env = Environment(
+        train_dataset=get_breast_cancer_data(target='target'),
+        root_results_path='HyperparameterHunterAssets',
+        metrics_map=['roc_auc_score'],
+        cross_validation_type='StratifiedKFold',
+        cross_validation_params=dict(n_splits=10, shuffle=True, random_state=32),
+    )
+
+    experiment = CrossValidationExperiment(
+        model_initializer=XGBClassifier,
+        model_init_params=dict(objective='reg:linear', max_depth=3, n_estimators=100, subsample=0.5),
+        model_extra_params=dict(
+            fit=dict(
+                eval_set=[(env.train_input, env.train_target), (env.validation_input, env.validation_target)],
+                early_stopping_rounds=5
+            )
+        )
+    )
+    ```
+
+* Added ability to print `experiment_id` (or first n characters) during optimization rounds via the `show_experiment_id` kwarg in
+:class:`hyperparameter_hunter.reporting.OptimizationReporter` (#42)
+* Lots of other documentation additions, and improvements to example scripts
+
+#### Bug-Fixes
+* Moved the temporary `build_fn` file created during Keras optimization, so there isn't a temporary file floating around in the
+present working directory (#54)
+* Fixed :meth:`models.XGBoostModel.fit` using `eval_set` by default with introduction of :class:`sentinels.DatasetSentinel`,
+allowing users to define `eval_set` only if they want to (#22)
+
 <a name="1.0.1"></a>
 ### 1.0.1 (2018-08-19)
 
