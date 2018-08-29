@@ -1,5 +1,10 @@
 """This module defines utilities for assisting in processing Keras Experiments"""
 ##################################################
+# Import Own Assets
+##################################################
+from hyperparameter_hunter.settings import G
+
+##################################################
 # Import Miscellaneous Assets
 ##################################################
 # noinspection PyProtectedMember
