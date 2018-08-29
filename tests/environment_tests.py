@@ -8,6 +8,7 @@ from hyperparameter_hunter.utils.test_utils import equals_suite, format_suites, 
 # Import Miscellaneous Assets
 ##################################################
 from functools import partial
+import numpy as np
 import pandas as pd
 from unittest import TestCase, TestSuite, TextTestRunner
 
