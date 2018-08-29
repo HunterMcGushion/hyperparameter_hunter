@@ -32,7 +32,7 @@ class PredictorOOF(BasePredictorCallback):
         ]
         for attr in required_attributes:
             if not hasattr(self, attr):
-                raise AttributeError('Missing required attribute for {} class: {}'.format(__class__.__name__, attr))
+                raise AttributeError('Missing required attribute for `PredictorOOF` class: {}'.format(attr))
 
         self.final_oof_predictions = (0 * self.train_dataset[self.target_column])
         super().on_experiment_start()
