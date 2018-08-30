@@ -9,10 +9,13 @@ def readme():
 setup(
     name='hyperparameter_hunter',
     version='1.0.2',
-    description='Easy hyperparameter optimization and automatic result saving across machine learning algorithms and libraries',
+    description=('Easy hyperparameter optimization and automatic result '
+                 'saving across machine learning algorithms and libraries',
     long_description=readme(),
     long_description_content_type='text/markdown',
-    keywords='hyperparameter tuning optimization machine learning artificial intelligence neural network keras scikit-learn xgboost catboost lightgbm rgf',
+    keywords=('hyperparameter tuning optimization machine learning '
+              'artificial intelligence neural network keras '
+              'scikit-learn xgboost catboost lightgbm rgf'),
     url='https://github.com/HunterMcGushion/hyperparameter_hunter',
     author='Hunter McGushion',
     author_email='hunter@mcgushion.com',
