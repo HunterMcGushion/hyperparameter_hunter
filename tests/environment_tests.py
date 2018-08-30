@@ -16,7 +16,7 @@ from unittest import TestCase, TestSuite, TextTestRunner
 # Import Learning Assets
 ##################################################
 from sklearn.datasets import load_breast_cancer
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
 
 
 def get_breast_cancer_data():
