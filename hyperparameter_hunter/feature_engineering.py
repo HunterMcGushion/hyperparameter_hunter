@@ -444,45 +444,45 @@ class Sampler():
             ))
 
 
-def _execute():
-    """EXPERIMENTAL"""
-    test_parameters = [
-        dict(
-            target_feature='target',
-            target_value=1.0,
-            method='smote'
-        ),
-        dict(
-            target_feature='target',
-            method='upsample',
-            target_value=1.0,
-            parameters=dict(
-                n_times=3
-            )
-        ),
-        # dict(
-        #     target_feature='target',
-        #     target_value=1.0,
-        #     method='smote'
-        # ),
-        # dict(
-        #     target_feature='target',
-        #     target_value=1.0,
-        #     method='adasyn'
-        # )
-    ]
-
-    # train_data = pd.read_csv('./data/porto_seguro_train.csv')
-    # train_input = train_data.drop(['id', 'target'], axis=1)
-    # train_target = train_data['target']
-
-    test_sampler = Sampler(test_parameters, train_input, train_target)
-    # test_sampler.report_status()
-    # test_sampler.advance_pipeline()
-    test_sampler.execute_pipeline()
-
-    print('hold')
-
-
-if __name__ == '__main__':
-    _execute()
+# def _execute():
+#     """EXPERIMENTAL"""
+#     test_parameters = [
+#         dict(
+#             target_feature='target',
+#             target_value=1.0,
+#             method='smote'
+#         ),
+#         dict(
+#             target_feature='target',
+#             method='upsample',
+#             target_value=1.0,
+#             parameters=dict(
+#                 n_times=3
+#             )
+#         ),
+#         # dict(
+#         #     target_feature='target',
+#         #     target_value=1.0,
+#         #     method='smote'
+#         # ),
+#         # dict(
+#         #     target_feature='target',
+#         #     target_value=1.0,
+#         #     method='adasyn'
+#         # )
+#     ]
+#
+#     # train_data = pd.read_csv('./data/porto_seguro_train.csv')
+#     # train_input = train_data.drop(['id', 'target'], axis=1)
+#     # train_target = train_data['target']
+#
+#     test_sampler = Sampler(test_parameters, train_input, train_target)
+#     # test_sampler.report_status()
+#     # test_sampler.advance_pipeline()
+#     test_sampler.execute_pipeline()
+#
+#     print('hold')
+#
+#
+# if __name__ == '__main__':
+#     _execute()
