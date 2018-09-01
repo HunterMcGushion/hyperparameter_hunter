@@ -1,0 +1,17 @@
+
+##################################################
+# Black Code Formatting
+##################################################
+[tool.black]
+line-length = 100
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.tox
+  | _build
+  | build
+  | dist
+  | env*
+)/
+'''

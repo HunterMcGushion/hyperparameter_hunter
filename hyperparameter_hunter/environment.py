@@ -43,67 +43,61 @@ import pandas as pd
 from sklearn.model_selection import _split as sk_cv
 
 
-class Environment():
+class Environment:
     DEFAULT_PARAMS = dict(
         environment_params_path=None,
         root_results_path=None,
-
-        target_column='target',
+        target_column="target",
         id_column=None,
         do_predict_proba=False,
         prediction_formatter=format_predictions,
         metrics_map=None,
         metrics_params=dict(),
-
-        cross_validation_type='KFold',
+        cross_validation_type="KFold",
         runs=1,
         global_random_seed=32,
         random_seeds=None,
         random_seed_bounds=[0, 100000],
         cross_validation_params=dict(),
-
         verbose=True,
         file_blacklist=None,
         reporting_handler_params=dict(
             # reporting_type='logging',
             heartbeat_path=None,
-            float_format='{:.5f}',
+            float_format="{:.5f}",
             console_params=None,
-            heartbeat_params=None
+            heartbeat_params=None,
         ),
         to_csv_params=dict(),
         do_full_save=default_do_full_save,
     )
 
     def __init__(
-            self,
-            train_dataset,  # TODO: Allow providing separate (train_input, train_target) dataframes, or the full df
-            environment_params_path=None,
-            *,
-            root_results_path=None,
-            metrics_map=None,
-            holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dataframes, or the full df
-            test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dataframes, or the full df
-
-            target_column=None,
-            id_column=None,
-            do_predict_proba=None,
-            prediction_formatter=None,
-            metrics_params=None,
-
-            cross_validation_type=None,
-            runs=None,
-            global_random_seed=None,
-            random_seeds=None,
-            random_seed_bounds=None,
-            cross_validation_params=None,
-
-            verbose=None,
-            file_blacklist=None,
-            reporting_handler_params=None,
-            to_csv_params=None,
-            do_full_save=None,
-            experiment_callbacks=None
+        self,
+        train_dataset,  # TODO: Allow providing separate (train_input, train_target) dataframes, or the full df
+        environment_params_path=None,
+        *,
+        root_results_path=None,
+        metrics_map=None,
+        holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dataframes, or the full df
+        test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dataframes, or the full df
+        target_column=None,
+        id_column=None,
+        do_predict_proba=None,
+        prediction_formatter=None,
+        metrics_params=None,
+        cross_validation_type=None,
+        runs=None,
+        global_random_seed=None,
+        random_seeds=None,
+        random_seed_bounds=None,
+        cross_validation_params=None,
+        verbose=None,
+        file_blacklist=None,
+        reporting_handler_params=None,
+        to_csv_params=None,
+        do_full_save=None,
+        experiment_callbacks=None,
     ):
         """Class to organize the parameters that allow Experiments to be fairly compared
 
@@ -252,19 +246,19 @@ class Environment():
         self.experiment_callbacks = experiment_callbacks or []
 
         self.result_paths = {
-            'root': self.root_results_path,
-            'checkpoint': None,
-            'description': None,
-            'heartbeat': None,
-            'predictions_holdout': None,
-            'predictions_in_fold': None,
-            'predictions_oof': None,
-            'predictions_test': None,
-            'script_backup': None,
-            'tested_keys': None,
-            'key_attribute_lookup': None,
-            'leaderboards': None,
-            'global_leaderboard': None,
+            "root": self.root_results_path,
+            "checkpoint": None,
+            "description": None,
+            "heartbeat": None,
+            "predictions_holdout": None,
+            "predictions_in_fold": None,
+            "predictions_oof": None,
+            "predictions_test": None,
+            "script_backup": None,
+            "tested_keys": None,
+            "key_attribute_lookup": None,
+            "leaderboards": None,
+            "global_leaderboard": None,
         }
         self.current_task = None
         self.cross_experiment_key = None
@@ -272,7 +266,7 @@ class Environment():
         self.environment_workflow()
 
     def __repr__(self):
-        return F'{self.__class__.__name__}(cross_experiment_key={self.cross_experiment_key!s})'
+        return f"{self.__class__.__name__}(cross_experiment_key={self.cross_experiment_key!s})"
 
     def __eq__(self, other):
         return self.cross_experiment_key == other
@@ -293,25 +287,29 @@ class Environment():
         self.define_holdout_set()
         self.format_result_paths()
         self.generate_cross_experiment_key()
-        G.log('Cross-Experiment Key: {!s}'.format(self.cross_experiment_key))
+        G.log("Cross-Experiment Key: {!s}".format(self.cross_experiment_key))
 
     def validate_parameters(self):
         """Ensure the provided parameters are valid and properly formatted"""
         #################### root_results_path ####################
         if self.root_results_path is None:
-            G.warn('Received root_results_path=None. Results will not be stored at all.')
+            G.warn("Received root_results_path=None. Results will not be stored at all.")
         elif isinstance(self.root_results_path, str):
             if not self.root_results_path.endswith(ASSETS_DIRNAME):
                 self.root_results_path = os.path.join(self.root_results_path, ASSETS_DIRNAME)
-                self.result_paths['root'] = self.root_results_path
+                self.result_paths["root"] = self.root_results_path
             if not os.path.exists(self.root_results_path):
                 os.makedirs(self.root_results_path, exist_ok=True)
         else:
-            raise TypeError('root_results_path must be None or str, not {}: {}'.format(*type_val(self.root_results_path)))
+            raise TypeError(
+                "root_results_path must be None or str, not {}: {}".format(
+                    *type_val(self.root_results_path)
+                )
+            )
 
         #################### verbose ####################
         if not isinstance(self.verbose, bool):
-            raise TypeError('verbose must be a boolean. Received {}: {}'.format(*type_val(self.verbose)))
+            raise TypeError("`verbose` must be bool, not {}: {}".format(*type_val(self.verbose)))
 
         #################### file_blacklist ####################
         self.file_blacklist = validate_file_blacklist(self.file_blacklist)
@@ -323,14 +321,14 @@ class Environment():
             self.test_dataset = pd.read_csv(self.test_dataset)
 
         #################### metrics_params/metrics_map ####################
-        if (self.metrics_map is not None) and ('metrics_map' in self.metrics_params.keys()):
+        if (self.metrics_map is not None) and ("metrics_map" in self.metrics_params.keys()):
             raise ValueError(
-                '`metrics_map` may be provided as a kwarg, or as a key in `metrics_params`, but NOT BOTH. Received: ' +
-                F'\n `metrics_map`={self.metrics_map}\n `metrics_params`={self.metrics_params}'
+                "`metrics_map` may be provided as a kwarg, or as a key in `metrics_params`, but NOT BOTH. Received: "
+                + f"\n `metrics_map`={self.metrics_map}\n `metrics_params`={self.metrics_params}"
             )
         else:
             if self.metrics_map is None:
-                self.metrics_map = self.metrics_params['metrics_map']
+                self.metrics_map = self.metrics_params["metrics_map"]
             self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
 
         #################### cross_validation_type ####################
@@ -338,10 +336,14 @@ class Environment():
             try:
                 self.cross_validation_type = sk_cv.__getattribute__(self.cross_validation_type)
             except AttributeError:
-                raise AttributeError('`sklearn.model_selection._split` has no attribute "{}".'.format(self.cross_validation_type))
+                raise AttributeError(
+                    f"`sklearn.model_selection._split` has no attribute '{self.cross_validation_type}'"
+                )
 
         #################### to_csv_params ####################
-        self.to_csv_params = {_k: _v for _k, _v in self.to_csv_params.items() if _k != 'path_or_buf'}
+        self.to_csv_params = {
+            _k: _v for _k, _v in self.to_csv_params.items() if _k != "path_or_buf"
+        }
 
         #################### cross_experiment_params ####################
         self.cross_experiment_params = dict(
@@ -357,57 +359,82 @@ class Environment():
             self.experiment_callbacks = [self.experiment_callbacks]
         for callback in self.experiment_callbacks:
             if not isclass(callback):
-                raise TypeError(F'experiment_callbacks must be classes. Received {type(callback)}: {callback}')
-            if callback.__name__ != 'LambdaCallback':
-                raise ValueError(F'experiment_callbacks must be LambdaCallback instances, not {callback.__name__}: {callback}')
+                raise TypeError(
+                    f"experiment_callbacks must be classes. Received {type(callback)}: {callback}"
+                )
+            if callback.__name__ != "LambdaCallback":
+                raise ValueError(
+                    f"experiment_callbacks must be LambdaCallback instances, not {callback.__name__}: {callback}"
+                )
 
     def define_holdout_set(self):
         """Define :attr:`Environment.holdout_dataset`, and (if holdout_dataset is callable), also modifies train_dataset"""
         if callable(self.holdout_dataset):
-            self.train_dataset, self.holdout_dataset = self.holdout_dataset(self.train_dataset, self.target_column)
+            self.train_dataset, self.holdout_dataset = self.holdout_dataset(
+                self.train_dataset, self.target_column
+            )
         elif isinstance(self.holdout_dataset, str):
             try:
                 self.holdout_dataset = pd.read_csv(self.holdout_dataset)
             except FileNotFoundError:
                 raise
-        elif (self.holdout_dataset is not None) and (not isinstance(self.holdout_dataset, pd.DataFrame)):
-            raise TypeError(F'holdout_dataset must be one of: [None, DataFrame, callable, str], not {type(self.holdout_dataset)}')
+        # elif (self.holdout_dataset is not None) and (not isinstance(self.holdout_dataset, pd.DataFrame)):
+        elif self.holdout_dataset and (not isinstance(self.holdout_dataset, pd.DataFrame)):
+            raise TypeError(
+                f"holdout_dataset must be one of: [None, DataFrame, callable, str], not {type(self.holdout_dataset)}"
+            )
 
-        if (self.holdout_dataset is not None) and (not np.array_equal(self.train_dataset.columns, self.holdout_dataset.columns)):
-            raise ValueError('\n'.join([
-                'train_dataset and holdout_dataset must have the same columns. Instead, '
-                F'train_dataset had {len(self.train_dataset.columns)} columns: {self.train_dataset.columns}',
-                F'holdout_dataset had {len(self.holdout_dataset.columns)} columns: {self.holdout_dataset.columns}',
-            ]))
+        if (self.holdout_dataset is not None) and (
+            not np.array_equal(self.train_dataset.columns, self.holdout_dataset.columns)
+        ):
+            raise ValueError(
+                "\n".join(
+                    [
+                        "train_dataset and holdout_dataset must have the same columns. Instead, "
+                        f"train_dataset had {len(self.train_dataset.columns)} columns: {self.train_dataset.columns}",
+                        f"holdout_dataset had {len(self.holdout_dataset.columns)} columns: {self.holdout_dataset.columns}",
+                    ]
+                )
+            )
 
     def format_result_paths(self):
         """Remove paths contained in file_blacklist, and format others to prepare for saving results"""
-        if self.file_blacklist == 'ALL':
+        if self.file_blacklist == "ALL":
             return
 
         if self.root_results_path is not None:
             # Blacklist prediction files for datasets not given
             if self.holdout_dataset is None:
-                self.file_blacklist.append('predictions_holdout')
+                self.file_blacklist.append("predictions_holdout")
             if self.test_dataset is None:
-                self.file_blacklist.append('predictions_test')
+                self.file_blacklist.append("predictions_test")
 
             for k in self.result_paths.keys():
-                if k == 'root':
+                if k == "root":
                     continue
                 elif k not in self.file_blacklist:
-                    self.result_paths[k] = os.path.join(self.root_results_path, RESULT_FILE_SUB_DIR_PATHS[k])
+                    self.result_paths[k] = os.path.join(
+                        self.root_results_path, RESULT_FILE_SUB_DIR_PATHS[k]
+                    )
                 else:
                     self.result_paths[k] = None
                     # G.debug('Result file "{}" has been blacklisted'.format(k))
 
     def update_custom_environment_params(self):
         """Try to update null parameters from environment_params_path, or DEFAULT_PARAMS"""
-        allowed_parameter_keys = [k for k, v in signature(Environment).parameters.items() if v.kind == v.KEYWORD_ONLY]
+        allowed_parameter_keys = [
+            k for k, v in signature(Environment).parameters.items() if v.kind == v.KEYWORD_ONLY
+        ]
         user_defaults = {}
 
-        if (not isinstance(self.environment_params_path, str)) and (self.environment_params_path is not None):
-            raise TypeError('environment_params_path must be a str, not {}: {}'.format(*type_val(self.environment_params_path)))
+        if (not isinstance(self.environment_params_path, str)) and (
+            self.environment_params_path is not None
+        ):
+            raise TypeError(
+                "environment_params_path must be a str, not {}: {}".format(
+                    *type_val(self.environment_params_path)
+                )
+            )
 
         try:
             user_defaults = read_json(self.environment_params_path)
@@ -418,18 +445,30 @@ class Environment():
             raise
 
         if not isinstance(user_defaults, dict):
-            raise TypeError('environment_params_path must contain a dict. Received {}: {}'.format(*type_val(user_defaults)))
+            raise TypeError(
+                "environment_params_path must contain a dict. Received {}: {}".format(
+                    *type_val(user_defaults)
+                )
+            )
 
         #################### Check user_defaults ####################
         for k, v in user_defaults.items():
             if k not in allowed_parameter_keys:
-                G.warn('\n\t'.join([
-                    'Invalid key ({}) in user-defined default Environment parameter file at "{}". If expected to do something,',
-                    'it really won\'t, so it should be removed or fixed. The following are valid default keys: {}'
-                ]).format(k, self.environment_params_path, allowed_parameter_keys))
+                G.warn(
+                    "\n\t".join(
+                        [
+                            'Invalid key ({}) in user-defined default Environment parameter file at "{}". If expected to do something,',
+                            "it really won't, so it should be removed or fixed. The following are valid default keys: {}",
+                        ]
+                    ).format(k, self.environment_params_path, allowed_parameter_keys)
+                )
             elif getattr(self, k) is None:
                 setattr(self, k, v)
-                G.debug('Environment kwarg "{}" was set to user default at "{}"'.format(k, self.environment_params_path))
+                G.debug(
+                    'Environment kwarg "{}" was set to user default at "{}"'.format(
+                        k, self.environment_params_path
+                    )
+                )
 
         #################### Check Module Default Environment Arguments ####################
         for k in allowed_parameter_keys:
@@ -456,7 +495,9 @@ class Environment():
     def initialize_reporting(self):
         """Initialize reporting for the Environment and all experiments conducted during its lifetime"""
         reporting_handler_params = self.reporting_handler_params
-        reporting_handler_params['heartbeat_path'] = '{}/Heartbeat.log'.format(self.root_results_path)
+        reporting_handler_params["heartbeat_path"] = "{}/Heartbeat.log".format(
+            self.root_results_path
+        )
         reporting_handler = ReportingHandler(**reporting_handler_params)
 
         #################### Make Unified Logging Globally Available ####################
@@ -476,7 +517,7 @@ class Environment():
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_train_input` upon
             `Model` initialization"""
-        return DatasetSentinel('train_input', **self._dataset_sentinel_helper())
+        return DatasetSentinel("train_input", **self._dataset_sentinel_helper())
 
     @property
     def train_target(self):
@@ -487,7 +528,7 @@ class Environment():
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_train_target` upon
             `Model` initialization"""
-        return DatasetSentinel('train_target', **self._dataset_sentinel_helper())
+        return DatasetSentinel("train_target", **self._dataset_sentinel_helper())
 
     @property
     def validation_input(self):
@@ -498,7 +539,7 @@ class Environment():
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_validation_input`
             upon `Model` initialization"""
-        return DatasetSentinel('validation_input', **self._dataset_sentinel_helper())
+        return DatasetSentinel("validation_input", **self._dataset_sentinel_helper())
 
     @property
     def validation_target(self):
@@ -509,7 +550,7 @@ class Environment():
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_validation_target`
             upon `Model` initialization"""
-        return DatasetSentinel('validation_target', **self._dataset_sentinel_helper())
+        return DatasetSentinel("validation_target", **self._dataset_sentinel_helper())
 
     @property
     def holdout_input(self):
@@ -520,7 +561,9 @@ class Environment():
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_input_data`
             upon `Model` initialization"""
-        return DatasetSentinel('holdout_input', self.cross_experiment_key.parameters['holdout_dataset'])
+        return DatasetSentinel(
+            "holdout_input", self.cross_experiment_key.parameters["holdout_dataset"]
+        )
 
     @property
     def holdout_target(self):
@@ -531,15 +574,23 @@ class Environment():
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
             upon `Model` initialization"""
-        return DatasetSentinel('holdout_target', self.cross_experiment_key.parameters['holdout_dataset'])
+        return DatasetSentinel(
+            "holdout_target", self.cross_experiment_key.parameters["holdout_dataset"]
+        )
 
     def _dataset_sentinel_helper(self):
         """Helper method for retrieving train/validation sentinel parameters"""
         return dict(
-            dataset_hash=self.cross_experiment_key.parameters['train_dataset'],
-            cross_validation_type=self.cross_experiment_key.parameters['cross_experiment_params']['cross_validation_type'],
-            global_random_seed=self.cross_experiment_key.parameters['cross_experiment_params']['global_random_seed'],
-            random_seeds=self.cross_experiment_key.parameters['cross_experiment_params']['random_seeds']
+            dataset_hash=self.cross_experiment_key.parameters["train_dataset"],
+            cross_validation_type=self.cross_experiment_key.parameters["cross_experiment_params"][
+                "cross_validation_type"
+            ],
+            global_random_seed=self.cross_experiment_key.parameters["cross_experiment_params"][
+                "global_random_seed"
+            ],
+            random_seeds=self.cross_experiment_key.parameters["cross_experiment_params"][
+                "random_seeds"
+            ],
         )
 
 
@@ -579,31 +630,43 @@ def validate_file_blacklist(blacklist):
     directory will also be excluded from the list of files to update"""
     valid_values = [
         # 'checkpoint',
-        'description',
-        'heartbeat',
-        'predictions_holdout',
-        'predictions_in_fold',
-        'predictions_oof',
-        'predictions_test',
-        'script_backup',
-        'tested_keys',
+        "description",
+        "heartbeat",
+        "predictions_holdout",
+        "predictions_in_fold",
+        "predictions_oof",
+        "predictions_test",
+        "script_backup",
+        "tested_keys",
     ]
-    if blacklist == 'ALL':
+    if blacklist == "ALL":
         G.warn('WARNING: Received `blacklist`="ALL". Nothing will be saved')
         return blacklist
 
     if not blacklist:
         return []
     elif not isinstance(blacklist, list):
-        raise TypeError('Expected blacklist to be a list, but received {}: {}'.format(type(blacklist), blacklist))
+        raise TypeError(
+            "Expected blacklist to be a list, but received {}: {}".format(
+                type(blacklist), blacklist
+            )
+        )
     elif not all([isinstance(_, str) for _ in blacklist]):
         invalid_files = [(type(_).__name__, _) for _ in blacklist if not isinstance(_, str)]
-        raise TypeError('Expected contents of blacklist to be strings, but received {}'.format(invalid_files))
+        raise TypeError(
+            "Expected contents of blacklist to be strings, but received {}".format(invalid_files)
+        )
 
     for a_file in blacklist:
         if a_file not in valid_values:
-            raise ValueError('Received invalid blacklist value: {}.\nExpected one of: [{}]'.format(a_file, valid_values))
-        if a_file in ['description', 'tested_keys']:
-            G.warn(F'Including {a_file!r} in file_blacklist will severely impede the functionality of this library')
+            raise ValueError(
+                "Received invalid blacklist value: {}.\nExpected one of: [{}]".format(
+                    a_file, valid_values
+                )
+            )
+        if a_file in ["description", "tested_keys"]:
+            G.warn(
+                f"Including {a_file!r} in file_blacklist will severely impede the functionality of this library"
+            )
 
     return blacklist

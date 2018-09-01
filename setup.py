@@ -20,15 +20,20 @@ setup(
     packages=find_packages(),
     install_requires=[
         # 'h5py',  # ?
+        'dill',
         'numpy',
         'pandas',
         'scikit-learn',
         'scikit-optimize',
         'scipy',
         'simplejson',
-        'dill',
     ],
     extras_require={
+        'dev': [
+            'pre-commit'
+            'nbconvert',
+            'nbformat',
+        ],
         'docs': [
             'hyperparameter-hunter',
             'keras',
