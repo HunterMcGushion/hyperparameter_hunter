@@ -1,22 +1,22 @@
 env:
-	python3 -m venv env
+	python -m venv env
 	@echo 'run `source env/bin/activate` to use virtualenv'
 
 setup: env
-	# source env/bin/activate && pip3 install -U black isort twine
+	# source env/bin/activate && pip install -U black isort twine
 	source env/bin/activate
-	pip3 install -U black isort nose twine
+	pip install -U black isort nose twine
 
 dev: setup
-	# source env/bin/activate && python3 setup.py develop && pip install hyperparameter_hunter[dev]
+	# source env/bin/activate && python setup.py develop && pip install hyperparameter_hunter[dev]
 	source env/bin/activate
-	python3 setup.py develop
+	python setup.py develop
 	pip install hyperparameter_hunter[dev]
 	pre-commit install
 	@echo 'run `source env/bin/activate` to develop hyperparameter_hunter'
 
 release: lint test clean
-	python3 setup.py sdist bdist_wheel
+	python setup.py sdist bdist_wheel
 	twine upload dist/*
 
 format:
