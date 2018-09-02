@@ -42,6 +42,7 @@ setup(
         ],
         'travis': [
             'nose',
+            'black'
             'hyperparameter-hunter',
             'keras',
             'tensorflow',
