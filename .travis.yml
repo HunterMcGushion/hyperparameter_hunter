@@ -13,8 +13,8 @@ before_script:
 script:
   - make test
   # - python setup.py nosetests
-matrix:
-  include:
-  - python: "3.6"
-    script:
-      - make lint
+#matrix:
+#  include:
+#  - python: "3.6"
+#    script:
+#      - make lint
