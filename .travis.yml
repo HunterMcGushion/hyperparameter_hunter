@@ -17,4 +17,4 @@ matrix:
   include:
   - python: "3.6"
     script:
-      - make lint test
+      - make lint
