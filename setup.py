@@ -22,8 +22,9 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=[
-        # 'h5py',  # ?
         'dill',
+        'nbconvert',
+        'nbformat',
         'numpy',
         'pandas',
         'scikit-learn',
@@ -33,27 +34,17 @@ setup(
     ],
     extras_require={
         'dev': [
-            'pre-commit'
-            'nbconvert',
-            'nbformat',
+            'pre-commit',
         ],
         'docs': [
             'hyperparameter-hunter',
             'keras',
-            'nbconvert',
-            'nbformat'
-        ],
-        'ipynb': [
-            'nbconvert',
-            'nbformat'
         ],
         'travis': [
             'nose',
             'hyperparameter-hunter',
             'keras',
             'tensorflow',
-            'nbconvert',
-            'nbformat'
         ]
     },
     include_package_data=True,

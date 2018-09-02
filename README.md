@@ -337,6 +337,8 @@ If you like being on the cutting-edge, and you want all the latest developments,
 pip install git+https://github.com/HunterMcGushion/hyperparameter_hunter.git
 ```
 
+If you want to contribute to HyperparameterHunter, [get started here](CONTRIBUTING.md).
+
 I Still Don't Get It
 --------------------
 That's ok. Don't feel bad. It's a bit weird to wrap your head around. Here's an example that illustrates how everything is related:
