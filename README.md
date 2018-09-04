@@ -6,8 +6,10 @@ HyperparameterHunter
 [![Build Status](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter.svg?branch=master)](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter)
 [![Documentation Status](https://readthedocs.org/projects/hyperparameter-hunter/badge/?version=latest)](https://hyperparameter-hunter.readthedocs.io/en/latest/?badge=latest)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ef0d004a10ede0b228cc/maintainability)](https://codeclimate.com/github/HunterMcGushion/hyperparameter_hunter/maintainability)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1413b76fabe2400fab1958e70be593a2)](https://www.codacy.com/app/HunterMcGushion/hyperparameter_hunter?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=HunterMcGushion/hyperparameter_hunter&amp;utm_campaign=Badge_Grade)
 [![PyPI version](https://badge.fury.io/py/hyperparameter-hunter.svg)](https://badge.fury.io/py/hyperparameter-hunter)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Q3EX3PQUV256G)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 Automatically save and learn from Experiment results, leading to long-term, persistent optimization that remembers all your tests.
 
