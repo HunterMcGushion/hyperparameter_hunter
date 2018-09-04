@@ -10,14 +10,13 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.utils.general_utils import flatten, type_val
+from hyperparameter_hunter.utils.general_utils import type_val
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 from collections import OrderedDict
 import numpy as np
-import pandas as pd
 
 ##################################################
 # Import Learning Assets
@@ -27,11 +26,11 @@ from sklearn import metrics as sk_metrics
 ##################################################
 # Declare Global Variables
 ##################################################
-data_types = ('__in_fold', '__oof', '__holdout')
+data_types = ("__in_fold", "__oof", "__holdout")
 
 
 class ScoringMixIn(object):
-    def __init__(self, metrics_map, in_fold='all', oof='all', holdout='all', do_score=True):
+    def __init__(self, metrics_map, in_fold="all", oof="all", holdout="all", do_score=True):
         """MixIn class that manages the metrics to record for each dataset type, and performs evaluations
 
         Parameters
@@ -76,7 +75,11 @@ class ScoringMixIn(object):
     def _validate_metrics_map(self):
         """Ensure `metrics_map` input parameter is properly formatted and yields callable functions for all metrics"""
         if not (isinstance(self.metrics_map, dict) or isinstance(self.metrics_map, list)):
-            raise TypeError('metrics_map must be one of: [dict, list]. Received type: {}.'.format(type(self.metrics_map)))
+            raise TypeError(
+                "metrics_map must be one of: [dict, list]. Received type: {}.".format(
+                    type(self.metrics_map)
+                )
+            )
 
         #################### If metrics_map is list, convert to dict with None values ####################
         if isinstance(self.metrics_map, list):
@@ -84,36 +87,64 @@ class ScoringMixIn(object):
 
         for _m_key, _m_val in self.metrics_map.items():
             if not isinstance(_m_key, str):
-                raise TypeError('metrics_map ids must be strings. Received type {}: {}'.format(type(_m_key), _m_key))
+                raise TypeError(
+                    "metrics_map ids must be strings. Received type {}: {}".format(
+                        type(_m_key), _m_key
+                    )
+                )
             if not any([callable(_m_val), isinstance(_m_val, str), _m_val is None]):
-                raise TypeError('metrics_map values must be one of: [callable, str, None]. Received {}'.format(type(_m_val)))
+                raise TypeError(
+                    "metrics_map values must be one of: [callable, str, None]. Received {}".format(
+                        type(_m_val)
+                    )
+                )
 
             #################### Check sklearn.metrics for: _m_val if str, or _m_key if _m_val is None ####################
             if not callable(_m_val):
                 try:
-                    self.metrics_map[_m_key] = sk_metrics.__getattribute__(_m_key if _m_val is None else _m_val)
+                    self.metrics_map[_m_key] = sk_metrics.__getattribute__(
+                        _m_key if _m_val is None else _m_val
+                    )
                 except AttributeError:
-                    raise AttributeError('"sklearn.metrics" has no attribute "{}".'.format(_m_key if _m_val is None else _m_val))
+                    raise AttributeError(
+                        '"sklearn.metrics" has no attribute "{}".'.format(
+                            _m_key if _m_val is None else _m_val
+                        )
+                    )
 
     def _validate_metrics_list_parameters(self):
         """Ensure metrics lists input parameters are of correct types and are compatible with each other"""
-        for (_d_type, _m_val) in [(_, getattr(self, '_ScoringMixIn{}'.format(_))) for _ in data_types]:
-            if _m_val == 'all':
+        for (_d_type, _m_val) in [
+            (_, getattr(self, "_ScoringMixIn{}".format(_))) for _ in data_types
+        ]:
+            if _m_val == "all":
                 setattr(self, _d_type, list(self.metrics_map.keys()))
             elif not isinstance(_m_val, list):
-                raise TypeError('{} must be one of: ["all", None, <list>]. Received {}: {}'.format(_d_type, type(_m_val), _m_val))
+                raise TypeError(
+                    '{} must be one of: ["all", None, <list>]. Received {}: {}'.format(
+                        _d_type, type(_m_val), _m_val
+                    )
+                )
             else:
                 for _id in _m_val:
                     if not isinstance(_id, str):
-                        raise TypeError('{} values must be of type str. Received {}: {}'.format(_d_type, type(_id), _id))
+                        raise TypeError(
+                            "{} values must be of type str. Received {}: {}".format(
+                                _d_type, type(_id), _id
+                            )
+                        )
                     if _id not in self.metrics_map.keys():
-                        raise KeyError('{} values must be in metrics_map.keys(). Could not find: {}'.format(_d_type, _id))
+                        raise KeyError(
+                            "{} values must be in metrics_map.keys(). Could not find: {}".format(
+                                _d_type, _id
+                            )
+                        )
 
     def _set_default_metrics_parameters(self):
         """Set default parameters if metrics_map is empty (which implies metrics lists are also empty)"""
         if len(self.metrics_map.keys()) == 0:
             self.metrics_map = dict(roc_auc=sk_metrics.roc_auc_score)
-            self.in_fold_metrics = ['roc_auc']
+            self.in_fold_metrics = ["roc_auc"]
 
     def evaluate(self, data_type, target, prediction, return_list=False):
         """Apply metric(s) to the given data to calculate the value of the `prediction`
@@ -141,10 +172,14 @@ class ScoringMixIn(object):
         if self.do_score is False:
             return
 
-        if data_type not in ('in_fold', 'oof', 'holdout'):
-            raise ValueError("data_type must be in: ['in_fold', 'oof', 'holdout']. Received {}: {}".format(*type_val(data_type)))
+        if data_type not in ("in_fold", "oof", "holdout"):
+            raise ValueError(
+                "data_type must be in: ['in_fold', 'oof', 'holdout']. Received {}: {}".format(
+                    *type_val(data_type)
+                )
+            )
 
-        _metric_ids = getattr(self, '__{}'.format(data_type))
+        _metric_ids = getattr(self, "__{}".format(data_type))
         _result = []
 
         for _metric_id in _metric_ids:
@@ -179,13 +214,13 @@ def get_clean_prediction(target, prediction):
         If `target` types are ints, and `prediction` types are not, given predicted labels clipped between the min, and max of
         `target`, then rounded to the nearest integer. Else, original predicted labels"""
     try:
-        target_is_int = (target.values.dtype == np.int)
+        target_is_int = target.values.dtype == np.int
     except AttributeError:
-        target_is_int = (target.dtype == np.int)
+        target_is_int = target.dtype == np.int
     try:
-        prediction_is_int = (prediction.dtype == np.int)
+        prediction_is_int = prediction.dtype == np.int
     except AttributeError:
-        prediction_is_int = (prediction.values.dtype == np.int)
+        prediction_is_int = prediction.values.dtype == np.int
 
     if (target_is_int is True) and (prediction_is_int is False):
         # ValueError probably: "Classification metrics can't handle a mix of binary and continuous targets"
@@ -196,7 +231,9 @@ def get_clean_prediction(target, prediction):
         else:
             # TODO: If len(min/max) > 1: multi-class classification, or other multi-output problem
             # TODO: Then each prediction value must be clipped to its specific min/max
-            raise ValueError(F'Cannot handle multi-output problems. Received bounds of: {target_min}, {target_max}.')
+            raise ValueError(
+                f"Cannot handle multi-output problems. Received bounds of: {target_min}, {target_max}."
+            )
 
         prediction = np.clip(prediction, target_min, target_max)
         prediction = np.rint(prediction)
@@ -204,7 +241,7 @@ def get_clean_prediction(target, prediction):
     return prediction
 
 
-def get_formatted_target_metric(target_metric, metrics_map, default_dataset='oof'):
+def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof"):
     """Return a properly formatted target_metric tuple for use with navigating evaluation results
 
     Parameters
@@ -243,7 +280,7 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset='oof
     >>> get_formatted_target_metric(None, ['f1_score', 'roc_auc_score'])
     ('oof', 'f1_score')
     """
-    valid_datasets = ['oof', 'holdout', 'in_fold']
+    valid_datasets = ["oof", "holdout", "in_fold"]
 
     if isinstance(target_metric, str):
         target_metric = (target_metric,)
@@ -251,10 +288,14 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset='oof
         target_metric = (default_dataset,)
 
     if not isinstance(target_metric, tuple):
-        raise TypeError(F'Expected `target_metric` to be: tuple, str, or None. Received {type(target_metric)}: {target_metric}')
-    elif (len(target_metric) > 2):
-        raise ValueError(F'Expected `target_metric` tuple to be of length 2. Received len={len(target_metric)}: {target_metric}')
-    elif (len(target_metric) == 1):
+        raise TypeError(
+            f"Expected `target_metric` to be: tuple, str, or None. Received {type(target_metric)}: {target_metric}"
+        )
+    elif len(target_metric) > 2:
+        raise ValueError(
+            f"Expected `target_metric` tuple to be of length 2. Received len={len(target_metric)}: {target_metric}"
+        )
+    elif len(target_metric) == 1:
         if target_metric[0] in valid_datasets:
             # Just a dataset was provided - Need metric name
             try:
@@ -268,12 +309,16 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset='oof
             target_metric = (default_dataset,) + target_metric
 
     if not any([_ == target_metric[0] for _ in valid_datasets]):
-        raise ValueError(F'The first item of `target_metric` must be in {valid_datasets}. Received: {target_metric}')
+        raise ValueError(
+            f"The first item of `target_metric` must be in {valid_datasets}. Received: {target_metric}"
+        )
     if not target_metric[1] in metrics_map:
-        raise ValueError(F'The second value of `target_metric` ({target_metric[1]}) must be in `metrics_map`: {metrics_map}')
+        raise ValueError(
+            f"The second value of `target_metric` ({target_metric[1]}) must be in `metrics_map`: {metrics_map}"
+        )
 
     return target_metric
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

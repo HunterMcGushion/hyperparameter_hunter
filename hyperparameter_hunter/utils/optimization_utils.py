@@ -15,7 +15,6 @@ far from ideal, but the creators and contributors of SKOpt deserve all the credi
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap, default_enter
 from hyperparameter_hunter.utils.file_utils import read_json
@@ -36,26 +35,22 @@ except ImportError:
     pass
 
 # FLAG: TEMP IMPORTS BELOW
-import sys
 import warnings
-from math import log
-from numbers import Number
 import numpy as np
-from scipy.optimize import fmin_l_bfgs_b
 
-from sklearn.base import clone, is_regressor
-from sklearn.externals.joblib import Parallel, delayed
+from sklearn.base import is_regressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils import check_random_state
+
 # noinspection PyProtectedMember
-from skopt.acquisition import _gaussian_acquisition, gaussian_acquisition_1D
+from skopt.acquisition import gaussian_acquisition_1D
 from skopt.learning import GaussianProcessRegressor
-# from skopt.space import Space, Categorical
 from hyperparameter_hunter.space import Space, Categorical
-# from skopt.utils import normalize_dimensions
 from hyperparameter_hunter.space import normalize_dimensions
+
 # noinspection PyProtectedMember
-from skopt.utils import check_x_in_space, cook_estimator, create_result, has_gradients, is_listlike, is_2Dlistlike
+from skopt.utils import cook_estimator, create_result, has_gradients, is_listlike, is_2Dlistlike
+
 # FLAG: TEMP IMPORTS ABOVE
 
 
@@ -78,12 +73,16 @@ class AskingOptimizer(Optimizer):
     # FLAG: TEST BELOW
     # noinspection PyMissingConstructor
     def __init__(
-            self, dimensions, base_estimator='gp',
-            n_random_starts=None, n_initial_points=10,
-            acq_func='gp_hedge',
-            acq_optimizer='auto',
-            random_state=None, acq_func_kwargs=None,
-            acq_optimizer_kwargs=None
+        self,
+        dimensions,
+        base_estimator="gp",
+        n_random_starts=None,
+        n_initial_points=10,
+        acq_func="gp_hedge",
+        acq_optimizer="auto",
+        random_state=None,
+        acq_func_kwargs=None,
+        acq_optimizer_kwargs=None,
     ):
         """This is nearly identical to :meth:`skopt.optimizer.optimizer.Optimizer.__init__`. It is recreated here to use the
         modified :class:`hyperparameter_hunter.space.Space`, rather than the original `skopt` version. This is not an ideal
@@ -108,67 +107,80 @@ class AskingOptimizer(Optimizer):
         self.acq_func = acq_func
         self.acq_func_kwargs = acq_func_kwargs
 
-        allowed_acq_funcs = ['gp_hedge', 'EI', 'LCB', 'PI', 'EIps', 'PIps']
+        allowed_acq_funcs = ["gp_hedge", "EI", "LCB", "PI", "EIps", "PIps"]
         if self.acq_func not in allowed_acq_funcs:
-            raise ValueError(F'Expected `acq_func` to be in {allowed_acq_funcs}, got {self.acq_func}')
+            raise ValueError(
+                f"Expected `acq_func` to be in {allowed_acq_funcs}, got {self.acq_func}"
+            )
 
         # Treat hedging method separately
-        if self.acq_func == 'gp_hedge':
-            self.cand_acq_funcs_ = ['EI', 'LCB', 'PI']
+        if self.acq_func == "gp_hedge":
+            self.cand_acq_funcs_ = ["EI", "LCB", "PI"]
             self.gains_ = np.zeros(3)
         else:
             self.cand_acq_funcs_ = [self.acq_func]
 
         if acq_func_kwargs is None:
             acq_func_kwargs = dict()
-        self.eta = acq_func_kwargs.get('eta', 1.0)
+        self.eta = acq_func_kwargs.get("eta", 1.0)
 
         # Configure counters of points - Check `n_random_starts` deprecation first
         if n_random_starts is not None:
-            warnings.warn(('`n_random_starts` will be removed in favour of `n_initial_points`'), DeprecationWarning)
+            warnings.warn(
+                ("`n_random_starts` will be removed in favour of `n_initial_points`"),
+                DeprecationWarning,
+            )
             n_initial_points = n_random_starts
         if n_initial_points < 0:
-            raise ValueError(F'Expected `n_initial_points` >= 0, got {n_initial_points}')
+            raise ValueError(f"Expected `n_initial_points` >= 0, got {n_initial_points}")
         self._n_initial_points = n_initial_points
         self.n_initial_points_ = n_initial_points
 
         # Configure estimator - Build `base_estimator` if doesn't exist
         if isinstance(base_estimator, str):
             base_estimator = cook_estimator(
-                base_estimator, space=dimensions, random_state=self.rng.randint(0, np.iinfo(np.int32).max)
+                base_estimator,
+                space=dimensions,
+                random_state=self.rng.randint(0, np.iinfo(np.int32).max),
             )
 
         # Check if regressor
         if not is_regressor(base_estimator) and base_estimator is not None:
-            raise ValueError(F'`base_estimator`={base_estimator} must be a regressor')
+            raise ValueError(f"`base_estimator`={base_estimator} must be a regressor")
 
         # Treat per second acquisition function specially
         is_multi_regressor = isinstance(base_estimator, MultiOutputRegressor)
-        if 'ps' in self.acq_func and not is_multi_regressor:
+        if "ps" in self.acq_func and not is_multi_regressor:
             self.base_estimator_ = MultiOutputRegressor(base_estimator)
         else:
             self.base_estimator_ = base_estimator
 
         # Configure optimizer - Decide optimizer based on gradient information
-        if acq_optimizer == 'auto':
+        if acq_optimizer == "auto":
             if has_gradients(self.base_estimator_):
-                acq_optimizer = 'lbfgs'
+                acq_optimizer = "lbfgs"
             else:
-                acq_optimizer = 'sampling'
+                acq_optimizer = "sampling"
 
-        if acq_optimizer not in ['lbfgs', 'sampling']:
-            raise ValueError('Expected `acq_optimizer` to be "lbfgs" or "sampling", got {}'.format(acq_optimizer))
-        if (not has_gradients(self.base_estimator_) and acq_optimizer != 'sampling'):
-            raise ValueError('The regressor {} should run with `acq_optimizer`="sampling"'.format(type(base_estimator)))
+        if acq_optimizer not in ["lbfgs", "sampling"]:
+            raise ValueError(
+                'Expected `acq_optimizer` to be "lbfgs" or "sampling", got {}'.format(acq_optimizer)
+            )
+        if not has_gradients(self.base_estimator_) and acq_optimizer != "sampling":
+            raise ValueError(
+                'The regressor {} should run with `acq_optimizer`="sampling"'.format(
+                    type(base_estimator)
+                )
+            )
         self.acq_optimizer = acq_optimizer
 
         # Record other arguments
         if acq_optimizer_kwargs is None:
             acq_optimizer_kwargs = dict()
 
-        self.n_points = acq_optimizer_kwargs.get('n_points', 10000)
-        self.n_restarts_optimizer = acq_optimizer_kwargs.get('n_restarts_optimizer', 5)
-        n_jobs = acq_optimizer_kwargs.get('n_jobs', 1)
+        self.n_points = acq_optimizer_kwargs.get("n_points", 10000)
+        self.n_restarts_optimizer = acq_optimizer_kwargs.get("n_restarts_optimizer", 5)
+        n_jobs = acq_optimizer_kwargs.get("n_jobs", 1)
         self.n_jobs = n_jobs
         self.acq_optimizer_kwargs = acq_optimizer_kwargs
 
@@ -201,9 +213,9 @@ class AskingOptimizer(Optimizer):
         # TODO: Add documentation
         ask_result = super()._ask()
 
-        do_retell = self.__repeated_ask_kwargs.get('do_retell', True)
-        return_val = self.__repeated_ask_kwargs.get('return_val', 'ask')
-        persistent_check = self.__repeated_ask_kwargs.get('persistent_check', True)
+        do_retell = self.__repeated_ask_kwargs.get("do_retell", True)
+        return_val = self.__repeated_ask_kwargs.get("return_val", "ask")
+        persistent_check = self.__repeated_ask_kwargs.get("persistent_check", True)
 
         if persistent_check is True:
             counter = 100
@@ -214,7 +226,7 @@ class AskingOptimizer(Optimizer):
 
         return ask_result
 
-    def __ask_helper(self, ask_result, do_retell=True, return_val='ask'):
+    def __ask_helper(self, ask_result, do_retell=True, return_val="ask"):
         """
 
         Parameters
@@ -243,14 +255,14 @@ class AskingOptimizer(Optimizer):
                     self.tell(ask_result, self.yi[self.Xi.index(ask_result)])
                     # G.debug_(F'Optimizer was re-`tell`ed point:   {ask_result}   ->   {self.yi[self.Xi.index(ask_result)]}')
 
-                if return_val == 'ask':
+                if return_val == "ask":
                     ask_result = super()._ask()
                     # G.debug_(F'Re-`ask`ed, and received point:   {ask_result}')
-                elif return_val == 'random':
+                elif return_val == "random":
                     ask_result = self.space.rvs(random_state=self.rng)[0]
                     # G.debug_(F'Set repeated point to random:   {ask_result}')
                 else:
-                    raise ValueError(F'Received invalid value for `return_val`: {return_val}')
+                    raise ValueError(f"Received invalid value for `return_val`: {return_val}")
 
         return ask_result
 
@@ -258,7 +270,13 @@ class AskingOptimizer(Optimizer):
 ##################################################
 # Optimization Utility Functions
 ##################################################
-def get_ids_by(leaderboard_path, algorithm_name=None, cross_experiment_key=None, hyperparameter_key=None, drop_duplicates=True):
+def get_ids_by(
+    leaderboard_path,
+    algorithm_name=None,
+    cross_experiment_key=None,
+    hyperparameter_key=None,
+    drop_duplicates=True,
+):
     """Get a list of experiment_ids that match the provided criteria
 
     Parameters
@@ -287,16 +305,18 @@ def get_ids_by(leaderboard_path, algorithm_name=None, cross_experiment_key=None,
         return []
 
     if algorithm_name is not None:
-        leaderboard = leaderboard.loc[leaderboard['algorithm_name'] == algorithm_name]
+        leaderboard = leaderboard.loc[leaderboard["algorithm_name"] == algorithm_name]
     if cross_experiment_key is not None:
-        leaderboard = leaderboard.loc[leaderboard['cross_experiment_key'] == cross_experiment_key]
+        leaderboard = leaderboard.loc[leaderboard["cross_experiment_key"] == cross_experiment_key]
     if hyperparameter_key is not None:
-        leaderboard = leaderboard.loc[leaderboard['hyperparameter_key'] == hyperparameter_key]
+        leaderboard = leaderboard.loc[leaderboard["hyperparameter_key"] == hyperparameter_key]
 
     if drop_duplicates is True:
-        leaderboard.drop_duplicates(subset=['algorithm_name', 'cross_experiment_key', 'hyperparameter_key'], inplace=True)
+        leaderboard.drop_duplicates(
+            subset=["algorithm_name", "cross_experiment_key", "hyperparameter_key"], inplace=True
+        )
 
-    matching_ids = leaderboard['experiment_id'].values.tolist()
+    matching_ids = leaderboard["experiment_id"].values.tolist()
     return matching_ids
 
 
@@ -318,12 +338,14 @@ def get_scored_params(experiment_description_path, target_metric):
     evaluation: Float
         Value of the Experiment's `target_metric`"""
     description = read_json(file_path=experiment_description_path)
-    evaluation = get_path(description['final_evaluations'], target_metric)
-    all_hyperparameters = description['hyperparameters']
+    evaluation = get_path(description["final_evaluations"], target_metric)
+    all_hyperparameters = description["hyperparameters"]
 
-    if description['module_name'].lower() == 'keras':
-        all_hyperparameters['model_init_params']['layers'] = consolidate_layers(
-            all_hyperparameters['model_init_params']['layers'], class_name_key=False, separate_args=False
+    if description["module_name"].lower() == "keras":
+        all_hyperparameters["model_init_params"]["layers"] = consolidate_layers(
+            all_hyperparameters["model_init_params"]["layers"],
+            class_name_key=False,
+            separate_args=False,
         )
 
     return (all_hyperparameters, evaluation)
@@ -346,16 +368,25 @@ def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters fit within the `hyperparameter_space`"""
     dimension_names = hyperparameter_space.get_names()
-    hyperparameters_and_scores = list(filter(
-        lambda _: dimension_subset(_[0], dimension_names) in hyperparameter_space, hyperparameters_and_scores
-    ))
+    hyperparameters_and_scores = list(
+        filter(
+            lambda _: dimension_subset(_[0], dimension_names) in hyperparameter_space,
+            hyperparameters_and_scores,
+        )
+    )
 
     return hyperparameters_and_scores
 
 
 def filter_by_guidelines(
-        hyperparameters_and_scores, hyperparameter_space, model_init_params, model_extra_params,
-        preprocessing_pipeline, preprocessing_params, feature_selector, **kwargs
+    hyperparameters_and_scores,
+    hyperparameter_space,
+    model_init_params,
+    model_extra_params,
+    preprocessing_pipeline,
+    preprocessing_params,
+    feature_selector,
+    **kwargs,
 ):
     """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not match the guideline hyperparameters (all
     hyperparameters not in `hyperparameter_space`), after ignoring unimportant hyperparameters
@@ -380,24 +411,35 @@ def filter_by_guidelines(
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters matched the guideline hyperparameters"""
-    dimensions = [('model_init_params', _) if isinstance(_, str) else _ for _ in hyperparameter_space.get_names()]
+    dimensions = [
+        ("model_init_params", _) if isinstance(_, str) else _
+        for _ in hyperparameter_space.get_names()
+    ]
     # `dimensions` = hyperparameters to be ignored. Filter by all remaining
 
     dimensions_to_ignore = [
-        ('model_initializer',),
-        ('model_init_params', 'build_fn'),
-        (None, 'verbose'),
-        (None, 'silent'),
-        (None, 'random_state'),
-        (None, 'seed'),
-        ('model_init_params', 'n_jobs'),
-        ('model_init_params', 'nthread'),
-        ('model_init_params', 'compile_params', 'loss_functions'),  # TODO: Remove this once loss_functions are hashed in description files
+        ("model_initializer",),
+        ("model_init_params", "build_fn"),
+        (None, "verbose"),
+        (None, "silent"),
+        (None, "random_state"),
+        (None, "seed"),
+        ("model_init_params", "n_jobs"),
+        ("model_init_params", "nthread"),
+        (
+            "model_init_params",
+            "compile_params",
+            "loss_functions",
+        ),  # TODO: Remove this once loss_functions are hashed in description files
     ]
 
     temp_guidelines = dict(
-        model_init_params=model_init_params, model_extra_params=model_extra_params, preprocessing_pipeline=preprocessing_pipeline,
-        preprocessing_params=preprocessing_params, feature_selector=feature_selector, **kwargs
+        model_init_params=model_init_params,
+        model_extra_params=model_extra_params,
+        preprocessing_pipeline=preprocessing_pipeline,
+        preprocessing_params=preprocessing_params,
+        feature_selector=feature_selector,
+        **kwargs,
     )
 
     # noinspection PyUnusedLocal
@@ -408,12 +450,14 @@ def filter_by_guidelines(
                 return False
         return True
 
-    guidelines = remap(temp_guidelines, visit=_visit)  # (Hyperparameters that were set values and affect Experiment results)
+    guidelines = remap(
+        temp_guidelines, visit=_visit
+    )  # (Hyperparameters that were set values and affect Experiment results)
     # `guidelines` = `temp_guidelines` that are neither `hyperparameter_space` choices, nor in `dimensions_to_ignore`
 
-    hyperparameters_and_scores = list(filter(
-        lambda _: remap(_[0], visit=_visit) == guidelines, hyperparameters_and_scores
-    ))
+    hyperparameters_and_scores = list(
+        filter(lambda _: remap(_[0], visit=_visit) == guidelines, hyperparameters_and_scores)
+    )
 
     return hyperparameters_and_scores
 
@@ -442,17 +486,14 @@ def get_choice_dimensions(params, iter_attrs=None):
     def _visit(path, key, value):
         """If `value` is a descendant of :class:`space.Dimension`, collect inputs, and return True. Else, return False"""
         if isinstance(value, (Real, Integer, Categorical)):
-            choices.append((
-                (path + (key,)),
-                value
-            ))
+            choices.append(((path + (key,)), value))
             return True
         return False
 
     def _enter(path, key, value):
         """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic attributes. Else, `default_enter`"""
         if any([_(path, key, value) for _ in iter_attrs]):
-            included_attrs = [_ for _ in dir(value) if not _.startswith('__')]
+            included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
         return default_enter(path, key, value)
 
@@ -460,5 +501,5 @@ def get_choice_dimensions(params, iter_attrs=None):
     return choices
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

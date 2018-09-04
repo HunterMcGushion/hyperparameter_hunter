@@ -17,17 +17,27 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.algorithm_handlers import identify_algorithm, identify_algorithm_hyperparameters
-from hyperparameter_hunter.exception_handler import EnvironmentInactiveError, EnvironmentInvalidError, RepeatedExperimentError
+from hyperparameter_hunter.algorithm_handlers import (
+    identify_algorithm,
+    identify_algorithm_hyperparameters,
+)
+from hyperparameter_hunter.exception_handler import (
+    EnvironmentInactiveError,
+    EnvironmentInvalidError,
+    RepeatedExperimentError,
+)
 from hyperparameter_hunter.experiments import CrossValidationExperiment
 from hyperparameter_hunter.library_helpers.keras_helper import reinitialize_callbacks
-from hyperparameter_hunter.library_helpers.keras_optimization_helper import keras_prep_workflow, link_choice_ids
+from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
+    keras_prep_workflow,
+    link_choice_ids,
+)
 from hyperparameter_hunter.metrics import get_formatted_target_metric
 from hyperparameter_hunter.reporting import OptimizationReporter
 from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.space import Space, dimension_subset
-from hyperparameter_hunter.utils.boltons_utils import get_path, PathAccessError
+from hyperparameter_hunter.utils.boltons_utils import get_path
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update
 from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions
 
@@ -43,6 +53,7 @@ import os
 # Import Learning Assets
 ##################################################
 from skopt.callbacks import check_callback
+
 # noinspection PyProtectedMember
 from skopt.utils import cook_estimator, eval_callbacks
 
@@ -64,17 +75,29 @@ class OptimizationProtocolMeta(type):
 
     def __call__(cls, *args, **kwargs):
         """Set the instance's :attr:`source_script` to the absolute path of the file that instantiated the OptimizationProtocol"""
-        setattr(cls, 'source_script', os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]))
+        setattr(
+            cls,
+            "source_script",
+            os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]),
+        )
         return super().__call__(*args, **kwargs)
 
 
 class MergedOptimizationMeta(OptimizationProtocolMeta, ABCMeta):
     """Metaclass to combine :class:`OptimizationProtocolMeta`, and `ABCMeta`"""
+
     pass
 
 
 class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
-    def __init__(self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None):
+    def __init__(
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+    ):
         """Base class for :class:`InformedOptimizationProtocol`, and :class:`UninformedOptimizationProtocol`
 
         Parameters
@@ -153,8 +176,15 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     # Core Methods:
     ##################################################
     def set_experiment_guidelines(
-            self, model_initializer, model_init_params, model_extra_params=None, feature_selector=None,
-            preprocessing_pipeline=None, preprocessing_params=None, notes=None, do_raise_repeated=True,
+        self,
+        model_initializer,
+        model_init_params,
+        model_extra_params=None,
+        feature_selector=None,
+        preprocessing_pipeline=None,
+        preprocessing_params=None,
+        notes=None,
+        do_raise_repeated=True,
     ):
         """Provide the arguments necessary to instantiate :class:`experiments.CrossValidationExperiment`. This method has the same
         signature as :meth:`experiments.BaseExperiment.__init__` except where noted
@@ -206,15 +236,20 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.do_raise_repeated = do_raise_repeated
 
         if self.do_raise_repeated is False:
-            G.warn_('WARNING: Setting `do_raise_repeated`=False will allow Experiments to be unnecessarily duplicated')
+            G.warn_(
+                "WARNING: Setting `do_raise_repeated`=False will allow Experiments to be unnecessarily duplicated"
+            )
 
         self.algorithm_name, self.module_name = identify_algorithm(self.model_initializer)
         self._validate_guidelines()
 
         #################### Deal with Keras ####################
-        if self.module_name == 'keras':
+        if self.module_name == "keras":
             reusable_build_fn, reusable_wrapper_params, dummy_layers, dummy_compile_params = keras_prep_workflow(
-                self.model_initializer, self.model_init_params['build_fn'], self.model_extra_params, self.source_script
+                self.model_initializer,
+                self.model_init_params["build_fn"],
+                self.model_extra_params,
+                self.source_script,
             )
             self.model_init_params = dict(build_fn=reusable_build_fn)
             self.model_extra_params = reusable_wrapper_params
@@ -229,27 +264,37 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         all_dimension_choices = []
 
         #################### Remap Extra Objects ####################
-        if self.module_name == 'keras':
+        if self.module_name == "keras":
             from keras.callbacks import Callback as BaseKerasCallback
-            self.extra_iter_attrs.append(lambda _path, _key, _value: isinstance(_value, BaseKerasCallback))
+
+            self.extra_iter_attrs.append(
+                lambda _path, _key, _value: isinstance(_value, BaseKerasCallback)
+            )
 
         #################### Collect Choice Dimensions ####################
-        init_dimension_choices = get_choice_dimensions(self.model_init_params, iter_attrs=self.init_iter_attrs)
-        extra_dimension_choices = get_choice_dimensions(self.model_extra_params, iter_attrs=self.extra_iter_attrs)
+        init_dimension_choices = get_choice_dimensions(
+            self.model_init_params, iter_attrs=self.init_iter_attrs
+        )
+        extra_dimension_choices = get_choice_dimensions(
+            self.model_extra_params, iter_attrs=self.extra_iter_attrs
+        )
 
         for (path, choice) in init_dimension_choices:
-            choice._name = ('model_init_params',) + path
+            choice._name = ("model_init_params",) + path
             all_dimension_choices.append(choice)
 
         for (path, choice) in extra_dimension_choices:
-            choice._name = ('model_extra_params',) + path
+            choice._name = ("model_extra_params",) + path
             all_dimension_choices.append(choice)
 
         self.dimensions = all_dimension_choices
 
-        if self.module_name == 'keras':
+        if self.module_name == "keras":
             self.model_extra_params = link_choice_ids(
-                self.dummy_layers, self.dummy_compile_params, self.model_extra_params, self.dimensions
+                self.dummy_layers,
+                self.dummy_compile_params,
+                self.model_extra_params,
+                self.dimensions,
             )
 
     def go(self):
@@ -258,9 +303,13 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         learning material for :class:`InformedOptimizationProtocol` s; and executing :meth:`_optimization_loop`, which actually
         sets off the Experiment execution process"""
         if self.model_initializer is None:
-            raise ValueError('Experiment guidelines and options must be set before hyperparameter optimization can be started')
+            raise ValueError(
+                "Experiment guidelines and options must be set before hyperparameter optimization can be started"
+            )
 
-        self.logger = OptimizationReporter([_.name for _ in self.dimensions], **self.reporter_parameters)
+        self.logger = OptimizationReporter(
+            [_.name for _ in self.dimensions], **self.reporter_parameters
+        )
 
         self.tested_keys = []
         self._set_hyperparameter_space()
@@ -269,8 +318,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         loop_start_time = datetime.now()
         self._optimization_loop()
         loop_end_time = datetime.now()
-        G.log_(F'Optimization loop completed in {loop_end_time - loop_start_time}')
-        G.log_(F'Best score was {self.best_score} from Experiment "{self.best_experiment}"')
+        G.log_(f"Optimization loop completed in {loop_end_time - loop_start_time}")
+        G.log_(f'Best score was {self.best_score} from Experiment "{self.best_experiment}"')
 
     ##################################################
     # Helper Methods:
@@ -294,7 +343,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
                 continue
             except StopIteration:
                 if len(self.tested_keys) >= self.search_space_size:
-                    G.log_(F'Hyperparameter search space has been exhausted after testing {len(self.tested_keys)} keys')
+                    G.log_(
+                        f"Hyperparameter search space has been exhausted after testing {len(self.tested_keys)} keys"
+                    )
                     break
                 # G.debug_(F'Re-initializing hyperparameter grid after testing {len(self.tested_keys)} keys')
                 self._set_hyperparameter_space()
@@ -302,7 +353,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
             # TODO: :attr:`current_hyperparameters_list` only exists in Informed Protocols
             self.logger.print_result(
-                self.current_hyperparameters_list, self.current_score, experiment_id=self.current_experiment.experiment_id
+                self.current_hyperparameters_list,
+                self.current_score,
+                experiment_id=self.current_experiment.experiment_id,
             )
 
             if (self.best_experiment is None) or (self.current_score > self.best_score):
@@ -321,10 +374,15 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self._update_current_hyperparameters()
 
         self.current_experiment = CrossValidationExperiment(
-            model_initializer=self.model_initializer, model_init_params=self.current_init_params,
-            model_extra_params=self.current_extra_params, feature_selector=self.feature_selector,
-            preprocessing_pipeline=self.preprocessing_pipeline, preprocessing_params=self.preprocessing_params, notes=self.notes,
-            do_raise_repeated=self.do_raise_repeated, auto_start=False
+            model_initializer=self.model_initializer,
+            model_init_params=self.current_init_params,
+            model_extra_params=self.current_extra_params,
+            feature_selector=self.feature_selector,
+            preprocessing_pipeline=self.preprocessing_pipeline,
+            preprocessing_params=self.preprocessing_params,
+            notes=self.notes,
+            do_raise_repeated=self.do_raise_repeated,
+            auto_start=False,
         )
 
         self.current_experiment.preparation_workflow()
@@ -334,13 +392,15 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             self.tested_keys.append(self.current_experiment.hyperparameter_key.key)
 
         self.current_experiment.experiment_workflow()
-        self.current_score = get_path(self.current_experiment.last_evaluation_results, self.target_metric)
+        self.current_score = get_path(
+            self.current_experiment.last_evaluation_results, self.target_metric
+        )
         self.successful_iterations += 1
         self._clean_up_experiment()
 
     def _clean_up_experiment(self):
         """Perform any cleanup necessary after completion of an Experiment"""
-        if self.module_name == 'keras':
+        if self.module_name == "keras":
             K.clear_session()
 
     def _update_current_hyperparameters(self):
@@ -348,8 +408,14 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         to be searched"""
         current_hyperparameters = self._get_current_hyperparameters()
 
-        init_params = {_k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == 'model_init_params'}
-        extra_params = {_k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == 'model_extra_params'}
+        init_params = {
+            _k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == "model_init_params"
+        }
+        extra_params = {
+            _k[1:]: _v
+            for _k, _v in current_hyperparameters.items()
+            if _k[0] == "model_extra_params"
+        }
 
         self.current_init_params = deep_restricted_update(
             self.model_init_params, init_params, iter_attrs=self.init_iter_attrs
@@ -358,8 +424,10 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             self.model_extra_params, extra_params, iter_attrs=self.extra_iter_attrs
         )
 
-        if (self.module_name == 'keras') and ('callbacks' in self.current_extra_params):
-            self.current_extra_params['callbacks'] = reinitialize_callbacks(self.current_extra_params['callbacks'])
+        if (self.module_name == "keras") and ("callbacks" in self.current_extra_params):
+            self.current_extra_params["callbacks"] = reinitialize_callbacks(
+                self.current_extra_params["callbacks"]
+            )
 
     ##################################################
     # Abstract Methods:
@@ -401,13 +469,17 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         if G.Env is None:
             raise EnvironmentInactiveError()
         if G.Env.current_task is None:
-            G.log_(F'Validated Environment with key: "{G.Env.cross_experiment_key}"')
+            G.log_(f'Validated Environment with key: "{G.Env.cross_experiment_key}"')
         else:
-            raise EnvironmentInvalidError('A task is in progress. It must finish before a new one can be started')
+            raise EnvironmentInvalidError(
+                "A task is in progress. It must finish before a new one can be started"
+            )
 
     def _validate_parameters(self):
         """Ensure provided input parameters are properly formatted"""
-        self.target_metric = get_formatted_target_metric(self.target_metric, G.Env.metrics_map, default_dataset='oof')
+        self.target_metric = get_formatted_target_metric(
+            self.target_metric, G.Env.metrics_map, default_dataset="oof"
+        )
 
     def _validate_guidelines(self):
         """Ensure provided Experiment guideline parameters are properly formatted"""
@@ -417,7 +489,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         if self.feature_selector is None:
             restricted_cols = [_ for _ in [target_column, id_column] if _ is not None]
-            self.feature_selector = [_ for _ in train_dataset.columns.values if _ not in restricted_cols]
+            self.feature_selector = [
+                _ for _ in train_dataset.columns.values if _ not in restricted_cols
+            ]
 
     def _find_similar_experiments(self):
         """Look for Experiments that were performed under similar conditions (algorithm and cross-experiment parameters)"""
@@ -427,18 +501,26 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.logger.print_saved_results_header()
 
         model_params = dict(
-            model_init_params=self.model_init_params, model_extra_params=self.model_extra_params,
-            preprocessing_pipeline=self.preprocessing_pipeline, preprocessing_params=self.preprocessing_params,
+            model_init_params=self.model_init_params,
+            model_extra_params=self.model_extra_params,
+            preprocessing_pipeline=self.preprocessing_pipeline,
+            preprocessing_params=self.preprocessing_params,
             feature_selector=self.feature_selector,
         )
 
-        if self.module_name == 'keras':
-            model_params['model_init_params']['layers'] = self.dummy_layers
-            model_params['model_init_params']['compile_params'] = self.dummy_compile_params
+        if self.module_name == "keras":
+            model_params["model_init_params"]["layers"] = self.dummy_layers
+            model_params["model_init_params"]["compile_params"] = self.dummy_compile_params
 
         experiment_finder = finder_selector(self.module_name)(
-            self.algorithm_name, self.module_name, G.Env.cross_experiment_key, self.target_metric, self.hyperparameter_space,
-            G.Env.result_paths['global_leaderboard'], G.Env.result_paths["description"], model_params
+            self.algorithm_name,
+            self.module_name,
+            G.Env.cross_experiment_key,
+            self.target_metric,
+            self.hyperparameter_space,
+            G.Env.result_paths["global_leaderboard"],
+            G.Env.result_paths["description"],
+            model_params,
         )
         experiment_finder.find()
         self.similar_experiments = experiment_finder.similar_experiments
@@ -447,31 +529,33 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         """Update the contents of :attr:`environment.Environment.reporting_handler_params` if required by :attr:`verbose`"""
         #################### Mute non-critical console logging for Experiments ####################
         if self.verbose in [0, 1]:
-            G.Env.reporting_handler_params.setdefault('console_params', {})['level'] = 'CRITICAL'
+            G.Env.reporting_handler_params.setdefault("console_params", {})["level"] = "CRITICAL"
 
         #################### Blacklist 'script_backup' ####################
-        G.Env.result_paths['script_backup'] = None
+        G.Env.result_paths["script_backup"] = None
 
 
 class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
     def __init__(
-            self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-
-            #################### Optimizer Class Parameters ####################
-            base_estimator='GP',
-            n_initial_points=10,
-            acquisition_function='gp_hedge',
-            acquisition_optimizer='auto',
-            random_state=32,
-            acquisition_function_kwargs=None,
-            acquisition_optimizer_kwargs=None,
-
-            #################### Minimizer Parameters ####################
-            n_random_starts=10,
-            callbacks=None,
-
-            #################### Other Parameters ####################
-            base_estimator_kwargs=None,
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+        #################### Optimizer Class Parameters ####################
+        base_estimator="GP",
+        n_initial_points=10,
+        acquisition_function="gp_hedge",
+        acquisition_optimizer="auto",
+        random_state=32,
+        acquisition_function_kwargs=None,
+        acquisition_optimizer_kwargs=None,
+        #################### Minimizer Parameters ####################
+        n_random_starts=10,
+        callbacks=None,
+        #################### Other Parameters ####################
+        base_estimator_kwargs=None,
     ):
         """Base class for Informed Optimization Protocols
 
@@ -560,8 +644,11 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         self.current_hyperparameters_list = None
 
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
-            reporter_parameters=reporter_parameters
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
+            reporter_parameters=reporter_parameters,
         )
 
     def _set_hyperparameter_space(self):
@@ -574,7 +661,9 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
     def _prepare_estimator(self):
         """Initialize :attr:`base_estimator` with :attr:`hyperparameter_space` and any other kwargs, using
         `skopt.utils.cook_estimator`"""
-        self.base_estimator = cook_estimator(self.base_estimator, space=self.hyperparameter_space, **self.base_estimator_kwargs)
+        self.base_estimator = cook_estimator(
+            self.base_estimator, space=self.hyperparameter_space, **self.base_estimator_kwargs
+        )
 
     def _build_optimizer(self):
         """Set :attr:`optimizer` to the optimizing class used to both estimate the utility of sets of hyperparameters by learning
@@ -597,7 +686,9 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         # FLAG: Resolve switching between below options depending on `target_metric`
         # self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, self.current_score, fit=True)
-        self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, -self.current_score, fit=True)
+        self.optimizer_result = self.optimizer.tell(
+            self.current_hyperparameters_list, -self.current_score, fit=True
+        )
         # FLAG: Resolve switching between above options depending on `target_metric`
 
         if eval_callbacks(self.callbacks, self.optimizer_result):
@@ -615,14 +706,19 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         if _current_hyperparameters == self.current_hyperparameters_list:
             new_parameters = self.hyperparameter_space.rvs(random_state=None)[0]
-            G.debug_('REPEATED     asked={}     new={}'.format(_current_hyperparameters, new_parameters))
+            G.debug_(
+                "REPEATED     asked={}     new={}".format(_current_hyperparameters, new_parameters)
+            )
             _current_hyperparameters = new_parameters
 
         self.current_hyperparameters_list = _current_hyperparameters
 
-        current_hyperparameters = dict(zip(
-            self.hyperparameter_space.get_names(use_location=False), self.current_hyperparameters_list
-        ))
+        current_hyperparameters = dict(
+            zip(
+                self.hyperparameter_space.get_names(use_location=False),
+                self.current_hyperparameters_list,
+            )
+        )
 
         return current_hyperparameters
 
@@ -632,7 +728,9 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         super()._find_similar_experiments()
 
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
-            _hyperparameters = dimension_subset(_experiment[0], self.hyperparameter_space.get_names())
+            _hyperparameters = dimension_subset(
+                _experiment[0], self.hyperparameter_space.get_names()
+            )
             _evaluation = _experiment[1]
             _experiment_id = _experiment[2] if len(_experiment) > 2 else None
             self.logger.print_result(_hyperparameters, _evaluation, experiment_id=_experiment_id)
@@ -672,9 +770,19 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
 
 class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
-    def __init__(self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None):
+    def __init__(
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+    ):
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
         )
 
@@ -684,5 +792,5 @@ class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta
         return current_hyperparameters
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -2,8 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import exception_handler
-from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.general_utils import now_time, to_even, type_val
+from hyperparameter_hunter.utils.general_utils import now_time, type_val
 
 ##################################################
 # Import Miscellaneous Assets
@@ -13,11 +12,17 @@ from datetime import datetime
 import inspect
 import logging
 import os.path
-import re
 
 
 class ReportingHandler(object):
-    def __init__(self, heartbeat_path=None, float_format='{:.5f}', console_params=None, heartbeat_params=None, add_frame=False):
+    def __init__(
+        self,
+        heartbeat_path=None,
+        float_format="{:.5f}",
+        console_params=None,
+        heartbeat_params=None,
+        add_frame=False,
+    ):
         """The class in control of custom logging methods, how logs are formatted, and initializing logging for Experiments
 
         Parameters
@@ -32,7 +37,9 @@ class ReportingHandler(object):
             Parameters passed to :meth:`_configure_heartbeat_logger_handler`
         add_frame: Boolean, default=False
             If True, whenever :meth:`log` is called, the source of the call will be prepended to the content being logged"""
-        self.reporting_type = 'logging'  # TODO: Add `reporting_type` as kwarg to `__init__`, with options: logging, advanced
+        self.reporting_type = (
+            "logging"
+        )  # TODO: Add `reporting_type` as kwarg to `__init__`, with options: logging, advanced
         self.heartbeat_path = heartbeat_path
         self.float_format = float_format
         self.console_params = console_params or {}
@@ -45,53 +52,91 @@ class ReportingHandler(object):
     def _validate_parameters(self):
         """Ensure all logging parameters are properly formatted"""
         #################### reporting_type ####################
-        valid_types = ['logging', 'standard', 'advanced']
+        valid_types = ["logging", "standard", "advanced"]
         if not isinstance(self.reporting_type, str):
-            raise TypeError('reporting_type must be a str. Received {}: {}'.format(*type_val(self.reporting_type)))
+            raise TypeError(
+                "reporting_type must be a str. Received {}: {}".format(
+                    *type_val(self.reporting_type)
+                )
+            )
         if self.reporting_type not in valid_types:
-            raise ValueError('reporting_type must be in {}. Received: {}'.format(valid_types, self.reporting_type))
+            raise ValueError(
+                "reporting_type must be in {}. Received: {}".format(
+                    valid_types, self.reporting_type
+                )
+            )
 
         #################### heartbeat_path ####################
         if self.heartbeat_path is not None:
             if not isinstance(self.heartbeat_path, str):
-                raise TypeError('heartbeat_path must be of type str. Received {}: {}'.format(*type_val(self.heartbeat_path)))
+                raise TypeError(
+                    "heartbeat_path must be of type str. Received {}: {}".format(
+                        *type_val(self.heartbeat_path)
+                    )
+                )
 
             head, tail = os.path.split(self.heartbeat_path)
 
-            if not tail.endswith('.log'):
-                raise ValueError('heartbeat_path must end with the extension ".log". Received: {}'.format(self.heartbeat_path))
+            if not tail.endswith(".log"):
+                raise ValueError(
+                    'heartbeat_path must end with the extension ".log". Received: {}'.format(
+                        self.heartbeat_path
+                    )
+                )
             if not os.path.exists(head):
-                raise FileNotFoundError('heartbeat_path must start with an existing dir. Received {}'.format(self.heartbeat_path))
+                raise FileNotFoundError(
+                    "heartbeat_path must start with an existing dir. Received {}".format(
+                        self.heartbeat_path
+                    )
+                )
 
         #################### float_format ####################
         if not isinstance(self.float_format, str):
-            raise TypeError('float_format must be a format str. Received {}: {}'.format(*type_val(self.float_format)))
-        if (not self.float_format.startswith('{')) or (not self.float_format.endswith('}')):
-            raise ValueError('float_format must start with "{{" and end with "}}". Received: {}'.format(self.float_format))
+            raise TypeError(
+                "float_format must be a format str. Received {}: {}".format(
+                    *type_val(self.float_format)
+                )
+            )
+        if (not self.float_format.startswith("{")) or (not self.float_format.endswith("}")):
+            raise ValueError(
+                'float_format must start with "{{" and end with "}}". Received: {}'.format(
+                    self.float_format
+                )
+            )
 
         #################### console_params ####################
         if not isinstance(self.console_params, dict):
-            raise TypeError('console_params must be a dict or None. Received {}'.format(type(self.console_params)))
+            raise TypeError(
+                "console_params must be a dict or None. Received {}".format(
+                    type(self.console_params)
+                )
+            )
 
         #################### heartbeat_params ####################
         if not isinstance(self.heartbeat_params, dict):
-            raise TypeError('heartbeat_params must be a dict or None. Received {}'.format(type(self.heartbeat_params)))
+            raise TypeError(
+                "heartbeat_params must be a dict or None. Received {}".format(
+                    type(self.heartbeat_params)
+                )
+            )
 
     def _configure_reporting_type(self):
         """Update the placeholder logging methods to those specified by :attr:`reporting_type`, and initialize logging"""
-        if self.reporting_type == 'standard':
+        if self.reporting_type == "standard":
             raise ValueError('Standard logging is not yet implemented. Please choose "logging"')
             # setattr(self, 'log', self._standard_log)
             # setattr(self, 'debug', self._standard_debug)
             # setattr(self, 'warn', self._standard_warn)
-        elif self.reporting_type == 'logging':
-            setattr(self, 'log', self._logging_log)
-            setattr(self, 'debug', self._logging_debug)
-            setattr(self, 'warn', self._logging_warn)
+        elif self.reporting_type == "logging":
+            setattr(self, "log", self._logging_log)
+            setattr(self, "debug", self._logging_debug)
+            setattr(self, "warn", self._logging_warn)
 
             self._initialize_logging_logging()
-        elif self.reporting_type == 'advanced':
-            raise ValueError('Advanced logging is not yet implemented. Please choose one of: ["logging", "standard"]')
+        elif self.reporting_type == "advanced":
+            raise ValueError(
+                'Advanced logging is not yet implemented. Please choose one of: ["logging", "standard"]'
+            )
 
     def _initialize_logging_logging(self):
         """Initialize and configure logging to be handled by the `logging` library"""
@@ -104,14 +149,18 @@ class ReportingHandler(object):
 
         # Suppress FileExistsError because it is raised when self.heartbeat_path is None, which means heartbeat is blacklisted
         with suppress(FileExistsError):
-            logger_handlers.append(self._configure_heartbeat_logger_handler(**self.heartbeat_params))
+            logger_handlers.append(
+                self._configure_heartbeat_logger_handler(**self.heartbeat_params)
+            )
 
         logging.basicConfig(handlers=logger_handlers, level=logging.DEBUG)
 
-        self.debug('Logging Logging has been initialized!')
+        self.debug("Logging Logging has been initialized!")
 
     @staticmethod
-    def _configure_console_logger_handler(level='INFO', fmt=None, datefmt=None, style='%', **kwargs):
+    def _configure_console_logger_handler(
+        level="INFO", fmt=None, datefmt=None, style="%", **kwargs
+    ):
         """Configure the console handler in charge of printing log messages
 
         Parameters
@@ -134,12 +183,14 @@ class ReportingHandler(object):
         console_handler = logging.StreamHandler()
         console_handler.setLevel(level)
 
-        fmt = fmt or '<%(asctime)s> %(message)s'
+        fmt = fmt or "<%(asctime)s> %(message)s"
         formatter = logging.Formatter(fmt=fmt, datefmt=datefmt, style=style)
         console_handler.setFormatter(formatter)
         return console_handler
 
-    def _configure_heartbeat_logger_handler(self, level='DEBUG', fmt=None, datefmt=None, style='%', **kwargs):
+    def _configure_heartbeat_logger_handler(
+        self, level="DEBUG", fmt=None, datefmt=None, style="%", **kwargs
+    ):
         """Configure the file handler in charge of adding log messages to the heartbeat file
 
         Parameters
@@ -163,10 +214,10 @@ class ReportingHandler(object):
         if self.heartbeat_path is None:
             raise FileExistsError
 
-        file_handler = logging.FileHandler(self.heartbeat_path, mode='w')
+        file_handler = logging.FileHandler(self.heartbeat_path, mode="w")
         file_handler.setLevel(level)
 
-        fmt = fmt or '<%(asctime)s> %(levelname)-8s - %(message)s'
+        fmt = fmt or "<%(asctime)s> %(levelname)-8s - %(message)s"
         formatter = logging.Formatter(fmt=fmt, datefmt=datefmt, style=style)
         file_handler.setFormatter(formatter)
         return file_handler
@@ -203,12 +254,14 @@ class ReportingHandler(object):
         **kwargs: Dict
             Extra keyword arguments"""
         if self.add_frame is True:
-            previous_frame = inspect.currentframe().f_back if previous_frame is None else previous_frame
+            previous_frame = (
+                inspect.currentframe().f_back if previous_frame is None else previous_frame
+            )
             try:
                 frame_source = format_frame_source(previous_frame)
             finally:
                 del previous_frame
-            content = frame_source + ' - ' + content
+            content = frame_source + " - " + content
 
         content = add_time_to_content(content, add_time=add_time)
         logging.info(content)
@@ -227,12 +280,14 @@ class ReportingHandler(object):
         **kwargs: Dict
             Extra keyword arguments"""
         if self.add_frame is True:
-            previous_frame = inspect.currentframe().f_back if previous_frame is None else previous_frame
+            previous_frame = (
+                inspect.currentframe().f_back if previous_frame is None else previous_frame
+            )
             try:
                 frame_source = format_frame_source(previous_frame)
             finally:
                 del previous_frame
-            content = frame_source + ' - ' + content
+            content = frame_source + " - " + content
 
         content = add_time_to_content(content, add_time=add_time)
         logging.debug(content)
@@ -252,7 +307,7 @@ class ReportingHandler(object):
                 frame_source = format_frame_source(previous_frame)
             finally:
                 del previous_frame
-            content = frame_source + ' - ' + content
+            content = frame_source + " - " + content
 
         logging.warning(content)
 
@@ -280,17 +335,18 @@ class ReportingHandler(object):
     #         self.heartbeat(content)
 
 
-class _Color():
+class _Color:
     """Object defining color codes for use with logging"""
-    BLUE = '\033[34m'
-    CYAN = '\033[36m'
-    GREEN = '\033[32m'
-    MAGENTA = '\033[35m'
-    RED = '\033[31m'
-    STOP = '\033[0m'
+
+    BLUE = "\033[34m"
+    CYAN = "\033[36m"
+    GREEN = "\033[32m"
+    MAGENTA = "\033[35m"
+    RED = "\033[31m"
+    STOP = "\033[0m"
 
 
-class OptimizationReporter():
+class OptimizationReporter:
     def __init__(self, parameter_names, verbose=1, show_experiment_id=8):
         """A MixIn class for reporting the results of hyperparameter optimization rounds
 
@@ -305,9 +361,11 @@ class OptimizationReporter():
             `show_experiment_id`-many characters of each experiment_id will be printed in each row"""
         self.original_parameter_names = parameter_names
         self.verbose = verbose
-        self.show_experiment_id = 36 if (show_experiment_id is True or show_experiment_id > 36) else show_experiment_id
+        self.show_experiment_id = (
+            36 if (show_experiment_id is True or show_experiment_id > 36) else show_experiment_id
+        )
 
-        self.end = ' | '
+        self.end = " | "
         self.y_max = None
         self.x_max = None
         self.iteration = 0
@@ -315,36 +373,58 @@ class OptimizationReporter():
         self.start_time = datetime.now()
         self.last_round = datetime.now()
 
-        _skip = ('model_init_params', 'model_extra_params', 'preprocessing_pipeline', 'preprocessing_params', 'feature_selector')
-        self.parameter_names = [_[1:] if _[0] in _skip else _ for _ in self.original_parameter_names]
-        self.parameter_names = [_[1:] if _[0] == 'params' else _ for _ in self.parameter_names]
-        self.parameter_names = [_[0] if len(_) == 1 else str(_).replace("'", '').replace('"', '') for _ in self.parameter_names]
+        _skip = (
+            "model_init_params",
+            "model_extra_params",
+            "preprocessing_pipeline",
+            "preprocessing_params",
+            "feature_selector",
+        )
+        self.parameter_names = [
+            _[1:] if _[0] in _skip else _ for _ in self.original_parameter_names
+        ]
+        self.parameter_names = [_[1:] if _[0] == "params" else _ for _ in self.parameter_names]
+        self.parameter_names = [
+            _[0] if len(_) == 1 else str(_).replace("'", "").replace('"', "")
+            for _ in self.parameter_names
+        ]
 
         self.sizes = [max(len(_), 7) for _ in self.parameter_names]
         self.sorted_indexes = sorted(
-            range(len(self.parameter_names)),
-            key=self.parameter_names.__getitem__
+            range(len(self.parameter_names)), key=self.parameter_names.__getitem__
         )
 
     def print_saved_results_header(self):
         """Print a header signifying that saved Experiment results are being read"""
-        header = F'{_Color.RED}Saved Result Files{_Color.STOP}'
-        line_len = (29 + sum([_ + 5 for _ in self.sizes]) + (self.show_experiment_id + 3 if self.show_experiment_id else 0))
-        line = (_Color.RED + '_' * line_len + _Color.STOP)
+        header = f"{_Color.RED}Saved Result Files{_Color.STOP}"
+        line_len = (
+            29
+            + sum([_ + 5 for _ in self.sizes])
+            + (self.show_experiment_id + 3 if self.show_experiment_id else 0)
+        )
+        line = _Color.RED + "_" * line_len + _Color.STOP
         self.print_header(header, line)
 
     def print_random_points_header(self):
         """Print a header signifying that random point evaluation rounds are starting"""
-        header = F'{_Color.RED}Random Point Evaluation{_Color.STOP}'
-        line_len = (29 + sum([_ + 5 for _ in self.sizes]) + (self.show_experiment_id + 3 if self.show_experiment_id else 0))
-        line = (_Color.RED + '_' * line_len + _Color.STOP)
+        header = f"{_Color.RED}Random Point Evaluation{_Color.STOP}"
+        line_len = (
+            29
+            + sum([_ + 5 for _ in self.sizes])
+            + (self.show_experiment_id + 3 if self.show_experiment_id else 0)
+        )
+        line = _Color.RED + "_" * line_len + _Color.STOP
         self.print_header(header, line)
 
     def print_optimization_header(self):
         """Print a header signifying that Optimization rounds are starting"""
-        header = F'{_Color.RED}Hyperparameter Optimization{_Color.STOP}'
-        line_len = (29 + sum([_ + 5 for _ in self.sizes]) + (self.show_experiment_id + 3 if self.show_experiment_id else 0))
-        line = (_Color.RED + '_' * line_len + _Color.STOP)
+        header = f"{_Color.RED}Hyperparameter Optimization{_Color.STOP}"
+        line_len = (
+            29
+            + sum([_ + 5 for _ in self.sizes])
+            + (self.show_experiment_id + 3 if self.show_experiment_id else 0)
+        )
+        line = _Color.RED + "_" * line_len + _Color.STOP
         self.print_header(header, line)
 
     def print_header(self, header, line):
@@ -359,15 +439,15 @@ class OptimizationReporter():
         print(header)
         print(line)
 
-        self._print_column_name('Step', 5)
+        self._print_column_name("Step", 5)
         if self.show_experiment_id:
-            self._print_column_name('ID', self.show_experiment_id)
-        self._print_column_name('Time', 6)
-        self._print_column_name('Value', 10)
+            self._print_column_name("ID", self.show_experiment_id)
+        self._print_column_name("Time", 6)
+        self._print_column_name("Value", 10)
 
         for index in self.sorted_indexes:
             self._print_column_name(self.parameter_names[index], self.sizes[index] + 2)
-        print('')
+        print("")
 
     def _print_column_name(self, value, size):
         """Print a column name within a specified `size` constraint
@@ -379,12 +459,12 @@ class OptimizationReporter():
         size: Int
             The number of characters that `value` should span"""
         try:
-            print('{0:>{1}}'.format(value, size), end=self.end)
+            print("{0:>{1}}".format(value, size), end=self.end)
         except TypeError:  # Probably received a tuple including where param came from (init_params, extra_params, etc.)
             if len(value) == 1:
-                print('{0:>{1}}'.format(value[0], size), end=self.end)
+                print("{0:>{1}}".format(value[0], size), end=self.end)
             else:
-                print('{0:>{1}}'.format(str(value), size), end=self.end)
+                print("{0:>{1}}".format(str(value), size), end=self.end)
 
     def print_result(self, hyperparameters, evaluation, experiment_id=None):
         """Print a row containing the results of an Experiment just executed
@@ -399,16 +479,16 @@ class OptimizationReporter():
             If not None, should be a string that is the UUID of the Experiment"""
         if not self.verbose:
             return
-        print('{:>5d}'.format(self.iteration), end=self.end)
+        print("{:>5d}".format(self.iteration), end=self.end)
 
         if self.show_experiment_id:
             if experiment_id is not None:
-                print('{}'.format(experiment_id[:self.show_experiment_id]), end=self.end)
+                print("{}".format(experiment_id[: self.show_experiment_id]), end=self.end)
             else:
-                print(' ' * self.show_experiment_id, end=self.end)
+                print(" " * self.show_experiment_id, end=self.end)
 
         minutes, seconds = divmod((datetime.now() - self.last_round).total_seconds(), 60)
-        print('{:>02d}m{:>02d}s'.format(int(minutes), int(seconds)), end=self.end)
+        print("{:>02d}m{:>02d}s".format(int(minutes), int(seconds)), end=self.end)
 
         if self.y_max is None or self.y_max < evaluation:
             self.y_max, self.x_max = evaluation, hyperparameters
@@ -418,11 +498,11 @@ class OptimizationReporter():
             self._print_target_value(evaluation)
             self._print_input_values(hyperparameters)
 
-        print('')
+        print("")
         self.last_round = datetime.now()
         self.iteration += 1
 
-    def _print_target_value(self, value, pre='', post=''):
+    def _print_target_value(self, value, pre="", post=""):
         """Print the utility of an Experiment
 
         Parameters
@@ -433,10 +513,10 @@ class OptimizationReporter():
             Content to prepend to the formatted `value` string before printing
         post: String, default=''
             Content to append to the formatted `value` string before printing"""
-        content = pre + '{: >10.5f}'.format(value) + post
+        content = pre + "{: >10.5f}".format(value) + post
         print(content, end=self.end)
 
-    def _print_input_values(self, values, pre='', post=''):
+    def _print_input_values(self, values, pre="", post=""):
         """Print the value of a hyperparameter used by an Experiment
 
         Parameters
@@ -449,16 +529,11 @@ class OptimizationReporter():
             Content to append to the formatted `value` string before printing"""
         for index in self.sorted_indexes:
             if isinstance(values[index], float):
-                content = '{0: >{1}.{2}f}'.format(
-                    values[index],
-                    self.sizes[index] + 2,
-                    min(self.sizes[index] - 3, 6 - 2)
+                content = "{0: >{1}.{2}f}".format(
+                    values[index], self.sizes[index] + 2, min(self.sizes[index] - 3, 6 - 2)
                 )
             else:
-                content = '{0: >{1}}'.format(
-                    values[index],
-                    self.sizes[index] + 2,
-                )
+                content = "{0: >{1}}".format(values[index], self.sizes[index] + 2)
             print(pre + content + post, end=self.end)
 
     def reset_timer(self):
@@ -491,12 +566,22 @@ def format_frame_source(previous_frame, **kwargs):
     source_script, source_line_no, source_func, source_class = source[0], source[1], source[2], None
 
     with suppress(AttributeError, KeyError):
-        source_class = type(previous_frame.f_locals['self']).__name__
+        source_class = type(previous_frame.f_locals["self"]).__name__
 
-    return stringify_frame_source(source_script, source_line_no, source_func, source_class, **kwargs)
+    return stringify_frame_source(
+        source_script, source_line_no, source_func, source_class, **kwargs
+    )
 
 
-def stringify_frame_source(src_file, src_line_no, src_func, src_class, add_line_no=True, max_line_no_size=4, total_max_size=80):
+def stringify_frame_source(
+    src_file,
+    src_line_no,
+    src_func,
+    src_class,
+    add_line_no=True,
+    max_line_no_size=4,
+    total_max_size=80,
+):
     """Construct a string that neatly displays the location in the code at which a call was made
 
     Parameters
@@ -521,21 +606,21 @@ def stringify_frame_source(src_file, src_line_no, src_func, src_class, add_line_
     -------
     source_content: Str
         A formatted string containing the location in the code at which a call was made"""
-    source_content = ''
+    source_content = ""
 
     if add_line_no is True:
         # Left-align line_no to size: max_line_no_size
-        source_content += '{0:<{1}}'.format(src_line_no, max_line_no_size)
-        source_content += ' - '
+        source_content += "{0:<{1}}".format(src_line_no, max_line_no_size)
+        source_content += " - "
 
     script_name = os.path.splitext(os.path.basename(src_file))[0]
 
     if src_class is not None:
-        source_content += '{}.{}.{}()'.format(script_name, src_class, src_func)
+        source_content += "{}.{}.{}()".format(script_name, src_class, src_func)
     else:
-        source_content += '{}.{}()'.format(script_name, src_func)
+        source_content += "{}.{}()".format(script_name, src_func)
 
-    source_content = '{0:<{1}}'.format(source_content, total_max_size)
+    source_content = "{0:<{1}}".format(source_content, total_max_size)
 
     return source_content
 
@@ -554,19 +639,19 @@ def add_time_to_content(content, add_time=False):
     -------
     content: Str
          A string containing the original `content`, along with the current time, and any additional formatting"""
-    add_content = ''
+    add_content = ""
     add_time = now_time() if add_time is True else add_time
-    add_content += 'Time: {}'.format(add_time) if add_time else ''
+    add_content += "Time: {}".format(add_time) if add_time else ""
 
     #################### Combine Original Content with New Content ####################
-    if add_content != '':
-        content += '   ' if ((content != '') and (not content.endswith(' '))) else ''
+    if add_content != "":
+        content += "   " if ((content != "") and (not content.endswith(" "))) else ""
         content += add_content
 
     return content
 
 
-def format_fold_run(fold=None, run=None, mode='concise'):
+def format_fold_run(fold=None, run=None, mode="concise"):
     """Construct a string to display the fold, and run currently being executed
 
     Parameters
@@ -582,23 +667,23 @@ def format_fold_run(fold=None, run=None, mode='concise'):
     -------
     content: Str
         A clean display of the current fold/run"""
-    content = ''
+    content = ""
     valid_fold, valid_run = isinstance(fold, int), isinstance(run, int)
 
-    if mode == 'verbose':
-        content += format('Fold' if valid_fold else '')
-        content += format('/' if valid_fold and valid_run else '')
-        content += format('Run' if valid_run else '')
-        content += format(': ' if valid_fold or valid_run else '')
-        content += format(fold if valid_fold else '')
-        content += format('/' if valid_fold and valid_run else '')
-        content += format(run if valid_run else '')
-    elif mode == 'concise':
-        content += format('F' if valid_fold else '')
-        content += format(fold if valid_fold else '')
-        content += format('/' if valid_fold and valid_run else '')
-        content += format('R' if valid_run else '')
-        content += format(run if valid_run else '')
+    if mode == "verbose":
+        content += format("Fold" if valid_fold else "")
+        content += format("/" if valid_fold and valid_run else "")
+        content += format("Run" if valid_run else "")
+        content += format(": " if valid_fold or valid_run else "")
+        content += format(fold if valid_fold else "")
+        content += format("/" if valid_fold and valid_run else "")
+        content += format(run if valid_run else "")
+    elif mode == "concise":
+        content += format("F" if valid_fold else "")
+        content += format(fold if valid_fold else "")
+        content += format("/" if valid_fold and valid_run else "")
+        content += format("R" if valid_run else "")
+        content += format(run if valid_run else "")
     else:
         raise ValueError('Received invalid mode value: "{}". Expected mode string'.format(mode))
 
@@ -630,7 +715,7 @@ def format_fold_run(fold=None, run=None, mode='concise'):
 #     return content
 
 
-def format_evaluation_results(results, separator='  |  ', float_format='{:.5f}'):
+def format_evaluation_results(results, separator="  |  ", float_format="{:.5f}"):
     """Construct a string to neatly display the results of a model evaluation
 
     Parameters
@@ -648,29 +733,32 @@ def format_evaluation_results(results, separator='  |  ', float_format='{:.5f}')
     content: Str
         The model's evaluation results"""
     if isinstance(results, list):
-        raise TypeError('Sorry, I can\'t deal with results of type list. Please send me an OrderedDict, instead')
+        raise TypeError(
+            "Sorry, I can't deal with results of type list. Please send me an OrderedDict, instead"
+        )
 
     content = []
 
     for data_type, values in results.items():
-        if values is None: continue
+        if values is None:
+            continue
 
-        data_type = 'OOF' if data_type == 'oof' else data_type
-        data_type = 'Holdout' if data_type == 'holdout' else data_type
-        data_type = 'In-Fold' if data_type == 'in_fold' else data_type
+        data_type = "OOF" if data_type == "oof" else data_type
+        data_type = "Holdout" if data_type == "holdout" else data_type
+        data_type = "In-Fold" if data_type == "in_fold" else data_type
 
-        metric_entry = '{}('.format(data_type)
+        metric_entry = "{}(".format(data_type)
         metric_entry_vals = []
 
         for metric_id, metric_value in values.items():
             try:
                 formatted_value = float_format.format(metric_value)
             except ValueError:
-                formatted_value = '{}'.format(metric_value)
+                formatted_value = "{}".format(metric_value)
 
-            metric_entry_vals.append('{}={}'.format(metric_id, formatted_value))
+            metric_entry_vals.append("{}={}".format(metric_id, formatted_value))
 
-        metric_entry += (', '.join(metric_entry_vals) + ')')
+        metric_entry += ", ".join(metric_entry_vals) + ")"
         content.append(metric_entry)
 
     content = separator.join(content)

@@ -2,7 +2,6 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import BasePredictorCallback
-from hyperparameter_hunter.settings import G
 
 ##################################################
 # Import Miscellaneous Assets
@@ -22,32 +21,38 @@ class PredictorOOF(BasePredictorCallback):
 
     def on_experiment_start(self):
         required_attributes = [
-            'final_oof_predictions',
-            'repetition_oof_predictions',
-            'run_validation_predictions',
-            'train_dataset',
-            'validation_index',
-            'target_column',
-            'experiment_params',
+            "final_oof_predictions",
+            "repetition_oof_predictions",
+            "run_validation_predictions",
+            "train_dataset",
+            "validation_index",
+            "target_column",
+            "experiment_params",
         ]
         for attr in required_attributes:
             if not hasattr(self, attr):
-                raise AttributeError('Missing required attribute for `PredictorOOF` class: {}'.format(attr))
+                raise AttributeError(
+                    "Missing required attribute for `PredictorOOF` class: {}".format(attr)
+                )
 
-        self.final_oof_predictions = (0 * self.train_dataset[self.target_column])
+        self.final_oof_predictions = 0 * self.train_dataset[self.target_column]
         super().on_experiment_start()
 
     def on_repetition_start(self):
-        self.repetition_oof_predictions = (0 * self.train_dataset[self.target_column])
+        self.repetition_oof_predictions = 0 * self.train_dataset[self.target_column]
         super().on_repetition_start()
 
     def on_run_end(self):
         self.run_validation_predictions = self.model.predict(self.fold_validation_input)
-        self.repetition_oof_predictions.iloc[self.validation_index] += self.run_validation_predictions
+        self.repetition_oof_predictions.iloc[
+            self.validation_index
+        ] += self.run_validation_predictions
         super().on_run_end()
 
     def on_fold_end(self):
-        self.repetition_oof_predictions.iloc[self.validation_index] /= self.experiment_params['runs']
+        self.repetition_oof_predictions.iloc[self.validation_index] /= self.experiment_params[
+            "runs"
+        ]
         super().on_fold_end()
 
     def on_repetition_end(self):
@@ -55,7 +60,7 @@ class PredictorOOF(BasePredictorCallback):
         super().on_repetition_end()
 
     def on_experiment_end(self):
-        self.final_oof_predictions /= self.cross_validation_params.get('n_repeats', 1)
+        self.final_oof_predictions /= self.cross_validation_params.get("n_repeats", 1)
         super().on_experiment_end()
 
 
@@ -88,20 +93,22 @@ class PredictorHoldout(BasePredictorCallback):
 
     def on_fold_end(self):
         try:
-            self.fold_holdout_predictions /= self.experiment_params['runs']
+            self.fold_holdout_predictions /= self.experiment_params["runs"]
         except TypeError:
-            self.fold_holdout_predictions = np.divide(self.fold_holdout_predictions, self.experiment_params['runs'])
+            self.fold_holdout_predictions = np.divide(
+                self.fold_holdout_predictions, self.experiment_params["runs"]
+            )
 
         self.repetition_holdout_predictions += self.fold_holdout_predictions
         super().on_fold_end()
 
     def on_repetition_end(self):
-        self.repetition_holdout_predictions /= self.cross_validation_params['n_splits']
+        self.repetition_holdout_predictions /= self.cross_validation_params["n_splits"]
         self.final_holdout_predictions += self.repetition_holdout_predictions
         super().on_repetition_end()
 
     def on_experiment_end(self):
-        self.final_holdout_predictions /= self.cross_validation_params.get('n_repeats', 1)
+        self.final_holdout_predictions /= self.cross_validation_params.get("n_repeats", 1)
         super().on_experiment_end()
 
 
@@ -134,22 +141,24 @@ class PredictorTest(BasePredictorCallback):
 
     def on_fold_end(self):
         try:
-            self.fold_test_predictions /= self.experiment_params['runs']
+            self.fold_test_predictions /= self.experiment_params["runs"]
         except TypeError:
-            self.fold_test_predictions = np.divide(self.fold_test_predictions, self.experiment_params['runs'])
+            self.fold_test_predictions = np.divide(
+                self.fold_test_predictions, self.experiment_params["runs"]
+            )
 
         self.repetition_test_predictions += self.fold_test_predictions
         super().on_fold_end()
 
     def on_repetition_end(self):
-        self.repetition_test_predictions /= self.cross_validation_params['n_splits']
+        self.repetition_test_predictions /= self.cross_validation_params["n_splits"]
         self.final_test_predictions += self.repetition_test_predictions
         super().on_repetition_end()
 
     def on_experiment_end(self):
-        self.final_test_predictions /= self.cross_validation_params.get('n_repeats', 1)
+        self.final_test_predictions /= self.cross_validation_params.get("n_repeats", 1)
         super().on_experiment_end()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

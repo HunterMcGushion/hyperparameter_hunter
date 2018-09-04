@@ -16,7 +16,8 @@ Related
 from hyperparameter_hunter.sentinels import locate_sentinels
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import type_val
-from hyperparameter_hunter.utils.metrics_utils import wrap_xgboost_metric
+
+# from hyperparameter_hunter.utils.metrics_utils import wrap_xgboost_metric
 
 ##################################################
 # Import Miscellaneous Assets
@@ -24,7 +25,6 @@ from hyperparameter_hunter.utils.metrics_utils import wrap_xgboost_metric
 from contextlib import suppress
 import inspect
 import sys
-from types import MethodType
 import warnings
 
 ##################################################
@@ -32,7 +32,7 @@ import warnings
 ##################################################
 import sklearn.utils as sklearn_utils
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 load_model = lambda _: _
 
 
@@ -48,9 +48,9 @@ def model_selector(model_initializer):
     -------
     :class:`Model`, or one of its children"""
     try:
-        if model_initializer.__name__ in ('KerasClassifier', 'KerasRegressor'):
+        if model_initializer.__name__ in ("KerasClassifier", "KerasRegressor"):
             return KerasModel
-        elif model_initializer.__name__ in ('XGBClassifier', 'XGBRegressor'):
+        elif model_initializer.__name__ in ("XGBClassifier", "XGBRegressor"):
             return XGBoostModel
         else:
             return Model
@@ -60,8 +60,17 @@ def model_selector(model_initializer):
 
 class Model(object):
     def __init__(
-            self, model_initializer, initialization_params, extra_params, train_input=None, train_target=None,
-            validation_input=None, validation_target=None, do_predict_proba=False, target_metric=None, metrics_map=None,
+        self,
+        model_initializer,
+        initialization_params,
+        extra_params,
+        train_input=None,
+        train_target=None,
+        validation_input=None,
+        validation_target=None,
+        do_predict_proba=False,
+        target_metric=None,
+        metrics_map=None,
     ):
         """Handles initialization, fitting, and prediction for provided algorithms. Consider documentation for children of
         :class:`Model` to be identical to that of :class:`Model`, except where noted
@@ -124,27 +133,37 @@ class Model(object):
             self.model = self.model_initializer(**self.initialization_params)
         except Exception as _ex:
             raise type(_ex)(
-                str(_ex) + '\nReceived invalid model_initializer of type {}: {}'.format(*type_val(self.model_initializer))
+                str(_ex)
+                + "\nReceived invalid model_initializer of type {}: {}".format(
+                    *type_val(self.model_initializer)
+                )
             ).with_traceback(sys.exc_info()[2])
 
     def fit(self):
         """Train a model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
         expected_fit_parameters = list(inspect.signature(self.model.fit).parameters)
         fit_kwargs = {}
-        if 'verbose' in expected_fit_parameters:
-            fit_kwargs['verbose'] = False
-        if 'silent' in expected_fit_parameters:
-            fit_kwargs['silent'] = True
+        if "verbose" in expected_fit_parameters:
+            fit_kwargs["verbose"] = False
+        if "silent" in expected_fit_parameters:
+            fit_kwargs["silent"] = True
 
         fit_kwargs = dict(
-            fit_kwargs, **{_k: _v for _k, _v in self.extra_params.get('fit', {}).items() if _k not in ['X', 'y']}
+            fit_kwargs,
+            **{
+                _k: _v
+                for _k, _v in self.extra_params.get("fit", {}).items()
+                if _k not in ["X", "y"]
+            },
         )
 
         try:
             self.model = self.model.fit(self.train_input, self.train_target, **fit_kwargs)
         except (TypeError, sklearn_utils.DataConversionWarning):
             try:
-                self.model = self.model.fit(self.train_input.values, self.train_target.values[:, 0], **fit_kwargs)
+                self.model = self.model.fit(
+                    self.train_input.values, self.train_target.values[:, 0], **fit_kwargs
+                )
             except Exception as _ex:
                 raise _ex
 
@@ -174,8 +193,17 @@ class Model(object):
 
 class XGBoostModel(Model):
     def __init__(
-            self, model_initializer, initialization_params, extra_params, train_input=None, train_target=None,
-            validation_input=None, validation_target=None, do_predict_proba=False, target_metric=None, metrics_map=None,
+        self,
+        model_initializer,
+        initialization_params,
+        extra_params,
+        train_input=None,
+        train_target=None,
+        validation_input=None,
+        validation_target=None,
+        do_predict_proba=False,
+        target_metric=None,
+        metrics_map=None,
     ):
         """A special Model class for handling XGBoost algorithms. Consider documentation to be identical to that of
         :class:`Model`, except where noted
@@ -204,15 +232,24 @@ class XGBoostModel(Model):
             Used to determine the 'eval_metric' argument to :meth:`xgboost.sklearn.XGBModel.fit`. See the documentation for
             :attr:`XGBoostModel.extra_params` for more information
         metrics_map: See :class:`Model`"""
-        if model_initializer.__name__ not in ('XGBClassifier', 'XGBRegressor'):
-            raise ValueError('XGBoostModel given invalid model_initializer: {} - {}\nTry using the standard Model class'.format(
-                type(model_initializer), (model_initializer.__name__ or model_initializer)
-            ))
+        if model_initializer.__name__ not in ("XGBClassifier", "XGBRegressor"):
+            raise ValueError(
+                "XGBoostModel given invalid model_initializer: {} - {}\nTry using the standard Model class".format(
+                    type(model_initializer), (model_initializer.__name__ or model_initializer)
+                )
+            )
 
         super().__init__(
-            model_initializer, initialization_params, extra_params, train_input=train_input, train_target=train_target,
-            validation_input=validation_input, validation_target=validation_target, do_predict_proba=do_predict_proba,
-            target_metric=target_metric, metrics_map=metrics_map,
+            model_initializer,
+            initialization_params,
+            extra_params,
+            train_input=train_input,
+            train_target=train_target,
+            validation_input=validation_input,
+            validation_target=validation_target,
+            do_predict_proba=do_predict_proba,
+            target_metric=target_metric,
+            metrics_map=metrics_map,
         )
 
     # def fit(self):
@@ -239,8 +276,17 @@ class XGBoostModel(Model):
 
 class KerasModel(Model):
     def __init__(
-            self, model_initializer, initialization_params, extra_params, train_input=None, train_target=None,
-            validation_input=None, validation_target=None, do_predict_proba=False, target_metric=None, metrics_map=None,
+        self,
+        model_initializer,
+        initialization_params,
+        extra_params,
+        train_input=None,
+        train_target=None,
+        validation_input=None,
+        validation_target=None,
+        do_predict_proba=False,
+        target_metric=None,
+        metrics_map=None,
     ):
         """A special Model class for handling Keras neural networks. Consider documentation to be identical to that of
         :class:`Model`, except where noted
@@ -274,15 +320,24 @@ class KerasModel(Model):
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`
         metrics_map: Dict
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`"""
-        if model_initializer.__name__ not in ('KerasClassifier', 'KerasRegressor'):
-            raise ValueError('KerasModel given invalid model_initializer: {} - {}\nTry using the standard Model class'.format(
-                type(model_initializer), (model_initializer.__name__ or model_initializer)
-            ))
+        if model_initializer.__name__ not in ("KerasClassifier", "KerasRegressor"):
+            raise ValueError(
+                "KerasModel given invalid model_initializer: {} - {}\nTry using the standard Model class".format(
+                    type(model_initializer), (model_initializer.__name__ or model_initializer)
+                )
+            )
 
         super().__init__(
-            model_initializer, initialization_params, extra_params, train_input=train_input, train_target=train_target,
-            validation_input=validation_input, validation_target=validation_target, do_predict_proba=do_predict_proba,
-            target_metric=target_metric, metrics_map=metrics_map,
+            model_initializer,
+            initialization_params,
+            extra_params,
+            train_input=train_input,
+            train_target=train_target,
+            validation_input=validation_input,
+            validation_target=validation_target,
+            do_predict_proba=do_predict_proba,
+            target_metric=target_metric,
+            metrics_map=metrics_map,
         )
 
         global load_model
@@ -298,7 +353,7 @@ class KerasModel(Model):
         try:
             self.model.fit(self.train_input, self.train_target)
         except Exception as _ex:
-            G.warn(F'KerasModel.fit() failed with Exception: {_ex}\nAttempting standard fit method')
+            G.warn(f"KerasModel.fit() failed with Exception: {_ex}\nAttempting standard fit method")
             super().fit()
         finally:
             #################### Record Epochs Elapsed if Model has 'epoch' Attribute ####################
@@ -306,8 +361,8 @@ class KerasModel(Model):
                 self.epochs_elapsed = len(self.model.epoch)
 
             #################### Load Model Checkpoint if Possible ####################
-            for callback in self.extra_params.get('callbacks', []):
-                if callback.__class__.__name__ == 'ModelCheckpoint':
+            for callback in self.extra_params.get("callbacks", []):
+                if callback.__class__.__name__ == "ModelCheckpoint":
                     self.model.model.load_weights(callback.filepath)
 
     def get_input_shape(self, get_dim=False):
@@ -331,26 +386,44 @@ class KerasModel(Model):
                 return self.validation_input.shape[1]
             return self.validation_input.shape[1:]
         else:
-            raise ValueError('To initialize a KerasModel, train_input data, or input_dim must be provided')
+            raise ValueError(
+                "To initialize a KerasModel, train_input data, or input_dim must be provided"
+            )
 
     def validate_keras_params(self):
         """Ensure provided input parameters are properly formatted"""
         #################### Check Keras Import Hooks ####################
-        necessary_import_hooks = ['keras_layer']
+        necessary_import_hooks = ["keras_layer"]
         for hook in necessary_import_hooks:
             if hook not in G.import_hooks:
-                raise ImportError(F'The following import hook must be established before Keras is imported: {hook!r}')
+                raise ImportError(
+                    f"The following import hook must be established before Keras is imported: {hook!r}"
+                )
 
         #################### build_fn ####################
         if not isinstance(self.initialization_params, dict):
-            raise TypeError(F'initialization_params must be a dict containing "build_fn".\nReceived:{self.initialization_params}')
-        if 'build_fn' not in self.initialization_params.keys():
-            raise KeyError(F'initialization_params must contain the "build_fn" key.\nReceived: {self.initialization_params}')
+            raise TypeError(
+                f'initialization_params must be a dict containing "build_fn".\nReceived:{self.initialization_params}'
+            )
+        if "build_fn" not in self.initialization_params.keys():
+            raise KeyError(
+                f'initialization_params must contain the "build_fn" key.\nReceived: {self.initialization_params}'
+            )
 
-        bad_extra_keys = {'build_fn', 'input_shape', 'input_dim', 'validation_data', 'validation_split', 'x', 'y'}
+        bad_extra_keys = {
+            "build_fn",
+            "input_shape",
+            "input_dim",
+            "validation_data",
+            "validation_split",
+            "x",
+            "y",
+        }
         bad_keys_found = bad_extra_keys.intersection(self.extra_params)
         if len(bad_keys_found) > 0:
-            raise KeyError(F'extra_params may not contain the following keys: {bad_extra_keys}.\nFound: {bad_keys_found}')
+            raise KeyError(
+                f"extra_params may not contain the following keys: {bad_extra_keys}.\nFound: {bad_keys_found}"
+            )
 
     def initialize_keras_neural_network(self):
         """Initialize Keras model wrapper (:attr:`model_initializer`) with :attr:`initialization_params`, :attr:`extra_params`,
@@ -360,12 +433,12 @@ class KerasModel(Model):
             validation_data = (self.validation_input, self.validation_target)
 
         return self.model_initializer(
-            build_fn=self.initialization_params['build_fn'],
+            build_fn=self.initialization_params["build_fn"],
             input_shape=self.get_input_shape(),
             validation_data=validation_data,
             **self.extra_params,
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

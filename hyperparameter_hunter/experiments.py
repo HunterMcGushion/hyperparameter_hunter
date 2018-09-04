@@ -19,8 +19,15 @@ As mentioned above, the inner workings of :mod:`experiments` will be very confus
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.algorithm_handlers import identify_algorithm, identify_algorithm_hyperparameters
-from hyperparameter_hunter.exception_handler import EnvironmentInactiveError, EnvironmentInvalidError, RepeatedExperimentError
+from hyperparameter_hunter.algorithm_handlers import (
+    identify_algorithm,
+    identify_algorithm_hyperparameters,
+)
+from hyperparameter_hunter.exception_handler import (
+    EnvironmentInactiveError,
+    EnvironmentInvalidError,
+    RepeatedExperimentError,
+)
 from hyperparameter_hunter.experiment_core import ExperimentMeta
 from hyperparameter_hunter.key_handler import HyperparameterKeyMaker
 from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_metric
@@ -32,8 +39,8 @@ from hyperparameter_hunter.settings import G
 # Import Miscellaneous Assets
 ##################################################
 from abc import abstractmethod
-from copy import copy, deepcopy
-from inspect import isclass, signature
+from copy import deepcopy
+from inspect import isclass
 import numpy as np
 import os
 import pandas as pd
@@ -49,19 +56,27 @@ import warnings
 from sklearn.model_selection import KFold, StratifiedKFold, RepeatedKFold, RepeatedStratifiedKFold
 import sklearn.utils as sklearn_utils
 
-pd.set_option('display.expand_frame_repr', False)
-warnings.simplefilter(action='ignore', category=FutureWarning)
-warnings.simplefilter(action='ignore', category=DeprecationWarning)
-warnings.simplefilter(action='ignore', category=sklearn_utils.DataConversionWarning)
+pd.set_option("display.expand_frame_repr", False)
+warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.simplefilter(action="ignore", category=DeprecationWarning)
+warnings.simplefilter(action="ignore", category=sklearn_utils.DataConversionWarning)
 np.random.seed(32)
 
 
 class BaseExperiment(ScoringMixIn):
     def __init__(
-            # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
-            self, model_initializer, model_init_params, model_extra_params=None, feature_selector=None,
-            preprocessing_pipeline=None, preprocessing_params=None, notes=None, do_raise_repeated=False, auto_start=True,
-            target_metric=None,
+        # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
+        self,
+        model_initializer,
+        model_init_params,
+        model_extra_params=None,
+        feature_selector=None,
+        preprocessing_pipeline=None,
+        preprocessing_params=None,
+        notes=None,
+        do_raise_repeated=False,
+        auto_start=True,
+        target_metric=None,
     ):
         """Base class for :class:`BaseCVExperiment`
 
@@ -102,7 +117,9 @@ class BaseExperiment(ScoringMixIn):
             for more info. Any values returned by, or used as the `target_metric` input to this function are acceptable values
             for :attr:`BaseExperiment.target_metric`"""
         self.model_initializer = model_initializer
-        self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)  # FLAG: Play nice with Keras
+        self.model_init_params = identify_algorithm_hyperparameters(
+            self.model_initializer
+        )  # FLAG: Play nice with Keras
         try:
             self.model_init_params.update(model_init_params)
         except TypeError:
@@ -166,7 +183,10 @@ class BaseExperiment(ScoringMixIn):
 
     def __repr__(self):
         return '{}("{}", cross_experiment_key="{}", hyperparameter_key="{}")'.format(
-            type(self).__name__, self.experiment_id, self.cross_experiment_key, self.hyperparameter_key
+            type(self).__name__,
+            self.experiment_id,
+            self.cross_experiment_key,
+            self.hyperparameter_key,
         )
 
     def __getattr__(self, attr):
@@ -174,14 +194,16 @@ class BaseExperiment(ScoringMixIn):
         try:
             return getattr(G.Env, attr)
         except AttributeError:
-            raise AttributeError("Could not find '{}' in 'G.Env', or any of the following locations: {}".format(
-                attr, [_.__name__ for _ in type(self).__mro__]
-            )).with_traceback(exc_info()[2]) from None
+            raise AttributeError(
+                "Could not find '{}' in 'G.Env', or any of the following locations: {}".format(
+                    attr, [_.__name__ for _ in type(self).__mro__]
+                )
+            ).with_traceback(exc_info()[2]) from None
 
     def experiment_workflow(self):
         """Define the actual experiment process, including execution, result saving, and cleanup"""
         if self.hyperparameter_key.exists is True:
-            _ex = F'{self!r} has already been run'
+            _ex = f"{self!r} has already been run"
             if self.do_raise_repeated is True:
                 self._clean_up()
                 raise RepeatedExperimentError(_ex)
@@ -193,20 +215,20 @@ class BaseExperiment(ScoringMixIn):
 
         recorders = RecorderList(file_blacklist=G.Env.file_blacklist)
         recorders.format_result()
-        G.log(F'Saving results for Experiment: "{self.experiment_id}"')
+        G.log(f'Saving results for Experiment: "{self.experiment_id}"')
         recorders.save_result()
         self._clean_up()
 
     def preparation_workflow(self):
         """Execute all tasks that must take place before the experiment is actually started. Such tasks include (but are not
         limited to): Creating experiment IDs and hyperparameter keys, creating script backups, and validating parameters"""
-        G.debug('Starting preparation_workflow...')
+        G.debug("Starting preparation_workflow...")
         self._generate_experiment_id()
         self._create_script_backup()
         self._validate_parameters()
         self._generate_hyperparameter_key()
         self._additional_preparation_steps()
-        G.debug('Completed preparation_workflow')
+        G.debug("Completed preparation_workflow")
 
     @abstractmethod
     def _additional_preparation_steps(self):
@@ -258,7 +280,7 @@ class BaseExperiment(ScoringMixIn):
         if isinstance(self.test_dataset, pd.DataFrame):
             self.test_input_data = self.test_dataset.copy().loc[:, self.feature_selector]
 
-        G.log('Initial preprocessing stage complete')
+        G.log("Initial preprocessing stage complete")
 
     ##################################################
     # Supporting Methods:
@@ -271,19 +293,23 @@ class BaseExperiment(ScoringMixIn):
         #################### feature_selector ####################
         if self.feature_selector is None:
             restricted_cols = [_ for _ in [self.target_column, self.id_column] if _ is not None]
-            self.feature_selector = [_ for _ in self.train_dataset.columns.values if _ not in restricted_cols]
+            self.feature_selector = [
+                _ for _ in self.train_dataset.columns.values if _ not in restricted_cols
+            ]
 
-        G.debug('Experiment parameters have been validated')
+        G.debug("Experiment parameters have been validated")
 
     def _validate_environment(self):
         """Check that there is a currently active Environment instance that is not already occupied"""
         if G.Env is None:
-            raise EnvironmentInactiveError('')
+            raise EnvironmentInactiveError("")
         if G.Env.current_task is None:
             G.Env.current_task = self
-            G.log(F'Validated Environment with key: "{self.cross_experiment_key}"')
+            G.log(f'Validated Environment with key: "{self.cross_experiment_key}"')
         else:
-            raise EnvironmentInvalidError('An experiment is in progress. It must finish before a new one can be started')
+            raise EnvironmentInvalidError(
+                "An experiment is in progress. It must finish before a new one can be started"
+            )
 
     @staticmethod
     def _clean_up():
@@ -296,8 +322,8 @@ class BaseExperiment(ScoringMixIn):
     def _generate_experiment_id(self):
         """Set :attr:`experiment_id` to a UUID"""
         self.experiment_id = str(uuid())
-        G.log('')
-        G.log('Initialized new Experiment with ID: {}'.format(self.experiment_id))
+        G.log("")
+        G.log("Initialized new Experiment with ID: {}".format(self.experiment_id))
 
     def _generate_hyperparameter_key(self):
         """Set :attr:`hyperparameter_key` to a key to describe the experiment's hyperparameters"""
@@ -312,31 +338,41 @@ class BaseExperiment(ScoringMixIn):
         )
 
         self.hyperparameter_key = HyperparameterKeyMaker(parameters, self.cross_experiment_key)
-        G.log('Generated hyperparameter key: {}'.format(self.hyperparameter_key))
+        G.log("Generated hyperparameter key: {}".format(self.hyperparameter_key))
 
     def _create_script_backup(self):
         """Create and save a copy of the script that initialized the Experiment"""
         #################### Attempt to Copy Source Script if Allowed ####################
         try:
-            if G.Env.result_paths['script_backup'] is not None:
+            if G.Env.result_paths["script_backup"] is not None:
                 try:
-                    shutil.copyfile(self.source_script, F'{self.result_paths["script_backup"]}/{self.experiment_id}.py')
+                    shutil.copyfile(
+                        self.source_script,
+                        f'{self.result_paths["script_backup"]}/{self.experiment_id}.py',
+                    )
                 except FileNotFoundError:
                     os.makedirs(self.result_paths["script_backup"], exist_ok=False)
-                    shutil.copyfile(self.source_script, F'{self.result_paths["script_backup"]}/{self.experiment_id}.py')
+                    shutil.copyfile(
+                        self.source_script,
+                        f'{self.result_paths["script_backup"]}/{self.experiment_id}.py',
+                    )
                 G.log('Created backup of file: "{}"'.format(self.source_script))
             else:
                 G.log('Skipped creating backup of file: "{}"'.format(self.source_script))
         #################### Exception Handling ####################
         except AttributeError as _ex:
             if G.Env is None:
-                raise EnvironmentInactiveError(extra='\n{!s}'.format(_ex))
-            if not hasattr(G.Env, 'result_paths'):
-                raise EnvironmentInvalidError(extra='G.Env lacks "result_paths" attribute\n{!s}'.format(_ex))
+                raise EnvironmentInactiveError(extra="\n{!s}".format(_ex))
+            if not hasattr(G.Env, "result_paths"):
+                raise EnvironmentInvalidError(
+                    extra='G.Env lacks "result_paths" attribute\n{!s}'.format(_ex)
+                )
             raise
         except KeyError as _ex:
-            if 'script_backup' not in G.Env.result_paths:
-                raise EnvironmentInvalidError(extra='G.Env.result_paths lacks "script_backup" key\n{!s}'.format(_ex))
+            if "script_backup" not in G.Env.result_paths:
+                raise EnvironmentInvalidError(
+                    extra='G.Env.result_paths lacks "script_backup" key\n{!s}'.format(_ex)
+                )
             raise
 
     ##################################################
@@ -344,32 +380,35 @@ class BaseExperiment(ScoringMixIn):
     ##################################################
     def _initialize_random_seeds(self):
         """Initialize global random seed, and generate set of random seeds for each fold/run if not provided"""
-        np.random.seed(self.experiment_params['global_random_seed'])
-        random.seed(self.experiment_params['global_random_seed'])
+        np.random.seed(self.experiment_params["global_random_seed"])
+        random.seed(self.experiment_params["global_random_seed"])
         self._random_seed_initializer()
-        G.debug('Initialized random seeds for experiment')
+        G.debug("Initialized random seeds for experiment")
 
     def _random_seed_initializer(self):
         """Generate set of random seeds for each repetition/fold/run if not provided"""
-        if self.experiment_params['random_seeds'] is None:
-            self.experiment_params['random_seeds'] = np.random.randint(*self.experiment_params['random_seed_bounds'], size=(
-                self.cross_validation_params.get('n_repeats', 1),
-                self.cross_validation_params['n_splits'],
-                self.experiment_params['runs']
-            )).tolist()
-        G.debug('BaseExperiment._random_seed_initializer() done')
+        if self.experiment_params["random_seeds"] is None:
+            self.experiment_params["random_seeds"] = np.random.randint(
+                *self.experiment_params["random_seed_bounds"],
+                size=(
+                    self.cross_validation_params.get("n_repeats", 1),
+                    self.cross_validation_params["n_splits"],
+                    self.experiment_params["runs"],
+                ),
+            ).tolist()
+        G.debug("BaseExperiment._random_seed_initializer() done")
 
     def _update_model_params(self):
         """Update random state of :attr:`model_init_params` according to :attr:`current_seed`"""
         # TODO: Add this to some workflow in Experiment class. For now it is never used, unless the subclass decides to...
         # `model_init_params` initialized to all algorithm hyperparameters - Works even if 'random_state' not explicitly given
         try:
-            if 'random_state' in self.model_init_params:
-                self.model_init_params['random_state'] = self.current_seed
-            elif 'seed' in self.model_init_params:
-                self.model_init_params['seed'] = self.current_seed
+            if "random_state" in self.model_init_params:
+                self.model_init_params["random_state"] = self.current_seed
+            elif "seed" in self.model_init_params:
+                self.model_init_params["seed"] = self.current_seed
             else:
-                G.log('Model has no random_state/seed parameter to update')
+                G.log("Model has no random_state/seed parameter to update")
                 # FLAG: HIGH PRIORITY BELOW
                 # TODO: BELOW IS NOT THE CASE IF MODEL IS NN - SETTING THE GLOBAL RANDOM SEED DOES SOMETHING
                 # TODO: If this is logged, there is no reason to execute multiple-run-averaging, so don't
@@ -377,14 +416,22 @@ class BaseExperiment(ScoringMixIn):
                 # TODO: ... 2) Set the results of all subsequent runs to the results of the first run (this could be difficult)
                 # FLAG: HIGH PRIORITY ABOVE
         except Exception as _ex:
-            G.log('Failed to update model\'s random_state     {}'.format(_ex.__repr__()))
+            G.log("Failed to update model's random_state     {}".format(_ex.__repr__()))
 
 
 class BaseCVExperiment(BaseExperiment):
     def __init__(
-            self, model_initializer, model_init_params, model_extra_params=None, feature_selector=None,
-            preprocessing_pipeline=None, preprocessing_params=None, notes=None, do_raise_repeated=False, auto_start=True,
-            target_metric=None,
+        self,
+        model_initializer,
+        model_init_params,
+        model_extra_params=None,
+        feature_selector=None,
+        preprocessing_pipeline=None,
+        preprocessing_params=None,
+        notes=None,
+        do_raise_repeated=False,
+        auto_start=True,
+        target_metric=None,
     ):
         self._rep = 0
         self._fold = 0
@@ -420,9 +467,17 @@ class BaseCVExperiment(BaseExperiment):
         self.final_holdout_predictions = 0
 
         BaseExperiment.__init__(
-            self, model_initializer, model_init_params, model_extra_params=model_extra_params, feature_selector=feature_selector,
-            preprocessing_pipeline=preprocessing_pipeline, preprocessing_params=preprocessing_params, notes=notes,
-            do_raise_repeated=do_raise_repeated, auto_start=auto_start, target_metric=target_metric,
+            self,
+            model_initializer,
+            model_init_params,
+            model_extra_params=model_extra_params,
+            feature_selector=feature_selector,
+            preprocessing_pipeline=preprocessing_pipeline,
+            preprocessing_params=preprocessing_params,
+            notes=notes,
+            do_raise_repeated=do_raise_repeated,
+            auto_start=auto_start,
+            target_metric=target_metric,
         )
 
     def _additional_preparation_steps(self):
@@ -443,19 +498,25 @@ class BaseCVExperiment(BaseExperiment):
         self.on_experiment_start()
 
         cv_indices = self.folds.split(self.train_input_data, self.train_target_data.iloc[:, 0])
-        new_shape = (self.cross_validation_params.get('n_repeats', 1), self.cross_validation_params['n_splits'], 2)
+        new_shape = (
+            self.cross_validation_params.get("n_repeats", 1),
+            self.cross_validation_params["n_splits"],
+            2,
+        )
         reshaped_indices = np.reshape(np.array(list(cv_indices)), new_shape)
 
         for self._rep, repetition_indices in enumerate(reshaped_indices.tolist()):
             self.on_repetition_start()
 
-            for self._fold, (self.train_index, self.validation_index) in enumerate(repetition_indices):
+            for self._fold, (self.train_index, self.validation_index) in enumerate(
+                repetition_indices
+            ):
                 self.cv_fold_workflow()
 
             self.on_repetition_end()
         self.on_experiment_end()
 
-        G.log('')
+        G.log("")
 
     ##################################################
     # Fold Workflow Methods:
@@ -478,7 +539,7 @@ class BaseCVExperiment(BaseExperiment):
         self.on_fold_start()
         # TODO: Call self.intra_cv_preprocessing() - Ensure the 4 fold input/target attributes (from on_fold_start) are changed
 
-        for self._run in range(self.experiment_params.get('runs', 1)):
+        for self._run in range(self.experiment_params.get("runs", 1)):
             self.cv_run_workflow()
         self.on_fold_end()
 
@@ -488,7 +549,7 @@ class BaseCVExperiment(BaseExperiment):
     def on_run_start(self):
         """Override :meth:`on_run_start` tasks organized by :class:`experiment_core.ExperimentMeta`, consisting of: 1) Set random
         seed and update model parameters according to current seed, 2) Log run start, 3) Execute original tasks"""
-        self.current_seed = self.experiment_params['random_seeds'][self._rep][self._fold][self._run]
+        self.current_seed = self.experiment_params["random_seeds"][self._rep][self._fold][self._run]
         np.random.seed(self.current_seed)
         self._update_model_params()
         super().on_run_start()
@@ -498,10 +559,16 @@ class BaseCVExperiment(BaseExperiment):
         tasks, 2) Initialize and fit Model, 3) Execute overridden :meth:`on_run_end` tasks"""
         self.on_run_start()
         self.model = model_selector(self.model_initializer)(
-            self.model_initializer, self.model_init_params, self.model_extra_params,
-            train_input=self.fold_train_input, train_target=self.fold_train_target,
-            validation_input=self.fold_validation_input, validation_target=self.fold_validation_target,
-            do_predict_proba=self.do_predict_proba, target_metric=self.target_metric, metrics_map=self.metrics_map,
+            self.model_initializer,
+            self.model_init_params,
+            self.model_extra_params,
+            train_input=self.fold_train_input,
+            train_target=self.fold_train_target,
+            validation_input=self.fold_validation_input,
+            validation_target=self.fold_validation_target,
+            do_predict_proba=self.do_predict_proba,
+            target_metric=self.target_metric,
+            metrics_map=self.metrics_map,
         )
         self.model.fit()
         self.on_run_end()
@@ -512,28 +579,48 @@ class BaseCVExperiment(BaseExperiment):
 ##################################################
 class CrossValidationExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
-            self, model_initializer, model_init_params, model_extra_params=None, feature_selector=None,
-            preprocessing_pipeline=None, preprocessing_params=None, notes=None, do_raise_repeated=False, auto_start=True,
-            target_metric=None,
+        self,
+        model_initializer,
+        model_init_params,
+        model_extra_params=None,
+        feature_selector=None,
+        preprocessing_pipeline=None,
+        preprocessing_params=None,
+        notes=None,
+        do_raise_repeated=False,
+        auto_start=True,
+        target_metric=None,
     ):
         BaseCVExperiment.__init__(
-            self, model_initializer, model_init_params, model_extra_params=model_extra_params, feature_selector=feature_selector,
-            preprocessing_pipeline=preprocessing_pipeline, preprocessing_params=preprocessing_params, notes=notes,
-            do_raise_repeated=do_raise_repeated, auto_start=auto_start, target_metric=target_metric,
+            self,
+            model_initializer,
+            model_init_params,
+            model_extra_params=model_extra_params,
+            feature_selector=feature_selector,
+            preprocessing_pipeline=preprocessing_pipeline,
+            preprocessing_params=preprocessing_params,
+            notes=notes,
+            do_raise_repeated=do_raise_repeated,
+            auto_start=auto_start,
+            target_metric=target_metric,
         )
 
     def _initialize_folds(self):
         """Initialize :attr:`folds` according to cross_validation_type and :attr:`cross_validation_params`"""
-        cross_validation_type = self.experiment_params['cross_validation_type']  # Allow failure
+        cross_validation_type = self.experiment_params["cross_validation_type"]  # Allow failure
         if not isclass(cross_validation_type):
-            raise TypeError(F'Expected a class to perform cross-validation. Received: {type(cross_validation_type)}')
+            raise TypeError(
+                f"Expected a class to perform cross-validation. Received: {type(cross_validation_type)}"
+            )
 
         try:
-            _split_method = getattr(cross_validation_type, 'split')
+            _split_method = getattr(cross_validation_type, "split")
             if not callable(_split_method):
-                raise TypeError('`cross_validation_type` must implement a callable :meth:`split`')
+                raise TypeError("`cross_validation_type` must implement a callable :meth:`split`")
         except AttributeError:
-            raise AttributeError('`cross_validation_type` must be a class that implements :meth:`split`')
+            raise AttributeError(
+                "`cross_validation_type` must be a class that implements :meth:`split`"
+            )
 
         self.folds = cross_validation_type(**self.cross_validation_params)
 
@@ -543,20 +630,38 @@ class CrossValidationExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
 ##################################################
 class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
-            self, model_initializer, model_init_params, model_extra_params=None, feature_selector=None,
-            preprocessing_pipeline=None, preprocessing_params=None, notes=None, do_raise_repeated=False, auto_start=True,
-            target_metric=None,
+        self,
+        model_initializer,
+        model_init_params,
+        model_extra_params=None,
+        feature_selector=None,
+        preprocessing_pipeline=None,
+        preprocessing_params=None,
+        notes=None,
+        do_raise_repeated=False,
+        auto_start=True,
+        target_metric=None,
     ):
         BaseCVExperiment.__init__(
-            self, model_initializer, model_init_params, model_extra_params=model_extra_params, feature_selector=feature_selector,
-            preprocessing_pipeline=preprocessing_pipeline, preprocessing_params=preprocessing_params, notes=notes,
-            do_raise_repeated=do_raise_repeated, auto_start=auto_start, target_metric=target_metric,
+            self,
+            model_initializer,
+            model_init_params,
+            model_extra_params=model_extra_params,
+            feature_selector=feature_selector,
+            preprocessing_pipeline=preprocessing_pipeline,
+            preprocessing_params=preprocessing_params,
+            notes=notes,
+            do_raise_repeated=do_raise_repeated,
+            auto_start=auto_start,
+            target_metric=target_metric,
         )
 
     def _initialize_folds(self):
         """Initialize :attr:`folds` according to cross_validation_type and :attr:`cross_validation_params`"""
-        cross_validation_type = self.experiment_params.get('cross_validation_type', 'repeatedkfold').lower()
-        if cross_validation_type in ('stratifiedkfold', 'repeatedstratifiedkfold'):
+        cross_validation_type = self.experiment_params.get(
+            "cross_validation_type", "repeatedkfold"
+        ).lower()
+        if cross_validation_type in ("stratifiedkfold", "repeatedstratifiedkfold"):
             self.folds = RepeatedStratifiedKFold(**self.cross_validation_params)
         else:
             self.folds = RepeatedKFold(**self.cross_validation_params)
@@ -564,20 +669,36 @@ class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
 
 class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
-            self, model_initializer, model_init_params, model_extra_params=None, feature_selector=None,
-            preprocessing_pipeline=None, preprocessing_params=None, notes=None, do_raise_repeated=False, auto_start=True,
-            target_metric=None,
+        self,
+        model_initializer,
+        model_init_params,
+        model_extra_params=None,
+        feature_selector=None,
+        preprocessing_pipeline=None,
+        preprocessing_params=None,
+        notes=None,
+        do_raise_repeated=False,
+        auto_start=True,
+        target_metric=None,
     ):
         BaseCVExperiment.__init__(
-            self, model_initializer, model_init_params, model_extra_params=model_extra_params, feature_selector=feature_selector,
-            preprocessing_pipeline=preprocessing_pipeline, preprocessing_params=preprocessing_params, notes=notes,
-            do_raise_repeated=do_raise_repeated, auto_start=auto_start, target_metric=target_metric,
+            self,
+            model_initializer,
+            model_init_params,
+            model_extra_params=model_extra_params,
+            feature_selector=feature_selector,
+            preprocessing_pipeline=preprocessing_pipeline,
+            preprocessing_params=preprocessing_params,
+            notes=notes,
+            do_raise_repeated=do_raise_repeated,
+            auto_start=auto_start,
+            target_metric=target_metric,
         )
 
     def _initialize_folds(self):
         """Initialize :attr:`folds` according to cross_validation_type and :attr:`cross_validation_params`"""
-        cross_validation_type = self.experiment_params.get('cross_validation_type', 'kfold').lower()
-        if cross_validation_type == 'stratifiedkfold':
+        cross_validation_type = self.experiment_params.get("cross_validation_type", "kfold").lower()
+        if cross_validation_type == "stratifiedkfold":
             self.folds = StratifiedKFold(**self.cross_validation_params)
         else:
             self.folds = KFold(**self.cross_validation_params)
@@ -587,5 +708,5 @@ class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
 #     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

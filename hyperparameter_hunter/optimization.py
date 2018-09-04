@@ -9,8 +9,10 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.optimization_core import InformedOptimizationProtocol, UninformedOptimizationProtocol
+from hyperparameter_hunter.optimization_core import (
+    InformedOptimizationProtocol,
+    UninformedOptimizationProtocol,
+)
 from hyperparameter_hunter.space import normalize_dimensions
 
 ##################################################
@@ -34,25 +36,49 @@ class BayesianOptimization(InformedOptimizationProtocol):
     """Bayesian optimization with Gaussian Processes"""
 
     def __init__(
-            self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            base_estimator='GP', n_initial_points=10,
-            acquisition_function='gp_hedge', acquisition_optimizer='auto', random_state=32,
-            acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
-            n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+        base_estimator="GP",
+        n_initial_points=10,
+        acquisition_function="gp_hedge",
+        acquisition_optimizer="auto",
+        random_state=32,
+        acquisition_function_kwargs=None,
+        acquisition_optimizer_kwargs=None,
+        n_random_starts=10,
+        callbacks=None,
+        base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != 'GP' and not isinstance(base_estimator, GaussianProcessRegressor):
-            raise TypeError(F'Expected `base_estimator`="GP", or `GaussianProcessRegressor`, not {base_estimator}')
+        if base_estimator.upper() != "GP" and not isinstance(
+            base_estimator, GaussianProcessRegressor
+        ):
+            raise TypeError(
+                f'Expected `base_estimator`="GP", or `GaussianProcessRegressor`, not {base_estimator}'
+            )
 
         base_estimator_kwargs = base_estimator_kwargs or {}
-        base_estimator_kwargs.setdefault('noise', 'gaussian')
+        base_estimator_kwargs.setdefault("noise", "gaussian")
 
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            base_estimator=base_estimator, n_initial_points=n_initial_points,
-            acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
-            acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
-            n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
+            base_estimator=base_estimator,
+            n_initial_points=n_initial_points,
+            acquisition_function=acquisition_function,
+            acquisition_optimizer=acquisition_optimizer,
+            random_state=random_state,
+            acquisition_function_kwargs=acquisition_function_kwargs,
+            acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
+            n_random_starts=n_random_starts,
+            callbacks=callbacks,
+            base_estimator_kwargs=base_estimator_kwargs,
         )
 
     def go(self):
@@ -64,24 +90,48 @@ class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
     """Sequential optimization with gradient boosted regression trees"""
 
     def __init__(
-            self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            base_estimator='GBRT', n_initial_points=10,
-            acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
-            acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
-            n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+        base_estimator="GBRT",
+        n_initial_points=10,
+        acquisition_function="EI",
+        acquisition_optimizer="sampling",
+        random_state=32,
+        acquisition_function_kwargs=None,
+        acquisition_optimizer_kwargs=None,
+        n_random_starts=10,
+        callbacks=None,
+        base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != 'GBRT' and not isinstance(base_estimator, GradientBoostingQuantileRegressor):
-            raise TypeError(F'Expected `base_estimator`="GBRT", or `GradientBoostingQuantileRegressor`, not {base_estimator}')
+        if base_estimator.upper() != "GBRT" and not isinstance(
+            base_estimator, GradientBoostingQuantileRegressor
+        ):
+            raise TypeError(
+                f'Expected `base_estimator`="GBRT", or `GradientBoostingQuantileRegressor`, not {base_estimator}'
+            )
 
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            base_estimator=base_estimator, n_initial_points=n_initial_points,
-            acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
-            acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
-            n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
+            base_estimator=base_estimator,
+            n_initial_points=n_initial_points,
+            acquisition_function=acquisition_function,
+            acquisition_optimizer=acquisition_optimizer,
+            random_state=random_state,
+            acquisition_function_kwargs=acquisition_function_kwargs,
+            acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
+            n_random_starts=n_random_starts,
+            callbacks=callbacks,
+            base_estimator_kwargs=base_estimator_kwargs,
         )
 
 
@@ -89,24 +139,46 @@ class RandomForestOptimization(InformedOptimizationProtocol):
     """Sequential optimization with random forest regressor decision trees"""
 
     def __init__(
-            self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            base_estimator='RF', n_initial_points=10,
-            acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
-            acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
-            n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+        base_estimator="RF",
+        n_initial_points=10,
+        acquisition_function="EI",
+        acquisition_optimizer="sampling",
+        random_state=32,
+        acquisition_function_kwargs=None,
+        acquisition_optimizer_kwargs=None,
+        n_random_starts=10,
+        callbacks=None,
+        base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != 'RF' and not isinstance(base_estimator, RandomForestRegressor):
-            raise TypeError(F'Expected `base_estimator`="RF", or `RandomForestRegressor`, not {base_estimator}')
+        if base_estimator.upper() != "RF" and not isinstance(base_estimator, RandomForestRegressor):
+            raise TypeError(
+                f'Expected `base_estimator`="RF", or `RandomForestRegressor`, not {base_estimator}'
+            )
 
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            base_estimator=base_estimator, n_initial_points=n_initial_points,
-            acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
-            acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
-            n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
+            base_estimator=base_estimator,
+            n_initial_points=n_initial_points,
+            acquisition_function=acquisition_function,
+            acquisition_optimizer=acquisition_optimizer,
+            random_state=random_state,
+            acquisition_function_kwargs=acquisition_function_kwargs,
+            acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
+            n_random_starts=n_random_starts,
+            callbacks=callbacks,
+            base_estimator_kwargs=base_estimator_kwargs,
         )
 
 
@@ -114,24 +186,46 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
     """Sequential optimization with extra trees regressor decision trees"""
 
     def __init__(
-            self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            base_estimator='ET', n_initial_points=10,
-            acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
-            acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
-            n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+        base_estimator="ET",
+        n_initial_points=10,
+        acquisition_function="EI",
+        acquisition_optimizer="sampling",
+        random_state=32,
+        acquisition_function_kwargs=None,
+        acquisition_optimizer_kwargs=None,
+        n_random_starts=10,
+        callbacks=None,
+        base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != 'ET' and not isinstance(base_estimator, ExtraTreesRegressor):
-            raise TypeError(F'Expected `base_estimator`="ET", or `ExtraTreesRegressor`, not {base_estimator}')
+        if base_estimator.upper() != "ET" and not isinstance(base_estimator, ExtraTreesRegressor):
+            raise TypeError(
+                f'Expected `base_estimator`="ET", or `ExtraTreesRegressor`, not {base_estimator}'
+            )
 
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            base_estimator=base_estimator, n_initial_points=n_initial_points,
-            acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
-            acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
-            n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
+            base_estimator=base_estimator,
+            n_initial_points=n_initial_points,
+            acquisition_function=acquisition_function,
+            acquisition_optimizer=acquisition_optimizer,
+            random_state=random_state,
+            acquisition_function_kwargs=acquisition_function_kwargs,
+            acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
+            n_random_starts=n_random_starts,
+            callbacks=callbacks,
+            base_estimator_kwargs=base_estimator_kwargs,
         )
 
 
@@ -140,24 +234,44 @@ class DummySearch(InformedOptimizationProtocol):
     its reliance on `Scikit-Optimize`"""
 
     def __init__(
-            self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None,
-            base_estimator='DUMMY', n_initial_points=10,
-            acquisition_function='EI', acquisition_optimizer='sampling', random_state=32,
-            acquisition_function_kwargs=None, acquisition_optimizer_kwargs=None,
-            n_random_starts=10, callbacks=None, base_estimator_kwargs=None,
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+        base_estimator="DUMMY",
+        n_initial_points=10,
+        acquisition_function="EI",
+        acquisition_optimizer="sampling",
+        random_state=32,
+        acquisition_function_kwargs=None,
+        acquisition_optimizer_kwargs=None,
+        n_random_starts=10,
+        callbacks=None,
+        base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != 'DUMMY':
-            raise TypeError(F'Expected `base_estimator`="DUMMY", not {base_estimator}')
+        if base_estimator.upper() != "DUMMY":
+            raise TypeError(f'Expected `base_estimator`="DUMMY", not {base_estimator}')
 
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
-            base_estimator=base_estimator, n_initial_points=n_initial_points,
-            acquisition_function=acquisition_function, acquisition_optimizer=acquisition_optimizer, random_state=random_state,
-            acquisition_function_kwargs=acquisition_function_kwargs, acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
-            n_random_starts=n_random_starts, callbacks=callbacks, base_estimator_kwargs=base_estimator_kwargs,
+            base_estimator=base_estimator,
+            n_initial_points=n_initial_points,
+            acquisition_function=acquisition_function,
+            acquisition_optimizer=acquisition_optimizer,
+            random_state=random_state,
+            acquisition_function_kwargs=acquisition_function_kwargs,
+            acquisition_optimizer_kwargs=acquisition_optimizer_kwargs,
+            n_random_starts=n_random_starts,
+            callbacks=callbacks,
+            base_estimator_kwargs=base_estimator_kwargs,
         )
 
 
@@ -180,9 +294,19 @@ class ParticleSwarmOptimization(InformedOptimizationProtocol):
 # Uninformed Optimization Protocols
 ##################################################
 class GridSearch(UninformedOptimizationProtocol):
-    def __init__(self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None):
+    def __init__(
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+    ):
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
         )
 
@@ -197,25 +321,37 @@ class GridSearch(UninformedOptimizationProtocol):
 
 
 class RandomizedGridSearch(UninformedOptimizationProtocol):
-    def __init__(self, target_metric=None, iterations=1, verbose=1, read_experiments=True, reporter_parameters=None):
+    def __init__(
+        self,
+        target_metric=None,
+        iterations=1,
+        verbose=1,
+        read_experiments=True,
+        reporter_parameters=None,
+    ):
         super().__init__(
-            target_metric=target_metric, iterations=iterations, verbose=verbose, read_experiments=read_experiments,
+            target_metric=target_metric,
+            iterations=iterations,
+            verbose=verbose,
+            read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
         )
 
     def _set_hyperparameter_space(self):
         # FLAG: Might be more efficient to use ParameterGrid with __getitem__ because ParameterSampler repeats keys
-        self.hyperparameter_space = ParameterSampler(self.search_bounds, n_iter=self.iterations).__iter__()
+        self.hyperparameter_space = ParameterSampler(
+            self.search_bounds, n_iter=self.iterations
+        ).__iter__()
 
     @property
     def search_space_size(self):
         if self._search_space_size is None:
-            if np.any([hasattr(_, 'rvs') for _ in self.search_bounds.values()]):
+            if np.any([hasattr(_, "rvs") for _ in self.search_bounds.values()]):
                 self._search_space_size = np.inf
             else:
                 self._search_space_size = len(ParameterGrid(self.search_bounds))
         return self._search_space_size
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

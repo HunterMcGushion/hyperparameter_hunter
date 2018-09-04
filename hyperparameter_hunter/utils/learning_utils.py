@@ -9,13 +9,14 @@ import pandas as pd
 # Import Learning Assets
 ###############################################
 from sklearn.datasets import load_breast_cancer, make_classification
-from sklearn.preprocessing import OneHotEncoder, LabelBinarizer
+
+# from sklearn.preprocessing import OneHotEncoder, LabelBinarizer
 
 
 ##################################################
 # Dataset Utilities
 ##################################################
-def get_breast_cancer_data(target='diagnosis'):
+def get_breast_cancer_data(target="diagnosis"):
     """Get the Wisconsin Breast Cancer classification dataset, formatted as a DataFrame
 
     Parameters
@@ -28,14 +29,22 @@ def get_breast_cancer_data(target='diagnosis'):
     df: `pandas.DataFrame`
         The breast cancer dataset, with friendly column names"""
     data = load_breast_cancer()
-    df = pd.DataFrame(data=data.data, columns=[_.replace(' ', '_') for _ in data.feature_names])
+    df = pd.DataFrame(data=data.data, columns=[_.replace(" ", "_") for _ in data.feature_names])
     df[target] = data.target
     return df
 
 
-def get_toy_classification_data(target='target', n_samples=300, n_classes=2, shuffle=True, random_state=32, **kwargs):
+def get_toy_classification_data(
+    target="target", n_samples=300, n_classes=2, shuffle=True, random_state=32, **kwargs
+):
     """Wrapper around `sklearn.datasets.make_classification` to produce a `pandas.DataFrame` result"""
-    x, y = make_classification(n_samples=n_samples, n_classes=n_classes, shuffle=shuffle, random_state=random_state, **kwargs)
+    x, y = make_classification(
+        n_samples=n_samples,
+        n_classes=n_classes,
+        shuffle=shuffle,
+        random_state=random_state,
+        **kwargs
+    )
     train_df = pd.DataFrame(data=x, columns=range(x.shape[1]))
     train_df[target] = y
     return train_df

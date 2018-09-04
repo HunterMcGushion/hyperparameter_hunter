@@ -6,15 +6,9 @@ Related
 :mod:`hyperparameter_hunter.recorders`
     This module initiates the saving of Experiment entries to Leaderboards"""
 ##################################################
-# Import Own Assets
-##################################################
-from hyperparameter_hunter.settings import G
-
-##################################################
 # Import Miscellaneous Assets
 ##################################################
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
 import pandas as pd
 
 
@@ -95,25 +89,32 @@ class GlobalLeaderboard(Leaderboard):
         entry_columns, entry_data = [], []
         # TODO: Resolve cases where `data` contains an aliased column for a metric, but the current experiment uses the
         # TODO: ... standard metric name. EX) 'oof_roc' vs 'oof_roc_auc_score' - They should be considered the same - Use alias
-        evaluation_columns, evaluation_values = list(zip(*evaluations_to_columns(final_evaluations)))
+        evaluation_columns, evaluation_values = list(
+            zip(*evaluations_to_columns(final_evaluations))
+        )
         entry_columns.extend(evaluation_columns)
         entry_data.extend(evaluation_values)
 
-        identifier_cols = ['experiment_id', 'hyperparameter_key', 'cross_experiment_key', 'algorithm_name']
+        identifier_cols = [
+            "experiment_id",
+            "hyperparameter_key",
+            "cross_experiment_key",
+            "algorithm_name",
+        ]
         entry_columns.extend(identifier_cols)
         for id_col in identifier_cols:
             val = getattr(experiment, id_col)
-            if id_col in ['hyperparameter_key', 'cross_experiment_key']:
+            if id_col in ["hyperparameter_key", "cross_experiment_key"]:
                 val = val.key
             entry_data.append(val)
 
-        entry_columns.append('experiment_#')
+        entry_columns.append("experiment_#")
         entry_data.append(self.data.shape[0])
         entry = pd.DataFrame(data=[entry_data], columns=entry_columns)
 
-        self.data = self.data.append(
-            entry, ignore_index=True
-        )[combine_column_order(self.data, entry, both_cols=identifier_cols)]
+        self.data = self.data.append(entry, ignore_index=True)[
+            combine_column_order(self.data, entry, both_cols=identifier_cols)
+        ]
 
 
 # class AlgorithmLeaderboard(Leaderboard):
@@ -139,6 +140,7 @@ def evaluations_to_columns(evaluation):
 
     Examples
     --------
+    >>> from collections import OrderedDict
     >>> evaluations_to_columns({
     ...     'in_fold': None,
     ...     'holdout': OrderedDict([('roc_auc_score', 0.9856), ('f1_score', 0.9768)]),
@@ -146,15 +148,13 @@ def evaluations_to_columns(evaluation):
     ... })
     [['oof_roc_auc_score', 0.9634], ['holdout_roc_auc_score', 0.9856], ['holdout_f1_score', 0.9768]]
     """
-    data_types = ['oof', 'holdout', 'in_fold']
+    data_types = ["oof", "holdout", "in_fold"]
     column_metrics = []
 
     for data_type in data_types:
         if evaluation[data_type] is not None:
             for metric_key, metric_value in evaluation[data_type].items():
-                column_metrics.append([
-                    F'{data_type}_{metric_key}', metric_value
-                ])
+                column_metrics.append([f"{data_type}_{metric_key}", metric_value])
 
     return column_metrics
 
@@ -197,5 +197,5 @@ def combine_column_order(df_1, df_2, both_cols=None):
     return combined_cols
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

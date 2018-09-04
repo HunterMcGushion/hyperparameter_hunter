@@ -8,9 +8,11 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exception_handler import EnvironmentInactiveError, EnvironmentInvalidError
+from hyperparameter_hunter.exception_handler import (
+    EnvironmentInactiveError,
+    EnvironmentInvalidError,
+)
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
-from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, add_to_json
 
@@ -54,10 +56,12 @@ class BaseRecorder(metaclass=ABCMeta):
         except AttributeError as _ex:
             if G.Env is None:
                 raise EnvironmentInactiveError(str(_ex)).with_traceback(exc_info()[2])
-            if not hasattr(G.Env, 'result_paths'):
-                raise EnvironmentInvalidError(F'{_ex!s}\nG.Env missing "result_paths" attr').with_traceback(exc_info()[2])
+            if not hasattr(G.Env, "result_paths"):
+                raise EnvironmentInvalidError(
+                    f'{_ex!s}\nG.Env missing "result_paths" attr'
+                ).with_traceback(exc_info()[2])
         except KeyError as _ex:
-            _err_message = F'{_ex!s}\nG.Env.result_paths missing the key: "{self.result_path_key}"'
+            _err_message = f'{_ex!s}\nG.Env.result_paths missing the key: "{self.result_path_key}"'
             raise EnvironmentInvalidError(_err_message).with_traceback(exc_info()[2])
 
         if self.result_path is None:
@@ -72,7 +76,9 @@ class BaseRecorder(metaclass=ABCMeta):
                 setattr(self, required_attribute, getattr(G.Env.current_task, required_attribute))
             except AttributeError as _ex:
                 if G.Env.current_task is None:
-                    raise EnvironmentInvalidError(F'{_ex!s}\nNo active experiment found').with_traceback(exc_info()[2])
+                    raise EnvironmentInvalidError(
+                        f"{_ex!s}\nNo active experiment found"
+                    ).with_traceback(exc_info()[2])
                 raise EnvironmentInvalidError(str(_ex)).with_traceback(exc_info()[2])
 
     @property
@@ -120,7 +126,7 @@ class RecorderList(object):
         ]
 
         if file_blacklist is not None:
-            if file_blacklist == 'ALL':
+            if file_blacklist == "ALL":
                 self.recorders = []
             self.recorders = [_ for _ in self.recorders if _.result_path_key not in file_blacklist]
 
@@ -146,10 +152,10 @@ class RecorderList(object):
         of the experiment - are saved (to ensure the experiment is not duplicated, and to provide some utility to Hyperparameter
         Optimization algorithms), while extra results like Predictions are not saved."""
         for recorder in self.recorders:
-            G.log(F'Saving result file for "{type(recorder).__name__}"')
+            G.log(f'Saving result file for "{type(recorder).__name__}"')
             exit_code = recorder.save_result()
 
-            if exit_code and exit_code == 'break':
+            if exit_code and exit_code == "break":
                 break
 
 
@@ -157,50 +163,51 @@ class RecorderList(object):
 # Description
 ##################################################
 class DescriptionRecorder(BaseRecorder):
-    result_path_key = 'description'
+    result_path_key = "description"
     required_attributes = [
-        'experiment_id',
-        'hyperparameter_key',
-        'cross_experiment_key',
-        'last_evaluation_results',
-        'stat_aggregates',
+        "experiment_id",
+        "hyperparameter_key",
+        "cross_experiment_key",
+        "last_evaluation_results",
+        "stat_aggregates",
         # 'train_features',
-        'source_script',
-        'notes',
-        'model_initializer',
-        'do_full_save',
-
-        'model',
-        'algorithm_name',
-        'module_name',
+        "source_script",
+        "notes",
+        "model_initializer",
+        "do_full_save",
+        "model",
+        "algorithm_name",
+        "module_name",
     ]
 
     def format_result(self):
         """Format an OrderedDict containing the Experiment's identifying attributes, results, hyperparameters used, and other
         stats or information that may be useful"""
-        self.result = OrderedDict([
-            ('experiment_id', self.experiment_id),
-            ('algorithm_name', self.algorithm_name),
-            ('module_name', self.module_name),
-            ('hyperparameter_key', self.hyperparameter_key.key),
-            ('cross_experiment_key', self.cross_experiment_key.key),
-            ('final_evaluations', self.last_evaluation_results),
-
-            ('hyperparameters', self.hyperparameter_key.parameters),
-            ('cross_experiment_parameters', self.cross_experiment_key.parameters),
-
-            ('train_features', None),  # TODO: Record the column features in train df
-            ('platform', node()),
-            ('source_script', self.source_script),
-            ('notes', self.notes or ''),
-            ('aggregates', self.stat_aggregates),
-        ])
+        self.result = OrderedDict(
+            [
+                ("experiment_id", self.experiment_id),
+                ("algorithm_name", self.algorithm_name),
+                ("module_name", self.module_name),
+                ("hyperparameter_key", self.hyperparameter_key.key),
+                ("cross_experiment_key", self.cross_experiment_key.key),
+                ("final_evaluations", self.last_evaluation_results),
+                ("hyperparameters", self.hyperparameter_key.parameters),
+                ("cross_experiment_parameters", self.cross_experiment_key.parameters),
+                ("train_features", None),  # TODO: Record the column features in train df
+                ("platform", node()),
+                ("source_script", self.source_script),
+                ("notes", self.notes or ""),
+                ("aggregates", self.stat_aggregates),
+            ]
+        )
 
         #################### Filter hyperparameters' model_init_params ####################
-        bad_keys = {'random_state', 'seed'}
+        bad_keys = {"random_state", "seed"}
 
-        self.result['hyperparameters']['model_init_params'] = {
-            _k: _v for _k, _v in self.result['hyperparameters']['model_init_params'].items() if _k not in bad_keys
+        self.result["hyperparameters"]["model_init_params"] = {
+            _k: _v
+            for _k, _v in self.result["hyperparameters"]["model_init_params"].items()
+            if _k not in bad_keys
         }
 
     def save_result(self):
@@ -214,22 +221,24 @@ class DescriptionRecorder(BaseRecorder):
             This string will be returned if :attr:`do_full_save` is a callable and returns False when given the description
             object. This is the signal for :class:`recorders.RecorderList` to stop recording result files"""
         try:
-            write_json(F'{self.result_path}/{self.experiment_id}.json', self.result, do_clear=False)
+            write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
         except FileNotFoundError:
             os.makedirs(self.result_path, exist_ok=False)
-            write_json(F'{self.result_path}/{self.experiment_id}.json', self.result, do_clear=False)
+            write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
 
         if (self.do_full_save is not None) and (not self.do_full_save(self.result)):
-            G.warn('Breaking out of result-saving loop early! Remaining result files will not be saved')
-            return 'break'
+            G.warn(
+                "Breaking out of result-saving loop early! Remaining result files will not be saved"
+            )
+            return "break"
 
 
 ##################################################
 # Heartbeat
 ##################################################
 class HeartbeatRecorder(BaseRecorder):
-    result_path_key = 'heartbeat'
-    required_attributes = ['experiment_id']
+    result_path_key = "heartbeat"
+    required_attributes = ["experiment_id"]
 
     def format_result(self):
         """Do nothing"""
@@ -238,73 +247,103 @@ class HeartbeatRecorder(BaseRecorder):
     def save_result(self):
         """Copy the global heartbeat log, and add it to the results dir as a .log file, named after :attr:`experiment_id`"""
         try:
-            shutil.copyfile(F'{G.Env.result_paths["root"]}/Heartbeat.log', F'{self.result_path}/{self.experiment_id}.log')
+            shutil.copyfile(
+                f'{G.Env.result_paths["root"]}/Heartbeat.log',
+                f"{self.result_path}/{self.experiment_id}.log",
+            )
         except FileNotFoundError:
             os.makedirs(self.result_path, exist_ok=False)
-            shutil.copyfile(F'{G.Env.result_paths["root"]}/Heartbeat.log', F'{self.result_path}/{self.experiment_id}.log')
+            shutil.copyfile(
+                f'{G.Env.result_paths["root"]}/Heartbeat.log',
+                f"{self.result_path}/{self.experiment_id}.log",
+            )
 
 
 ##################################################
 # Predictions
 ##################################################
-prediction_recorder_attributes = ['experiment_id', 'prediction_formatter', 'target_column', 'id_column', 'to_csv_params']
+prediction_recorder_attributes = [
+    "experiment_id",
+    "prediction_formatter",
+    "target_column",
+    "id_column",
+    "to_csv_params",
+]
 
 
 class PredictionsHoldoutRecorder(BaseRecorder):
-    result_path_key = 'predictions_holdout'
-    required_attributes = ['final_holdout_predictions', 'holdout_dataset'] + prediction_recorder_attributes
+    result_path_key = "predictions_holdout"
+    required_attributes = [
+        "final_holdout_predictions",
+        "holdout_dataset",
+    ] + prediction_recorder_attributes
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_holdout_predictions, self.holdout_dataset, self.target_column, id_column=self.id_column
+            self.final_holdout_predictions,
+            self.holdout_dataset,
+            self.target_column,
+            id_column=self.id_column,
         )
 
     def save_result(self):
         """Save holdout predictions to a .csv file, named after :attr:`experiment_id`"""
         try:
-            self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
+            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
         except FileNotFoundError:
             os.makedirs(self.result_path, exist_ok=False)
-            self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
+            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
 class PredictionsOOFRecorder(BaseRecorder):
-    result_path_key = 'predictions_oof'
-    required_attributes = ['final_oof_predictions', 'train_dataset'] + prediction_recorder_attributes
+    result_path_key = "predictions_oof"
+    required_attributes = [
+        "final_oof_predictions",
+        "train_dataset",
+    ] + prediction_recorder_attributes
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_oof_predictions, self.train_dataset, self.target_column, id_column=self.id_column
+            self.final_oof_predictions,
+            self.train_dataset,
+            self.target_column,
+            id_column=self.id_column,
         )
 
     def save_result(self):
         """Save out-of-fold predictions to a .csv file, named after :attr:`experiment_id`"""
         try:
-            self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
+            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
         except FileNotFoundError:
             os.makedirs(self.result_path, exist_ok=False)
-            self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
+            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
 class PredictionsTestRecorder(BaseRecorder):
-    result_path_key = 'predictions_test'
-    required_attributes = ['final_test_predictions', 'test_dataset'] + prediction_recorder_attributes
+    result_path_key = "predictions_test"
+    required_attributes = [
+        "final_test_predictions",
+        "test_dataset",
+    ] + prediction_recorder_attributes
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_test_predictions, self.test_dataset, self.target_column, id_column=self.id_column
+            self.final_test_predictions,
+            self.test_dataset,
+            self.target_column,
+            id_column=self.id_column,
         )
 
     def save_result(self):
         """Save test predictions to a .csv file, named after :attr:`experiment_id`"""
         try:
-            self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
+            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
         except FileNotFoundError:
             os.makedirs(self.result_path, exist_ok=False)
-            self.result.to_csv(F'{self.result_path}/{self.experiment_id}.csv', **self.to_csv_params)
+            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
 # class PredictionsInFoldRecorder(BaseRecorder):
@@ -316,8 +355,8 @@ class PredictionsTestRecorder(BaseRecorder):
 # Keys (Cross-Experiment, Hyperparameter), and IDs
 ##################################################
 class TestedKeyRecorder(BaseRecorder):
-    result_path_key = 'tested_keys'
-    required_attributes = ['experiment_id', 'hyperparameter_key', 'cross_experiment_key']
+    result_path_key = "tested_keys"
+    required_attributes = ["experiment_id", "hyperparameter_key", "cross_experiment_key"]
 
     def format_result(self):
         """Do nothing"""
@@ -328,11 +367,11 @@ class TestedKeyRecorder(BaseRecorder):
         self.cross_experiment_key.save_key()
         self.hyperparameter_key.save_key()
         add_to_json(
-            file_path=F'{self.hyperparameter_key.tested_keys_dir}/{self.cross_experiment_key.key}.json',
+            file_path=f"{self.hyperparameter_key.tested_keys_dir}/{self.cross_experiment_key.key}.json",
             data_to_add=self.experiment_id,
             key=self.hyperparameter_key.key,
             condition=lambda _: self.hyperparameter_key.key in _.keys(),
-            append_value=True
+            append_value=True,
         )
 
 
@@ -340,23 +379,23 @@ class TestedKeyRecorder(BaseRecorder):
 # Leaderboard
 ##################################################
 class LeaderboardEntryRecorder(BaseRecorder):
-    result_path_key = 'tested_keys'
-    required_attributes = ['result_paths', 'current_task']
+    result_path_key = "tested_keys"
+    required_attributes = ["result_paths", "current_task"]
 
     def format_result(self):
         """Read the existing global leaderboard, add the current entry, then sort the updated leaderboard"""
-        self.result = GlobalLeaderboard.from_path(path=self.result_paths['global_leaderboard'])
+        self.result = GlobalLeaderboard.from_path(path=self.result_paths["global_leaderboard"])
         self.result.add_entry(self.current_task)
         self.result.sort(by=list(self.result.data.columns))
 
     def save_result(self):
         """Save the updated leaderboard file"""
         try:
-            self.result.save(path=self.result_paths['global_leaderboard'])
+            self.result.save(path=self.result_paths["global_leaderboard"])
         except FileNotFoundError:
-            os.makedirs(self.result_paths['leaderboards'], exist_ok=False)
-            self.result.save(path=self.result_paths['global_leaderboard'])
+            os.makedirs(self.result_paths["leaderboards"], exist_ok=False)
+            self.result.save(path=self.result_paths["global_leaderboard"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -15,8 +15,14 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exception_handler import EnvironmentInvalidError, EnvironmentInactiveError
-from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_dict, parameterize_compiled_keras_model
+from hyperparameter_hunter.exception_handler import (
+    EnvironmentInvalidError,
+    EnvironmentInactiveError,
+)
+from hyperparameter_hunter.library_helpers.keras_helper import (
+    keras_callback_to_dict,
+    parameterize_compiled_keras_model,
+)
 from hyperparameter_hunter.library_helpers.keras_optimization_helper import initialize_dummy_model
 from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
@@ -29,10 +35,10 @@ from hyperparameter_hunter.utils.boltons_utils import remap
 from abc import ABCMeta, abstractmethod
 import base64
 from copy import deepcopy
-import dill
+import dill  # TODO: Figure out if this can be safely removed
 from functools import partial
 import hashlib
-from inspect import getsourcelines, isfunction, isclass, getsource
+from inspect import getsourcelines, isclass, getsource
 from os import listdir
 import os.path
 import pandas as pd
@@ -45,7 +51,8 @@ import shelve
 try:
     from keras.callbacks import Callback as BaseKerasCallback
 except ModuleNotFoundError:
-    class BaseKerasCallback():
+
+    class BaseKerasCallback:
         placeholder_attribute = """
         Hello, there! I am a `placeholder_attribute` for `BaseKerasCallback` if attempting to import `Keras` raised a 
         `ModuleNotFoundError`. You might be wondering what I'm doing here. I'm special because no normal/sane person would make a
@@ -86,8 +93,8 @@ class KeyMaker(metaclass=ABCMeta):
         self.key = None
         self.exists = False
 
-        self.key_attribute_lookup_dir = G.Env.result_paths['key_attribute_lookup']
-        self.tested_keys_dir = G.Env.result_paths['tested_keys']
+        self.key_attribute_lookup_dir = G.Env.result_paths["key_attribute_lookup"]
+        self.tested_keys_dir = G.Env.result_paths["tested_keys"]
 
         self.validate_environment()
         self.handle_complex_types()
@@ -96,10 +103,10 @@ class KeyMaker(metaclass=ABCMeta):
         self.does_key_exist()
 
     def __repr__(self):
-        return F'{self.__class__.__name__}(key={self.key!r})'
+        return f"{self.__class__.__name__}(key={self.key!r})"
 
     def __str__(self):
-        return F'{self.key!s}'
+        return f"{self.key!s}"
 
     def __eq__(self, other):
         return self.key == other
@@ -114,9 +121,9 @@ class KeyMaker(metaclass=ABCMeta):
     def validate_environment(self):
         """Check that the currently active Environment is suitable"""
         if G.Env is None:
-            raise EnvironmentInactiveError('')
-        if not all([hasattr(G.Env, _) for _ in ['result_paths', 'cross_experiment_key']]):
-            raise EnvironmentInvalidError('')
+            raise EnvironmentInactiveError("")
+        if not all([hasattr(G.Env, _) for _ in ["result_paths", "cross_experiment_key"]]):
+            raise EnvironmentInvalidError("")
         try:
             # Ensure :attr:`tested_keys_dir` exists before calling :meth:`does_key_exist`, so "None" paths won't be checked
             if os.path.exists(self.tested_keys_dir) is False:
@@ -177,8 +184,8 @@ class KeyMaker(metaclass=ABCMeta):
         for df_hash, df_names in dataframe_hashes.items():
             if len(df_names) > 1:
                 G.warn(
-                    F'The dataframes: {df_names} have an identical hash: {df_hash!s}. This implies the dataframes are ' +
-                    'identical, which is probably unintentional. If left alone, scores may be misleading!'
+                    f"The dataframes: {df_names} have an identical hash: {df_hash!s}. This implies the dataframes are "
+                    + "identical, which is probably unintentional. If left alone, scores may be misleading!"
                 )
 
     def add_complex_type_lookup_entry(self, path, key, value, hashed_value):
@@ -196,19 +203,26 @@ class KeyMaker(metaclass=ABCMeta):
         hashed_value: Str
             The hash produced for `value`"""
         # TODO: Combine `path` and `key` to produce actual filepaths
-        shelve_params = ['model_initializer', 'cross_validation_type']
+        shelve_params = ["model_initializer", "cross_validation_type"]
 
         if isclass(value) or (key in shelve_params):
-            with shelve.open(os.path.join(self.key_attribute_lookup_dir, F'{key}'), flag='c') as shelf:
+            with shelve.open(
+                os.path.join(self.key_attribute_lookup_dir, f"{key}"), flag="c"
+            ) as shelf:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
                 shelf[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
             os.makedirs(os.path.join(self.key_attribute_lookup_dir, key), exist_ok=True)
-            value.to_csv(os.path.join(self.key_attribute_lookup_dir, key, F'{hashed_value}.csv'), index=False)
+            value.to_csv(
+                os.path.join(self.key_attribute_lookup_dir, key, f"{hashed_value}.csv"), index=False
+            )
         else:  # Possible types: partial, function, *other
             add_to_json(
-                file_path=os.path.join(self.key_attribute_lookup_dir, F'{key}.json'),
-                data_to_add=getsource(value), key=hashed_value, condition=lambda _: hashed_value not in _.keys(), default={},
+                file_path=os.path.join(self.key_attribute_lookup_dir, f"{key}.json"),
+                data_to_add=getsource(value),
+                key=hashed_value,
+                condition=lambda _: hashed_value not in _.keys(),
+                default={},
             )
 
     def make_key(self):
@@ -251,7 +265,7 @@ class KeyMaker(metaclass=ABCMeta):
 
 
 class CrossExperimentKeyMaker(KeyMaker):
-    key_type = 'cross_experiment'
+    key_type = "cross_experiment"
 
     def __init__(self, parameters, **kwargs):
         """A KeyMaker class dedicated to creating cross-experiment keys, which determine when experiments were executed under
@@ -281,15 +295,15 @@ class CrossExperimentKeyMaker(KeyMaker):
     def save_key(self):
         """Create a new file for this cross_experiment_key if :attr:`exists` is False"""
         if not self.exists:
-            write_json(F'{self.tested_keys_dir}/{self.key}.json', {})
+            write_json(f"{self.tested_keys_dir}/{self.key}.json", {})
             self.exists = True
-            G.log(F'Saved {self.key_type}_key: "{self.key}"')
+            G.log(f'Saved {self.key_type}_key: "{self.key}"')
         else:
-            G.log(F'{self.key_type}_key "{self.key}" already exists - Skipped saving')
+            G.log(f'{self.key_type}_key "{self.key}" already exists - Skipped saving')
 
 
 class HyperparameterKeyMaker(KeyMaker):
-    key_type = 'hyperparameter'
+    key_type = "hyperparameter"
 
     def __init__(self, parameters, cross_experiment_key, **kwargs):
         """A KeyMaker class dedicated to creating hyperparameter keys, which determine when experiments were executed using
@@ -308,12 +322,18 @@ class HyperparameterKeyMaker(KeyMaker):
             Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         self.cross_experiment_key = cross_experiment_key
 
-        if hasattr(G.Env, 'current_task') and G.Env.current_task and G.Env.current_task.module_name == 'keras':
+        if (
+            hasattr(G.Env, "current_task")
+            and G.Env.current_task
+            and G.Env.current_task.module_name == "keras"
+        ):
             parameters = deepcopy(parameters)
 
             #################### Initialize and Parameterize Dummy Model ####################
             temp_model = initialize_dummy_model(
-                parameters['model_initializer'], parameters['model_init_params']['build_fn'], parameters['model_extra_params']
+                parameters["model_initializer"],
+                parameters["model_init_params"]["build_fn"],
+                parameters["model_extra_params"],
             )
 
             temp_layers, temp_compile_params = parameterize_compiled_keras_model(temp_model)
@@ -322,16 +342,16 @@ class HyperparameterKeyMaker(KeyMaker):
             # noinspection PyUnusedLocal
             def _visit(path, key, value):
                 """If `key` is not in ('input_shape', 'input_dim'), return True. Else, return False"""
-                return key not in ('input_shape', 'input_dim')
+                return key not in ("input_shape", "input_dim")
 
             temp_layers = remap(temp_layers, visit=_visit)
 
-            parameters['model_init_params']['layers'] = temp_layers
-            parameters['model_init_params']['compile_params'] = temp_compile_params
+            parameters["model_init_params"]["layers"] = temp_layers
+            parameters["model_init_params"]["compile_params"] = temp_compile_params
 
-            if 'params' in parameters['model_extra_params']:
-                parameters['model_extra_params'] = {
-                    _k: _v for _k, _v in parameters['model_extra_params'].items() if _k != 'params'
+            if "params" in parameters["model_extra_params"]:
+                parameters["model_extra_params"] = {
+                    _k: _v for _k, _v in parameters["model_extra_params"].items() if _k != "params"
                 }
 
         KeyMaker.__init__(self, parameters, **kwargs)
@@ -352,19 +372,28 @@ class HyperparameterKeyMaker(KeyMaker):
         parameters: dict
             The filtered version of the given `parameters`"""
         reject_keys = {
-            'verbose', 'verbosity', 'silent',
-            'random_state', 'random_seed', 'seed',
-            'n_jobs', 'nthread',
+            "verbose",
+            "verbosity",
+            "silent",
+            "random_state",
+            "random_seed",
+            "seed",
+            "n_jobs",
+            "nthread",
         }
 
-        if hasattr(G.Env, 'current_task') and G.Env.current_task and G.Env.current_task.module_name == 'keras':
-            reject_keys.add('build_fn')
+        if (
+            hasattr(G.Env, "current_task")
+            and G.Env.current_task
+            and G.Env.current_task.module_name == "keras"
+        ):
+            reject_keys.add("build_fn")
 
         for k in reject_keys:
-            if parameters['model_init_params'] and (k in parameters['model_init_params'].keys()):
-                del parameters['model_init_params'][k]
-            if parameters['model_extra_params'] and (k in parameters['model_extra_params'].keys()):
-                del parameters['model_extra_params'][k]
+            if parameters["model_init_params"] and (k in parameters["model_init_params"].keys()):
+                del parameters["model_init_params"][k]
+            if parameters["model_extra_params"] and (k in parameters["model_extra_params"].keys()):
+                del parameters["model_extra_params"][k]
 
         return parameters
 
@@ -376,11 +405,14 @@ class HyperparameterKeyMaker(KeyMaker):
         -------
         Boolean"""
         if self.cross_experiment_key.exists is True:
-            records = read_json(F'{self.tested_keys_dir}/{self.cross_experiment_key.key}.json')
+            records = read_json(f"{self.tested_keys_dir}/{self.cross_experiment_key.key}.json")
 
             for a_hyperparameter_key in records.keys():
                 if self.key == a_hyperparameter_key:
-                    if isinstance(records[a_hyperparameter_key], list) and len(records[a_hyperparameter_key]) > 0:
+                    if (
+                        isinstance(records[a_hyperparameter_key], list)
+                        and len(records[a_hyperparameter_key]) > 0
+                    ):
                         self.exists = True
                         return self.exists
 
@@ -391,17 +423,24 @@ class HyperparameterKeyMaker(KeyMaker):
         and whose value is an empty list if :attr:`exists` is False"""
         if not self.exists:
             if self.cross_experiment_key.exists is False:
-                raise ValueError('Cannot save hyperparameter_key: "{}", before cross_experiment_key "{}" has been saved'.format(
-                    self.key, self.cross_experiment_key.key
-                ))
+                raise ValueError(
+                    'Cannot save hyperparameter_key: "{}", before cross_experiment_key "{}" has been saved'.format(
+                        self.key, self.cross_experiment_key.key
+                    )
+                )
 
-            key_path = F'{self.tested_keys_dir}/{self.cross_experiment_key.key}.json'
-            add_to_json(file_path=key_path, data_to_add=[], key=self.key, condition=lambda _: self.key not in _.keys())
+            key_path = f"{self.tested_keys_dir}/{self.cross_experiment_key.key}.json"
+            add_to_json(
+                file_path=key_path,
+                data_to_add=[],
+                key=self.key,
+                condition=lambda _: self.key not in _.keys(),
+            )
 
             self.exists = True
-            G.log(F'Saved {self.key_type}_key: "{self.key}"')
+            G.log(f'Saved {self.key_type}_key: "{self.key}"')
         else:
-            G.log(F'{self.key_type}_key "{self.key}" already exists - Skipped saving')
+            G.log(f'{self.key_type}_key "{self.key}" already exists - Skipped saving')
 
 
 def make_hash_sha256(obj, **kwargs):
@@ -450,8 +489,13 @@ def to_hashable(obj, **kwargs):
 
 
 def hash_callable(
-        obj, ignore_line_comments=True, ignore_first_line=False,
-        ignore_module=False, ignore_name=False, ignore_keywords=False, ignore_source_lines=False,
+    obj,
+    ignore_line_comments=True,
+    ignore_first_line=False,
+    ignore_module=False,
+    ignore_name=False,
+    ignore_keywords=False,
+    ignore_source_lines=False,
 ):
     """Prepare callable object for hashing
 
@@ -500,7 +544,9 @@ def hash_callable(
             raise
         # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
     else:
-        raise TypeError('Expected obj of type functools.partial, or function. Received {}'.format(type(obj)))
+        raise TypeError(
+            "Expected obj of type functools.partial, or function. Received {}".format(type(obj))
+        )
 
     #################### Format Source Code Lines ####################
     if ignore_line_comments is True:
@@ -530,8 +576,8 @@ def is_line_comment(string):
     Returns
     -------
     Boolean"""
-    return bool(re.match(r'^\s*#', string))
+    return bool(re.match(r"^\s*#", string))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

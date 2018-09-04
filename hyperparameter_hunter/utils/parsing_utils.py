@@ -20,7 +20,6 @@ from inspect import getsource
 from operator import attrgetter
 import os
 import re
-import sys
 
 
 def stringify_model_builder(build_fn):
@@ -60,10 +59,10 @@ def build_temp_model_file(build_fn_str, source_script):
 
     cleaned_builder_str = remove_imports(remove_comments(build_fn_str))
 
-    temp_file_str = ''
+    temp_file_str = ""
     temp_file_str += source_imports
-    temp_file_str += builder_imports.replace('#coding=utf-8', '')
-    temp_file_str += '\n\n'
+    temp_file_str += builder_imports.replace("#coding=utf-8", "")
+    temp_file_str += "\n\n"
     temp_file_str += cleaned_builder_str
 
     return temp_file_str
@@ -81,8 +80,8 @@ def read_source_script(filepath):
     -------
     source: Str
         The contents of `filepath`"""
-    if filepath.endswith('.ipynb'):
-        with open(filepath, 'r') as f:
+    if filepath.endswith(".ipynb"):
+        with open(filepath, "r") as f:
             from nbconvert import PythonExporter
             import nbformat
 
@@ -90,13 +89,13 @@ def read_source_script(filepath):
             exporter = PythonExporter()
             source, _ = exporter.from_notebook_node(notebook)
     else:
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             source = f.read()
 
     return source
 
 
-def write_python_source(source_str, filepath='temp_modified.py'):
+def write_python_source(source_str, filepath="temp_modified.py"):
     """Save `source_str` to the file located at `filepath`
 
     Parameters
@@ -106,7 +105,7 @@ def write_python_source(source_str, filepath='temp_modified.py'):
     filepath: String
         The filepath of the file to which `source_str` should be written"""
     try:
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.write(source_str)
             f.close()
     except FileNotFoundError:
@@ -124,31 +123,29 @@ class ImportParser(NodeVisitor):
         self.line_numbers = []
 
     def visit_Import(self, node):
-        line = 'import {}'.format(self._import_names(node.names))
+        line = "import {}".format(self._import_names(node.names))
         self._visit_helper(line, node)
 
     def visit_ImportFrom(self, node):
-        line = 'from {}{} import {}'.format(
-            node.level * '.',
-            node.module or '',
-            self._import_names(node.names)
+        line = "from {}{} import {}".format(
+            node.level * ".", node.module or "", self._import_names(node.names)
         )
         self._visit_helper(line, node)
 
     def _visit_helper(self, line, node):
-        if self._import_asnames(node.names) != '':
-            line += ' as {}'.format(self._import_asnames(node.names))
+        if self._import_asnames(node.names) != "":
+            line += " as {}".format(self._import_asnames(node.names))
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
 
     # noinspection PyMethodMayBeStatic
     def _import_names(self, names):
-        return ', '.join(map(attrgetter('name'), names))
+        return ", ".join(map(attrgetter("name"), names))
 
     # noinspection PyMethodMayBeStatic
     def _import_asnames(self, names):
-        asname = map(attrgetter('asname'), names)
-        return ''.join(filter(None, asname))
+        asname = map(attrgetter("asname"), names)
+        return "".join(filter(None, asname))
 
 
 def extract_imports(source):
@@ -166,17 +163,17 @@ def extract_imports(source):
     tree = parse(source)
     import_parser = ImportParser()
     import_parser.visit(tree)
-    import_lines = ['#coding=utf-8\n']
+    import_lines = ["#coding=utf-8\n"]
 
     for line in import_parser.lines:
-        if 'print_function' in line:
-            import_lines.append(line + '\n')
-        elif ('_pydev_' in line) or ('java.lang' in line):
+        if "print_function" in line:
+            import_lines.append(line + "\n")
+        elif ("_pydev_" in line) or ("java.lang" in line):
             continue  # Skip imports for PyCharm, and Eclipse
         else:
-            import_lines.append('try:\n    {}\nexcept:\n    pass\n'.format(line))
+            import_lines.append("try:\n    {}\nexcept:\n    pass\n".format(line))
 
-    imports_str = '\n'.join(import_lines)
+    imports_str = "\n".join(import_lines)
     return imports_str
 
 
@@ -195,10 +192,14 @@ def remove_imports(source):
     tree = parse(source)
     import_parser = ImportParser()
     import_parser.visit(tree)
-    lines = source.split('\n')  # Source including all comments, since line numbers are parsed with comments
+    lines = source.split(
+        "\n"
+    )  # Source including all comments, since line numbers are parsed with comments
     lines_to_remove = set(import_parser.line_numbers)
-    non_import_lines = [_line for _i, _line in enumerate(lines, start=1) if _i not in lines_to_remove]
-    return '\n'.join(non_import_lines)
+    non_import_lines = [
+        _line for _i, _line in enumerate(lines, start=1) if _i not in lines_to_remove
+    ]
+    return "\n".join(non_import_lines)
 
 
 def remove_comments(source):
