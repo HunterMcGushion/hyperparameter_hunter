@@ -1,21 +1,24 @@
-"""This module is central to the proper functioning of the entire library. It defines :class:`Environment`, which (when activated)
-is used by the vast majority of the other operation-critical modules in the library. :class:`Environment` can be viewed as a
-simple storage container that defines settings that characterize the Experiments/OptimizationProtocols to be conducted, and
-influence how those processes are carried out
+"""This module is central to the proper functioning of the entire library. It defines
+:class:`Environment`, which (when activated) is used by the vast majority of the other
+operation-critical modules in the library. :class:`Environment` can be viewed as a simple storage
+container that defines settings that characterize the Experiments/OptimizationProtocols to be
+conducted, and influence how those processes are carried out
 
 Related
 -------
 :mod:`hyperparameter_hunter.settings`
-    This module is the doorway for other modules to access the settings defined by :class:`environment.Environment`, which sets
-    :attr:`hyperparameter_hunter.settings.G.Env` to itself as its first action. This allows other modules to access any
-    information they need from the active :class:`environment.Environment` via :attr:`hyperparameter_hunter.settings.G.Env`.
-    :class:`hyperparameter_hunter.settings.G` also provides other modules with access to the logging methods that are initialized
-    by :class:`hyperparameter_hunter.environment.Environment`
+    This module is the doorway for other modules to access the settings defined by
+    :class:`environment.Environment`, which sets :attr:`hyperparameter_hunter.settings.G.Env` to
+    itself as its first action. This allows other modules to access any information they need from
+    the active :class:`environment.Environment` via :attr:`hyperparameter_hunter.settings.G.Env`.
+    :class:`hyperparameter_hunter.settings.G` also provides other modules with access to the
+    logging methods that are initialized by :class:`hyperparameter_hunter.environment.Environment`
 
 Notes
 -----
-Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module listed as being "related", pretty much all the
-other modules in the library are related to :class:`hyperparameter_hunter.environment.Environment` by way of this relation"""
+Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module listed as being
+"related", pretty much all the other modules in the library are related to
+:class:`hyperparameter_hunter.environment.Environment` by way of this relation"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -74,13 +77,13 @@ class Environment:
 
     def __init__(
         self,
-        train_dataset,  # TODO: Allow providing separate (train_input, train_target) dataframes, or the full df
+        train_dataset,  # TODO: Allow providing separate (train_input, train_target) dfs
         environment_params_path=None,
         *,
         root_results_path=None,
         metrics_map=None,
-        holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dataframes, or the full df
-        test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dataframes, or the full df
+        holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dfs
+        test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dfs
         target_column=None,
         id_column=None,
         do_predict_proba=None,
@@ -104,110 +107,162 @@ class Environment:
         Parameters
         ----------
         train_dataset: Pandas.DataFrame, or str path
-            The training data for the experiment. Will be split into train/holdout data, if applicable, and train/validation data
-            if cross-validation is to be performed. If str, will attempt to read file at path via :func:`pandas.read_csv`
+            The training data for the experiment. Will be split into train/holdout data, if
+            applicable, and train/validation data if cross-validation is to be performed. If str,
+            will attempt to read file at path via :func:`pandas.read_csv`. For more information on
+            which columns will be used during fitting/predicting, see the "Dataset columns" note
+            in the "Notes" section below
         environment_params_path: String path, or None, default=None
-            If not None and is valid .json filepath containing an object (dict), the file's contents are treated as the default
-            values for all keys that match any of the below kwargs used to initialize :class:`Environment`
+            If not None and is valid .json filepath containing an object (dict), the file's contents
+            are treated as the default values for all keys that match any of the below kwargs used
+            to initialize :class:`Environment`
         root_results_path: String path, or None, default=None
-            If valid directory path and the results directory has not yet been created, it will be created here. If this does not
-            end with <ASSETS_DIRNAME>, it will be appended. If <ASSETS_DIRNAME>
-            already exists at this path, new results will also be stored here. If None or invalid, results will not be stored
+            If valid directory path and the results directory has not yet been created, it will be
+            created here. If this does not end with <ASSETS_DIRNAME>, it will be appended. If
+            <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
+            None or invalid, results will not be stored
         metrics_map: Dict, List, or None, default=None
-            Specifies all metrics to be used by their id keys, along with a means to compute the metric. If list, all values must
-            be strings that are attributes in :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
-            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the metric. Its corresponding
-            value must be one of: 1) a callable to calculate the metric, 2) None if the "id" key is an attribute in
-            `sklearn.metrics` and should be used to fetch a callable, 3) a string that is an attribute in `sklearn.metrics` and
-            should be used to fetch a callable. Metric callable functions should expect inputs of form (target, prediction), and
-            should return floats. See `metrics_params` for details on how these two are related
+            Specifies all metrics to be used by their id keys, along with a means to compute the
+            metric. If list, all values must be strings that are attributes in
+            :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
+            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the
+            metric. Its corresponding value must be one of: 1) a callable to calculate the metric,
+            2) None if the "id" key is an attribute in `sklearn.metrics` and should be used to fetch
+            a callable, 3) a string that is an attribute in `sklearn.metrics` and should be used to
+            fetch a callable. Metric callable functions should expect inputs of form
+            (target, prediction), and should return floats. See `metrics_params` for details on how
+            these two are related
         holdout_dataset: Pandas.DataFrame, callable, str path, or None, default=None
-            If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes (self.train: DataFrame,
-            self.target_column: str) as input and returns the new (self.train: DataFrame, self.holdout: DataFrame). If str,
-            will attempt to read file at path via :func:`pandas.read_csv`. Else, there is no holdout set
+            If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes
+            (self.train: DataFrame, self.target_column: str) as input and returns the new
+            (self.train: DataFrame, self.holdout: DataFrame). If str, will attempt to read file at
+            path via :func:`pandas.read_csv`. Else, there is no holdout set. For more information on
+            which columns will be used during fitting/predicting, see the "Dataset columns" note
+            in the "Notes" section below
         test_dataset: Pandas.DataFrame, str path, or None, default=None
-            The testing data for the experiment. Structure should be identical to that of train_dataset, except its
-            target_column column can be empty or non-existent, because test_dataset predictions will never be evaluated. If str,
-            will attempt to read file at path via :func:`pandas.read_csv`
+            The testing data for the experiment. Structure should be identical to that of
+            `train_dataset`, except its `target_column` column can be empty or non-existent, because
+            `test_dataset` predictions will never be evaluated. If str, will attempt to read file at
+            path via :func:`pandas.read_csv`. For more information on which columns will be used
+            during fitting/predicting, see the "Dataset columns" note in the "Notes" section below
         target_column: str, default='target'
-            Str denoting the column name in all provided datasets (except test) that contains the target output
+            Str denoting the column name in all provided datasets (except test) that contains the
+            target output
         id_column: str, or None, default=None
-            If not None, str denoting the column name in all provided datasets that contains sample IDs
+            If not None, str denoting the column name in all provided datasets that contains sample
+            IDs
         do_predict_proba: Boolean, default=False
-            If True, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict_proba`. Else, it will
-            call :meth:`models.Model.model.predict`
+            If True, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict_proba`.
+            Else, it will call :meth:`models.Model.model.predict`
         prediction_formatter: Callable, or None, default=None
-            If callable, expected to have same signature as :func:`.utils.result_utils.format_predictions`. That is, the callable
-            will receive (raw_predictions: np.array, dataset_df: pd.DataFrame, target_column: str, id_column: str or None) as
-            input and should return a properly formatted prediction DataFrame. The callable uses raw_predictions as the content,
-            dataset_df to provide any id column, and target_column to identify the column in which to place raw_predictions
+            If callable, expected to have same signature as
+            :func:`.utils.result_utils.format_predictions`. That is, the callable will receive
+            (raw_predictions: np.array, dataset_df: pd.DataFrame, target_column: str,
+            id_column: str or None) as input and should return a properly formatted prediction
+            DataFrame. The callable uses raw_predictions as the content, dataset_df to provide any
+            id column, and target_column to identify the column in which to place raw_predictions
         metrics_params: Dict, or None, default=dict()
-            Dictionary of extra parameters to provide to :meth:`.metrics.ScoringMixIn.__init__`. `metrics_map` must be provided
-            either 1) as an input kwarg to :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
+            Dictionary of extra parameters to provide to :meth:`.metrics.ScoringMixIn.__init__`.
+            `metrics_map` must be provided either 1) as an input kwarg to
+            :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
             but not both. An Exception will be raised if both are given, or if neither is given
         cross_validation_type: Class or str, default='KFold'
-            The class to define cross-validation splits. If str, it must be an attribute of `sklearn.model_selection._split`, and
-            it must be a cross-validation class that inherits one of the following `sklearn` classes: `BaseCrossValidator`, or
-            `_RepeatedSplits`. Valid str values include 'KFold', and 'RepeatedKFold', although there are many more. It must
-            implement the following methods: [`__init__`, `split`]. If using a custom class, see the following tested `sklearn`
-            classes for proper implementations: [`KFold`, `StratifiedKFold`, `RepeatedKFold`, `RepeatedStratifiedKFold`]. The
-            arguments provided to :meth:`cross_validation_type.__init__` will be :attr:`Environment.cross_validation_params`,
-            which should include the following: ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
+            The class to define cross-validation splits. If str, it must be an attribute of
+            `sklearn.model_selection._split`, and it must be a cross-validation class that inherits
+            one of the following `sklearn` classes: `BaseCrossValidator`, or `_RepeatedSplits`.
+            Valid str values include 'KFold', and 'RepeatedKFold', although there are many more. It
+            must implement the following methods: [`__init__`, `split`]. If using a custom class,
+            see the following tested `sklearn` classes for proper implementations:
+            [`KFold`, `StratifiedKFold`, `RepeatedKFold`, `RepeatedStratifiedKFold`]. The arguments
+            provided to :meth:`cross_validation_type.__init__` will be
+            :attr:`Environment.cross_validation_params`, which should include the following:
+            ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
             :meth:`cross_validation_type.split` will receive the following arguments:
             [:attr:`BaseExperiment.train_input_data`, :attr:`BaseExperiment.train_target_data`]
         runs: Int, default=1
-            The number of times to fit a model within each fold to perform multiple-run-averaging with different random seeds
+            The number of times to fit a model within each fold to perform multiple-run-averaging
+            with different random seeds
         global_random_seed: Int, default=32
-            The initial random seed used just before generating an Experiment's random_seeds. This ensures consistency for
-            `random_seeds` between Experiments, without having to explicitly provide it here
+            The initial random seed used just before generating an Experiment's random_seeds. This
+            ensures consistency for `random_seeds` between Experiments, without having to explicitly
+            provide it here
         random_seeds: None, or List, default=None
-            If None, `random_seeds` of the appropriate shape will be created automatically. Else, must be a list of ints of shape
-            (`cross_validation_params['n_repeats']`, `cross_validation_params['n_splits']`, `runs`). If `cross_validation_params`
-            does not have the key `n_repeats` (because standard cross-validation is being used), the value will default to 1.
-            See :meth:`.experiments.BaseExperiment._random_seed_initializer` for more info on the expected shape
+            If None, `random_seeds` of the appropriate shape will be created automatically. Else,
+            must be a list of ints of shape (`cross_validation_params['n_repeats']`,
+            `cross_validation_params['n_splits']`, `runs`). If `cross_validation_params` does not
+            have the key `n_repeats` (because standard cross-validation is being used), the value
+            will default to 1. See :meth:`.experiments.BaseExperiment._random_seed_initializer` for
+            more info on the expected shape
         random_seed_bounds: List, default=[0, 100000]
-            A list containing two integers: the lower and upper bounds, respectively, for generating an Experiment's random seeds
-            in :meth:`.experiments.BaseExperiment._random_seed_initializer`. Generally, leave this kwarg alone
+            A list containing two integers: the lower and upper bounds, respectively, for generating
+            an Experiment's random seeds in
+            :meth:`.experiments.BaseExperiment._random_seed_initializer`. Generally, leave this
+            kwarg alone
         cross_validation_params: dict, or None, default=dict()
-            Dict of parameters provided upon initialization of cross_validation_type. Keys may be any args accepted by
-            :meth:`cross_validation_type.__init__`. Number of fold splits must be provided here via "n_splits", and number of
-            repeats (if applicable according to `cross_validation_type`) must be provided via "n_repeats"
+            Dict of parameters provided upon initialization of cross_validation_type. Keys may be
+            any args accepted by :meth:`cross_validation_type.__init__`. Number of fold splits must
+            be provided here via "n_splits", and number of repeats (if applicable according to
+            `cross_validation_type`) must be provided via "n_repeats"
         verbose: Boolean, default=True
             Verbosity of printing for any experiments performed while this Environment is active
         file_blacklist: List of str, or None, or 'ALL', default=None
-            If list of str, the result files named within are not saved to their respective directory in
-            "<ASSETS_DIRNAME>/Experiments". If None, all result files are saved. If 'ALL', nothing at all will be saved for the
-            Experiments. For info on acceptable values, see :func:`validate_file_blacklist`
+            If list of str, the result files named within are not saved to their respective
+            directory in "<ASSETS_DIRNAME>/Experiments". If None, all result files are saved.
+            If 'ALL', nothing at all will be saved for the Experiments. For info on acceptable
+            values, see :func:`validate_file_blacklist`
         reporting_handler_params: Dict, default=dict()
             Parameters passed to initialize :class:`.reporting.ReportingHandler`
         to_csv_params: Dict, default=dict()
-            Parameters passed to the calls to :meth:`pandas.frame.DataFrame.to_csv` in :mod:`recorders`. In particular,
-            this is where an Experiment's final prediction files are saved, so the values here will affect the format of the .csv
-            prediction files. Warning: If `to_csv_params` contains the key "path_or_buf", it will be removed. Otherwise, all
-            items are supplied directly to :meth:`to_csv`, including kwargs it might not be expecting if they are given
+            Parameters passed to the calls to :meth:`pandas.frame.DataFrame.to_csv` in
+            :mod:`recorders`. In particular, this is where an Experiment's final prediction files
+            are saved, so the values here will affect the format of the .csv prediction files.
+            Warning: If `to_csv_params` contains the key "path_or_buf", it will be removed.
+            Otherwise, all items are supplied directly to :meth:`to_csv`, including kwargs it might
+            not be expecting if they are given
         do_full_save: None, or callable, default=:func:`utils.result_utils.default_do_full_save`
-            If callable, expected to take an Experiment's result description dict as input and return a boolean. If None, treated
-            as a callable that returns True. This parameter is used by :class:`recorders.DescriptionRecorder` to determine whether
-            the Experiment result files following the description should also be created. If `do_full_save` returns False, result
-            file-saving is stopped early, and only the description is saved. If `do_full_save` returns True, all files not in
-            `file_blacklist` are saved normally. This allows you to skip creation of an Experiment's predictions, logs, and
-            heartbeats if its score does not meet some threshold you set, for example. `do_full_save` receives the Experiment
-            description dict as input, so for help setting `do_full_save`, just look into one of your Experiment descriptions
-        experiment_callbacks: :class:`LambdaCallback`, list of :class:`LambdaCallback`, or None, default=None
-            If not None, should be a :class:`LambdaCallback` produced by :func:`.callbacks.bases.lambda_callback`, or a list of
-            such classes. The contents will be added to the MRO of the executed Experiment class by
-            :class:`.experiment_core.ExperimentMeta` at `__call__` time, making `experiment_callbacks` new base classes of the
-            Experiment. See :func:`.callbacks.bases.lambda_callback` for more information
+            If callable, expected to take an Experiment's result description dict as input and
+            return a boolean. If None, treated as a callable that returns True. This parameter is
+            used by :class:`recorders.DescriptionRecorder` to determine whether the Experiment
+            result files following the description should also be created. If `do_full_save` returns
+            False, result file-saving is stopped early, and only the description is saved. If
+            `do_full_save` returns True, all files not in `file_blacklist` are saved normally. This
+            allows you to skip creation of an Experiment's predictions, logs, and heartbeats if its
+            score does not meet some threshold you set, for example. `do_full_save` receives the
+            Experiment description dict as input, so for help setting `do_full_save`, just look into
+            one of your Experiment descriptions
+        experiment_callbacks: :class:`LambdaCallback`, list of :class:`LambdaCallback`, default=None
+            If not None, should be a :class:`LambdaCallback` produced by
+            :func:`.callbacks.bases.lambda_callback`, or a list of such classes. The contents will
+            be added to the MRO of the executed Experiment class by
+            :class:`.experiment_core.ExperimentMeta` at `__call__` time, making
+            `experiment_callbacks` new base classes of the Experiment. See
+            :func:`.callbacks.bases.lambda_callback` for more information
 
         Notes
         -----
-        Overriding default kwargs at "environment_params_path": If you have any of the above kwargs specified in the .json file
-        at environment_params_path (except environment_params_path, which will be ignored), you can override its value by
-        passing it as a kwarg when initializing :class:`Environment`. The contents at environment_params_path are only used when
-        the matching kwarg supplied at initialization is None. See "/examples/environment_params_path_example.py" for details
+        Dataset columns: In order to specify the columns to be used by the three dataset kwargs
+        (`train_dataset`, `holdout_dataset`, `test_dataset`) during fitting and predicting, a few
+        attributes can be used. On `Environment` initialization, the columns specified by the
+        following kwargs will be separated from the rest of the dataset during training/predicting:
+        1) `target_column`, which names the column containing the target output labels for the input
+        data; and 2) `id_column`, which (if given) represents the name of the column that contains
+        identifying information for each data sample, and should otherwise have no relation to the
+        actual data. Additionally, the `feature_selector` kwarg of the descendants of
+        :class:`hyperparameter_hunter.experiments.BaseExperiment` (like
+        :class:`hyperparameter_hunter.experiments.CrossValidationExperiment`) is used to filter out
+        columns of the given datasets prior to fitting. See its documentation for more information,
+        but it can effectively be used to remove any columns from the datasets
 
-        The order of precedence for determining the value of each parameter is as follows, with items at the top having the
-        highest priority, and deferring only to the items below if their own value is None:
+        Overriding default kwargs at `environment_params_path`: If you have any of the above kwargs
+        specified in the .json file at environment_params_path (except environment_params_path,
+        which will be ignored), you can override its value by passing it as a kwarg when
+        initializing :class:`Environment`. The contents at environment_params_path are only used
+        when the matching kwarg supplied at initialization is None. See
+        "/examples/environment_params_path_example.py" for details
+
+        The order of precedence for determining the value of each parameter is as follows, with
+        items at the top having the highest priority, and deferring only to the items below if
+        their own value is None:
 
         * 1)kwargs passed directly to :meth:`.Environment.__init__` on initialization,
         * 2)keys of the file at environment_params_path (if valid .json object),
@@ -323,7 +378,7 @@ class Environment:
         #################### metrics_params/metrics_map ####################
         if (self.metrics_map is not None) and ("metrics_map" in self.metrics_params.keys()):
             raise ValueError(
-                "`metrics_map` may be provided as a kwarg, or as a key in `metrics_params`, but NOT BOTH. Received: "
+                "`metrics_map` may be provided as a kwarg, or as a `metrics_params` key, but NOT BOTH. Received: "
                 + f"\n `metrics_map`={self.metrics_map}\n `metrics_params`={self.metrics_params}"
             )
         else:
@@ -368,7 +423,8 @@ class Environment:
                 )
 
     def define_holdout_set(self):
-        """Define :attr:`Environment.holdout_dataset`, and (if holdout_dataset is callable), also modifies train_dataset"""
+        """Define :attr:`Environment.holdout_dataset`, and (if holdout_dataset is callable), also
+        modifies train_dataset"""
         if callable(self.holdout_dataset):
             self.train_dataset, self.holdout_dataset = self.holdout_dataset(
                 self.train_dataset, self.target_column
@@ -378,7 +434,6 @@ class Environment:
                 self.holdout_dataset = pd.read_csv(self.holdout_dataset)
             except FileNotFoundError:
                 raise
-        # elif (self.holdout_dataset is not None) and (not isinstance(self.holdout_dataset, pd.DataFrame)):
         elif self.holdout_dataset and (not isinstance(self.holdout_dataset, pd.DataFrame)):
             raise TypeError(
                 f"holdout_dataset must be one of: [None, DataFrame, callable, str], not {type(self.holdout_dataset)}"
@@ -493,7 +548,7 @@ class Environment:
         self.cross_experiment_key = CrossExperimentKeyMaker(parameters)
 
     def initialize_reporting(self):
-        """Initialize reporting for the Environment and all experiments conducted during its lifetime"""
+        """Initialize reporting for the Environment and Experiments conducted during its lifetime"""
         reporting_handler_params = self.reporting_handler_params
         reporting_handler_params["heartbeat_path"] = "{}/Heartbeat.log".format(
             self.root_results_path
@@ -598,8 +653,8 @@ class Environment:
 # File Blacklist Utilities
 ##################################################
 def validate_file_blacklist(blacklist):
-    """Validate contents of blacklist. For most values, the corresponding file is saved upon completion of the experiment. See
-    the "Notes" section below for details on some special cases
+    """Validate contents of blacklist. For most values, the corresponding file is saved upon
+    completion of the experiment. See the "Notes" section below for details on some special cases
 
     Parameters
     ----------
@@ -613,21 +668,24 @@ def validate_file_blacklist(blacklist):
 
     Notes
     -----
-    'heartbeat': If the heartbeat file is saved, a new file is not generated and saved to the "Experiments/Heartbeats" directory
-    as is the case with most other files. Instead, the general "Heartbeat.log" file is copied and renamed to the current
-    experiment id, then saved to the appropriate dir. This is because the general "Heartbeat.log" file represents the heartbeat
+    'heartbeat': If the heartbeat file is saved, a new file is not generated and saved to the
+    "Experiments/Heartbeats" directory as is the case with most other files. Instead, the general
+    "Heartbeat.log" file is copied and renamed to the current experiment id, then saved to the
+    appropriate dir. This is because the general "Heartbeat.log" file represents the heartbeat
     for whatever experiment is currently in progress.
 
-    'script_backup': This file is saved as quickly as possible after starting a new experiment, rather than waiting for the
-    experiment to end. There are two reasons for this behavior: 1) to avoid saving any changes that may have been made to a file
-    after it has been executed, and 2) to have the offending file in the event of a catastrophic failure that results in no other
+    'script_backup': This file is saved as quickly as possible after starting a new experiment,
+    rather than waiting for the experiment to end. There are two reasons for this behavior: 1) to
+    avoid saving any changes that may have been made to a file after it has been executed, and 2)
+    to have the offending file in the event of a catastrophic failure that results in no other
     files being saved.
 
-    'description' and 'tested_keys': These two results types constitute a bare minimum of sorts for experiment recording. If
-    either of these two are blacklisted, then as far as the library is concerned, the experiment never took place.
+    'description' and 'tested_keys': These two results types constitute a bare minimum of sorts for
+    experiment recording. If either of these two are blacklisted, then as far as the library is
+    concerned, the experiment never took place.
 
-    'tested_keys' (continued): If this string is included in the blacklist, then the contents of the "KeyAttributeLookup"
-    directory will also be excluded from the list of files to update"""
+    'tested_keys' (continued): If this string is included in the blacklist, then the contents of the
+    "KeyAttributeLookup" directory will also be excluded from the list of files to update"""
     valid_values = [
         # 'checkpoint',
         "description",
