@@ -49,7 +49,7 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     def _enter(path, key, value):
         """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic attributes. Else, `default_enter`"""
         if any([_(path, key, value) for _ in iter_attrs]):
-            included_attrs = [_ for _ in dir(value) if not _.startswith('__')]
+            included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
         return default_enter(path, key, value)
 
@@ -57,7 +57,7 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
 
 
 def now_time():
-    return datetime.now().time().strftime('%H:%M:%S')
+    return datetime.now().time().strftime("%H:%M:%S")
 
 
 def sec_to_hms(seconds, ms_places=5, as_str=False):
@@ -66,13 +66,13 @@ def sec_to_hms(seconds, ms_places=5, as_str=False):
     t_sec = round(t_sec, ms_places)
 
     if as_str is True:
-        result = ''
+        result = ""
         if t_hour != 0:
-            result += '{} h, '.format(t_hour)
+            result += "{} h, ".format(t_hour)
         if t_min != 0:
-            result += '{} m, '.format(t_min)
+            result += "{} m, ".format(t_min)
         if t_sec != 0:
-            result += '{} s'.format(t_sec)
+            result += "{} s".format(t_sec)
         return result
     else:
         return (t_hour, t_min, t_sec)
@@ -87,19 +87,18 @@ def type_val(val):
 
 
 def to_standard_string(a_string):
-    for to_replace in string.punctuation + ' ':
-        a_string = a_string.replace(to_replace, '')
+    for to_replace in string.punctuation + " ":
+        a_string = a_string.replace(to_replace, "")
 
     return a_string.lower()
 
 
 def standard_equality(string_1, string_2):
-    assert (isinstance(string_1, str) and isinstance(string_2, str))
-
+    # assert (isinstance(string_1, str) and isinstance(string_2, str))
     return to_standard_string(string_1) == to_standard_string(string_2)
 
 
-def to_even(value, append_char=' '):
+def to_even(value, append_char=" "):
     try:
         if len(value) % 2 != 0:
             return value + append_char
@@ -114,6 +113,7 @@ def composed(*decorators):
         for dec in reversed(decorators):
             f = dec(f)
         return f
+
     return _deco
 
 
@@ -131,5 +131,5 @@ def deep_dict_set(rec_dict, keys, value):
     return rec_dict
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
