@@ -3,6 +3,7 @@ HyperparameterHunter
 
 ![HyperparameterHunter Overview](docs/media/overview.gif)
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5a9c5ce4d4dc4e9b9debe2b6bcc06576)](https://app.codacy.com/app/HunterMcGushion/hyperparameter_hunter?utm_source=github.com&utm_medium=referral&utm_content=HunterMcGushion/hyperparameter_hunter&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter.svg?branch=master)](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter)
 [![Documentation Status](https://readthedocs.org/projects/hyperparameter-hunter/badge/?version=latest)](https://hyperparameter-hunter.readthedocs.io/en/latest/?badge=latest)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ef0d004a10ede0b228cc/maintainability)](https://codeclimate.com/github/HunterMcGushion/hyperparameter_hunter/maintainability)
