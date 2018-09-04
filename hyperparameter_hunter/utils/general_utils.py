@@ -12,8 +12,8 @@ import string
 
 
 def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
-    """Return an updated dictionary that mirrors `default_vals`, except where the key in `new_vals` matches the path in
-    `default_vals`, in which case the `new_vals` value is used
+    """Return an updated dictionary that mirrors `default_vals`, except where the key in `new_vals`
+    matches the path in `default_vals`, in which case the `new_vals` value is used
 
     Parameters
     ----------
@@ -22,9 +22,10 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     new_vals: Dict
         Dict whose keys are expected to be tuples corresponding to key paths in `default_vals`
     iter_attrs: Callable, list of callables, or None, default=None
-        If callable, must evaluate to True or False when given three inputs: (path, key, value). Callable should return True if
-        the current value should be entered by `remap`. If callable returns False, `default_enter` will be called. If `iter_attrs`
-        is a list of callables, the value will be entered if any evaluates to True. If None, `default_enter` will be called
+        If callable, must evaluate to True or False when given three inputs: (path, key, value).
+        Callable should return True if the current value should be entered by `remap`. If callable
+        returns False, `default_enter` will be called. If `iter_attrs` is a list of callables, the
+        value will be entered if any evaluates to True. If None, `default_enter` will be called
 
     Returns
     -------
@@ -47,7 +48,8 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
         return (key, value)
 
     def _enter(path, key, value):
-        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic attributes. Else, `default_enter`"""
+        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
+        attributes. Else, `default_enter`"""
         if any([_(path, key, value) for _ in iter_attrs]):
             included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
