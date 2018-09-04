@@ -109,7 +109,9 @@ class Environment:
         train_dataset: Pandas.DataFrame, or str path
             The training data for the experiment. Will be split into train/holdout data, if
             applicable, and train/validation data if cross-validation is to be performed. If str,
-            will attempt to read file at path via :func:`pandas.read_csv`
+            will attempt to read file at path via :func:`pandas.read_csv`. For more information on
+            which columns will be used during fitting/predicting, see the "Dataset columns" note
+            in the "Notes" section below
         environment_params_path: String path, or None, default=None
             If not None and is valid .json filepath containing an object (dict), the file's contents
             are treated as the default values for all keys that match any of the below kwargs used
@@ -134,12 +136,15 @@ class Environment:
             If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes
             (self.train: DataFrame, self.target_column: str) as input and returns the new
             (self.train: DataFrame, self.holdout: DataFrame). If str, will attempt to read file at
-            path via :func:`pandas.read_csv`. Else, there is no holdout set
+            path via :func:`pandas.read_csv`. Else, there is no holdout set. For more information on
+            which columns will be used during fitting/predicting, see the "Dataset columns" note
+            in the "Notes" section below
         test_dataset: Pandas.DataFrame, str path, or None, default=None
             The testing data for the experiment. Structure should be identical to that of
             `train_dataset`, except its `target_column` column can be empty or non-existent, because
             `test_dataset` predictions will never be evaluated. If str, will attempt to read file at
-            path via :func:`pandas.read_csv`
+            path via :func:`pandas.read_csv`. For more information on which columns will be used
+            during fitting/predicting, see the "Dataset columns" note in the "Notes" section below
         target_column: str, default='target'
             Str denoting the column name in all provided datasets (except test) that contains the
             target output
@@ -235,6 +240,19 @@ class Environment:
 
         Notes
         -----
+        Dataset columns: In order to specify the columns to be used by the three dataset kwargs
+        (`train_dataset`, `holdout_dataset`, `test_dataset`) during fitting and predicting, a few
+        attributes can be used. On `Environment` initialization, the columns specified by the
+        following kwargs will be separated from the rest of the dataset during training/predicting:
+        1) `target_column`, which names the column containing the target output labels for the input
+        data; and 2) `id_column`, which (if given) represents the name of the column that contains
+        identifying information for each data sample, and should otherwise have no relation to the
+        actual data. Additionally, the `feature_selector` kwarg of the descendants of
+        :class:`hyperparameter_hunter.experiments.BaseExperiment` (like
+        :class:`hyperparameter_hunter.experiments.CrossValidationExperiment`) is used to filter out
+        columns of the given datasets prior to fitting. See its documentation for more information,
+        but it can effectively be used to remove any columns from the datasets
+
         Overriding default kwargs at `environment_params_path`: If you have any of the above kwargs
         specified in the .json file at environment_params_path (except environment_params_path,
         which will be ignored), you can override its value by passing it as a kwarg when
