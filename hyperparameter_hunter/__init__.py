@@ -27,19 +27,15 @@ from .space import Categorical
 from .callbacks.bases import lambda_callback
 
 __all__ = [
-    'Environment',
-
-    'CrossValidationExperiment',
-
-    'BayesianOptimization',
-    'GradientBoostedRegressionTreeOptimization',
-    'RandomForestOptimization',
-    'ExtraTreesOptimization',
-    'DummySearch',
-
-    'Real',
-    'Integer',
-    'Categorical',
-
-    'lambda_callback',
+    "Environment",
+    "CrossValidationExperiment",
+    "BayesianOptimization",
+    "GradientBoostedRegressionTreeOptimization",
+    "RandomForestOptimization",
+    "ExtraTreesOptimization",
+    "DummySearch",
+    "Real",
+    "Integer",
+    "Categorical",
+    "lambda_callback",
 ]

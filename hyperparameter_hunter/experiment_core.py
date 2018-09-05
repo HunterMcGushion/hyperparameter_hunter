@@ -26,8 +26,16 @@ separated in their own classes makes it very easy to debug existing functionalit
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.callbacks.aggregators import AggregatorEvaluations, AggregatorEpochsElapsed, AggregatorTimes
-from hyperparameter_hunter.callbacks.bases import BaseCallback, BasePredictorCallback, BaseEvaluatorCallback
+from hyperparameter_hunter.callbacks.aggregators import (
+    AggregatorEvaluations,
+    AggregatorEpochsElapsed,
+    AggregatorTimes,
+)
+from hyperparameter_hunter.callbacks.bases import (
+    BaseCallback,
+    BasePredictorCallback,
+    BaseEvaluatorCallback,
+)
 from hyperparameter_hunter.callbacks.bases import BaseAggregatorCallback, BaseLoggerCallback
 from hyperparameter_hunter.callbacks.evaluators import EvaluatorOOF, EvaluatorHoldout
 from hyperparameter_hunter.callbacks.loggers import LoggerFitStatus
@@ -50,10 +58,7 @@ class ExperimentMeta(type):
         provided, those that are provided on a class-wide basis, and those that are provided on an instance-wide basis. This is
         done in order to preserve the intended MRO of the original base classes, after adding and sorting new bases"""
         namespace = dict(
-            __original_bases=bases,
-            __class_wide_bases=[],
-            __instance_bases=[],
-            source_script=None,
+            __original_bases=bases, __class_wide_bases=[], __instance_bases=[], source_script=None
         )
 
         return namespace
@@ -63,33 +68,37 @@ class ExperimentMeta(type):
         class_obj = super().__new__(mcs, name, bases, namespace)
 
         # Add cross-validation-related bases to inheritance tree
-        if name != 'NoValidationExperiment':
-            namespace['__class_wide_bases'].append(PredictorOOF)
-            namespace['__class_wide_bases'].append(EvaluatorOOF)
+        if name != "NoValidationExperiment":
+            namespace["__class_wide_bases"].append(PredictorOOF)
+            namespace["__class_wide_bases"].append(EvaluatorOOF)
 
         # Add Class-Wide Aggregator Bases
-        namespace['__class_wide_bases'].append(AggregatorEvaluations)
-        namespace['__class_wide_bases'].append(AggregatorEpochsElapsed)
-        namespace['__class_wide_bases'].append(AggregatorTimes)
+        namespace["__class_wide_bases"].append(AggregatorEvaluations)
+        namespace["__class_wide_bases"].append(AggregatorEpochsElapsed)
+        namespace["__class_wide_bases"].append(AggregatorTimes)
 
         # Add Class-Wide Logger Bases
-        namespace['__class_wide_bases'].append(LoggerFitStatus)
+        namespace["__class_wide_bases"].append(LoggerFitStatus)
 
         return class_obj
 
     def __call__(cls, *args, **kwargs):
         """Store necessary instance-wide callbacks to :attr:`__instance_bases`, sort all dynamically added callback base classes,
         then add them to the instance"""
-        original_bases = getattr(cls, '__original_bases')
-        class_wide_bases = getattr(cls, '__class_wide_bases')
+        original_bases = getattr(cls, "__original_bases")
+        class_wide_bases = getattr(cls, "__class_wide_bases")
         instance_bases = []
 
         # Get source_script for use by Experiment later
-        setattr(cls, 'source_script', os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]))
+        setattr(
+            cls,
+            "source_script",
+            os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]),
+        )
 
         # Add callbacks explicitly supplied on class initialization
-        if kwargs.get('callbacks', None) is not None:
-            for callback in kwargs['callbacks']:
+        if kwargs.get("callbacks", None) is not None:
+            for callback in kwargs["callbacks"]:
                 instance_bases.append(callback)
 
         # Infer necessary callbacks based on class initialization inputs
@@ -104,7 +113,7 @@ class ExperimentMeta(type):
         if len(G.Env.experiment_callbacks) > 0:
             instance_bases.extend(G.Env.experiment_callbacks)
 
-        setattr(cls, '__instance_bases', instance_bases)
+        setattr(cls, "__instance_bases", instance_bases)
 
         # Sort dynamically added auxiliary base classes
         auxiliary_bases = tuple(base_callback_class_sorter((class_wide_bases + instance_bases)))
@@ -149,7 +158,11 @@ def base_callback_class_sorter(auxiliary_bases, parent_class_order=None):
         If `auxiliary_bases` contains a class that is not a descendant of any of the classes in `parent_class_order`"""
     if parent_class_order is None:
         parent_class_order = [
-            BasePredictorCallback, BaseEvaluatorCallback, BaseAggregatorCallback, BaseLoggerCallback, BaseCallback
+            BasePredictorCallback,
+            BaseEvaluatorCallback,
+            BaseAggregatorCallback,
+            BaseLoggerCallback,
+            BaseCallback,
         ]
 
     sorted_auxiliary_bases = []
@@ -162,10 +175,12 @@ def base_callback_class_sorter(auxiliary_bases, parent_class_order=None):
         sorted_auxiliary_bases.extend(callback_holder)
 
     if len(auxiliary_bases) > 0:
-        raise ValueError(F'Received base class that does not inherit any of the given parent classes: {auxiliary_bases}')
+        raise ValueError(
+            f"Received base class that does not inherit any of the given parent classes: {auxiliary_bases}"
+        )
 
     return sorted_auxiliary_bases
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -41,6 +41,7 @@ class BaseCallback(object):
     "Heartbeat.log" file. Conversely, if any of the below debug messages are not printed to "Heartbeat.log", it is likely that a
     callback class's implementation of the corresponding method does not end with "super().<method_name>()". Such cases should be
     remedied immediately, as the callback stream could be skipping any number of other callbacks"""
+
     # FLAG: Try to implement something like below to ensure other attributes aren't modified (except predictions by Predictors)
     # FLAG: However, since ExperimentMeta makes BaseCallback a superclass of the Experiment classes, they would all pick up...
     # FLAG: ... this method, which would break everything.
@@ -53,47 +54,51 @@ class BaseCallback(object):
 
     def __init__(self):
         """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
-        print('I should not be printed. Ever.')
+        print("I should not be printed. Ever.")
 
     def on_experiment_start(self):
         """Perform tasks when an Experiment is started"""
-        G.debug('BaseCallback.on_experiment_start()')
+        G.debug("BaseCallback.on_experiment_start()")
 
     def on_experiment_end(self):
         """Perform tasks when an Experiment ends"""
-        G.debug('BaseCallback.on_experiment_end()')
+        G.debug("BaseCallback.on_experiment_end()")
 
     def on_repetition_start(self):
         """Perform tasks when a repetition is started during an Experiment's repeated cross-validation scheme"""
-        G.debug('BaseCallback.on_repetition_start()')
+        G.debug("BaseCallback.on_repetition_start()")
 
     def on_repetition_end(self):
         """Perform tasks when a repetition ends during an Experiment's repeated cross-validation scheme"""
-        G.debug('BaseCallback.on_repetition_end()')
+        G.debug("BaseCallback.on_repetition_end()")
 
     def on_fold_start(self):
         """Perform tasks when a fold is started during an Experiment's cross-validation scheme"""
-        G.debug('BaseCallback.on_fold_start()')
+        G.debug("BaseCallback.on_fold_start()")
 
     def on_fold_end(self):
         """Perform tasks when a fold ends during an Experiment's cross-validation scheme"""
-        G.debug('BaseCallback.on_fold_end()')
+        G.debug("BaseCallback.on_fold_end()")
 
     def on_run_start(self):
         """Perform tasks when a run is started during an Experiment's multiple-run-averaging phase"""
-        G.debug('BaseCallback.on_run_start()')
+        G.debug("BaseCallback.on_run_start()")
 
     def on_run_end(self):
         """Perform tasks when a run ends during an Experiment's multiple-run-averaging phase"""
-        G.debug('BaseCallback.on_run_end()')
+        G.debug("BaseCallback.on_run_end()")
 
 
 def lambda_callback(
-        required_attributes,
-        on_experiment_start=None, on_experiment_end=None,
-        on_repetition_start=None, on_repetition_end=None,
-        on_fold_start=None, on_fold_end=None,
-        on_run_start=None, on_run_end=None,
+    required_attributes,
+    on_experiment_start=None,
+    on_experiment_end=None,
+    on_repetition_start=None,
+    on_repetition_end=None,
+    on_fold_start=None,
+    on_fold_end=None,
+    on_run_start=None,
+    on_run_end=None,
 ):
     """Utility for creating custom callbacks to be declared by :class:`Environment` and used by Experiments
 
@@ -141,18 +146,24 @@ def lambda_callback(
     See :mod:`hyperparameter_hunter.examples.lambda_callback_example` for more"""
 
     methods = [
-        ('on_experiment_start', on_experiment_start), ('on_experiment_end', on_experiment_end),
-        ('on_repetition_start', on_repetition_start), ('on_repetition_end', on_repetition_end),
-        ('on_fold_start', on_fold_start), ('on_fold_end', on_fold_end),
-        ('on_run_start', on_run_start), ('on_run_end', on_run_end),
+        ("on_experiment_start", on_experiment_start),
+        ("on_experiment_end", on_experiment_end),
+        ("on_repetition_start", on_repetition_start),
+        ("on_repetition_end", on_repetition_end),
+        ("on_fold_start", on_fold_start),
+        ("on_fold_end", on_fold_end),
+        ("on_run_start", on_run_start),
+        ("on_run_end", on_run_end),
     ]
 
-    LambdaCallback = type('LambdaCallback', (BaseCallback,), dict())
+    LambdaCallback = type("LambdaCallback", (BaseCallback,), dict())
 
     for method_name, method_content in methods:
         if callable(method_content):
+
             def _method_factory(_method_name=method_name, _method_content=method_content):
                 """Provide `_method_name` and `_method_content` for :func:`_method` to be executed properly"""
+
                 def _method(self):
                     """Perform the tasks given in `_method_content`, then call parent's method of name `_method_name`"""
                     _method_content(*[getattr(self, _) for _ in required_attributes])
@@ -167,23 +178,27 @@ def lambda_callback(
 
 class BasePredictorCallback(BaseCallback):
     """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.predictors` are descendants"""
+
     pass
 
 
 class BaseLoggerCallback(BaseCallback):
     """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.loggers` are descendants"""
+
     pass
 
 
 class BaseAggregatorCallback(BaseCallback):
     """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.aggregators` are descendants"""
+
     pass
 
 
 class BaseEvaluatorCallback(BaseCallback):
     """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.evaluators` are descendants"""
+
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

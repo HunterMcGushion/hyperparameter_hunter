@@ -71,7 +71,9 @@ class Sentinel(metaclass=ABCMeta):
         value: Str
             The new value of :attr:`Sentinel._sentinel`"""
         if not isinstance(value, str):
-            raise TypeError('`sentinel` must be of type str. Received "{}": {}'.format(type(value), value))
+            raise TypeError(
+                '`sentinel` must be of type str. Received "{}": {}'.format(type(value), value)
+            )
 
         self._sentinel = value
         G.sentinel_registry.append(self)
@@ -134,7 +136,14 @@ def locate_sentinels(parameters):
 # Sentinel Classes
 ##################################################
 class DatasetSentinel(Sentinel):
-    def __init__(self, dataset_type, dataset_hash, cross_validation_type=None, global_random_seed=None, random_seeds=None):
+    def __init__(
+        self,
+        dataset_type,
+        dataset_hash,
+        cross_validation_type=None,
+        global_random_seed=None,
+        random_seeds=None,
+    ):
         """Class to create sentinels representing dataset input/target values
 
         Parameters
@@ -170,14 +179,16 @@ class DatasetSentinel(Sentinel):
         -------
         sentinel: Str
             A string identifying the sentinel"""
-        sentinel = 'SENTINEL***'
-        sentinel += self.dataset_type + '***'
-        sentinel += self.dataset_hash + '***'
-        sentinel += self.cross_validation_type + '***' if self.cross_validation_type is not None else ''
+        sentinel = "SENTINEL***"
+        sentinel += self.dataset_type + "***"
+        sentinel += self.dataset_hash + "***"
+        sentinel += (
+            self.cross_validation_type + "***" if self.cross_validation_type is not None else ""
+        )
         if self.random_seeds is not None:
-            sentinel += '{}'.format(self.random_seeds)
+            sentinel += "{}".format(self.random_seeds)
         elif self.global_random_seed is not None:
-            sentinel += '{}'.format(self.global_random_seed)
+            sentinel += "{}".format(self.global_random_seed)
 
         return sentinel
 
@@ -188,35 +199,51 @@ class DatasetSentinel(Sentinel):
         -------
         object
             The dataset for which the sentinel was being used as a placeholder"""
-        if self.dataset_type in ('train_input', 'train_target', 'validation_input', 'validation_target'):
-            return getattr(G.Env.current_task, 'fold_{}'.format(self.dataset_type))
+        if self.dataset_type in (
+            "train_input",
+            "train_target",
+            "validation_input",
+            "validation_target",
+        ):
+            return getattr(G.Env.current_task, "fold_{}".format(self.dataset_type))
         else:
-            return getattr(G.Env.current_task, '{}_data'.format(self.dataset_type))
+            return getattr(G.Env.current_task, "{}_data".format(self.dataset_type))
 
     def _validate_parameters(self):
         """Ensure input parameters are valid and properly formatted"""
         #################### dataset_type ####################
         acceptable_values = [
-            'train_input', 'train_target', 'validation_input', 'validation_target', 'holdout_input', 'holdout_target'
+            "train_input",
+            "train_target",
+            "validation_input",
+            "validation_target",
+            "holdout_input",
+            "holdout_target",
         ]
 
         if self.dataset_type not in acceptable_values:
             raise ValueError('Received invalid `dataset_type`: "{}"'.format(self.dataset_type))
 
         #################### cross_validation_type ####################
-        if self.dataset_type in ('holdout_input', 'holdout_target'):
+        if self.dataset_type in ("holdout_input", "holdout_target"):
             self.cross_validation_type = None
         elif self.cross_validation_type is None:
-            raise ValueError('`cross_validation_type` may only be None if `dataset_type` is from "holdout"')
+            raise ValueError(
+                '`cross_validation_type` may only be None if `dataset_type` is from "holdout"'
+            )
 
         #################### global_random_seed ####################
-        if self.dataset_type in ('holdout_input', 'holdout_target'):
+        if self.dataset_type in ("holdout_input", "holdout_target"):
             self.global_random_seed = None
         elif self.global_random_seed is None:
-            raise ValueError('`global_random_seed` may only be None if `dataset_type` is from "holdout"')
+            raise ValueError(
+                '`global_random_seed` may only be None if `dataset_type` is from "holdout"'
+            )
 
         #################### random_seeds ####################
-        if self.dataset_type in ('holdout_input', 'holdout_target'):
+        if self.dataset_type in ("holdout_input", "holdout_target"):
             self.random_seeds = None
         elif self.random_seeds is None and self.global_random_seed is None:
-            raise ValueError('`random_seeds` may only be None if `dataset_type` is from "holdout", or `global_random_seed` given')
+            raise ValueError(
+                '`random_seeds` may only be None if `dataset_type` is from "holdout", or `global_random_seed` given'
+            )

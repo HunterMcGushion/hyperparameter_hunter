@@ -25,7 +25,9 @@ import numpy as np
 import pandas as pd
 
 
-def format_predictions(raw_predictions: np.array, dataset_df: pd.DataFrame, target_column: str, id_column: str = None):
+def format_predictions(
+    raw_predictions: np.array, dataset_df: pd.DataFrame, target_column: str, id_column: str = None
+):
     """Organize components into a pandas.DataFrame that is properly formatted and ready to save
 
     Parameters

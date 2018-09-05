@@ -38,13 +38,13 @@ def handle_exception(exception_type, exception_value, exception_traceback):
     SystemExit
         If `exception_type` is a subclass of KeyboardInterrupt"""
     if issubclass(exception_type, KeyboardInterrupt):
-        logging.error('KEYBOARD INTERRUPT!')
+        logging.error("KEYBOARD INTERRUPT!")
         sys.__excepthook__(exception_type, exception_value, exception_traceback)
         raise SystemExit
 
     logging.critical(
-        'Uncaught exception!   {}: {}'.format(exception_type.__name__, exception_value),
-        exc_info=(exception_type, exception_value, exception_traceback)
+        "Uncaught exception!   {}: {}".format(exception_type.__name__, exception_value),
+        exc_info=(exception_type, exception_value, exception_traceback),
     )
 
 
@@ -54,7 +54,7 @@ def hook_exception_handler():
 
 
 class EnvironmentInactiveError(Exception):
-    def __init__(self, message=None, extra=''):
+    def __init__(self, message=None, extra=""):
         """Exception raised when an active instance of :class:`hyperparameter_hunter.environments.Environment` is not detected
 
         Parameters
@@ -64,12 +64,12 @@ class EnvironmentInactiveError(Exception):
         extra: String, default=''
             Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
-            message = 'You must activate a valid instance of :class:`environment.Environment`'
+            message = "You must activate a valid instance of :class:`environment.Environment`"
         super(EnvironmentInactiveError, self).__init__(message + extra)
 
 
 class EnvironmentInvalidError(Exception):
-    def __init__(self, message=None, extra=''):
+    def __init__(self, message=None, extra=""):
         """Exception raised when there is an active instance of :class:`hyperparameter_hunter.environments.Environment`, but it is
         invalid for some reason
 
@@ -80,12 +80,12 @@ class EnvironmentInvalidError(Exception):
         extra: String, default=''
             Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
-            message = 'The currently active Environment is invalid. Please review proper Environment instantiation'
+            message = "The currently active Environment is invalid. Please review proper Environment instantiation"
         super(EnvironmentInvalidError, self).__init__(message + extra)
 
 
 class RepeatedExperimentError(Exception):
-    def __init__(self, message=None, extra=''):
+    def __init__(self, message=None, extra=""):
         """Exception raised when a saved Experiment is found with the same hyperparameters as the Experiment being executed
 
         Parameters
@@ -95,9 +95,9 @@ class RepeatedExperimentError(Exception):
         extra: String, default=''
             Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
-            message = 'An Experiment with identical hyperparameters has already been conducted and has saved results'
+            message = "An Experiment with identical hyperparameters has already been conducted and has saved results"
         super(RepeatedExperimentError, self).__init__(message + extra)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

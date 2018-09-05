@@ -16,6 +16,7 @@ def wrap_xgboost_metric(metric, metric_name):
     eval_metric: Function
         The function to pass to XGBoost's :meth:`fit`, with signature: (`prediction`, `target`). It will return a tuple
         of (`metric_name`: str, `metric_value`: float)"""
+
     def eval_metric(prediction, target):
         """Evaluate a custom metric for use as the `eval_metric` kwarg in :meth:`xgboost.sklearn.XGBModel.fit`
 

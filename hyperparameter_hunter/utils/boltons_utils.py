@@ -23,8 +23,8 @@ from collections import Mapping, Sequence, Set, ItemsView
 try:
     from typeutils import make_sentinel
 
-    _UNSET = make_sentinel('_UNSET')
-    _REMAP_EXIT = make_sentinel('_REMAP_EXIT')
+    _UNSET = make_sentinel("_UNSET")
+    _REMAP_EXIT = make_sentinel("_REMAP_EXIT")
 except ImportError:
     _REMAP_EXIT = object()
     _UNSET = object()
@@ -121,7 +121,7 @@ def split_iter(src, sep=None, maxsplit=None):
     See :func:`split` for a list-returning version.
     """
     if not is_iterable(src):
-        raise TypeError('expected an iterable')
+        raise TypeError("expected an iterable")
 
     if maxsplit is not None:
         maxsplit = int(maxsplit)
@@ -192,18 +192,18 @@ def chunked_iter(src, size, **kw):
     """
     # TODO: add count kwarg?
     if not is_iterable(src):
-        raise TypeError('expected an iterable')
+        raise TypeError("expected an iterable")
     size = int(size)
     if size <= 0:
-        raise ValueError('expected a positive integer chunk size')
+        raise ValueError("expected a positive integer chunk size")
     do_fill = True
     try:
-        fill_val = kw.pop('fill')
+        fill_val = kw.pop("fill")
     except KeyError:
         do_fill = False
         fill_val = None
     if kw:
-        raise ValueError('got unexpected keyword arguments: %r' % kw.keys())
+        raise ValueError("got unexpected keyword arguments: %r" % kw.keys())
     if not src:
         return
     postprocess = lambda chk: chk
@@ -285,7 +285,7 @@ def xfrange(stop, start=None, step=1.0):
     See :func:`frange` for more details.
     """
     if not step:
-        raise ValueError('step must be non-zero')
+        raise ValueError("step must be non-zero")
     if start is None:
         start, stop = 0.0, stop * 1.0
     else:
@@ -311,7 +311,7 @@ def frange(stop, start=None, step=1.0):
     [5.0, 3.75, 2.5, 1.25]
     """
     if not step:
-        raise ValueError('step must be non-zero')
+        raise ValueError("step must be non-zero")
     if start is None:
         start, stop = 0.0, stop * 1.0
     else:
@@ -336,10 +336,9 @@ def backoff(start, stop, count=None, factor=2.0, jitter=False):
     >>> backoff(1, 10)
     [1.0, 2.0, 4.0, 8.0, 10.0]
     """
-    if count == 'repeat':
+    if count == "repeat":
         raise ValueError("'repeat' supported in backoff_iter, not backoff")
-    return list(backoff_iter(start, stop, count=count,
-                             factor=factor, jitter=jitter))
+    return list(backoff_iter(start, stop, count=count, factor=factor, jitter=jitter))
 
 
 def backoff_iter(start, stop, count=None, factor=2.0, jitter=False):
@@ -391,26 +390,26 @@ def backoff_iter(start, stop, count=None, factor=2.0, jitter=False):
     stop = float(stop)
     factor = float(factor)
     if start < 0.0:
-        raise ValueError('expected start >= 0, not %r' % start)
+        raise ValueError("expected start >= 0, not %r" % start)
     if factor < 1.0:
-        raise ValueError('expected factor >= 1.0, not %r' % factor)
+        raise ValueError("expected factor >= 1.0, not %r" % factor)
     if stop == 0.0:
-        raise ValueError('expected stop >= 0')
+        raise ValueError("expected stop >= 0")
     if stop < start:
-        raise ValueError('expected stop >= start, not %r' % stop)
+        raise ValueError("expected stop >= start, not %r" % stop)
     if count is None:
         denom = start if start else 1
         count = 1 + math.ceil(math.log(stop / denom, factor))
         count = count if start else count + 1
-    if count != 'repeat' and count < 0:
+    if count != "repeat" and count < 0:
         raise ValueError('count must be positive or "repeat", not %r' % count)
     if jitter:
         jitter = float(jitter)
         if not (-1.0 <= jitter <= 1.0):
-            raise ValueError('expected jitter -1 <= j <= 1, not: %r' % jitter)
+            raise ValueError("expected jitter -1 <= j <= 1, not: %r" % jitter)
 
     cur, i = start, 0
-    while count == 'repeat' or i < count:
+    while count == "repeat" or i < count:
         if not jitter:
             cur_ret = cur
         elif jitter:
@@ -454,15 +453,15 @@ def bucketize(src, key=None, value_transform=None, key_filter=None):
     use cases.
     """
     if not is_iterable(src):
-        raise TypeError('expected an iterable')
+        raise TypeError("expected an iterable")
     if key is None:
         key = bool
     if not callable(key):
-        raise TypeError('expected callable key function')
+        raise TypeError("expected callable key function")
     if value_transform is None:
         value_transform = lambda x: x
     if not callable(value_transform):
-        raise TypeError('expected callable value transform function')
+        raise TypeError("expected callable value transform function")
 
     ret = {}
     for val in src:
@@ -518,7 +517,7 @@ def unique_iter(src, key=None):
     ['hi', 'hello', 'bye']
     """
     if not is_iterable(src):
-        raise TypeError('expected an iterable, not %r' % type(src))
+        raise TypeError("expected an iterable, not %r" % type(src))
     if key is None:
         key_func = lambda x: x
     elif callable(key):
@@ -659,12 +658,11 @@ def default_exit(path, key, old_parent, new_parent, new_items):
         except AttributeError:
             ret = new_parent.__class__(vals)  # frozensets
     else:
-        raise RuntimeError('unexpected iterable type: %r' % type(new_parent))
+        raise RuntimeError("unexpected iterable type: %r" % type(new_parent))
     return ret
 
 
-def remap(root, visit=default_visit, enter=default_enter, exit=default_exit,
-          **kwargs):
+def remap(root, visit=default_visit, enter=default_enter, exit=default_exit, **kwargs):
     """The remap ("recursive map") function is used to traverse and
     transform nested structures. Lists, tuples, sets, and dictionaries
     are just a few of the data structures nested into heterogenous
@@ -748,14 +746,14 @@ def remap(root, visit=default_visit, enter=default_enter, exit=default_exit,
     # TODO: improve argument formatting in sphinx doc
     # TODO: enter() return (False, items) to continue traverse but cancel copy?
     if not callable(visit):
-        raise TypeError('visit expected callable, not: %r' % visit)
+        raise TypeError("visit expected callable, not: %r" % visit)
     if not callable(enter):
-        raise TypeError('enter expected callable, not: %r' % enter)
+        raise TypeError("enter expected callable, not: %r" % enter)
     if not callable(exit):
-        raise TypeError('exit expected callable, not: %r' % exit)
-    reraise_visit = kwargs.pop('reraise_visit', True)
+        raise TypeError("exit expected callable, not: %r" % exit)
+    reraise_visit = kwargs.pop("reraise_visit", True)
     if kwargs:
-        raise TypeError('unexpected keyword arguments: %r' % kwargs.keys())
+        raise TypeError("unexpected keyword arguments: %r" % kwargs.keys())
 
     path, registry, stack = (), {}, [(None, root)]
     new_items_stack = []
@@ -778,8 +776,9 @@ def remap(root, visit=default_visit, enter=default_enter, exit=default_exit,
                 new_parent, new_items = res
             except TypeError:
                 # TODO: handle False?
-                raise TypeError('enter should return a tuple of (new_parent,'
-                                ' items_iterator), not: %r' % res)
+                raise TypeError(
+                    "enter should return a tuple of (new_parent," " items_iterator), not: %r" % res
+                )
             if new_items is not False:
                 # traverse unless False is explicitly passed
                 registry[id_value] = new_parent
@@ -810,7 +809,7 @@ def remap(root, visit=default_visit, enter=default_enter, exit=default_exit,
         try:
             new_items_stack[-1][1].append(visited_item)
         except IndexError:
-            raise TypeError('expected remappable root, not: %r' % root)
+            raise TypeError("expected remappable root, not: %r" % root)
     return value
 
 
@@ -827,11 +826,10 @@ class PathAccessError(KeyError, IndexError, TypeError):
 
     def __repr__(self):
         cn = self.__class__.__name__
-        return '%s(%r, %r, %r)' % (cn, self.exc, self.seg, self.path)
+        return "%s(%r, %r, %r)" % (cn, self.exc, self.seg, self.path)
 
     def __str__(self):
-        return ('could not access %r from path %r, got error: %r'
-                % (self.seg, self.path, self.exc))
+        return "could not access %r from path %r, got error: %r" % (self.seg, self.path, self.exc)
 
 
 def get_path(root, path, default=_UNSET):
@@ -861,7 +859,7 @@ def get_path(root, path, default=_UNSET):
           ``PathAccessError`` exceptions be raised.
     """
     if isinstance(path, basestring):
-        path = path.split('.')
+        path = path.split(".")
     cur = root
     try:
         for seg in path:
@@ -877,8 +875,7 @@ def get_path(root, path, default=_UNSET):
                     cur = cur[seg]
                 except (ValueError, KeyError, IndexError, TypeError):
                     if not is_iterable(cur):
-                        exc = TypeError('%r object is not indexable'
-                                        % type(cur).__name__)
+                        exc = TypeError("%r object is not indexable" % type(cur).__name__)
                     raise PathAccessError(exc, seg, path)
     except PathAccessError:
         if default is _UNSET:
@@ -924,7 +921,7 @@ def research(root, query=lambda p, k, v: True, reraise=False):
     ret = []
 
     if not callable(query):
-        raise TypeError('query expected callable, not: %r' % query)
+        raise TypeError("query expected callable, not: %r" % query)
 
     def enter(path, key, value):
         try:
@@ -946,6 +943,7 @@ def research(root, query=lambda p, k, v: True, reraise=False):
 
 # GUID iterators: 10x faster and somewhat more compact than uuid.
 
+
 class GUIDerator(object):
     """The GUIDerator is an iterator that yields a globally-unique
     identifier (GUID) on every iteration. The GUIDs produced are
@@ -966,17 +964,20 @@ class GUIDerator(object):
     def __init__(self, size=24):
         self.size = size
         if size < 20 or size > 36:
-            raise ValueError('expected 20 < size <= 36')
+            raise ValueError("expected 20 < size <= 36")
         self.count = itertools.count()
         self.reseed()
 
     def reseed(self):
         self.pid = os.getpid()
-        self.salt = '-'.join([str(self.pid),
-                              socket.gethostname() or b'<nohostname>',
-                              str(time.time()),
-                              codecs.encode(os.urandom(6),
-                                            'hex_codec').decode('ascii')])
+        self.salt = "-".join(
+            [
+                str(self.pid),
+                socket.gethostname() or b"<nohostname>",
+                str(time.time()),
+                codecs.encode(os.urandom(6), "hex_codec").decode("ascii"),
+            ]
+        )
         # that codecs trick is the best/only way to get a bytes to
         # hexbytes in py2/3
         return
@@ -985,18 +986,20 @@ class GUIDerator(object):
         return self
 
     if _IS_PY3:
+
         def __next__(self):
             if os.getpid() != self.pid:
                 self.reseed()
-            target_bytes = (self.salt + str(next(self.count))).encode('utf8')
-            hash_text = hashlib.sha1(target_bytes).hexdigest()[:self.size]
+            target_bytes = (self.salt + str(next(self.count))).encode("utf8")
+            hash_text = hashlib.sha1(target_bytes).hexdigest()[: self.size]
             return hash_text
+
     else:
+
         def __next__(self):
             if os.getpid() != self.pid:
                 self.reseed()
-            return hashlib.sha1(self.salt +
-                                str(next(self.count))).hexdigest()[:self.size]
+            return hashlib.sha1(self.salt + str(next(self.count))).hexdigest()[: self.size]
 
     next = __next__
 
@@ -1024,22 +1027,25 @@ class SequentialGUIDerator(GUIDerator):
     """
 
     if _IS_PY3:
+
         def reseed(self):
             super(SequentialGUIDerator, self).reseed()
-            start_str = hashlib.sha1(self.salt.encode('utf8')).hexdigest()
-            self.start = int(start_str[:self.size], 16)
-            self.start |= (1 << ((self.size * 4) - 2))
+            start_str = hashlib.sha1(self.salt.encode("utf8")).hexdigest()
+            self.start = int(start_str[: self.size], 16)
+            self.start |= 1 << ((self.size * 4) - 2)
+
     else:
+
         def reseed(self):
             super(SequentialGUIDerator, self).reseed()
             start_str = hashlib.sha1(self.salt).hexdigest()
-            self.start = int(start_str[:self.size], 16)
-            self.start |= (1 << ((self.size * 4) - 2))
+            self.start = int(start_str[: self.size], 16)
+            self.start |= 1 << ((self.size * 4) - 2)
 
     def __next__(self):
         if os.getpid() != self.pid:
             self.reseed()
-        return '%x' % (next(self.count) + self.start)
+        return "%x" % (next(self.count) + self.start)
 
     next = __next__
 

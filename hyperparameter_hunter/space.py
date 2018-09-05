@@ -69,7 +69,7 @@ class Dimension(skopt_space.Dimension, metaclass=ABCMeta):
 
 
 class Real(Dimension, skopt_space.Real):
-    def __init__(self, low, high, prior='uniform', transform='identity', name=None):
+    def __init__(self, low, high, prior="uniform", transform="identity", name=None):
         """Search space dimension that can assume any real value in a given range
 
         Parameters
@@ -120,7 +120,7 @@ class Integer(Dimension, skopt_space.Integer):
 
 
 class Categorical(Dimension, skopt_space.Categorical):
-    def __init__(self, categories, prior=None, transform='onehot', name=None):
+    def __init__(self, categories, prior=None, transform="onehot", name=None):
         """Search space dimension that can assume any categorical value in a given list
 
         Parameters
@@ -187,7 +187,11 @@ class Space(skopt_space.Space):
         else:
             search_space_size = reduce(
                 lambda x, y: x * y,
-                [1] + [(_.high - _.low + 1) if isinstance(_, Integer) else len(_.bounds) for _ in self.dimensions]
+                [1]
+                + [
+                    (_.high - _.low + 1) if isinstance(_, Integer) else len(_.bounds)
+                    for _ in self.dimensions
+                ],
             )
 
         return search_space_size
@@ -206,7 +210,7 @@ class Space(skopt_space.Space):
             A list of strings or tuples, in which each value is the name or location of the dimension at that index"""
         names = []
         for dimension in self.dimensions:
-            if use_location and hasattr(dimension, 'location') and dimension.location:
+            if use_location and hasattr(dimension, "location") and dimension.location:
                 names.append(dimension.location)
             else:
                 names.append(dimension.name)
@@ -245,26 +249,36 @@ def normalize_dimensions(dimensions):
 
     if space.is_categorical:
         for dimension in space:
-            transformed_dimensions.append(Categorical(
-                dimension.categories, dimension.prior, transform='identity', name=dimension.name
-            ))
+            transformed_dimensions.append(
+                Categorical(
+                    dimension.categories, dimension.prior, transform="identity", name=dimension.name
+                )
+            )
     else:
         for dimension in space.dimensions:
             if isinstance(dimension, Categorical):
                 transformed_dimensions.append(dimension)
             elif isinstance(dimension, Real):
-                transformed_dimensions.append(Real(
-                    dimension.low, dimension.high, dimension.prior, transform='normalize', name=dimension.name
-                ))
+                transformed_dimensions.append(
+                    Real(
+                        dimension.low,
+                        dimension.high,
+                        dimension.prior,
+                        transform="normalize",
+                        name=dimension.name,
+                    )
+                )
             elif isinstance(dimension, Integer):
-                transformed_dimensions.append(Integer(
-                    dimension.low, dimension.high, transform='normalize', name=dimension.name
-                ))
+                transformed_dimensions.append(
+                    Integer(
+                        dimension.low, dimension.high, transform="normalize", name=dimension.name
+                    )
+                )
             else:
-                raise RuntimeError(F'Unknown dimension type: {type(dimension)}')
+                raise RuntimeError(f"Unknown dimension type: {type(dimension)}")
 
             #################### Replace Lost Attributes ####################
-            if hasattr(dimension, 'location'):
+            if hasattr(dimension, "location"):
                 transformed_dimensions[-1].location = dimension.location
 
     return Space(transformed_dimensions)
@@ -285,15 +299,15 @@ def dimension_subset(hyperparameters, dimensions):
     Returns
     -------
     List of hyperparameter values"""
-    dimensions = [('model_init_params', _) if isinstance(_, str) else _ for _ in dimensions]
+    dimensions = [("model_init_params", _) if isinstance(_, str) else _ for _ in dimensions]
 
     if not all(isinstance(_, tuple) for _ in dimensions):
-        raise TypeError(F'All dimensions should be strings or tuples. Received: {dimensions}')
+        raise TypeError(f"All dimensions should be strings or tuples. Received: {dimensions}")
 
     values = [get_path(hyperparameters, _, default=None) for _ in dimensions]
     # FLAG: Might need to set `default`=<some sentinel str> in above `get_path` call - In case `None` is an accepted value
     return values
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
