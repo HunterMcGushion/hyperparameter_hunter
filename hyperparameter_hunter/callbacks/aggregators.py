@@ -14,7 +14,7 @@ import numpy as np
 
 class AggregatorTimes(BaseAggregatorCallback):
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.stat_aggregates = dict()
         self._rep = None
         self._fold = None
@@ -55,16 +55,12 @@ class AggregatorTimes(BaseAggregatorCallback):
 
     def on_experiment_end(self):
         #################### Reshape Run/Fold Aggregates to be of Proper Dimensions ####################
-        runs_shape, folds_shape = (
-            (self._rep + 1, self._fold + 1, self._run + 1),
-            (self._rep + 1, self._fold + 1),
-        )
-        self.stat_aggregates["times"]["runs"] = np.reshape(
-            self.stat_aggregates["times"]["runs"], runs_shape
-        ).tolist()
-        self.stat_aggregates["times"]["folds"] = np.reshape(
-            self.stat_aggregates["times"]["folds"], folds_shape
-        ).tolist()
+        runs_shape = (self._rep + 1, self._fold + 1, self._run + 1)
+        folds_shape = (self._rep + 1, self._fold + 1)
+
+        for (key, shape) in [("runs", runs_shape), ("folds", folds_shape)]:
+            new_val = np.reshape(self.stat_aggregates["times"][key], shape).tolist()
+            self.stat_aggregates["times"][key] = new_val
 
         self.stat_aggregates["times"]["end"] = str(datetime.now())
         self.__to_elapsed("total_elapsed")
@@ -73,12 +69,11 @@ class AggregatorTimes(BaseAggregatorCallback):
     def __to_elapsed(self, agg_key):
         # TODO: Add documentation
         start_val = self.stat_aggregates["times"][agg_key]
+        now = datetime.now()
         if isinstance(start_val, list):
-            self.stat_aggregates["times"][agg_key][-1] = (
-                datetime.now() - start_val[-1]
-            ).total_seconds()
+            self.stat_aggregates["times"][agg_key][-1] = (now - start_val[-1]).total_seconds()
         else:
-            self.stat_aggregates["times"][agg_key] = (datetime.now() - start_val).total_seconds()
+            self.stat_aggregates["times"][agg_key] = (now - start_val).total_seconds()
 
 
 class AggregatorEvaluations(BaseAggregatorCallback):
@@ -96,11 +91,10 @@ class AggregatorEvaluations(BaseAggregatorCallback):
         if len(self.stat_aggregates.setdefault("evaluations", {}).keys()) == 0:
             for dataset_key, metric_results in self.last_evaluation_results.items():
                 if metric_results is not None:
+                    placeholder = dict(runs=[], folds=[], reps=[], final=None)
                     self.stat_aggregates["evaluations"].update(
                         {
-                            "{}_{}".format(dataset_key, metric_key): dict(
-                                runs=[], folds=[], reps=[], final=None
-                            )
+                            "{}_{}".format(dataset_key, metric_key): placeholder
                             for metric_key in metric_results.keys()
                         }
                     )
@@ -202,23 +196,13 @@ class AggregatorEpochsElapsed(BaseAggregatorCallback):
             # self.stat_aggregates does not have 'epochs_elapsed' key - epochs never recorded in first place
             pass
         except TypeError:
+            vals = self.stat_aggregates["epochs_elapsed"][fold_key]["run_values"]
             G.warn(
                 "\n".join(
                     [
-                        "TypeError encountered when averaging stat_aggregates[{}][{}]:".format(
-                            "epochs_elapsed", fold_key
-                        ),
-                        "\tValues: {}".format(
-                            self.stat_aggregates["epochs_elapsed"][fold_key]["run_values"]
-                        ),
-                        "\tTypes: {}".format(
-                            [
-                                type(_)
-                                for _ in self.stat_aggregates["epochs_elapsed"][fold_key][
-                                    "run_values"
-                                ]
-                            ]
-                        ),
+                        f"TypeError encountered when averaging stat_aggregates['epochs_elapsed'][fold_key]:",
+                        "\tValues: {}".format(vals),
+                        "\tTypes: {}".format([type(_) for _ in vals]),
                         "If the above values are numbers and you want them averaged, fix me ASAP! If not, ignore me",
                     ]
                 )
