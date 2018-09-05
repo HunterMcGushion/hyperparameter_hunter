@@ -19,7 +19,7 @@ import inspect
 
 class LoggerFitStatus(BaseLoggerCallback):
     float_format = "{:.5f}"
-    log_separator = "  |  "  # '   '
+    log_separator = "  |  "
     # FLAG: Add means of updating float_format to "G.Env.reporting_handler_params['float_format']"
 
     def __init__(self):
@@ -33,27 +33,18 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().__init__()
 
     def on_experiment_start(self):
-        content = ""
-        # experiment_start_time = self.stat_aggregates['times']['start']
-
         G.log("\n", previous_frame=inspect.currentframe().f_back)
-        # G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
 
         super().on_experiment_start()
 
     def on_repetition_start(self):
-        G.log(
-            "Starting Repetition {}".format(self._rep), previous_frame=inspect.currentframe().f_back
-        )
+        G.log(f"Starting Repetition {self._rep}", previous_frame=inspect.currentframe().f_back)
         G.log("", previous_frame=inspect.currentframe().f_back)
 
         super().on_repetition_start()
 
     def on_fold_start(self):
-        content = ""
         # fold_start_time = self.stat_aggregates['times']['folds'][-1]
-
-        # G.log('\n', previous_frame=inspect.currentframe().f_back)
         G.log("", previous_frame=inspect.currentframe().f_back)
 
         super().on_fold_start()
@@ -70,16 +61,11 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().on_run_start()
 
     def on_run_end(self):
-        content = list()
-        content.append(format_fold_run(fold=self._fold, run=self._run))
-        content.append(
-            format_evaluation_results(self.last_evaluation_results, float_format=self.float_format)
-        )
-        content.append(
-            "Time Elapsed: {}".format(
-                sec_to_hms(self.stat_aggregates["times"]["runs"][-1], as_str=True)
-            )
-        )
+        content = [
+            format_fold_run(fold=self._fold, run=self._run),
+            format_evaluation_results(self.last_evaluation_results, float_format=self.float_format),
+            f"Time Elapsed: {sec_to_hms(self.stat_aggregates['times']['runs'][-1], as_str=True)}",
+        ]
 
         G.log(self.log_separator.join(content), previous_frame=inspect.currentframe().f_back)
         super().on_run_end()
@@ -90,6 +76,7 @@ class LoggerFitStatus(BaseLoggerCallback):
         content += format_evaluation_results(
             self.last_evaluation_results, float_format=self.float_format
         )
+
         content += self.log_separator if not content.endswith(" ") else ""
 
         content += "Time Elapsed: {}".format(

@@ -91,10 +91,11 @@ class AggregatorEvaluations(BaseAggregatorCallback):
         if len(self.stat_aggregates.setdefault("evaluations", {}).keys()) == 0:
             for dataset_key, metric_results in self.last_evaluation_results.items():
                 if metric_results is not None:
-                    placeholder = dict(runs=[], folds=[], reps=[], final=None)
                     self.stat_aggregates["evaluations"].update(
                         {
-                            "{}_{}".format(dataset_key, metric_key): placeholder
+                            "{}_{}".format(dataset_key, metric_key): dict(
+                                runs=[], folds=[], reps=[], final=None
+                            )
                             for metric_key in metric_results.keys()
                         }
                     )
