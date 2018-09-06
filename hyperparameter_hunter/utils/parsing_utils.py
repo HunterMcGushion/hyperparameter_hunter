@@ -1,17 +1,18 @@
-"""This module contains utilities for parsing Python source code. Its primary tasks include the following: 1) stringifying Python
-source code; 2) traversing Abstract Syntax Trees, especially to locate imports; and 3) preparing and cleaning source code for
-reuse
+"""This module contains utilities for parsing Python source code. Its primary tasks include the
+following: 1) stringifying Python source code; 2) traversing Abstract Syntax Trees, especially to
+locate imports; and 3) preparing and cleaning source code for reuse
 
 Related
 -------
 :mod:`hyperparameter_hunter.library_helpers.keras_optimization_helper`
-    Uses :mod:`hyperparameter_hunter.utils.parsing_utils` to prepare for Keras hyperparameter optimization
+    Uses :mod:`hyperparameter_hunter.utils.parsing_utils` to prepare for Keras optimization
 
 Notes
 -----
-Many of these utilities are modified versions of utilities originally from the `Hyperas` library. Thank you to the Hyperas
-    creators, and contributors for their excellent work and fascinating approach to Keras hyperparameter optimization. Without
-    them, Keras hyperparameter optimization in `hyperparameter_hunter` would be far less pretty"""
+Many of these utilities are modified versions of utilities originally from the `Hyperas` library.
+Thank you to the Hyperas creators, and contributors for their excellent work and fascinating
+approach to Keras hyperparameter optimization. Without them, Keras hyperparameter optimization in
+`hyperparameter_hunter` would be far less pretty"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -46,12 +47,13 @@ def build_temp_model_file(build_fn_str, source_script):
     build_fn_str: Str
         The stringified source code of a callable
     source_script: Str
-        Absolute path to a Python file. Expected to end with one of the following extensions: '.py', '.ipynb'
+        Absolute path to a Python file. Expected to end with one of the following extensions:
+        '.py', '.ipynb'
 
     Returns
     -------
     temp_file_Str: Str
-        The combination of extracted imports, and a clean `build_fn_str` in the format of a Python script"""
+        Combination of extracted imports, and clean `build_fn_str` in Python script format"""
     source_script_contents = read_source_script(source_script)
 
     builder_imports = extract_imports(build_fn_str)
@@ -74,7 +76,8 @@ def read_source_script(filepath):
     Parameters
     ----------
     filepath: Str
-        Absolute path to a Python file. Expected to end with one of the following extensions: '.py', '.ipynb'
+        Absolute path to a Python file. Expected to end with one of the following extensions:
+        '.py', '.ipynb'
 
     Returns
     -------

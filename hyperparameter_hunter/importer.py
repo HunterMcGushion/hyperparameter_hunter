@@ -1,11 +1,11 @@
-"""This module provides utilities to intercept certain external imports and load them using custom logic
+"""This module provides utilities to intercept external imports and load them using custom logic
 
 Related
 -------
 :mod:`hyperparameter_hunter.__init__`
     Executes the import hooks to ensure assets are properly imported prior to starting any real work
 :mod:`hyperparameter_hunter.tracers`
-    Defines tracing metaclasses applied by :mod:`hyperparameter_hunter.importer` to targeted imports"""
+    Defines tracing metaclasses applied by :mod:`hyperparameter_hunter.importer` to imports"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -24,15 +24,15 @@ import sys
 
 class Interceptor(PathFinder):
     def __init__(self, module_name, custom_loader):
-        """Class to intercept the loading of an external module in order to provide custom loading logic
+        """Class to intercept loading of an external module in order to provide custom loading logic
 
         Parameters
         ----------
         module_name: String
             The path of the module, for which loading should be handled by `custom_loader`
         custom_loader: Descendant of `importlib.machinery.SourceFileLoader`
-            Should implement :meth:`exec_module`, which should call its superclass's :meth:`exec_module`, then perform the custom
-            loading logic, and return `module`"""
+            Should implement :meth:`exec_module`, which should call its superclass's
+            :meth:`exec_module`, then perform the custom loading logic, and return `module`"""
         self.module_name = module_name
         self.custom_loader = custom_loader
 
@@ -50,7 +50,8 @@ class Interceptor(PathFinder):
 ##################################################
 class KerasLayerLoader(SourceFileLoader):
     def exec_module(self, module):
-        """Set `module.Layer` a traced version of itself via :class:`hyperparameter_hunter.tracers.KerasTracer`"""
+        """Set `module.Layer` a traced version of itself via
+        :class:`hyperparameter_hunter.tracers.KerasTracer`"""
         super().exec_module(module)
         module.Layer = KerasTracer(
             module.Layer.__name__, module.Layer.__bases__, module.Layer.__dict__
@@ -59,8 +60,8 @@ class KerasLayerLoader(SourceFileLoader):
 
 
 def hook_keras_layer():
-    """If Keras has yet to be imported, modify the inheritance structure of its base `Layer` class to inject attributes that
-    keep track of the parameters provided to each layer"""
+    """If Keras has yet to be imported, modify the inheritance structure of its base `Layer` class
+    to inject attributes that keep track of the parameters provided to each layer"""
     if "keras" in sys.modules:
         raise ImportError(
             "{} must be executed before importing Keras or other hyperparameter_hunter assets".format(

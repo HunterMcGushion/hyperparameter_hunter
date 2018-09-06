@@ -1,5 +1,6 @@
-"""This module defines the Leaderboard classes that are saved to the 'HyperparameterHunterAssets/Leaderboards' subdirectory. It
-provides the ability to compare all Experiment results at a glance
+"""This module defines the Leaderboard classes that are saved to the
+'HyperparameterHunterAssets/Leaderboards' subdirectory. It provides the ability to compare all
+Experiment results at a glance
 
 Related
 -------
@@ -14,8 +15,8 @@ import pandas as pd
 
 class Leaderboard(metaclass=ABCMeta):
     def __init__(self, data=None):
-        """The Leaderboard class is used for reading, updating, and saving leaderboard files within the
-         'HyperparameterHunterAssets/Leaderboards' subdirectory
+        """The Leaderboard class is used for reading, updating, and saving leaderboard files within
+        the 'HyperparameterHunterAssets/Leaderboards' subdirectory
 
         Parameters
         ----------
@@ -32,8 +33,8 @@ class Leaderboard(metaclass=ABCMeta):
         path: str
             The path of the file to read in as a DataFrame
         assert_existence: boolean, default=False
-            If False, and :func:`pandas.read_csv` raises FileNotFoundError, the Leaderboard will be initialized with None. Else
-            the exception is raised normally"""
+            If False, and :func:`pandas.read_csv` raises FileNotFoundError, the Leaderboard will be
+            initialized with None. Else the exception is raised normally"""
         try:
             data = pd.read_csv(path, index_col=None)
         except FileNotFoundError:
@@ -77,7 +78,8 @@ class Leaderboard(metaclass=ABCMeta):
 
 class GlobalLeaderboard(Leaderboard):
     def add_entry(self, experiment, **kwargs):
-        """Add an entry row to :attr:`Leaderboard.data` (pandas.DataFrame). This method also handles column conflicts to an extent
+        """Add an entry row to :attr:`Leaderboard.data` (pandas.DataFrame). This method also handles
+        column conflicts to an extent
 
         Parameters
         ----------
@@ -126,17 +128,19 @@ class GlobalLeaderboard(Leaderboard):
 
 
 def evaluations_to_columns(evaluation):
-    """Convert the results of :meth:`metrics.ScoringMixIn.evaluate` to a pandas DataFrame-ready format
+    """Convert the results of :meth:`metrics.ScoringMixIn.evaluate` to a pd.DataFrame-ready format
 
     Parameters
     ----------
     evaluation: dict of OrderedDicts
-        The result of consecutive calls to :meth:`metrics.ScoringMixIn.evaluate` for all given dataset types
+        The result of consecutive calls to :meth:`metrics.ScoringMixIn.evaluate` for all given
+        dataset types
 
     Returns
     -------
     column_metrics: list of pairs
-        A pair for each data_type-metric combination, where the first item is the key, and the second is the metric value
+        A pair for each data_type-metric combination, where the first item is the key, and the
+        second is the metric value
 
     Examples
     --------
@@ -165,11 +169,14 @@ def combine_column_order(df_1, df_2, both_cols=None):
     Parameters
     ----------
     df_1: pd.DataFrame
-        The first DataFrame, whose columns will be sorted. Columns unique to `df_1` will be sorted before those of `df_2`
+        The first DataFrame, whose columns will be sorted. Columns unique to `df_1` will be sorted
+        before those of `df_2`
     df_2: pd.DataFrame
-        The second DataFrame, whose columns will be sorted. Columns unique to `df_2` will be sorted after those of `df_1`
+        The second DataFrame, whose columns will be sorted. Columns unique to `df_2` will be sorted
+        after those of `df_1`
     both_cols: list, or None, default=None
-        If list, the column names that should be common to both DataFrames and placed last in the sort order
+        If list, the column names that should be common to both DataFrames and placed last in the
+        sort order
 
     Returns
     -------

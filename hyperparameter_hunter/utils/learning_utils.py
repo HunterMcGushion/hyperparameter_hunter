@@ -1,4 +1,4 @@
-"""This module defines some simple utilities for setting up toy datasets to be used in testing and examples"""
+"""This module defines simple utilities for making toy datasets to be used in testing/examples"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -37,7 +37,7 @@ def get_breast_cancer_data(target="diagnosis"):
 def get_toy_classification_data(
     target="target", n_samples=300, n_classes=2, shuffle=True, random_state=32, **kwargs
 ):
-    """Wrapper around `sklearn.datasets.make_classification` to produce a `pandas.DataFrame` result"""
+    """Wrapper around `sklearn.datasets.make_classification` to produce a `pandas.DataFrame`"""
     x, y = make_classification(
         n_samples=n_samples,
         n_classes=n_classes,

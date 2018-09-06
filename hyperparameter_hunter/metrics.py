@@ -1,11 +1,13 @@
 """This module defines :class:`hyperparameter_hunter.metrics.ScoringMixIn` which enables
-:class:`hyperparameter_hunter.experiments.BaseExperiment` to score predictions and collect the results of those evaluations
+:class:`hyperparameter_hunter.experiments.BaseExperiment` to score predictions and collect the
+results of those evaluations
 
 Related
 -------
 :mod:`hyperparameter_hunter.experiments`
-    This module uses :class:`hyperparameter_hunter.metrics.ScoringMixIn` as the only explicit parent class to
-    :class:`hyperparameter_hunter.experiments.BaseExperiment` (that is, the only parent class that isn't bestowed upon it by
+    This module uses :class:`hyperparameter_hunter.metrics.ScoringMixIn` as the only explicit parent
+    class to :class:`hyperparameter_hunter.experiments.BaseExperiment` (that is, the only parent
+    class that isn't bestowed upon it by
     :class:`hyperparameter_hunter.experiment_core.ExperimentMeta`)"""
 ##################################################
 # Import Own Assets
@@ -31,31 +33,34 @@ data_types = ("__in_fold", "__oof", "__holdout")
 
 class ScoringMixIn(object):
     def __init__(self, metrics_map, in_fold="all", oof="all", holdout="all", do_score=True):
-        """MixIn class that manages the metrics to record for each dataset type, and performs evaluations
+        """MixIn class to manage metrics to record for each dataset type, and perform evaluations
 
         Parameters
         ----------
         metrics_map: Dict, List
-            Specifies all metrics to be used by their id keys, along with a means to compute the metric. If list, all values must
-            be strings that are attributes in :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
-            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the metric. Its corresponding
-            value must be one of: 1) a callable to calculate the metric, 2) None if the "id" key is an attribute in
-            `sklearn.metrics` and should be used to fetch a callable, 3) a string that is an attribute in `sklearn.metrics` and
-            should be used to fetch a callable. Metric callable functions should expect inputs of form (target, prediction), and
-            should return floats
+            Specifies all metrics to be used by their id keys, along with a means to compute the
+            metric. If list, all values must be strings that are attributes in
+            :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
+            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the
+            metric. Its corresponding value must be one of: 1) a callable to calculate the metric,
+            2) None if the "id" key is an attribute in `sklearn.metrics` and should be used to fetch
+            a callable, 3) a string that is an attribute in `sklearn.metrics` and should be used to
+            fetch a callable. Metric callable functions should expect inputs of form
+            (target, prediction), and should return floats
         in_fold: List of strings, None, default=<all ids in `metrics_map`>
-            Specifies which metrics (from ids in `metrics_map`) should be recorded for in-fold data
+            Which metrics (from ids in `metrics_map`) should be recorded for in-fold data
         oof: List of strings, None, default=<all ids in `metrics_map`>
-            Specifies which metrics (from ids in `metrics_map`) should be recorded for out-of-fold data
+            Which metrics (from ids in `metrics_map`) should be recorded for out-of-fold data
         holdout: List of strings, None, default=<all ids in `metrics_map`>
-            Specifies which metrics (from ids in `metrics_map`) should be recorded for holdout data
+            Which metrics (from ids in `metrics_map`) should be recorded for holdout data
         do_score: Boolean, default=True
-            This is experimental. If False, scores will be neither calculated nor recorded for the duration of the experiment
+            This is experimental. If False, scores will be neither calculated nor recorded for the
+            duration of the experiment
 
         Notes
         -----
-        For each kwarg in [`in_fold`, `oof`, `holdout`], the following must be true: if the value of the kwarg is a list, its
-        contents must be a subset of `metrics_map`"""
+        For each kwarg in [`in_fold`, `oof`, `holdout`], the following must be true: if the value
+        of the kwarg is a list, its contents must be a subset of `metrics_map`"""
         self.metrics_map = metrics_map
 
         #################### Mangle Below Attributes - Should Only be Used by ScoringMixIn ####################
@@ -73,7 +78,8 @@ class ScoringMixIn(object):
         self.last_evaluation_results = dict(in_fold=None, oof=None, holdout=None)
 
     def _validate_metrics_map(self):
-        """Ensure `metrics_map` input parameter is properly formatted and yields callable functions for all metrics"""
+        """Ensure `metrics_map` input parameter is properly formatted and yields callable functions
+        for all metrics"""
         if not (isinstance(self.metrics_map, dict) or isinstance(self.metrics_map, list)):
             raise TypeError(
                 "metrics_map must be one of: [dict, list]. Received type: {}.".format(
@@ -113,7 +119,7 @@ class ScoringMixIn(object):
                     )
 
     def _validate_metrics_list_parameters(self):
-        """Ensure metrics lists input parameters are of correct types and are compatible with each other"""
+        """Ensure metrics lists input parameters are correct types and compatible with each other"""
         for (_d_type, _m_val) in [
             (_, getattr(self, "_ScoringMixIn{}".format(_))) for _ in data_types
         ]:
@@ -141,7 +147,8 @@ class ScoringMixIn(object):
                         )
 
     def _set_default_metrics_parameters(self):
-        """Set default parameters if metrics_map is empty (which implies metrics lists are also empty)"""
+        """Set default parameters if metrics_map is empty (which implies metrics lists are also
+        empty)"""
         if len(self.metrics_map.keys()) == 0:
             self.metrics_map = dict(roc_auc=sk_metrics.roc_auc_score)
             self.in_fold_metrics = ["roc_auc"]
@@ -158,17 +165,19 @@ class ScoringMixIn(object):
         prediction: Array-like
             Predicted labels for the data. Should be same shape as `target`
         return_list: Boolean, default=False
-            If True, return type is list of tuples instead of dict. See "Returns" section below for details
+            If True, return list of tuples instead of dict. See "Returns" section below for details
 
         Returns
         -------
         _result: OrderedDict, or list
-            A dict whose keys are all metric keys supplied for `data_type`, and whose values are the results of each metric. If
-            `return_list` is True, returns a list of tuples of: (<`data_type` metric str>, <metric result>)
+            A dict whose keys are all metric keys supplied for `data_type`, and whose values are the
+            results of each metric. If `return_list` is True, returns a list of tuples of:
+            (<`data_type` metric str>, <metric result>)
 
         Notes
         -----
-        The required types of `target` and `prediction` are entirely dependent on the metric callable's expectations"""
+        The required types of `target` and `prediction` are entirely dependent on the metric
+        callable's expectations"""
         if self.do_score is False:
             return
 
@@ -211,8 +220,9 @@ def get_clean_prediction(target, prediction):
     Returns
     -------
     prediction: Array-like
-        If `target` types are ints, and `prediction` types are not, given predicted labels clipped between the min, and max of
-        `target`, then rounded to the nearest integer. Else, original predicted labels"""
+        If `target` types are ints, and `prediction` types are not, given predicted labels clipped
+        between the min, and max of `target`, then rounded to the nearest integer. Else, original
+        predicted labels"""
     try:
         target_is_int = target.values.dtype == np.int
     except AttributeError:
@@ -247,16 +257,19 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
     Parameters
     ----------
     target_metric: Tuple, String, or None
-        A path denoting the metric to be used. If tuple, the first value should be one of ['oof', 'holdout', 'in_fold'], and the
-        second value should be the name of a metric supplied in :attr:`environment.Environment.metrics_params`. If str, should be
-        one of the two values from the tuple form. Else, a value will be chosen
+        A path denoting the metric to be used. If tuple, the first value should be one of
+        ['oof', 'holdout', 'in_fold'], and the second value should be the name of a metric supplied
+        in :attr:`environment.Environment.metrics_params`. If str, should be one of the two values
+        from the tuple form. Else, a value will be chosen
     metrics_map: Dict, List
-        Specifies all metrics to be used by their id keys, along with a means to compute the metric. If list, all values must be
-        strings that are attributes in :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
-        (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the metric. Its corresponding value
-        must be one of: 1) a callable to calculate the metric, 2) None if the "id" key is an attribute in `sklearn.metrics` and
-        should be used to fetch a callable, 3) a string that is an attribute in `sklearn.metrics` and should be used to fetch a
-        callable. Metric callable functions should expect inputs of form (target, prediction), and should return floats
+        Specifies all metrics to be used by their id keys, along with a means to compute the metric.
+        If list, all values must be strings that are attributes in :mod:`sklearn.metrics`. If dict,
+        key/value pairs must be of the form: (<id>, <callable/None/str sklearn.metrics attribute>),
+        where "id" is a str name for the metric. Its corresponding value must be one of:
+        1) a callable to calculate the metric, 2) None if the "id" key is an attribute in
+        `sklearn.metrics` and should be used to fetch a callable, 3) a string that is an attribute
+        in `sklearn.metrics` and should be used to fetch a callable. Metric callable functions
+        should expect inputs of form (target, prediction), and should return floats
     default_dataset: String in ['oof', 'holdout', 'in_fold'], default='oof'
         The default dataset type value to use if one is not provided
 

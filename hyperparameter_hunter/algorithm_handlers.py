@@ -44,15 +44,15 @@ def identify_algorithm(model_initializer):
         algorithm_name = type(model_initializer).__name__
 
     try:
-        module_name = model_initializer.__module__.split('.')[0]
+        module_name = model_initializer.__module__.split(".")[0]
     except AttributeError:
-        module_name = model_initializer.func.__module__.split('.')[0]
+        module_name = model_initializer.func.__module__.split(".")[0]
 
     return algorithm_name, module_name
 
 
 def identify_algorithm_hyperparameters(model_initializer):  # FLAG: Play nice with Keras
-    """Determine the keyword-arguments accepted by `model_initializer`, along with their default values
+    """Determine keyword-arguments accepted by `model_initializer`, along with their default values
 
     Parameters
     ----------
@@ -87,7 +87,7 @@ def identify_hyperparameter_choices(algorithm_name, module_name, hyperparameter_
             choices[hyperparameter] = dict(
                 lower_bound=-np.inf,  # FLAG: Might be safer to set to 0
                 # FLAG: If sticking with -np.inf, wrap optimization rounds in try/except. If fail, try raising lower_bound to 0
-                upper_bound=np.inf
+                upper_bound=np.inf,
             )
         elif isinstance(default_value, bool):
             # Likely Binary Feature
@@ -111,5 +111,5 @@ def identify_hyperparameter_choices(algorithm_name, module_name, hyperparameter_
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -1,5 +1,5 @@
-"""This module is still in an experimental stage and should not be assumed to be "reliable", or "useful", or anything else that
-might be expected of a normal module"""
+"""This module is still in an experimental stage and should not be assumed to be "reliable", or
+"useful", or anything else that might be expected of a normal module"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -41,37 +41,41 @@ class PreprocessingPipelineMixIn(object):
 
         Parameters
         ----------
-        - pipeline: List of tuples of form: (<string id>, <callable function>), in which the id identifies the paired function
-            Transformations to be fitted on dfs specified by fitting_guide[i], then applied to all other same-type, non-null dfs
-        - preprocessing_params: Dict
+        pipeline: List
+            List of tuples of form: (<string id>, <callable function>), in which the id identifies
+            the paired function transformations to be fitted on dfs specified by fitting_guide[i],
+            then applied to all other same-type, non-null dfs
+        preprocessing_params: Dict
             All the parameters necessary for the desired preprocessing functionality
-        - features: List
+        features: List
             List containing strings that specify the columns to be used as input
-        - target_column: String
+        target_column: String
             String naming the target column
-        - train_input_data: Pandas Dataframe
+        train_input_data: Pandas Dataframe
             ...
-        - train_target_data: Pandas Dataframe
+        train_target_data: Pandas Dataframe
             ...
-        - validation_input_data: Pandas Dataframe
+        validation_input_data: Pandas Dataframe
             ...
-        - validation_target_data: Pandas Dataframe
+        validation_target_data: Pandas Dataframe
             ...
-        - holdout_input_data: Pandas Dataframe
+        holdout_input_data: Pandas Dataframe
             ...
-        - holdout_target_data: Pandas Dataframe
+        holdout_target_data: Pandas Dataframe
             ...
-        - test_input_data: Pandas Dataframe
+        test_input_data: Pandas Dataframe
             ...
-        - fitting_guide: List of same length as pipeline containing tuples of strings, default=None
-            If not None, specifies datasets used to fit each manipulation in pipeline. Those not included in the list (and of same
-            type: input/target) will be transformed according to the fitted functions. Else, infer from preprocessing_stage
-        - fail_gracefully: Boolean, default=False
-            If True, Exceptions thrown by preprocessing transformations will be logged and skipped, so processing can continue
-        - preprocessing_stage: String in ['pre_cv', 'intra_cv', 'infer'], default='infer'
-            Denotes when preprocessing is occurring. If 'pre_cv', pipeline functions are fit on all available data. If 'intra_cv',
-             pipeline functions are fit on train data and applied to all same-type, non-null data. Else, infer stage
-        """
+        fitting_guide: List of same length as pipeline containing tuples of strings, default=None
+            If not None, specifies datasets used to fit each manipulation in pipeline. Those not
+            included in the list (and of same type: input/target) will be transformed according to
+            the fitted functions. Else, infer from preprocessing_stage
+        fail_gracefully: Boolean, default=False
+            If True, Exceptions thrown by preprocessing transformations will be logged and skipped,
+            so processing can continue
+        preprocessing_stage: String in ['pre_cv', 'intra_cv', 'infer'], default='infer'
+            Denotes when preprocessing is occurring. If 'pre_cv', pipeline functions are fit on all
+            available data. If 'intra_cv', pipeline functions are fit on train data and applied to
+            all same-type, non-null data. Else, infer stage"""
         ##################################################
         # Core Attributes
         ##################################################
@@ -132,7 +136,8 @@ class PreprocessingPipelineMixIn(object):
         return [_ for _ in dataset_names if self.__getattribute__(_) is not None]
 
     def set_preprocessing_stage_and_sets(self):
-        """Ensures preprocessing_stage has been properly initialized before initializing fit_input_sets and fit_target_sets"""
+        """Ensures preprocessing_stage has been properly initialized before initializing
+        fit_input_sets and fit_target_sets"""
         try:
             self.preprocessing_stage = self.initialize_preprocessing_stage()
         except Exception as _ex:
@@ -245,17 +250,21 @@ class PreprocessingPipelineMixIn(object):
             new_pipeline.append((step_id, step_callable, step_fit_sets, step_transform_sets))
 
     def custom_pipeline_method_builder(self, functionality, name=None):
-        """
+        """...
+
         Parameters
         ----------
-        - functionality: Callable
-            Performs all desired transformations/alterations/work for this pipeline step. This callable will not receive any input
-            arguments, so don't expect any. Instead, it is implemented as a class method, so it has access to all class attributes
-            and methods. To work properly, the class attributes: ['self.train_input_data', 'self.train_target_data',
-            'self.validation_input_data', 'self.validation_target_data', 'self.holdout_input_data', 'self.holdout_target_data',
-            'self.test_input_data'] are expected to be directly modified. See the "Notes"/"Examples" sections below for more
-        - name: String, or None, default=None
-            Suffix for the name of the new custom method. See below "Notes" section for details on method name creation
+        functionality: Callable
+            Performs all desired transformations/alterations/work for this pipeline step. This
+            callable will not receive any input arguments, so don't expect any. Instead, it is
+            implemented as a class method, so it has access to all class attributes and methods. To
+            work properly, the class attributes: ['self.train_input_data', 'self.train_target_data',
+            'self.validation_input_data', 'self.validation_target_data', 'self.holdout_input_data',
+            'self.holdout_target_data', 'self.test_input_data'] are expected to be directly
+            modified. See the "Notes"/"Examples" sections below for more
+        name: String, or None, default=None
+            Suffix for the name of the new custom method. See below "Notes" section for details on
+            method name creation
 
         Returns
         -------
@@ -264,39 +273,47 @@ class PreprocessingPipelineMixIn(object):
 
         Notes
         -----
-        - WARNING: Because the custom functionality is implemented as a class method, it is capable of modifying values that are
-            not expected to change, or setting new attributes. Doing either of these is a bad idea. The only attributes that
-            should be set are those listed in the above "Parameters" description for the "functionality" argument. Additionally,
-            the only values that should be retrieved are the aforementioned "data" attributes, plus "self.preprocessing_params"
-        - METHOD ARGUMENTS: If the custom functionality requires some input argument that could be subject to change later (like
-            a hyperparameter), it should be included in the "preprocessing_params" argument that is provided at the initialization
-            of this class. Then in the custom functionality, it can be retrieved with "self.preprocessing_params[<your_arg>]". See
-            the "Examples" section below for details on how to do this. The two primary reasons for this behavior are as follows:
-            - 1) to get around having to make sense of methods' expected arguments and the arguments actually input to them, and
-            - 2) to include any necessary arguments in the experiment's hyperparameters.
+        WARNING: Because the custom functionality is implemented as a class method, it is capable
+        of modifying values that are not expected to change, or setting new attributes. Doing either
+        of these is a bad idea. The only attributes that should be set are those listed in the above
+        "Parameters" description for the "functionality" argument. Additionally, the only values
+        that should be retrieved are the aforementioned "data" attributes, plus
+        :attr:`preprocessing_params`
+
+        METHOD ARGUMENTS: If the custom functionality requires some input argument that could be
+        subject to change later (like a hyperparameter), it should be included in
+        :attr:`preprocessing_params`. Then in the custom functionality, it can be retrieved with
+        "self.preprocessing_params[<your_arg>]". See the "Examples" section below for details on how
+        to do this. The two primary reasons for this behavior are as follows:
+
+        1) to get around having to make sense of methods' expected arguments and the arguments
+        actually input to them, and
+        2) to include any necessary arguments in the experiment's hyperparameters.
 
         Examples
         --------
         >>> from hyperparameter_hunter.feature_engineering import PreprocessingPipelineMixIn
         >>> def my_function(self):
         >>>     self.train_input_data = self.train_input_data.fillna(self.preprocessing_params['my_imputer'])
-        Notice in "my_function", "self" is the only input, "self.train_input_data" is directly modified, and instead of passing
-        "my_imputer" as an input, it is referenced in "self.preprocessing_params". Now, the class can use "my_function" below.
+        Notice in "my_function", "self" is the only input, "self.train_input_data" is directly
+        modified, and instead of passing "my_imputer" as an input, it is referenced in
+        "self.preprocessing_params". Now, the class can use "my_function" below.
         >>> preprocessor = PreprocessingPipelineMixIn(
         >>>     pipeline=[('my_function', my_function)],
         >>>     preprocessing_params=dict(my_imputer=-1), features=[], target_column=''
         >>> )
-        The "pipeline" is set to include "my_function", which, after its creation, will be able to retrieve "my_imputer" from
-        "self.preprocessing_params". Note that this example just demonstrates custom method building. It won't work as-is, without
-        any train_input_data, among other things.
-        Now in a later experiment, null values can be imputed to -2 instead of -1, just by changing "preprocessing_params":
+        The "pipeline" is set to include "my_function", which, after its creation, will be able to
+        retrieve "my_imputer" from "self.preprocessing_params". Note that this example just
+        demonstrates custom method building. It won't work as-is, without any train_input_data,
+        among other things. Now in a later experiment, null values can be imputed to -2 instead of
+        -1, just by changing "preprocessing_params":
         >>> preprocessor = PreprocessingPipelineMixIn(
         >>>     pipeline=[('my_function', my_function)],
         >>>     preprocessing_params=dict(my_imputer=-2), features=[], target_column=''
         >>> )
-        This makes it much easier to keep track of the actual hyperparameters being used in an experiment than having to scour
-        obscure functions for some number that may or may not even be declared inside.
-        """
+        This makes it much easier to keep track of the actual hyperparameters being used in an
+        experiment than having to scour obscure functions for some number that may or may not even
+        be declared inside"""
         if not callable(functionality):
             raise TypeError(
                 "Custom pipeline methods must be callable. Received type {}".format(

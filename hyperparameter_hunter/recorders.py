@@ -1,5 +1,6 @@
-"""This module handles recording and properly formatting the various result files requested for a completed Experiment.
-Coincidentally, if a particular result file was blacklisted by the active Environment, that is also handled here
+"""This module handles recording and properly formatting the various result files requested for a
+completed Experiment. Coincidentally, if a particular result file was blacklisted by the active
+Environment, that is also handled here
 
 Related
 -------
@@ -29,22 +30,24 @@ from sys import exc_info
 
 class BaseRecorder(metaclass=ABCMeta):
     def __init__(self):
-        """Base class for other classes that record various Experiment result files. Critical attributes of the descendants of
-        :class`recorders.BaseRecorder` are set here, enabling them to function properly
+        """Base class for other classes that record various Experiment result files. Critical
+        attributes of the descendants of :class`recorders.BaseRecorder` are set here, enabling them
+        to function properly
 
         Returns
         -------
         None
-            If :attr:`result_path` is None, which means the present result file was blacklisted by the active Environment
+            If :attr:`result_path` is None, which means the present result file was blacklisted by
+            the active Environment
 
         Raises
         ------
         EnvironmentInactiveError
             If :attr:`settings.G.Env` is None
         EnvironmentInvalidError
-            If any of the following occur: 1) :attr:`settings.G.Env` does not have an attribute named 'result_paths',
-            2) :attr:`settings.G.Env.result_paths` does not contain the current `result_path_key`,
-            3) :attr:`settings.G.Env.current_task` is None"""
+            If any of the following occur: 1) :attr:`settings.G.Env` does not have an attribute
+            named 'result_paths', 2) :attr:`settings.G.Env.result_paths` does not contain the
+            current `result_path_key`, 3) :attr:`settings.G.Env.current_task` is None"""
         self.result_path = None
         self.result = None
 
@@ -84,23 +87,27 @@ class BaseRecorder(metaclass=ABCMeta):
     @property
     @abstractmethod
     def result_path_key(self) -> str:
-        """Return key from :attr:`environment.Environment.result_paths`, corresponding to the target record"""
+        """Return key from :attr:`environment.Environment.result_paths`, corresponding to the
+        target record"""
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def required_attributes(self) -> list:
-        """Return attributes from :class:`environment.Environment` that are necessary to properly record result"""
+        """Return attributes from :class:`environment.Environment` that are necessary to properly
+        record result"""
         raise NotImplementedError()
 
     @abstractmethod
     def format_result(self):
-        """Set :attr:`BaseRecorder.result` to the final result object to be saved by :meth:`BaseRecorder.save_result`"""
+        """Set :attr:`BaseRecorder.result` to the final result object to be saved by
+        :meth:`BaseRecorder.save_result`"""
         raise NotImplementedError()
 
     @abstractmethod
     def save_result(self):
-        """Save :attr:`BaseRecorder.result` to :attr:`BaseRecorder.result_path`, or elsewhere if special case"""
+        """Save :attr:`BaseRecorder.result` to :attr:`BaseRecorder.result_path`, or elsewhere if
+        special case"""
         raise NotImplementedError()
 
 
@@ -111,8 +118,8 @@ class RecorderList(object):
         Parameters
         ----------
         file_blacklist: List, or None, default=None
-            If list, used to reject any elements of :attr:`RecorderList.recorders` whose :attr:`BaseRecorder.result_path_key` is
-            in file_blacklist"""
+            If list, used to reject any elements of :attr:`RecorderList.recorders` whose
+            :attr:`BaseRecorder.result_path_key` is in file_blacklist"""
         # WARNING: Take care if modifying the order/contents of :attr:`recorders`. See :meth:`save_result` documentation for info
         self.recorders = [
             TestedKeyRecorder,
@@ -142,15 +149,18 @@ class RecorderList(object):
 
         Notes
         -----
-        When iterating through :attr:`recorders` and calling :meth:`save_result`, a check is performed for `exit_code`. Children
-        classes of :class:`BaseRecorder` are NOT expected to explicitly return a value in their :meth:`save_result`. However, if
-        a value is returned and `exit_code` == 'break', the result-saving loop will be broken, and no further results will be
-        saved. In practice, this is only performed for the sake of :meth:`DescriptionRecorder.save_result`, which has the
-        additional quality of being able to prevent any other result files from being saved if the result of
-        :func:`DescriptionRecorder.do_full_save` returns False when given the formatted :attr:`DescriptionRecorder.result`. This
-        can be useful when there are storage constraints, because it ensures that essential data - including keys and the results
-        of the experiment - are saved (to ensure the experiment is not duplicated, and to provide some utility to Hyperparameter
-        Optimization algorithms), while extra results like Predictions are not saved."""
+        When iterating through :attr:`recorders` and calling :meth:`save_result`, a check is
+        performed for `exit_code`. Children classes of :class:`BaseRecorder` are NOT expected to
+        explicitly return a value in their :meth:`save_result`. However, if a value is returned and
+        `exit_code` == 'break', the result-saving loop will be broken, and no further results will
+        be saved. In practice, this is only performed for the sake of
+        :meth:`DescriptionRecorder.save_result`, which has the additional quality of being able to
+        prevent any other result files from being saved if the result of
+        :func:`DescriptionRecorder.do_full_save` returns False when given the formatted
+        :attr:`DescriptionRecorder.result`. This can be useful when there are storage constraints,
+        because it ensures that essential data - including keys and the results of the experiment -
+        are saved (to ensure the experiment is not duplicated, and to enable optimization protocol
+        learning), while extra results like Predictions are not saved"""
         for recorder in self.recorders:
             G.log(f'Saving result file for "{type(recorder).__name__}"')
             exit_code = recorder.save_result()
@@ -181,8 +191,8 @@ class DescriptionRecorder(BaseRecorder):
     ]
 
     def format_result(self):
-        """Format an OrderedDict containing the Experiment's identifying attributes, results, hyperparameters used, and other
-        stats or information that may be useful"""
+        """Format an OrderedDict containing the Experiment's identifying attributes, results,
+        hyperparameters used, and other stats or information that may be useful"""
         self.result = OrderedDict(
             [
                 ("experiment_id", self.experiment_id),
@@ -211,15 +221,16 @@ class DescriptionRecorder(BaseRecorder):
         }
 
     def save_result(self):
-        """Save the Experiment description as a .json file, named after :attr:`experiment_id`. If :attr:`do_full_save` is a
-        callable and returns False when given the description object, the result recording loop will be broken, and the remaining
-        result files will not be saved
+        """Save the Experiment description as a .json file, named after :attr:`experiment_id`. If
+        :attr:`do_full_save` is a callable and returns False when given the description object, the
+        result recording loop will be broken, and the remaining result files will not be saved
 
         Returns
         -------
         'break'
-            This string will be returned if :attr:`do_full_save` is a callable and returns False when given the description
-            object. This is the signal for :class:`recorders.RecorderList` to stop recording result files"""
+            This string will be returned if :attr:`do_full_save` is a callable and returns False
+            when given the description object. This is the signal for
+            :class:`recorders.RecorderList` to stop recording result files"""
         try:
             write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
         except FileNotFoundError:
@@ -245,7 +256,8 @@ class HeartbeatRecorder(BaseRecorder):
         pass
 
     def save_result(self):
-        """Copy the global heartbeat log, and add it to the results dir as a .log file, named after :attr:`experiment_id`"""
+        """Copy the global heartbeat log, and add it to the results dir as a .log file, named after
+        :attr:`experiment_id`"""
         try:
             shutil.copyfile(
                 f'{G.Env.result_paths["root"]}/Heartbeat.log',
@@ -363,7 +375,7 @@ class TestedKeyRecorder(BaseRecorder):
         pass
 
     def save_result(self):
-        """Save the cross-experiment, and hyperparameter keys, and update their tested keys entries"""
+        """Save cross-experiment, and hyperparameter keys, and update their tested keys entries"""
         self.cross_experiment_key.save_key()
         self.hyperparameter_key.save_key()
         add_to_json(
@@ -383,7 +395,7 @@ class LeaderboardEntryRecorder(BaseRecorder):
     required_attributes = ["result_paths", "current_task"]
 
     def format_result(self):
-        """Read the existing global leaderboard, add the current entry, then sort the updated leaderboard"""
+        """Read existing global leaderboard, add current entry, then sort the updated leaderboard"""
         self.result = GlobalLeaderboard.from_path(path=self.result_paths["global_leaderboard"])
         self.result.add_entry(self.current_task)
         self.result.sort(by=list(self.result.data.columns))

@@ -11,7 +11,7 @@ import numpy as np
 
 class PredictorOOF(BasePredictorCallback):
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.final_oof_predictions = None
         self.repetition_oof_predictions = None
         self.run_validation_predictions = None
@@ -66,7 +66,7 @@ class PredictorOOF(BasePredictorCallback):
 
 class PredictorHoldout(BasePredictorCallback):
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.final_holdout_predictions = None
         self.repetition_holdout_predictions = None
         self.fold_holdout_predictions = None
@@ -114,7 +114,7 @@ class PredictorHoldout(BasePredictorCallback):
 
 class PredictorTest(BasePredictorCallback):
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.final_test_predictions = None
         self.repetition_test_predictions = None
         self.fold_test_predictions = None

@@ -1,8 +1,10 @@
 """This module handles the creation of `cross_experiment_key`\s and `hyperparameter_key`\s for
-:class:`hyperparameter_hunter.environment.Environment`, and :class:`hyperparameter_hunter.experiments.BaseExperiment`,
-respectively. It also handles the treatment of complex-typed inputs and their storage in the 'KeyAttributeLookup' subdirectory.
-The descendants of :class:`hyperparameter_hunter.key_handler.KeyMaker` defined herein are each responsible for the generation and
-saving of their keys, as well as determining whether such a key already exists
+:class:`hyperparameter_hunter.environment.Environment`, and
+:class:`hyperparameter_hunter.experiments.BaseExperiment`, respectively. It also handles the
+treatment of complex-typed inputs and their storage in the 'KeyAttributeLookup' subdirectory. The
+descendants of :class:`hyperparameter_hunter.key_handler.KeyMaker` defined herein are each
+responsible for the generation and saving of their keys, as well as determining whether such a key
+already exists
 
 Related
 -------
@@ -66,14 +68,15 @@ except ModuleNotFoundError:
 ##################################################
 class KeyMaker(metaclass=ABCMeta):
     def __init__(self, parameters, **kwargs):
-        """Base class to handle making key hashes and checking for their existence. Additionally, this class handles saving
-        entries for complex-typed parameters, along with their hashes to ensure experiments are reproducible
+        """Base class to handle making key hashes and checking for their existence. Additionally,
+        this class handles saving entries for complex-typed parameters, along with their hashes to
+        ensure experiments are reproducible
 
         Parameters
         ----------
         parameters: Dict
-            All the parameters to be included when creating the key hash. Keys should correspond to parameter names, and values
-            should be the values of the corresponding keys
+            All the parameters to be included when creating the key hash. Keys should correspond to
+            parameter names, and values should be the values of the corresponding keys
         **kwargs: Dict
             Additional arguments
 
@@ -84,7 +87,8 @@ class KeyMaker(metaclass=ABCMeta):
         key: Str, or None
             If a key has been generated for `parameters`, it is saved here. Else, None
         exists: Boolean
-            If `key` is not None, and was found to already exist in `tested_keys_dir`, `exists` = True. Else, False
+            If `key` is not None, and was found to already exist in `tested_keys_dir`,
+            `exists` = True. Else, False
         key_attribute_lookup_dir: Str
             The directory in which complex-typed parameter entries will be saved
         tested_keys_dir: Str, or None
@@ -112,7 +116,7 @@ class KeyMaker(metaclass=ABCMeta):
         return self.key == other
 
     def __ne__(self, other):
-        """A KeyMaker instance will always return True for a non-equality check if its key has not been set (is None)"""
+        """Instance will always return True for a non-equality check if `key` is unset (None)"""
         return (self.key is None) or (self.key != other)
 
     ##################################################
@@ -135,17 +139,19 @@ class KeyMaker(metaclass=ABCMeta):
             os.makedirs(self.tested_keys_dir)
 
     def handle_complex_types(self):
-        """Locate complex types in :attr:`parameters`, create hashes for them, add lookup entries linking their original values
-        to their hashes, then update their values in :attr:`parameters` to their hashes to facilitate Description saving"""
+        """Locate complex types in :attr:`parameters`, create hashes for them, add lookup entries
+        linking their original values to their hashes, then update their values in
+        :attr:`parameters` to their hashes to facilitate Description saving"""
         if self.tested_keys_dir is None:  # Key-making blacklisted
             return
 
         dataframe_hashes = {}
 
         def visit(path, key, value):
-            """Check whether a parameter is of a complex type. If not, return it unchanged. Otherwise, 1) create a hash for its
-            value; 2) save a complex type lookup entry linking `key`, `value`, and the hash for `value`; and 3) return the hashed
-            value with `key`, instead of the original complex-typed `value`
+            """Check whether a parameter is of a complex type. If not, return it unchanged.
+            Otherwise, 1) create a hash for its value; 2) save a complex type lookup entry linking
+            `key`, `value`, and the hash for `value`; and 3) return the hashed value with `key`,
+            instead of the original complex-typed `value`
 
             Parameters
             ----------
@@ -158,7 +164,8 @@ class KeyMaker(metaclass=ABCMeta):
 
             Returns
             -------
-            Tuple of (`key`, value), in which value is either unchanged or a hash for the original `value`"""
+            Tuple of (`key`, value), in which value is either unchanged or a hash for the original
+            `value`"""
             if isinstance(value, BaseKerasCallback):
                 return (key, keras_callback_to_dict(value))
             if isinstance(value, Sentinel):
@@ -189,8 +196,8 @@ class KeyMaker(metaclass=ABCMeta):
                 )
 
     def add_complex_type_lookup_entry(self, path, key, value, hashed_value):
-        """Add lookup entry in `key_attribute_lookup_dir` for a complex-typed parameter, linking the parameter `key`, its
-        `value`, and its `hashed_value`
+        """Add lookup entry in `key_attribute_lookup_dir` for a complex-typed parameter, linking
+        the parameter `key`, its `value`, and its `hashed_value`
 
         Parameters
         ----------
@@ -231,7 +238,8 @@ class KeyMaker(metaclass=ABCMeta):
 
     @staticmethod
     def _filter_parameters_to_hash(parameters):
-        """Produce a filtered version of `parameters` that does not include values that should be ignored during hashing
+        """Produce a filtered version of `parameters` that does not include values that should be
+        ignored during hashing
 
         Parameters
         ----------
@@ -250,12 +258,14 @@ class KeyMaker(metaclass=ABCMeta):
     @property
     @abstractmethod
     def key_type(self) -> str:
-        """A string in ['hyperparameter', 'cross_experiment'] denoting which type of key is being processed"""
+        """A string in ['hyperparameter', 'cross_experiment'] denoting which type of key is
+        being processed"""
         raise NotImplementedError()
 
     @abstractmethod
     def does_key_exist(self) -> bool:
-        """Check if the key hash already exists among previously saved keys in the contents of :attr:`tested_keys_dir`"""
+        """Check if the key hash already exists among previously saved keys in the contents of
+        :attr:`tested_keys_dir`"""
         raise NotImplementedError()
 
     @abstractmethod
@@ -268,15 +278,16 @@ class CrossExperimentKeyMaker(KeyMaker):
     key_type = "cross_experiment"
 
     def __init__(self, parameters, **kwargs):
-        """A KeyMaker class dedicated to creating cross-experiment keys, which determine when experiments were executed under
-        sufficiently similar conditions to permit proper comparison. Two separate instances of :class:`environment.Environment`
-        should produce identical `cross_experiment_key` s if their arguments are the same (or close enough)
+        """A KeyMaker class dedicated to creating cross-experiment keys, which determine when
+        experiments were executed under sufficiently similar conditions to permit proper comparison.
+        Two separate instances of :class:`environment.Environment` should produce identical
+        `cross_experiment_key`\s if their arguments are the same (or close enough)
 
         Parameters
         ----------
         parameters: Dict
-            All the parameters to be included when creating the key hash. Keys should correspond to parameter names, and values
-            should be the values of the corresponding keys
+            All the parameters to be included when creating the key hash. Keys should correspond to
+            parameter names, and values should be the values of the corresponding keys
         **kwargs: Dict
             Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         KeyMaker.__init__(self, parameters, **kwargs)
@@ -306,18 +317,20 @@ class HyperparameterKeyMaker(KeyMaker):
     key_type = "hyperparameter"
 
     def __init__(self, parameters, cross_experiment_key, **kwargs):
-        """A KeyMaker class dedicated to creating hyperparameter keys, which determine when experiments were executed using
-        identical hyperparameters. Two separate instances of :class:`experiments.CrossValidationExperiment` should produce
-        identical `hyperparameter_key` s if their hyperparameters are the same (or close enough)
+        """A KeyMaker class dedicated to creating hyperparameter keys, which determine when
+        experiments were executed using identical hyperparameters. Two separate instances of
+        :class:`experiments.CrossValidationExperiment` should produce identical
+        `hyperparameter_key`\s if their hyperparameters are the same (or close enough)
 
         Parameters
         ----------
         parameters: Dict
-            All the parameters to be included when creating the key hash. Keys should correspond to parameter names, and values
-            should be the values of the corresponding keys
+            All the parameters to be included when creating the key hash. Keys should correspond to
+            parameter names, and values should be the values of the corresponding keys
         cross_experiment_key: Str
-            The key produced by the active Environment via :class:`key_handler.CrossExperimentKeyMaker`, used for determining
-            when a hyperparameter key has already been tested under the same cross-experiment parameters
+            The key produced by the active Environment via
+            :class:`key_handler.CrossExperimentKeyMaker`, used for determining when a
+            hyperparameter key has already been tested under the same cross-experiment parameters
         **kwargs: Dict
             Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         self.cross_experiment_key = cross_experiment_key
@@ -341,7 +354,7 @@ class HyperparameterKeyMaker(KeyMaker):
             #################### Process Parameters ####################
             # noinspection PyUnusedLocal
             def _visit(path, key, value):
-                """If `key` is not in ('input_shape', 'input_dim'), return True. Else, return False"""
+                """If `key` not in ('input_shape', 'input_dim'), return True. Else, return False"""
                 return key not in ("input_shape", "input_dim")
 
             temp_layers = remap(temp_layers, visit=_visit)
@@ -358,9 +371,10 @@ class HyperparameterKeyMaker(KeyMaker):
 
     @staticmethod
     def _filter_parameters_to_hash(parameters):
-        """Produce a filtered version of `parameters` that does not include hyperparameters that should be ignored during hashing,
-        such as those pertaining to verbosity, seeds, and random states, as they have no effect on the results of experiments
-        when within the confines of hyperparameter_hunter
+        """Produce a filtered version of `parameters` that does not include hyperparameters that
+        should be ignored during hashing, such as those pertaining to verbosity, seeds, and random
+        states, as they have no effect on the results of experiments when within the confines of
+        hyperparameter_hunter
 
         Parameters
         ----------
@@ -398,8 +412,9 @@ class HyperparameterKeyMaker(KeyMaker):
         return parameters
 
     def does_key_exist(self):
-        """Check that 1) there is a file corresponding to :attr:`cross_experiment_key.key`, 2) the aforementioned file contains
-        the key :attr:`key`, and 3) the value of the file at :attr:`key` is a non-empty list
+        """Check that 1) there is a file corresponding to :attr:`cross_experiment_key.key`,
+        2) the aforementioned file contains the key :attr:`key`, and
+        3) the value of the file at :attr:`key` is a non-empty list
 
         Returns
         -------
@@ -419,8 +434,9 @@ class HyperparameterKeyMaker(KeyMaker):
         return self.exists
 
     def save_key(self):
-        """Create an entry in the dict corresponding to the file at :attr:`cross_experiment_key.key`, whose key is :attr:`key`,
-        and whose value is an empty list if :attr:`exists` is False"""
+        """Create an entry in the dict corresponding to the file at
+        :attr:`cross_experiment_key.key`, whose key is :attr:`key`, and whose value is an empty
+        list if :attr:`exists` is False"""
         if not self.exists:
             if self.cross_experiment_key.exists is False:
                 raise ValueError(
@@ -502,24 +518,30 @@ def hash_callable(
     Parameters
     ----------
     obj: callable
-        The callable to convert to a hashable format. Currently supported types are: function, class, :class:`functools.partial`
+        The callable to convert to a hashable format. Currently supported types are: function,
+        class, :class:`functools.partial`
     ignore_line_comments: boolean, default=True
-        If True, any line comments will be stripped from the source code of `obj`, specifically any lines that start with
-        zero or more whitespaces, followed by an octothorpe (#). This does not apply to comments on the same line as code
+        If True, any line comments will be stripped from the source code of `obj`, specifically any
+        lines that start with zero or more whitespaces, followed by an octothorpe (#). This does not
+        apply to comments on the same line as code
     ignore_first_line: boolean, default=False
-        If True, the first line will be stripped from the callable's source code, specifically the function's name and
-        signature. If ignore_name=True, this will be treated as True
+        If True, the first line will be stripped from the callable's source code, specifically the
+        function's name and signature. If ignore_name=True, this will be treated as True
     ignore_module: boolean, default=False
-        If True, the name of the module in which the source code is located (:attr:`obj.__module__`) will be ignored
+        If True, the name of the module in which the source code is located (:attr:`obj.__module__`)
+        will be ignored
     ignore_name: boolean, default=False
-        If True, :attr:`obj.__name__` will be ignored. Note the distinction between this and `ignore_first_line`, which strips
-        the entire callable signature from the source code. `ignore_name` does not alter the source code. To ensure thorough
-        ignorance, ignore_first_line=True is recommended
+        If True, :attr:`obj.__name__` will be ignored. Note the distinction between this and
+        `ignore_first_line`, which strips the entire callable signature from the source code.
+        `ignore_name` does not alter the source code. To ensure thorough ignorance,
+        ignore_first_line=True is recommended
     ignore_keywords: boolean, default=False
-        If True and `obj` is a :class:`functools.partial` (not a normal function/method), :attr:`obj.keywords` will be ignored
+        If True and `obj` is a :class:`functools.partial` (not a normal function/method),
+        :attr:`obj.keywords` will be ignored
     ignore_source_lines: boolean, default=False
-        If True, all source code will be ignored by the hashing function. Ignoring all other kwargs, this means that only
-        :attr:`obj.__module__`, and :attr:`obj.__name__`, (and :attr:`obj.keywords` if `obj` is partial) will be used for hashing
+        If True, all source code will be ignored by the hashing function. Ignoring all other kwargs,
+        this means that only :attr:`obj.__module__`, and :attr:`obj.__name__`,
+        (and :attr:`obj.keywords` if `obj` is partial) will be used for hashing
 
     Returns
     -------
