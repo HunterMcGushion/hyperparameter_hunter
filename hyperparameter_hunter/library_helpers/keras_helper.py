@@ -56,11 +56,8 @@ def keras_callback_to_dict(callback):
     for arg_name, arg_val in signature_args:
         if arg_name not in ["verbose"]:
             try:
-                callback_dict[arg_name] = (
-                    getattr(callback, arg_name)
-                    if getattr(callback, arg_name) is not _empty
-                    else None
-                )
+                temp_val = getattr(callback, arg_name)
+                callback_dict[arg_name] = temp_val if temp_val is not _empty else None
             except AttributeError:
                 callback_dict[arg_name] = arg_val.default if arg_val.default is not _empty else None
 
@@ -125,37 +122,25 @@ def parameterize_compiled_keras_model(model):
     ##################################################
     compile_params = dict()
     # compile_params['optimizer'] = model.optimizer.__class__.__name__  # -> 'Adam'  # FLAG: ORIGINAL
-    compile_params[
-        "optimizer"
-    ] = model.model.optimizer.__class__.__name__.lower()  # -> 'Adam'  # FLAG: TEST
+    compile_params["optimizer"] = model.model.optimizer.__class__.__name__.lower()  # FLAG: TEST
     # compile_params['optimizer_params'] = model.optimizer.get_config()  # -> {**kwargs}  # FLAG: ORIGINAL
-    compile_params[
-        "optimizer_params"
-    ] = model.model.optimizer.get_config()  # -> {**kwargs}  # FLAG: TEST
+    compile_params["optimizer_params"] = model.model.optimizer.get_config()  # FLAG: TEST
 
     # compile_params['metrics'] = model.metrics  # -> ['accuracy']  # FLAG: ORIGINAL
-    compile_params["metrics"] = model.model.metrics  # -> ['accuracy']  # FLAG: TEST
+    compile_params["metrics"] = model.model.metrics  # FLAG: TEST
     # compile_params['metrics_names'] = model.metrics_names  # -> ['loss', 'acc']  # FLAG: ORIGINAL
-    compile_params["metrics_names"] = model.model.metrics_names  # -> ['loss', 'acc']  # FLAG: TEST
+    compile_params["metrics_names"] = model.model.metrics_names  # FLAG: TEST
 
-    compile_params[
-        "loss_functions"
-    ] = model.model.loss_functions  # -> [<function binary_crossentropy at 0x118832268>]
-    compile_params["loss_function_names"] = [
-        _.__name__ for _ in compile_params["loss_functions"]
-    ]  # -> ['binary_crossentropy']
+    compile_params["loss_functions"] = model.model.loss_functions
+    compile_params["loss_function_names"] = [_.__name__ for _ in compile_params["loss_functions"]]
 
     # FLAG: BELOW PARAMETERS SHOULD ONLY BE DISPLAYED IF EXPLICITLY GIVEN (probably have to be in key by default, though):
     # compile_params['loss_weights'] = model.loss_weights  # -> None, [], or {}  # FLAG: ORIGINAL
-    compile_params["loss_weights"] = model.model.loss_weights  # -> None, [], or {}  # FLAG: TEST
+    compile_params["loss_weights"] = model.model.loss_weights  # FLAG: TEST
     # compile_params['sample_weight_mode'] = model.sample_weight_mode  # -> None, or ''  # FLAG: ORIGINAL
-    compile_params[
-        "sample_weight_mode"
-    ] = model.model.sample_weight_mode  # -> None, or ''  # FLAG: TEST
+    compile_params["sample_weight_mode"] = model.model.sample_weight_mode  # FLAG: TEST
     # compile_params['weighted_metrics'] = model.weighted_metrics  # -> None, or []  # FLAG: ORIGINAL
-    compile_params[
-        "weighted_metrics"
-    ] = model.model.weighted_metrics  # -> None, or []  # FLAG: TEST
+    compile_params["weighted_metrics"] = model.model.weighted_metrics  # FLAG: TEST
 
     try:
         # compile_params['target_tensors'] = model.target_tensors  # FLAG: ORIGINAL
