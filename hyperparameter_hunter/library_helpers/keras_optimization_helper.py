@@ -1,17 +1,20 @@
-"""This module performs additional processing necessary when optimizing hyperparameters in the `Keras` library. Its purpose is
-twofold: 1) to enable the construction of Keras models while requiring minimal syntactic changes on the user's end when defining
-hyperparameter space choices; and 2) to enable thorough collection of all hyperparameters used to define a Keras model - not only
-those being optimized - in order to ensure the continued usefulness of an Experiment's result files even under different
-hyperparameter search constraints
+"""This module performs additional processing necessary when optimizing hyperparameters in the
+`Keras` library. Its purpose is twofold: 1) to enable the construction of Keras models while
+requiring minimal syntactic changes on the user's end when defining hyperparameter space choices;
+and 2) to enable thorough collection of all hyperparameters used to define a Keras model - not only
+those being optimized - in order to ensure the continued usefulness of an Experiment's result files
+even under different hyperparameter search constraints
 
 Related
 -------
 :mod:`hyperparameter_hunter.importer`
     Performs interception of `Keras` import to inject the hyperparameter-recording attributes
 :mod:`hyperparameter_hunter.tracers`
-    Defines the new metaclass used by :mod:`hyperparameter_hunter.importer` to apply to key Keras classes (like `Layer`)
+    Defines the new metaclass used by :mod:`hyperparameter_hunter.importer` to apply to key Keras
+    classes (like `Layer`)
 :mod:`hyperparameter_hunter.utils.parsing_utils`
-    Defines utilities to assist in parsing source code provided by users to declare Keras model-building functions
+    Defines utilities to assist in parsing source code provided by users to declare Keras
+    model-building functions
 :mod:`hyperparameter_hunter.library_helpers.keras_helper`
     Defines utilities to assist in characterizing Keras models"""
 ##################################################
@@ -45,40 +48,46 @@ from keras.callbacks import Callback as base_keras_callback
 
 
 def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script):
-    """Conduct preparation steps necessary before hyperparameter optimization on a `Keras` model. Such steps include parsing and
-    modifying `build_fn` to be of the form used by :class:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol`,
-    compiling a dummy model to identify universal locations of given hyperparameter choices, and creating a simplified
-    characterization of the models to be built during optimization in order to enable collection of similar Experiments
+    """Conduct preparation steps necessary before hyperparameter optimization on a `Keras` model.
+    Such steps include parsing and modifying `build_fn` to be of the form used by
+    :class:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol`, compiling a dummy
+    model to identify universal locations of given hyperparameter choices, and creating a simplified
+    characterization of the models to be built during optimization in order to enable collection of
+    similar Experiments
 
     Parameters
     ----------
     model_initializer: :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
-        A descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper` used to construct a Keras model
+        A descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper` used to build a Keras model
     build_fn: Callable
-        The `build_fn` value provided to :meth:`keras.wrappers.scikit_learn.BaseWrapper.__init__`. Expected to return a compiled
-        Keras model. May contain hyperparameter space choices
+        The `build_fn` value provided to :meth:`keras.wrappers.scikit_learn.BaseWrapper.__init__`.
+        Expected to return a compiled Keras model. May contain hyperparameter space choices
     extra_params: Dict
-        The parameters expected to be passed to the extra methods of the compiled Keras model. Such methods include (but are
-        not limited to) `fit`, `predict`, and `predict_proba`. Some of the common parameters given here include `epochs`,
-        `batch_size`, and `callbacks`
+        The parameters expected to be passed to the extra methods of the compiled Keras model. Such
+        methods include (but are not limited to) `fit`, `predict`, and `predict_proba`. Some of the
+        common parameters given here include `epochs`, `batch_size`, and `callbacks`
     source_script: Str
-        Absolute path to a Python file. Expected to end with one of the following extensions: '.py', '.ipynb'
+        Absolute path to a Python file. Expected to end with one of the following extensions:
+        '.py', '.ipynb'
 
     Returns
     -------
     reusable_build_fn: Callable
-        A modified `build_fn` in which hyperparameter space choices are replaced with dict lookups, and the signature is given
-        a standard name, and additional input parameters necessary for reuse
+        A modified `build_fn` in which hyperparameter space choices are replaced with dict lookups,
+        and the signature is given a standard name, and additional input parameters necessary for
+        reuse
     reusable_wrapper_params: Dict
-        The parameters expected to be passed to the extra methods of the compiled Keras model. Such methods include (but are
-        not limited to) `fit`, `predict`, and `predict_proba`. Some of the common parameters given here include `epochs`,
-        `batch_size`, and `callbacks`
+        The parameters expected to be passed to the extra methods of the compiled Keras model. Such
+        methods include (but are not limited to) `fit`, `predict`, and `predict_proba`. Some of the
+        common parameters given here include `epochs`, `batch_size`, and `callbacks`
     dummy_layers: List
-        The layers of a compiled dummy Keras model constructed according to the given hyperparameters, in which each layer is a
-        dict containing at least the following: the name of the layer class, allowed and used args, and default and used kwargs
+        The layers of a compiled dummy Keras model constructed according to the given
+        hyperparameters, in which each layer is a dict containing at least the following: the name
+        of the layer class, allowed and used args, and default and used kwargs
     dummy_compile_params: Dict
-        The parameters used on the `compile` call for the dummy model. If a parameter is accepted by the `compile` method, but
-        is not explicitly given, its default value is included in `dummy_compile_params`"""
+        The parameters used on the `compile` call for the dummy model. If a parameter is accepted
+        by the `compile` method, but is not explicitly given, its default value is included in
+        `dummy_compile_params`"""
     #################### Prepare Model-Builder String ####################
     temp_builder_name = "__temp_model_builder"
     reusable_build_fn, expected_params = rewrite_model_builder(stringify_model_builder(build_fn))
@@ -122,26 +131,29 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
 
 
 def consolidate_layers(layers, class_name_key=True, separate_args=True):
-    """For each of the layer dicts in `layers`, merge the dict's keys to reflect the end value of the key, rather than its default
-    value, and whether a value was explicitly given
+    """For each of the layer dicts in `layers`, merge the dict's keys to reflect the end value of
+    the key, rather than its default value, and whether a value was explicitly given
 
     Parameters
     ----------
     layers: List
-        A list of dicts, wherein each dict represents a layer in a Keras model, and contains information about its arguments
+        A list of dicts, wherein each dict represents a layer in a Keras model, and contains
+        information about its arguments
     class_name_key: Boolean, default=True
-        If True, 'class_name' will be added as a key to the dict describing each layer. Else, it will be used as a key to create
-        an outer dict containing the rest of the keys describing each layer
+        If True, 'class_name' will be added as a key to the dict describing each layer. Else, it
+        will be used as a key to create an outer dict containing the rest of the keys describing
+        each layer
     separate_args: Boolean, default=True
-        If True, each layer dict will be given two keys: 'arg_vals', and 'kwarg_vals', which are both dicts containing their
-        respective values. Else, each layer dict will directly contain all the keys of 'arg_vals', and 'kwarg_vals', removing
-        any indication of whether the parameter was a positional or keyword argument, aside from order
+        If True, each layer dict will be given two keys: 'arg_vals', and 'kwarg_vals', which are
+        both dicts containing their respective values. Else, each layer dict will directly contain
+        all the keys of 'arg_vals', and 'kwarg_vals', removing any indication of whether the
+        parameter was a positional or keyword argument, aside from order
 
     Returns
     -------
     consolidated_layers: List
-        A list of the same length as `layers`, except each element has fewer keys than it did in `layers`. The new keys are as
-        follows: 'class_name', 'arg_vals', 'kwarg_vals'"""
+        A list of the same length as `layers`, except each element has fewer keys than it did in
+        `layers`. The new keys are as follows: 'class_name', 'arg_vals', 'kwarg_vals'"""
     consolidated_layers = []
 
     for layer in layers:
@@ -183,31 +195,33 @@ def consolidate_layers(layers, class_name_key=True, separate_args=True):
 
 
 def merge_compile_params(compile_params, dummified_params):
-    """Update `compile_params` to reflect those values that were given hyperparameter space choices, as specified by
-    `dummified_params`
+    """Update `compile_params` to reflect those values that were given hyperparameter space choices,
+    as specified by `dummified_params`
 
     Parameters
     ----------
     compile_params: Dict
-        All the compile parameters provided to a dummy model's `compile` method, or their default values if they were not
-        explicitly given. If the original value of one of the keys in `compile_params` was a hyperparameter space choice, its
-        current value will be the dummy chosen for it, and this change will be reflected by the contents of `dummified_params`
+        All the compile parameters provided to a dummy model's `compile` method, or their default
+        values if they were not explicitly given. If the original value of one of the keys in
+        `compile_params` was a hyperparameter space choice, its current value will be the dummy
+        chosen for it, and this change will be reflected by the contents of `dummified_params`
     dummified_params: Dict
-        A mapping of keys in `compile_params` (possibly nested keys) to a tuple pair of (<original hyperparameter space choice>,
-        <tuple path to key>)
+        A mapping of keys in `compile_params` (possibly nested keys) to a tuple pair of
+        (<original hyperparameter space choice>, <tuple path to key>)
 
     Returns
     -------
     merged_params: Dict
-        A dictionary that mirrors `compile_params`, except where an element of `dummified_params` has the same path/key, in which
-        case the hyperparameter space choice value in `dummified_params` is used"""
+        A dictionary that mirrors `compile_params`, except where an element of `dummified_params`
+        has the same path/key, in which case the hyperparameter space choice value in
+        `dummified_params` is used"""
     # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
     _dummified_params = {
         (_k[1:] if _k[0] == "params" else _k): _v for _k, _v in dummified_params.copy().items()
     }
 
     def _visit(path, key, value):
-        """If (`path` + `key`) in `_dummified_params`, return its value instead. Else, default return"""
+        """If (`path` + `key`) in `_dummified_params`, return its value instead. Else, default"""
         location = path + (key,)
         if len(_dummified_params) and location in _dummified_params:
             return (key, _dummified_params.pop(location))
@@ -218,7 +232,8 @@ def merge_compile_params(compile_params, dummified_params):
 
 
 def check_dummy_params(params):
-    """Locate and dummify hyperparameter space choices in `params`, if the hyperparameter is used for model compilation
+    """Locate and dummify hyperparameter space choices in `params`, if the hyperparameter is used
+    for model compilation
 
     Parameters
     ----------
@@ -228,10 +243,11 @@ def check_dummy_params(params):
     Returns
     -------
     checked_params: Dict
-        A replica of `params`, in which instances of hyperparameter space choices are replaced with dummy values
+        A replica of `params`, in which instances of hyperparameter space choices are replaced with
+        dummy values
     dummified_params: Dict
-        A record of keys that were found whose values were hyperparameter space choices, mapped to tuple pairs of
-        (<original value>, <path to key>)"""
+        A record of keys that were found whose values were hyperparameter space choices, mapped to
+        tuple pairs of (<original value>, <path to key>)"""
     compile_keys = [
         "optimizer",
         "loss",
@@ -246,7 +262,8 @@ def check_dummy_params(params):
 
     # noinspection PyUnusedLocal
     def _visit(path, key, value):
-        """If `value` is a descendant of :class:`space.Dimension`, return its lower bound and collect it. Else, default return"""
+        """If `value` is a descendant of :class:`space.Dimension`, return its lower bound and
+        collect it. Else, default return"""
         if key in compile_keys:
             if isinstance(value, (Real, Integer, Categorical)):
                 dummified_params[path + (key,)] = value
@@ -258,8 +275,8 @@ def check_dummy_params(params):
 
 
 def link_choice_ids(layers, compile_params, extra_params, dimensions):
-    """Update `extra_params` to include a 'location' attribute on any descendants of :class:`space.Dimension`, specifying its
-    position among all hyperparameters
+    """Update `extra_params` to include a 'location' attribute on any descendants of
+    :class:`space.Dimension`, specifying its position among all hyperparameters
 
     Parameters
     ----------
@@ -268,21 +285,25 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
     compile_params: Dict
         A dict containing the hyperparameters supplied to the model's `compile` call
     extra_params: Dict
-        A dict containing the hyperparameters for the model's extra methods, such as `fit`, `predict`, and `predict_proba`
+        A dict containing the hyperparameters for the model's extra methods, such as `fit`,
+        `predict`, and `predict_proba`
     dimensions: List
-        A list containing descendants of :class:`space.Dimension`, representing the entire hyperparameter search space
+        A list containing descendants of :class:`space.Dimension`, representing the entire
+        hyperparameter search space
 
     Returns
     -------
     extra_params: Dict
-        Mirrors the given `extra_params`, except any descendants of :class:`space.Dimension` now have a 'location' attribute"""
+        Mirrors the given `extra_params`, except any descendants of :class:`space.Dimension` now
+        have a 'location' attribute"""
 
     def visit_builder(param_type):
-        """Define a visit function that prepends `param_type` to the 'location' tuple added in `_visit`"""
+        """Make visit func that prepends `param_type` to the 'location' tuple added in `_visit`"""
         param_type = (param_type,) if not isinstance(param_type, tuple) else param_type
 
         def _visit(path, key, value):
-            """If `value` is a descendant of :class:`space.Dimension`, add 'location' to itself and its copy in `dimensions`"""
+            """If `value` is a descendant of :class:`space.Dimension`, add 'location' to itself and
+            its copy in `dimensions`"""
             if isinstance(value, (Real, Integer, Categorical)):
                 for i in range(len(dimensions)):
                     if dimensions[i].id == value.id:
@@ -293,7 +314,8 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
         return _visit
 
     def _enter(path, key, value):
-        """If `value` is in `keras.callbacks`, enter as a dict, iterating over non-magic attributes. Else, `default_enter`"""
+        """If `value` is in `keras.callbacks`, enter as a dict, iterating over non-magic attributes.
+        Else, `default_enter`"""
         if isinstance(value, base_keras_callback):
             return dict(), [(_, getattr(value, _)) for _ in dir(value) if not _.startswith("__")]
         return default_enter(path, key, value)
@@ -319,26 +341,28 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
 # Keras Dummy Model Tracing Utilities
 ##################################################
 def initialize_dummy_model(model_initializer, build_fn, wrapper_params):
-    """Creates a dummy model with placeholder values wherever hyperparameter options are provided via
-    `hyperparameter_hunter.space` classes in order to produce a valid Keras model, albeit one with semi-useless values, which also
-    contains attributes injected by :mod:`hyperparameter_hunter.importer`, and :mod:`hyperparameter_hunter.tracers` in order to
+    """Creates a dummy model with placeholder values wherever hyperparameter options are provided
+    via `hyperparameter_hunter.space` classes in order to produce a valid Keras model, albeit one
+    with semi-useless values, which also contains attributes injected by
+    :mod:`hyperparameter_hunter.importer`, and :mod:`hyperparameter_hunter.tracers` in order to
     keep a record of given hyperparameter choices
 
     Parameters
     ----------
     model_initializer: :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
-        A descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper` used to construct a Keras model
+        A descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper` used to build a Keras model
     build_fn: Callable
         The `build_fn` value provided to :meth:`keras.wrappers.scikit_learn.BaseWrapper.__init__`
     wrapper_params: Dict
-        Additional parameters given to :meth:`keras.wrappers.scikit_learn.BaseWrapper.__init__`, as `sk_params`. Some acceptable
-        values include arguments of `build_fn`; and arguments for the `fit`, `predict`, `predict_proba`, and `score` methods. For
-        further information on acceptable values see the Keras documentation
+        Additional parameters given to :meth:`keras.wrappers.scikit_learn.BaseWrapper.__init__`, as
+        `sk_params`. Some acceptable values include arguments of `build_fn`; and arguments for the
+        `fit`, `predict`, `predict_proba`, and `score` methods. For further information on
+        acceptable values see the Keras documentation
 
     Returns
     -------
     dummy: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
-        An initialized and compiled descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper`"""
+        An initialized, compiled descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper`"""
     setattr(
         G, "use_dummy_keras_tracer", True
     )  # `use_dummy_keras_tracer`=True handles dummifying params via `KerasTracer`
@@ -369,9 +393,10 @@ def initialize_dummy_model(model_initializer, build_fn, wrapper_params):
 # Keras Model-Builder Parsing Utilities
 ##################################################
 def rewrite_model_builder(build_fn_source):
-    """Convert the build function used to construct a Keras model to a reusable format by replacing usages of
-    `hyperparameter_hunter.space` classes (`Real`, `Integer`, `Categorical`) with key lookups to a new build_fn input dict
-    containing keys for each of the hyperparameter search space choices found in the original source code
+    """Convert the build function used to construct a Keras model to a reusable format by replacing
+    usages of `hyperparameter_hunter.space` classes (`Real`, `Integer`, `Categorical`) with key
+    lookups to a new build_fn input dict containing keys for each of the hyperparameter search
+    space choices found in the original source code
 
     Parameters
     ----------
@@ -381,12 +406,13 @@ def rewrite_model_builder(build_fn_source):
     Returns
     -------
     reusable_build_fn: String
-        The given `build_fn_source`, in which any usages of `hyperparameter_hunter.space` classes (`Real`, `Integer`,
-        `Categorical`) are replaced with key lookups to a new build_fn input dict containing keys for each of the hyperparameter
-        search space choices found in the original `build_fn_source`,
+        The given `build_fn_source`, in which any usages of `hyperparameter_hunter.space` classes
+        (`Real`, `Integer`, `Categorical`) are replaced with key lookups to a new build_fn input
+        dict containing keys for each of the hyperparameter search space choices found in the
+        original `build_fn_source`,
     expected_params: `collections.OrderedDict` instance
-        A mapping of the names of the located hyperparameter choices to their given ranges (as described by
-        `hyperparameter_hunter.space` classes)"""
+        A mapping of the names of the located hyperparameter choices to their given ranges
+        (as described by `hyperparameter_hunter.space` classes)"""
     clipped_choices, names, start_indexes = find_space_fragments(build_fn_source)
     expected_params = OrderedDict(zip(names, clipped_choices))
 
@@ -406,17 +432,18 @@ def find_space_fragments(string):
     Parameters
     ----------
     string: String
-        A string assumed to be the source code of a Keras model-building function, in which hyperparameter choice declaration
-        strings may be found
+        A string assumed to be the source code of a Keras model-building function, in which
+        hyperparameter choice declaration strings may be found
 
     Returns
     -------
     clipped_choices: List
         All hyperparameter choice declaration strings found in `string` - in order of appearance
     names: List
-        The names of all hyperparameter choice declarations found in `string` - in order of appearance
+        The names of all hyperparameter choice declarations in `string` - in order of appearance
     start_indexes: List
-        The indexes at which each hyperparameter choice declaration string was found in `string` - in order of appearance"""
+        The indexes at which each hyperparameter choice declaration string was found in `string` -
+        in order of appearance"""
     unclipped_choices, start_indexes = zip(*iter_fragments(string, is_match=is_space_match))
     clipped_choices = []
     names = []
@@ -441,7 +468,7 @@ def is_space_match(string):
     Parameters
     ----------
     string: String
-        A string assumed to be a fragment of source code, which may contain a hyperparameter space declaration
+        Str assumed to be source code fragment, which may contain a hyperparameter space declaration
 
     Returns
     -------
@@ -464,13 +491,15 @@ def iter_fragments(string, is_match=None):
     string: String
         A string containing fragments, which, when passed to `is_match` return True
     is_match: Callable, or None, default=lambda _: False
-        A callable to be given a single string input that is a fragment of `string`, starting at any given index. Expected to
-        return a boolean value, which is truthy when the given fragment is of the desired form
+        A callable to be given a single string input that is a fragment of `string`, starting at
+        any given index. Expected to return a boolean value, which is truthy when the given
+        fragment is of the desired form
 
     Yields
     ------
     String
-        A fragment of `string` starting at an index and continuing to the end, for which `is_match` returned a truthy value
+        A fragment of `string` starting at an index and continuing to the end, for which `is_match`
+        returned a truthy value
     Int
         The index at which the aforementioned string fragment begins"""
     is_match = is_match or (lambda _: False)
@@ -481,20 +510,20 @@ def iter_fragments(string, is_match=None):
 
 
 def clean_parenthesized_string(string):
-    """Produce a clipped substring of `string` comprising all characters from the beginning of `string` through the closing
-    paren that matches the first opening paren in `string`
+    """Produce a clipped substring of `string` comprising all characters from the beginning of
+    `string` through the closing paren that matches the first opening paren in `string`
 
     Parameters
     ----------
     string: String
-        A string that contains a parenthesized statement in its entirety, along with extra content to be removed. The target
-        parenthesized statement may contain additional parentheses
+        A string that contains a parenthesized statement in its entirety, along with extra content
+        to be removed. The target parenthesized statement may contain additional parentheses
 
     Returns
     -------
     clean_string: String
-        A substring of `string`, extending from the beginning of `string`, through the closing paren that matches the first
-        opening paren found, producing a valid parenthesized statement"""
+        A substring of `string`, extending from the beginning of `string`, through the closing paren
+        that matches the first opening paren found, producing a valid parenthesized statement"""
     extra_closing_parens = 0
 
     for i in range(len(string)):
