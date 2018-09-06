@@ -1,11 +1,12 @@
-"""This module defines the Optimization Protocol classes that are intended for direct use. All classes defined herein should be
-descendants of one of the base classes defined in :mod:`hyperparameter_hunter.optimization_core`
+"""This module defines the Optimization Protocol classes that are intended for direct use. All
+classes defined herein should be descendants of one of the base classes defined in
+:mod:`hyperparameter_hunter.optimization_core`
 
 Related
 -------
 :mod:`hyperparameter_hunter.optimization_core`
-    Defines the base Optimization Protocol classes from which the classes in :mod:`hyperparameter_hunter.optimization` are
-    descendants"""
+    Defines the base Optimization Protocol classes from which the classes in
+    :mod:`hyperparameter_hunter.optimization` are descendants"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -230,8 +231,8 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
 
 
 class DummySearch(InformedOptimizationProtocol):
-    """Random search by uniform sampling. Technically this is not "Informed", but it fits better as an Informed subclass due to
-    its reliance on `Scikit-Optimize`"""
+    """Random search by uniform sampling. Technically this is not "Informed", but it fits better as
+    an Informed subclass due to its reliance on `Scikit-Optimize`"""
 
     def __init__(
         self,
