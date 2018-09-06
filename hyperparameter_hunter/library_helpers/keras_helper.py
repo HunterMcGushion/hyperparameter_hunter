@@ -13,7 +13,8 @@ from types import MethodType
 
 
 def keras_callback_to_key(callback):
-    """Convert a `Keras` callback instance to a string that identifies it, along with the parameters used to create it
+    """Convert a `Keras` callback instance to a string that identifies it, along with the parameters
+     used to create it
 
     Parameters
     ----------
@@ -39,7 +40,8 @@ def keras_callback_to_key(callback):
 
 
 def keras_callback_to_dict(callback):
-    """Convert a `Keras` callback instance to a dict that identifies it, along with the parameters used to create it
+    """Convert a `Keras` callback instance to a dict that identifies it, along with the parameters
+    used to create it
 
     Parameters
     ----------
@@ -95,22 +97,23 @@ def reinitialize_callbacks(callbacks):
 
 
 def parameterize_compiled_keras_model(model):
-    """Traverse a compiled Keras model to gather critical information about the layers used to construct its architecture, and
-    the parameters used to compile it
+    """Traverse a compiled Keras model to gather critical information about the layers used to
+    construct its architecture, and the parameters used to compile it
 
     Parameters
     ----------
     model: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
-        A compiled instance of a Keras model, constructed using the Keras `wrappers.scikit_learn` module
+        A compiled instance of a Keras model, made using the Keras `wrappers.scikit_learn` module
 
     Returns
     -------
     layers: List
-        A list containing a dict for each layer found in the architecture of `model`. A layer dict should contain the following
-        keys: ['class_name', '__hh_default_args', '__hh_default_kwargs', '__hh_used_args', '__hh_used_kwargs']
+        A list containing a dict for each layer found in the architecture of `model`. A layer dict
+        should contain the following keys: ['class_name', '__hh_default_args',
+        '__hh_default_kwargs', '__hh_used_args', '__hh_used_kwargs']
     compile_params: Dict
-        The parameters used on the call to :meth:`model.compile`. If a value for a certain parameter was not explicitly provided,
-        its default value will be included in `compile_params`"""
+        The parameters used on the call to :meth:`model.compile`. If a value for a certain parameter
+        was not explicitly provided, its default value will be included in `compile_params`"""
     # NOTE: Tested optimizer and loss with both callable and string inputs - Converted to callables automatically
 
     # TODO: MIGHT NEED TO CHECK KERAS VERSION...

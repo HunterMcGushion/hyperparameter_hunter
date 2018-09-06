@@ -23,7 +23,7 @@ class LoggerFitStatus(BaseLoggerCallback):
     # FLAG: Add means of updating float_format to "G.Env.reporting_handler_params['float_format']"
 
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.stat_aggregates = None
         self.last_evaluation_results = None
         self.current_seed = None

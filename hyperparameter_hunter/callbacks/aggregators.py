@@ -78,7 +78,7 @@ class AggregatorTimes(BaseAggregatorCallback):
 
 class AggregatorEvaluations(BaseAggregatorCallback):
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.stat_aggregates = dict()
         self.last_evaluation_results = dict(in_fold=None, oof=None, holdout=None)
         self._rep = None
@@ -159,7 +159,7 @@ class AggregatorLosses(BaseAggregatorCallback):
 class AggregatorEpochsElapsed(BaseAggregatorCallback):
     # TODO: Make this class work with RepeatedCVExperiments - Currently only considers fold, run
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.stat_aggregates = dict()
         self.model = None
         self._rep = None
