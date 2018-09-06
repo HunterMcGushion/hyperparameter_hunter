@@ -52,7 +52,7 @@ def identify_algorithm(model_initializer):
 
 
 def identify_algorithm_hyperparameters(model_initializer):  # FLAG: Play nice with Keras
-    """Determine the keyword-arguments accepted by `model_initializer`, along with their default values
+    """Determine keyword-arguments accepted by `model_initializer`, along with their default values
 
     Parameters
     ----------
