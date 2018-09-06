@@ -1,19 +1,23 @@
-"""This module defines the base Optimization Protocol classes. The classes defined herein are not intended for direct use, but are
-rather parent classes to those defined in :mod:`hyperparameter_hunter.optimization`
+"""This module defines the base Optimization Protocol classes. The classes defined herein are not
+intended for direct use, but are rather parent classes to those defined in
+:mod:`hyperparameter_hunter.optimization`
 
 Related
 -------
 :mod:`hyperparameter_hunter.optimization`
     Defines the optimization classes that are intended for direct use. All classes defined in
-    :mod:`hyperparameter_hunter.optimization` should be descendants of :class:`optimization_core.BaseOptimizationProtocol`
+    :mod:`hyperparameter_hunter.optimization` should be descendants of
+    :class:`optimization_core.BaseOptimizationProtocol`
 :mod:`hyperparameter_hunter.result_reader`
-    Used to locate result files for Experiments that may be similar to the current optimization constraints, and produce data to
-    learn from (in the case of :class:`InformedOptimizationProtocol`)
+    Used to locate result files for Experiments that are similar to the current optimization
+    constraints, and produce data to learn from in the case of :class:`InformedOptimizationProtocol`
 :mod:`hyperparameter_hunter.space`
-    Defines the child classes of `hyperparameter_hunter.space.Dimension`, which are used to define the hyperparameters to optimize
+    Defines the child classes of `hyperparameter_hunter.space.Dimension`, which are used to define
+    the hyperparameters to optimize
 :mod:`hyperparameter_hunter.utils.optimization_utils`:
-    Provides utility functions for locating saved Experiments that fit within the constraints currently being optimized, as well
-    as :class:`AskingOptimizer`, which guides the search of :class:`optimization_core.InformedOptimizationProtocol`"""
+    Provides utility functions for locating saved Experiments that fit within the constraints
+    currently being optimized, as well as :class:`AskingOptimizer`, which guides the search of
+    :class:`optimization_core.InformedOptimizationProtocol`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -64,8 +68,9 @@ except ImportError:
 
 
 class OptimizationProtocolMeta(type):
-    """Metaclass to accurately set :attr:`source_script` for its descendants even if the original call was the product of scripts
-    calling other scripts that eventually instantiated an optimization protocol"""
+    """Metaclass to accurately set :attr:`source_script` for its descendants even if the original
+    call was the product of scripts calling other scripts that eventually instantiated an
+    optimization protocol"""
 
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
@@ -74,7 +79,8 @@ class OptimizationProtocolMeta(type):
         return namespace
 
     def __call__(cls, *args, **kwargs):
-        """Set the instance's :attr:`source_script` to the absolute path of the file that instantiated the OptimizationProtocol"""
+        """Set the instance's :attr:`source_script` to the absolute path of the file that
+        instantiated the OptimizationProtocol"""
         setattr(
             cls,
             "source_script",
@@ -98,32 +104,38 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         read_experiments=True,
         reporter_parameters=None,
     ):
-        """Base class for :class:`InformedOptimizationProtocol`, and :class:`UninformedOptimizationProtocol`
+        """Base class for :class:`InformedOptimizationProtocol`, and
+        :class:`UninformedOptimizationProtocol`
 
         Parameters
         ----------
         target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics_map`>)
-            A path denoting the metric to be used to compare completed Experiments within the Optimization Protocol. The first
-            value should be one of ['oof', 'holdout', 'in_fold']. The second value should be the name of a metric being recorded
-            according to the values supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or used as the `target_metric`
-            input to this function are acceptable values for :attr:`BaseOptimizationProtocol.target_metric`
+            A path denoting the metric to be used to compare completed Experiments within the
+            Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
+            The second value should be the name of a metric being recorded according to the values
+            supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
+            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or
+            used as the `target_metric` input to this function are acceptable values for
+            :attr:`BaseOptimizationProtocol.target_metric`
         iterations: Int, default=1
             The number of distinct experiments to execute
         verbose: Int 0, 1, or 2, default=1
-            Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization Protocol. 2: In addition to
-            logs shown when verbose=1, also show the logs from individual Experiments
+            Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization
+            Protocol. 2: In addition to logs shown when verbose=1, also show the logs from individual
+            Experiments
         read_experiments: Boolean, default=True
-            If True, all Experiment records that fit within the current :attr:`hyperparameter_space`, and are for the same
-            :attr:`algorithm_name`, and match the current guidelines, will be read in and used to fit any optimizers
+            If True, all Experiment records that fit within the current
+            :attr:`hyperparameter_space`, and are for the same :attr:`algorithm_name`, and match the
+            current guidelines, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default=None
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
 
         Notes
         -----
-        By default, 'script_backup' for Experiments is blacklisted when executed within :class:`BaseOptimizationProtocol` since
-        it would just repeatedly create copies of the same, unchanged file (this file). So don't expect any script_backup files
-        for Experiments executed during optimization rounds"""
+        By default, 'script_backup' for Experiments is blacklisted when executed within
+        :class:`BaseOptimizationProtocol` since it would just repeatedly create copies of the same,
+        unchanged file (this file). So don't expect any script_backup files for Experiments executed
+        during optimization rounds"""
         #################### Optimization Protocol Parameters ####################
         self.target_metric = target_metric
         self.iterations = iterations
@@ -186,40 +198,49 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         notes=None,
         do_raise_repeated=True,
     ):
-        """Provide the arguments necessary to instantiate :class:`experiments.CrossValidationExperiment`. This method has the same
-        signature as :meth:`experiments.BaseExperiment.__init__` except where noted
+        """Provide the arguments necessary to instantiate
+        :class:`experiments.CrossValidationExperiment`. This method has the same signature as
+        :meth:`experiments.BaseExperiment.__init__` except where noted
 
         Parameters
         ----------
         model_initializer: Class, or functools.partial, or class instance
             The algorithm class being used to initialize a model
         model_init_params: Dict, or object
-            The dictionary of arguments given when creating a model instance with `model_initializer` via the `__init__` method
-            of :class:`models.Model`. Any kwargs that are considered valid by the `__init__` method of `model_initializer` are
+            The dictionary of arguments given when creating a model instance with
+            `model_initializer` via the `__init__` method of :class:`models.Model`. Any kwargs that
+            are considered valid by the `__init__` method of `model_initializer` are
             valid in `model_init_params`
         model_extra_params: Dict, or None, default=None
-            A dictionary of extra parameters passed to :class:`models.Model`. This is used to provide parameters to models'
-            non-initialization methods (like `fit`, `predict`, `predict_proba`, etc.), and for neural networks
+            A dictionary of extra parameters passed to :class:`models.Model`. This is used to
+            provide parameters to models' non-initialization methods (like `fit`, `predict`,
+            `predict_proba`, etc.), and for neural networks
         feature_selector: List of str, callable, list of booleans, default=None
-            The value provided when splitting apart the input data for all provided DataFrames. `feature_selector` is provided as
-            the second argument for calls to `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
-            `feature_selector` is set to all columns in :attr:`train_dataset`, less :attr:`target_column`, and :attr:`id_column`
+            The value provided when splitting apart the input data for all provided DataFrames.
+            `feature_selector` is provided as the second argument for calls to
+            `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
+            `feature_selector` is set to all columns in :attr:`train_dataset`, less
+            :attr:`target_column`, and :attr:`id_column`
         preprocessing_pipeline: ...
             ... Experimental...
         preprocessing_params: ...
             ... Experimental...
         notes: String, or None, default=None
-            Additional information about the Experiment that will be saved with the Experiment's description result file. This
-            serves no purpose other than to facilitate saving Experiment details in a more readable format
+            Additional information about the Experiment that will be saved with the Experiment's
+            description result file. This serves no purpose other than to facilitate saving
+            Experiment details in a more readable format
         do_raise_repeated: Boolean, default=False
-            If True and this Experiment locates a previous Experiment's results with matching Environment and Hyperparameter Keys,
-            a RepeatedExperimentError will be raised. Else, a warning will be logged
+            If True and this Experiment locates a previous Experiment's results with matching
+            Environment and Hyperparameter Keys, a RepeatedExperimentError will be raised. Else, a
+            warning will be logged
 
         Notes
         -----
-        The `auto_start` kwarg is not available here because :meth:`BaseOptimizationProtocol._execute_experiment` sets it to False
-        in order to check for duplicated keys before running the whole Experiment. This is the most notable difference between
-        calling :meth:`set_experiment_guidelines` and instantiating :class:`experiments.CrossValidationExperiment`"""
+        The `auto_start` kwarg is not available here because
+        :meth:`BaseOptimizationProtocol._execute_experiment` sets it to False in order to check for
+        duplicated keys before running the whole Experiment. This is the most notable difference
+        between calling :meth:`set_experiment_guidelines` and instantiating
+        :class:`experiments.CrossValidationExperiment`"""
         self.model_initializer = model_initializer
 
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
@@ -260,7 +281,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.set_dimensions()
 
     def set_dimensions(self):
-        """Locate given hyperparameters that are `space` choice declarations and add them to :attr:`dimensions`"""
+        """Locate given hyperparameters that are `space` choice declarations and add them to
+        :attr:`dimensions`"""
         all_dimension_choices = []
 
         #################### Remap Extra Objects ####################
@@ -298,10 +320,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             )
 
     def go(self):
-        """Begin hyperparameter optimization process after experiment guidelines have been set and search dimensions are in place.
-        This process includes the following: setting the hyperparameter space; locating similar experiments to be used as
-        learning material for :class:`InformedOptimizationProtocol` s; and executing :meth:`_optimization_loop`, which actually
-        sets off the Experiment execution process"""
+        """Begin hyperparameter optimization process after experiment guidelines have been set and
+        search dimensions are in place. This process includes the following: setting the
+        hyperparameter space; locating similar experiments to be used as learning material for
+        :class:`InformedOptimizationProtocol`\s; and executing :meth:`_optimization_loop`, which
+        actually sets off the Experiment execution process"""
         if self.model_initializer is None:
             raise ValueError(
                 "Experiment guidelines and options must be set before hyperparameter optimization can be started"
@@ -325,8 +348,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     # Helper Methods:
     ##################################################
     def _optimization_loop(self, iteration=0):
-        """Perform Experiment execution loop while `iteration` < `iterations`. At each iteration, an Experiment will be executed,
-        its results will be logged, and it will be compared to the current best experiment
+        """Perform Experiment execution loop while `iteration` < `iterations`. At each iteration, an
+        Experiment will be executed, its results will be logged, and it will be compared to the
+        current best experiment
 
         Parameters
         ----------
@@ -365,12 +389,14 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             iteration += 1
 
     def _execute_experiment(self):
-        """Instantiate and run a :class:`experiments.CrossValidationExperiment` after checking for duplicated keys
+        """Instantiate and run a :class:`experiments.CrossValidationExperiment` after checking for
+        duplicated keys
 
         Notes
         -----
-        As described in the Notes of :meth:`BaseOptimizationProtocol.set_experiment_guidelines`, the `auto_start` kwarg of
-        :meth:`experiments.CrossValidationExperiment.__init__` is set to False in order to check for duplicated keys"""
+        As described in the Notes of :meth:`BaseOptimizationProtocol.set_experiment_guidelines`, the
+        `auto_start` kwarg of :meth:`experiments.CrossValidationExperiment.__init__` is set to False
+        in order to check for duplicated keys"""
         self._update_current_hyperparameters()
 
         self.current_experiment = CrossValidationExperiment(
@@ -404,8 +430,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             K.clear_session()
 
     def _update_current_hyperparameters(self):
-        """Update :attr:`current_init_params`, and :attr:`current_extra_params` according to the upcoming set of hyperparameters
-        to be searched"""
+        """Update :attr:`current_init_params`, and :attr:`current_extra_params` according to the
+        upcoming set of hyperparameters to be searched"""
         current_hyperparameters = self._get_current_hyperparameters()
 
         init_params = {
@@ -434,7 +460,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     ##################################################
     @abstractmethod
     def _set_hyperparameter_space(self):
-        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search dimensions"""
+        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search
+        dimensions"""
         raise NotImplementedError()
 
     @abstractmethod
@@ -450,22 +477,23 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     @property
     @abstractmethod
     def search_space_size(self):
-        """The number of different hyperparameter permutations possible given the current hyperparameter search space"""
+        """The number of different hyperparameter permutations possible given the current
+        hyperparameter search space"""
         raise NotImplementedError()
 
     ##################################################
     # Utility Methods:
     ##################################################
     def _preparation_workflow(self):
-        """Perform housekeeping tasks to prepare for core functionality like validating the `Environment` and parameters,
-        and updating the verbosity of individual Experiments"""
+        """Perform housekeeping tasks to prepare for core functionality like validating the
+        `Environment` and parameters, and updating the verbosity of individual Experiments"""
         self._validate_environment()
         self._validate_parameters()
         self._update_verbosity()
 
     @staticmethod
     def _validate_environment():
-        """Check that there is a currently active Environment instance that is not already occupied"""
+        """Check that there is a currently active and unoccupied Environment instance"""
         if G.Env is None:
             raise EnvironmentInactiveError()
         if G.Env.current_task is None:
@@ -494,7 +522,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             ]
 
     def _find_similar_experiments(self):
-        """Look for Experiments that were performed under similar conditions (algorithm and cross-experiment parameters)"""
+        """Look for Experiments that were performed under similar conditions (algorithm and
+        cross-experiment parameters)"""
         if self.read_experiments is False:
             return
 
@@ -526,7 +555,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.similar_experiments = experiment_finder.similar_experiments
 
     def _update_verbosity(self):
-        """Update the contents of :attr:`environment.Environment.reporting_handler_params` if required by :attr:`verbose`"""
+        """Update the contents of :attr:`environment.Environment.reporting_handler_params` if
+        required by :attr:`verbose`"""
         #################### Mute non-critical console logging for Experiments ####################
         if self.verbose in [0, 1]:
             G.Env.reporting_handler_params.setdefault("console_params", {})["level"] = "CRITICAL"
@@ -562,39 +592,47 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         Parameters
         ----------
         target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics_map`>)
-            A path denoting the metric to be used to compare completed Experiments within the Optimization Protocol. The first
-            value should be one of ['oof', 'holdout', 'in_fold']. The second value should be the name of a metric being recorded
-            according to the values supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or used as the `target_metric`
-            input to this function are acceptable values for :attr:`BaseOptimizationProtocol.target_metric`
+            A path denoting the metric to be used to compare completed Experiments within the
+            Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
+            The second value should be the name of a metric being recorded according to the values
+            supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
+            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or
+            used as the `target_metric` input to this function are acceptable values for
+            :attr:`BaseOptimizationProtocol.target_metric`
         iterations: Int, default=1
             The number of distinct experiments to execute
         verbose: Int 0, 1, or 2, default=1
-            Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization Protocol. 2: In addition to
-            logs shown when verbose=1, also show the logs from individual Experiments
+            Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization
+            Protocol. 2: In addition to logs shown when verbose=1, also show the logs from
+            individual Experiments
         read_experiments: Boolean, default=True
-            If True, all Experiment records that fit within the current :attr:`hyperparameter_space`, and are for the same
-            :attr:`algorithm_name`, and match the current guidelines, will be read in and used to fit any optimizers
+            If True, all Experiment records that fit within the current
+            :attr:`hyperparameter_space`, and are for the same :attr:`algorithm_name`, and match the
+            current guidelines, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default=None
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
         base_estimator: String in ['GP', 'GBRT', 'RF', 'ET', 'DUMMY'], or an `sklearn` regressor, default='GP'
-            If one of the above strings, a default model of that type will be used. Else, should inherit from
-            :class:`sklearn.base.RegressorMixin`, and its :meth:`predict` should have an optional `return_std` argument, which
-            returns `std(Y | x)`, along with `E[Y | x]`
+            If one of the above strings, a default model of that type will be used. Else, should
+            inherit from :class:`sklearn.base.RegressorMixin`, and its :meth:`predict` should have
+            an optional `return_std` argument, which returns `std(Y | x)`, along with `E[Y | x]`
         n_initial_points: Int, default=10
-            The number of complete evaluation points necessary before allowing Experiments to be approximated with
-            `base_estimator`. Any valid Experiment records found will count as initialization points. If enough Experiment records
-            are not found, additional points will be randomly sampled
+            The number of complete evaluation points necessary before allowing Experiments to be
+            approximated with `base_estimator`. Any valid Experiment records found will count as
+            initialization points. If enough Experiment records are not found, additional points
+            will be randomly sampled
         acquisition_function: String in ['LCB', 'EI', 'PI', 'gp_hedge'], default='gp_hedge'
-            Function to minimize over the posterior distribution. 'LCB': lower confidence bound. 'EI': negative expected
-            improvement. 'PI': negative probability of improvement. 'gp_hedge': Probabilistically choose one of the preceding
-            three acquisition functions at each iteration
+            Function to minimize over the posterior distribution. 'LCB': lower confidence bound.
+            'EI': negative expected improvement. 'PI': negative probability of improvement.
+            'gp_hedge': Probabilistically choose one of the preceding three acquisition functions at
+            each iteration
         acquisition_optimizer: String in ['sampling', 'lbfgs', 'auto'], default='auto'
-            Method to minimize the acquisition function. The fit model is updated with the optimal value obtained by optimizing
-            `acquisition_function` with `acquisition_optimizer`. 'sampling': optimize by computing `acquisition_function` at
-            `acquisition_optimizer_kwargs['n_points']` randomly sampled points. 'lbfgs': optimize by sampling
-            `n_restarts_optimizer` random points, then run 'lbfgs' for 20 iterations with those points to find local minima, the
-            optimal of which is used to update the prior. 'auto': configure on the basis of `base_estimator` and `dimensions`
+            Method to minimize the acquisition function. The fit model is updated with the optimal
+            value obtained by optimizing `acquisition_function` with `acquisition_optimizer`.
+            'sampling': optimize by computing `acquisition_function` at
+            `acquisition_optimizer_kwargs['n_points']` randomly sampled points. 'lbfgs': optimize by
+            sampling `n_restarts_optimizer` random points, then run 'lbfgs' for 20 iterations with
+            those points to find local minima, the optimal of which is used to update the prior.
+            'auto': configure on the basis of `base_estimator` and `dimensions`
         random_state: Int, `RandomState` instance, or None, default=None
             Set to something other than None for reproducible results
         acquisition_function_kwargs: Dict, or None, default=dict(xi=0.01, kappa=1.96)
@@ -602,20 +640,23 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         acquisition_optimizer_kwargs: Dict, or None, default=dict(n_points=10000, n_restarts_optimizer=5, n_jobs=1)
             Additional arguments passed to the acquisition optimizer
         n_random_starts: Int, default=10
-            The number of Experiments to execute with random points before checking that `n_initial_points` have been evaluated
+            The number of Experiments to execute with random points before checking that
+            `n_initial_points` have been evaluated
         callbacks: Callable, list of callables, or None, default=[]
-            If callable, then `callbacks(self.optimizer_result)` is called after each update to :attr:`optimizer`. If list, then
-            each callable is called
+            If callable, then `callbacks(self.optimizer_result)` is called after each update to
+            :attr:`optimizer`. If list, then each callable is called
         base_estimator_kwargs: Dict, or None, default={}
             Additional arguments passed to `base_estimator` when it is initialized
 
         Notes
         -----
-        To provide initial input points for evaluation, individual Experiments can be executed prior to instantiating an
-        Optimization Protocol. The results of these Experiments will automatically be detected and cherished by the optimizer.
+        To provide initial input points for evaluation, individual Experiments can be executed prior
+        to instantiating an Optimization Protocol. The results of these Experiments will
+        automatically be detected and cherished by the optimizer.
 
-        :class:`.InformedOptimizationProtocol` and its children in :mod:`.optimization` rely heavily on the utilities provided by
-        the `Scikit-Optimize` library, so thank you to the creators and contributors for their excellent work."""
+        :class:`.InformedOptimizationProtocol` and its children in :mod:`.optimization` rely heavily
+        on the utilities provided by the `Scikit-Optimize` library, so thank you to the creators and
+        contributors for their excellent work."""
         # TODO: Add 'EIps', and 'PIps' to the allowable `acquisition_function` values - Will need to return execution times
 
         #################### Optimizer Parameters ####################
@@ -652,22 +693,23 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         )
 
     def _set_hyperparameter_space(self):
-        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search dimensions, and
-        :attr:`base_estimator` and :attr:`optimizer`"""
+        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search
+        dimensions, and :attr:`base_estimator` and :attr:`optimizer`"""
         self.hyperparameter_space = Space(dimensions=self.dimensions)
         self._prepare_estimator()
         self._build_optimizer()
 
     def _prepare_estimator(self):
-        """Initialize :attr:`base_estimator` with :attr:`hyperparameter_space` and any other kwargs, using
-        `skopt.utils.cook_estimator`"""
+        """Initialize :attr:`base_estimator` with :attr:`hyperparameter_space` and any other kwargs,
+        using `skopt.utils.cook_estimator`"""
         self.base_estimator = cook_estimator(
             self.base_estimator, space=self.hyperparameter_space, **self.base_estimator_kwargs
         )
 
     def _build_optimizer(self):
-        """Set :attr:`optimizer` to the optimizing class used to both estimate the utility of sets of hyperparameters by learning
-        from executed Experiments, and suggest points at which the objective should be evaluated"""
+        """Set :attr:`optimizer` to the optimizing class used to both estimate the utility of sets
+        of hyperparameters by learning from executed Experiments, and suggest points at which the
+        objective should be evaluated"""
         self.optimizer = AskingOptimizer(
             dimensions=self.hyperparameter_space,
             base_estimator=self.base_estimator,
@@ -680,8 +722,8 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         )
 
     def _execute_experiment(self):
-        """After executing parent's :meth:`_execute_experiment`, fit :attr:`optimizer` with the set of hyperparameters that
-        were used, and the utility of those hyperparameters"""
+        """After executing parent's :meth:`_execute_experiment`, fit :attr:`optimizer` with the set
+        of hyperparameters that were used, and the utility of those hyperparameters"""
         super()._execute_experiment()
 
         # FLAG: Resolve switching between below options depending on `target_metric`
@@ -695,8 +737,8 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             return
 
     def _get_current_hyperparameters(self):
-        """Ask :attr:`optimizer` for the upcoming set of hyperparameters that should be searched, then format them to be used
-        in the next Experiment
+        """Ask :attr:`optimizer` for the upcoming set of hyperparameters that should be searched,
+        then format them to be used in the next Experiment
 
         Returns
         -------
@@ -723,8 +765,9 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         return current_hyperparameters
 
     def _find_similar_experiments(self):
-        """After locating similar experiments by way of the parent's :meth:`_find_similar_experiments`, fit :attr:`optimizer`
-        with the hyperparameters and results of each located experiment"""
+        """After locating similar experiments by way of the parent's
+        :meth:`_find_similar_experiments`, fit :attr:`optimizer` with the hyperparameters and
+        results of each located experiment"""
         super()._find_similar_experiments()
 
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
@@ -756,14 +799,16 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
     @property
     def search_space_size(self):
-        """The number of different hyperparameter permutations possible given the current hyperparameter search dimensions.
+        """The number of different hyperparameter permutations possible given the current
+        hyperparameter search dimensions
 
         Returns
         -------
         :attr:`_search_space_size`: Int, or `numpy.inf`
-            Infinity will be returned if any of the following constraints are met: 1) the hyperparameter dimensions include any
-            real-valued boundaries, 2) the boundaries include values that are neither categorical nor integer, or 3) the search
-            space size is otherwise incalculable"""
+            Infinity will be returned if any of the following constraints are met: 1) the
+            hyperparameter dimensions include any real-valued boundaries, 2) the boundaries include
+            values that are neither categorical nor integer, or 3) the search space size is
+            otherwise incalculable"""
         if self._search_space_size is None:
             self._search_space_size = len(self.hyperparameter_space)
         return self._search_space_size
