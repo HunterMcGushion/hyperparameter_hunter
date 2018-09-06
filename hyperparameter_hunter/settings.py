@@ -1,13 +1,14 @@
 """This module is the doorway for other modules to access the information set by the active
-:class:`hyperparameter_hunter.environment.Environment`, and to access the appropriate logging methods. Specifically, other
-modules will most often use :class:`hyperparameter_hunter.settings.G` to access the aforementioned information. Additionally,
-this module defines several variables to assist in navigating the 'HyperparameterHunterAssets' directory structure
+:class:`hyperparameter_hunter.environment.Environment`, and to access the appropriate logging
+methods. Specifically, other modules will most often use :class:`hyperparameter_hunter.settings.G`
+to access the aforementioned information. Additionally, this module defines several variables to
+assist in navigating the 'HyperparameterHunterAssets' directory structure
 
 Related
 -------
 :mod:`hyperparameter_hunter.environment`
-    This module sets :attr:`hyperparameter_hunter.settings.G.Env` to itself, creating the primary gateway used by other modules
-    to access the active Environment's information"""
+    This module sets :attr:`hyperparameter_hunter.settings.G.Env` to itself, creating the primary
+    gateway used by other modules to access the active Environment's information"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -46,27 +47,30 @@ RESULT_FILE_SUB_DIR_PATHS = {
 
 
 class G(object):
-    """This class defines global attributes that are set upon instantiation of :class:`environment.Environment`. All
-    attributes contained herein are class variables (not instance variables) because the expectation is for the attributes of
-    this class to be set only once, then referenced by operations that may be executed after instantiating a
-    :class:`environment.Environment`. This allows functions to be called or classes to be initiated without
-    passing a reference to the currently active Environment, because they check the attributes of this class, instead.
+    """This class defines global attributes that are set upon instantiation of
+    :class:`environment.Environment`. All attributes contained herein are class variables (not
+    instance variables) because the expectation is for the attributes of this class to be set only
+    once, then referenced by operations that may be executed after instantiating a
+    :class:`environment.Environment`. This allows functions to be called or classes to be initiated
+    without passing a reference to the currently active Environment, because they check the
+    attributes of this class, instead
 
     Attributes
     ----------
     Env: None
-        This is set to "self" in :meth:`environment.Environment.__init__`. This fact allows other modules to check
-        if :attr:`settings.G.Env` is None. If None, a :class:`environment.Environment` has not yet been
-        instantiated. If not None, any attributes or methods of the instantiated Env may be called.
+        This is set to "self" in :meth:`environment.Environment.__init__`. This fact allows other
+        modules to check if :attr:`settings.G.Env` is None. If None, a
+        :class:`environment.Environment` has not yet been instantiated. If not None, any attributes
+        or methods of the instantiated Env may be called
     log: print
-        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version of
-        :meth:`reporting.ReportingHandler.log`
+        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version
+        of :meth:`reporting.ReportingHandler.log`
     debug: print
-        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version of
-        :meth:`reporting.ReportingHandler.debug`
+        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version
+        of :meth:`reporting.ReportingHandler.debug`
     warn: warnings.warn
-        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version of
-        :meth:`reporting.ReportingHandler.warn`
+        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version
+        of :meth:`reporting.ReportingHandler.warn`
     log_: print
         ... # TODO: ...
     debug_: print
