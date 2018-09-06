@@ -23,20 +23,23 @@ class ReportingHandler(object):
         heartbeat_params=None,
         add_frame=False,
     ):
-        """The class in control of custom logging methods, how logs are formatted, and initializing logging for Experiments
+        """The class in control of custom logging methods, how logs are formatted, and initializing
+        logging for Experiments
 
         Parameters
         ----------
         heartbeat_path: Str path, or None, default=None
             If string and valid heartbeat path, logging messages will also be saved in this file
         float_format: String, default='{:.5f}'
-            If not default, must be a valid formatting string for floating point values. If invalid, default will be used
+            If not default, must be a valid formatting string for floating point values. If invalid,
+            default will be used
         console_params: Dict, or None, default=None
             Parameters passed to :meth:`_configure_console_logger_handler`
         heartbeat_params: Dict, or None, default=None
             Parameters passed to :meth:`_configure_heartbeat_logger_handler`
         add_frame: Boolean, default=False
-            If True, whenever :meth:`log` is called, the source of the call will be prepended to the content being logged"""
+            If True, whenever :meth:`log` is called, the source of the call will be prepended to
+            the content being logged"""
         self.reporting_type = (
             "logging"
         )  # TODO: Add `reporting_type` as kwarg to `__init__`, with options: logging, advanced
@@ -121,7 +124,8 @@ class ReportingHandler(object):
             )
 
     def _configure_reporting_type(self):
-        """Update the placeholder logging methods to those specified by :attr:`reporting_type`, and initialize logging"""
+        """Update the placeholder logging methods to those specified by :attr:`reporting_type`, and
+        initialize logging"""
         if self.reporting_type == "standard":
             raise ValueError('Standard logging is not yet implemented. Please choose "logging"')
             # setattr(self, 'log', self._standard_log)
@@ -166,13 +170,13 @@ class ReportingHandler(object):
         Parameters
         ----------
         level: String, or Int, default='DEBUG'
-            The acceptable minimum message level for the console. Will be passed to :meth:`logging.StreamHandler.setlevel`
+            Minimum message level for the console. Passed to :meth:`logging.StreamHandler.setlevel`
         fmt: String, or None, default=None
-            The message formatting string for the console. Will be passed to :meth:`logging.Formatter.__init__`
+            Message formatting string for the console. Passed to :meth:`logging.Formatter.__init__`
         datefmt: String, or None, default=None
-            The date formatting string for the console. Will be passed to :meth:`logging.Formatter.__init__`
+            Date formatting string for the console. Passed to :meth:`logging.Formatter.__init__`
         style: String, default='%'
-            Specifies the type of string formatting used. Will be passed to :meth:`logging.Formatter.__init__`
+            Type of string formatting used. Passed to :meth:`logging.Formatter.__init__`
         **kwargs: Dict
             Extra keyword arguments
 
@@ -196,13 +200,16 @@ class ReportingHandler(object):
         Parameters
         ----------
         level: String, or Int, default='DEBUG'
-            The acceptable minimum message level for the heartbeat file. Will be passed to :meth:`logging.FileHandler.setlevel`
+            Minimum message level for the heartbeat file. Passed to
+            :meth:`logging.FileHandler.setlevel`
         fmt: String, or None, default=None
-            The message formatting string for the heartbeat file. Will be passed to :meth:`logging.Formatter.__init__`
+            Message formatting string for the heartbeat file. Passed to
+            :meth:`logging.Formatter.__init__`
         datefmt: String, or None, default=None
-            The date formatting string for the heartbeat file. Will be passed to :meth:`logging.Formatter.__init__`
+            Date formatting string for the heartbeat file. Passed to
+            :meth:`logging.Formatter.__init__`
         style: String, default='%'
-            Specifies the type of string formatting used. Will be passed to :meth:`logging.Formatter.__init__`
+            Type of string formatting used. Passed to :meth:`logging.Formatter.__init__`
         **kwargs: Dict
             Extra keyword arguments
 
@@ -355,10 +362,12 @@ class OptimizationReporter:
         parameter_names: List
             The names of the hyperparameters being evaluated and optimized
         verbose: Int in [0, 1, 2], default=1
-            If 0, all but critical logging is silenced. If 1, normal logging is performed. If 2, detailed logging is performed
+            If 0, all but critical logging is silenced. If 1, normal logging is performed. If 2,
+            detailed logging is performed
         show_experiment_id: Int, or Boolean, default=8
-            If True, the experiment_id will be printed in each result row. If False, it will not. If int, the first
-            `show_experiment_id`-many characters of each experiment_id will be printed in each row"""
+            If True, the experiment_id will be printed in each result row. If False, it will not.
+            If int, the first `show_experiment_id`-many characters of each experiment_id will be
+            printed in each row"""
         self.original_parameter_names = parameter_names
         self.verbose = verbose
         self.show_experiment_id = (
@@ -597,10 +606,11 @@ def stringify_frame_source(
     add_line_no: Boolean, default=False
         If True, the line number will be included in the `source_content` result
     max_line_no_size: Int, default=4
-        The total number (including padding) of characters to be occupied by `src_line_no`. For example, if `src_line_no`=32, and
-        `max_line_no_size`=4, `src_line_no` will be padded to become '32  ' in order to occupy four characters
+        Total number (including padding) of characters to be occupied by `src_line_no`. For
+        example, if `src_line_no`=32, and `max_line_no_size`=4, `src_line_no` will be padded to
+        become '32  ' in order to occupy four characters
     total_max_size: Int, default=80
-        The total number (including padding) of characters to be occupied by the `source_content` result
+        Total number (including padding) of characters to be occupied by the `source_content` result
 
     Returns
     -------
@@ -638,7 +648,7 @@ def add_time_to_content(content, add_time=False):
     Returns
     -------
     content: Str
-         A string containing the original `content`, along with the current time, and any additional formatting"""
+         Str containing original `content`, along with current time, and additional formatting"""
     add_content = ""
     add_time = now_time() if add_time is True else add_time
     add_content += "Time: {}".format(add_time) if add_time else ""
@@ -721,8 +731,8 @@ def format_evaluation_results(results, separator="  |  ", float_format="{:.5f}")
     Parameters
     ----------
     results: Dict
-        The results of a model evaluation, in which keys represent the dataset type evaluated, and values are dicts containing
-        metrics as keys, and metric values as values
+        The results of a model evaluation, in which keys represent the dataset type evaluated, and
+        values are dicts containing metrics as keys, and metric values as values
     separator: Str, default='  |  '
         The string used to join all the metric values into a single string
     float_format: Str, default='{:.5f}'
