@@ -1,12 +1,13 @@
-"""This module defines the Evaluator callbacks that perform calls to :meth:`hyperparameter_hunter.metrics.ScoringMixIn.evaluate`
-in order to score predictions generated at various stages of the :class:`hyperparameter_hunter.experiments.BaseExperiment`
+"""This module defines the Evaluator callbacks that perform calls to
+:meth:`hyperparameter_hunter.metrics.ScoringMixIn.evaluate` in order to score predictions generated
+at various stages of the :class:`hyperparameter_hunter.experiments.BaseExperiment`
 
 Related
 -------
 :mod:`hyperparameter_hunter.metrics`
     Defines :class:`hyperparameter_hunter.metrics.ScoringMixIn`, which is inherited by
-    :class:`hyperparameter_hunter.experiments.BaseExperiment`, and provides the `evaluate` method that is called by the classes
-    in :mod:`hyperparameter_hunter.callbacks.evaluators`"""
+    :class:`hyperparameter_hunter.experiments.BaseExperiment`, and provides the `evaluate` method
+    that is called by the classes in :mod:`hyperparameter_hunter.callbacks.evaluators`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -15,7 +16,7 @@ from hyperparameter_hunter.callbacks.bases import BaseEvaluatorCallback
 
 class EvaluatorOOF(BaseEvaluatorCallback):
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.fold_validation_target = None
         self.final_oof_predictions = None
         self.repetition_oof_predictions = None
@@ -50,7 +51,7 @@ class EvaluatorOOF(BaseEvaluatorCallback):
 
 class EvaluatorHoldout(BaseEvaluatorCallback):
     def __init__(self):
-        """Uncalled - See the 'Notes' section in the documentation of :class:`callbacks.bases.BaseCallback` for details"""
+        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
         self.holdout_target_data = None
         self.final_holdout_predictions = None
         self.repetition_holdout_predictions = None
