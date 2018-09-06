@@ -1,12 +1,12 @@
-"""This module defines a few custom Exception classes, and it provides the means for Exceptions to be added to the Heartbeat
-result files of Experiments
+"""This module defines a few custom Exception classes, and it provides the means for Exceptions to
+be added to the Heartbeat result files of Experiments
 
 Related
 -------
 :mod:`hyperparameter_hunter.reporting`
-    This module executes :func:`hyperparameter_hunter.exception_handler.hook_exception_handler` to ensure that any raised
-    Exceptions are also recorded in the Heartbeat files of the Experiment for which the Exception was raised in order to assist
-    in debugging"""
+    This module executes :func:`hyperparameter_hunter.exception_handler.hook_exception_handler` to
+    ensure that any raised Exceptions are also recorded in the Heartbeat files of the Experiment for
+    which the Exception was raised in order to assist in debugging"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -55,7 +55,8 @@ def hook_exception_handler():
 
 class EnvironmentInactiveError(Exception):
     def __init__(self, message=None, extra=""):
-        """Exception raised when an active instance of :class:`hyperparameter_hunter.environments.Environment` is not detected
+        """Exception raised when an active instance of
+        :class:`hyperparameter_hunter.environments.Environment` is not detected
 
         Parameters
         ----------
@@ -70,8 +71,8 @@ class EnvironmentInactiveError(Exception):
 
 class EnvironmentInvalidError(Exception):
     def __init__(self, message=None, extra=""):
-        """Exception raised when there is an active instance of :class:`hyperparameter_hunter.environments.Environment`, but it is
-        invalid for some reason
+        """Exception raised when there is an active instance of
+        :class:`hyperparameter_hunter.environments.Environment`, but it is invalid for some reason
 
         Parameters
         ----------
@@ -86,7 +87,8 @@ class EnvironmentInvalidError(Exception):
 
 class RepeatedExperimentError(Exception):
     def __init__(self, message=None, extra=""):
-        """Exception raised when a saved Experiment is found with the same hyperparameters as the Experiment being executed
+        """Exception raised when a saved Experiment is found with the same hyperparameters as the
+        Experiment being executed
 
         Parameters
         ----------
