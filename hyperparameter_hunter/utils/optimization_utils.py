@@ -1,17 +1,19 @@
-"""This module defines utility functions used to organize hyperparameter optimization, specifically the gathering of saved
-Experiment files in order to identify similar Experiments that can be used as learning material for the current
-OptimizationProtocol. Additionally, :class:`AskingOptimizer` is defined here, which is used to direct OptimizationProtocols'
-searches through hyperparameter space
+"""This module defines utility functions used to organize hyperparameter optimization, specifically
+the gathering of saved Experiment files in order to identify similar Experiments that can be used as
+learning material for the current OptimizationProtocol. Additionally, :class:`AskingOptimizer` is
+defined here, which is used to direct OptimizationProtocols' searches through hyperparameter space
 
 Related
 -------
 :mod:`hyperparameter_hunter.optimization_core`
-    The primary user of the utilities defined in :mod:`hyperparameter_hunter.utils.optimization_utils`
+    The primary user of the utilities defined in
+    :mod:`hyperparameter_hunter.utils.optimization_utils`
 
 Notes
 -----
-:class:`AskingOptimizer` is a blatant adaptation of Scikit-Optimize's `optimizer.optimizer.Optimizer` class. This situation is
-far from ideal, but the creators and contributors of SKOpt deserve all the credit for their excellent work"""
+:class:`AskingOptimizer` is a blatant adaptation of Scikit-Optimize's
+`optimizer.optimizer.Optimizer` class. This situation is far from ideal, but the creators and
+contributors of SKOpt deserve all the credit for their excellent work"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -51,6 +53,7 @@ from hyperparameter_hunter.space import normalize_dimensions
 # noinspection PyProtectedMember
 from skopt.utils import cook_estimator, create_result, has_gradients, is_listlike, is_2Dlistlike
 
+
 # FLAG: TEMP IMPORTS ABOVE
 
 
@@ -84,9 +87,10 @@ class AskingOptimizer(Optimizer):
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
     ):
-        """This is nearly identical to :meth:`skopt.optimizer.optimizer.Optimizer.__init__`. It is recreated here to use the
-        modified :class:`hyperparameter_hunter.space.Space`, rather than the original `skopt` version. This is not an ideal
-        solution, and other options are being considered
+        """This is nearly identical to :meth:`skopt.optimizer.optimizer.Optimizer.__init__`. It is
+        recreated here to use the modified :class:`hyperparameter_hunter.space.Space`, rather than
+        the original `skopt` version. This is not an ideal solution, and other options are being
+        considered
 
         Parameters
         ----------
@@ -234,11 +238,12 @@ class AskingOptimizer(Optimizer):
         ask_result: Iterable of hyperparameters
             The result of :meth:`skopt.optimizer.optimizer.Optimizer._ask`
         do_retell: Boolean, default=True
-            If True and `ask_result` has already been tested, the optimizer will be re-`tell`ed the hyperparameters and their
-            original score
+            If True and `ask_result` has already been tested, the optimizer will be re-`tell`ed the
+            hyperparameters and their original score
         return_val: String in ['ask', 'random'], default='ask'
-            If 'ask', :meth:`skopt.optimizer.optimizer.Optimizer._ask` will be repeatedly called for a new result. If 'random',
-            :meth:`space.Space.rvs` will be used to retrieve the next set of hyperparameters
+            If 'ask', :meth:`skopt.optimizer.optimizer.Optimizer._ask` will be repeatedly called
+            for a new result. If 'random', :meth:`space.Space.rvs` will be used to retrieve the
+            next set of hyperparameters
 
         Returns
         -------
@@ -282,18 +287,21 @@ def get_ids_by(
     Parameters
     ----------
     leaderboard_path: String
-        The path to a leaderboard .csv file, which has at least the following columns: 'experiment_id', 'hyperparameter_key',
-        'cross_experiment_key', 'algorithm_name'
+        The path to a leaderboard .csv file, which has at least the following columns:
+        'experiment_id', 'hyperparameter_key', 'cross_experiment_key', 'algorithm_name'
     algorithm_name: String, or None, default=None
-        If string, expects the name of an algorithm that may exist on the leaderboard, such as the following: 'LGBMRegressor',
-        'XGBClassifier', 'KerasClassifier', 'KMeans', 'BayesianRidge', 'RGFClassifier', etc.
+        If string, expects the name of an algorithm that may exist on the leaderboard, such as the
+        following: 'LGBMRegressor', 'XGBClassifier', 'KerasClassifier', 'KMeans', 'BayesianRidge',
+        'RGFClassifier', etc.
     cross_experiment_key: String, or None, default=None
-        If string, expects a cross-experiment key hash produced during initialization of :class:`environment.Environment`
+        If string, expects a cross-experiment key hash produced during initialization of
+        :class:`environment.Environment`
     hyperparameter_key: String, or None, default=None
-        If string, expects a hyperparameter key hash produced by a child of :class:`experiments.BaseExperiment`
+        If string, expects a hyperparameter key hash produced by a child of
+        :class:`experiments.BaseExperiment`
     drop_duplicates: Boolean, default=True
-        If True, only a single entry for every unique triple of ('algorithm_name', 'cross_experiment_key', 'hyperparameter_key')
-        will be returned
+        If True, only a single entry for every unique triple of ('algorithm_name',
+        'cross_experiment_key', 'hyperparameter_key') will be returned
 
     Returns
     -------
@@ -321,15 +329,16 @@ def get_ids_by(
 
 
 def get_scored_params(experiment_description_path, target_metric):
-    """Retrieve the hyperparameters of a completed Experiment, along with an evaluation of its performance
+    """Retrieve the hyperparameters of a completed Experiment, along with its performance evaluation
 
     Parameters
     ----------
     experiment_description_path: String
         The path to an Experiment's description .json file
     target_metric: Tuple
-        A path denoting the metric to be used. If tuple, the first value should be one of ['oof', 'holdout', 'in_fold'], and the
-        second value should be the name of a metric supplied in :attr:`environment.Environment.metrics_params`
+        A path denoting the metric to be used. If tuple, the first value should be one of ['oof',
+        'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
+        :attr:`environment.Environment.metrics_params`
 
     Returns
     -------
@@ -352,13 +361,15 @@ def get_scored_params(experiment_description_path, target_metric):
 
 
 def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
-    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not fit within `hyperparameter_space`
+    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not fit within
+    `hyperparameter_space`
 
     Parameters
     ----------
     hyperparameters_and_scores: List of tuples
-        Each tuple in list should be a pair of form (hyperparameters <dict>, evaluation <float>), where the hyperparameter dict
-        should contain at least the following keys: ['model_init_params', 'model_extra_params', 'preprocessing_pipeline',
+        Each tuple in list should be a pair of form (hyperparameters <dict>, evaluation <float>),
+        where the hyperparameter dict should contain at least the following keys:
+        ['model_init_params', 'model_extra_params', 'preprocessing_pipeline',
         'preprocessing_params', 'feature_selector']
     hyperparameter_space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
@@ -366,7 +377,7 @@ def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
     Returns
     -------
     hyperparameters_and_scores: List of tuples
-        Filtered to include only those whose hyperparameters fit within the `hyperparameter_space`"""
+        Filtered to include only those whose hyperparameters fit within `hyperparameter_space`"""
     dimension_names = hyperparameter_space.get_names()
     hyperparameters_and_scores = list(
         filter(
@@ -388,14 +399,16 @@ def filter_by_guidelines(
     feature_selector,
     **kwargs,
 ):
-    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not match the guideline hyperparameters (all
-    hyperparameters not in `hyperparameter_space`), after ignoring unimportant hyperparameters
+    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not match the
+    guideline hyperparameters (all hyperparameters not in `hyperparameter_space`), after ignoring
+    unimportant hyperparameters
 
     Parameters
     ----------
     hyperparameters_and_scores: List of tuples
-        Each tuple should be of form (hyperparameters <dict>, evaluation <float>), in which hyperparameters contains at least the
-        keys: ['model_init_params', 'model_extra_params', 'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
+        Each tuple should be of form (hyperparameters <dict>, evaluation <float>), in which
+        hyperparameters contains at least the keys: ['model_init_params', 'model_extra_params',
+        'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
     hyperparameter_space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
     model_init_params: Dict
@@ -404,13 +417,14 @@ def filter_by_guidelines(
     preprocessing_params: Dict, or None
     feature_selector: List of column names, callable, list of booleans, or None
     **kwargs: Dict
-        Extra parameter dicts to include in `guidelines`. For example, if filtering the hyperparameters of a Keras neural
-        network, this should contain the following keys: 'layers', 'compile_params'
+        Extra parameter dicts to include in `guidelines`. For example, if filtering the
+        hyperparameters of a Keras neural network, this should contain the following keys:
+        'layers', 'compile_params'
 
     Returns
     -------
     hyperparameters_and_scores: List of tuples
-        Filtered to include only those whose hyperparameters matched the guideline hyperparameters"""
+        Filtered to include only those whose hyperparameters matched guideline hyperparameters"""
     dimensions = [
         ("model_init_params", _) if isinstance(_, str) else _
         for _ in hyperparameter_space.get_names()
@@ -444,7 +458,8 @@ def filter_by_guidelines(
 
     # noinspection PyUnusedLocal
     def _visit(path, key, value):
-        """Return False if element in hyperparameter_space dimensions, or in dimensions being ignored. Else, return True"""
+        """Return False if element in hyperparameter_space dimensions, or in dimensions being
+        ignored. Else, return True"""
         for dimension in dimensions + dimensions_to_ignore:
             if (path + (key,) == dimension) or (dimension[0] is None and dimension[1] == key):
                 return False
@@ -463,35 +478,41 @@ def filter_by_guidelines(
 
 
 def get_choice_dimensions(params, iter_attrs=None):
-    """Compile a list of all elements in the nested structure `params` that are hyperparameter space choices
+    """Compile a list of all elements in the nested structure `params` that are hyperparameter space
+    choices
 
     Parameters
     ----------
     params: Dict
-        A dictionary of params that may be nested and that may contain hyperparameter space choices to collect
+        A dictionary of params that may be nested and that may contain hyperparameter space choices
+        to collect
     iter_attrs: Callable, list of callables, or None, default=None
-        If callable, must evaluate to True or False when given three inputs: (path, key, value). Callable should return True if
-        the current value should be entered by `remap`. If callable returns False, `default_enter` will be called. If `iter_attrs`
-        is a list of callables, the value will be entered if any evaluates to True. If None, `default_enter` will be called
+        If callable, must evaluate to True or False when given three inputs: (path, key, value).
+        Callable should return True if the current value should be entered by `remap`. If callable
+        returns False, `default_enter` will be called. If `iter_attrs` is a list of callables, the
+        value will be entered if any evaluates to True. If None, `default_enter` will be called
 
     Returns
     -------
     choices: List
-        A list of tuple pairs, in which `choices[<index>][0]` is a tuple path specifying the location of the hyperparameter given
-        a choice, and `choices[<index>][1]` is the space choice instance for that hyperparameter"""
+        A list of tuple pairs, in which `choices[<index>][0]` is a tuple path specifying the
+        location of the hyperparameter given a choice, and `choices[<index>][1]` is the space
+        choice instance for that hyperparameter"""
     choices = []
     iter_attrs = iter_attrs or [lambda *_args: False]
     iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
 
     def _visit(path, key, value):
-        """If `value` is a descendant of :class:`space.Dimension`, collect inputs, and return True. Else, return False"""
+        """If `value` is a descendant of :class:`space.Dimension`, collect inputs, and return True.
+        Else, return False"""
         if isinstance(value, (Real, Integer, Categorical)):
             choices.append(((path + (key,)), value))
             return True
         return False
 
     def _enter(path, key, value):
-        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic attributes. Else, `default_enter`"""
+        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
+        attributes. Else, `default_enter`"""
         if any([_(path, key, value) for _ in iter_attrs]):
             included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
