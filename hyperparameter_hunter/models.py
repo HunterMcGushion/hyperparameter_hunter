@@ -1,15 +1,16 @@
-"""This module provides wrapper classes around the raw algorithms being executed to facilitate use by
-:class:`hyperparameter_hunter.experiments.BaseExperiment`. The algorithms created by most libraries can be handled by
-:class:`hyperparameter_hunter.models.Model`, but some need special attention, hence :class:`KerasModel`, and
-:class:`XGBoostModel`. The model classes defined herein handle algorithm instantiation, as well as fitting and predicting
+"""This module provides wrapper classes around the raw algorithms being executed to facilitate use
+by :class:`hyperparameter_hunter.experiments.BaseExperiment`. The algorithms created by most
+libraries can be handled by :class:`hyperparameter_hunter.models.Model`, but some need special
+attention, hence :class:`KerasModel`, and :class:`XGBoostModel`. The model classes defined herein
+handle algorithm instantiation, as well as fitting and predicting
 
 Related
 -------
 :mod:`hyperparameter_hunter.experiments`
-    This module is the primary user of the Model classes defined in :mod:`hyperparameter_hunter.models`
+    This module is the primary user of the classes defined in :mod:`hyperparameter_hunter.models`
 :mod:`hyperparameter_hunter.sentinels`
-    This module defines the `Sentinel` classes that will be converted to the actual values they represent in
-    :meth:`hyperparameter_hunter.models.Model.__init__`"""
+    This module defines the `Sentinel` classes that will be converted to the actual values they
+    represent in :meth:`hyperparameter_hunter.models.Model.__init__`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -72,25 +73,29 @@ class Model(object):
         target_metric=None,
         metrics_map=None,
     ):
-        """Handles initialization, fitting, and prediction for provided algorithms. Consider documentation for children of
-        :class:`Model` to be identical to that of :class:`Model`, except where noted
+        """Handles initialization, fitting, and prediction for provided algorithms. Consider
+        documentation for children of :class:`Model` to be identical to that of :class:`Model`,
+        except where noted
 
         Parameters
         ----------
         model_initializer: Class
-            Expected to implement at least the following methods: 1) `__init__`, to which :attr:`initialization_params` will
-            usually be provided unless stated otherwise in a child class's documentation - like :class:`KerasModel`. 2) `fit`, to
-            which :attr:`train_input`, and :attr:`train_target` will be provided, in addition to the contents of
-            :attr:`extra_params['fit']` in some child classes - like :class:`XGBoostModel`. 3) `predict`, or `predict_proba` if
-            applicable, which should accept any array-like input of shape: (<num_samples>, `train_input.shape[1]`)
+            Expected to implement at least the following methods: 1) `__init__`, to which
+            :attr:`initialization_params` will usually be provided unless stated otherwise in a
+            child class's documentation - like :class:`KerasModel`. 2) `fit`, to which
+            :attr:`train_input`, and :attr:`train_target` will be provided, in addition to the
+            contents of :attr:`extra_params['fit']` in some child classes - like
+            :class:`XGBoostModel`. 3) `predict`, or `predict_proba` if applicable, which should
+            accept any array-like input of shape: (<num_samples>, `train_input.shape[1]`)
         initialization_params: Dict
-            A dict containing all arguments accepted by :meth:`__init__` of the class :attr:`model_initializer`, unless stated
-            otherwise in a child class's documentation - like :class:`KerasModel`. Arguments pertaining to random seeds will be
-            ignored
+            A dict containing all arguments accepted by :meth:`__init__` of the class
+            :attr:`model_initializer`, unless stated otherwise in a child class's documentation -
+            like :class:`KerasModel`. Arguments pertaining to random seeds will be ignored
         extra_params: Dict, default={}
-            A dict of special parameters that are passed to a model's non-initialization methods in special cases (such as `fit`,
-            `predict`, `predict_proba`, and `score`). `extra_params` are not used for all models. See the documentation for the
-            appropriate descendant of :class:`models.Model` for information about how it handles `extra_params`
+            A dict of special parameters that are passed to a model's non-initialization methods in
+            special cases (such as `fit`, `predict`, `predict_proba`, and `score`). `extra_params`
+            are not used for all models. See the documentation for the appropriate descendant of
+            :class:`models.Model` for information about how it handles `extra_params`
         train_input: `pandas.DataFrame`
             The model's training input data
         train_target: `pandas.DataFrame`
@@ -100,12 +105,14 @@ class Model(object):
         validation_target: `pandas.DataFrame`, or None
             The true labels corresponding to the rows of :attr:`validation_input`
         do_predict_proba: Boolean, default=False
-            If True, :meth:`models.Model.fit` will call :meth:`models.Model.model.predict_proba`. Else, it will
-            call :meth:`models.Model.model.predict`
+            If True, :meth:`models.Model.fit` will call :meth:`models.Model.model.predict_proba`.
+            Else, it will call :meth:`models.Model.model.predict`
         target_metric: Tuple
-            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`
+            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
+            :meth:`model.fit`
         metrics_map: Dict
-            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`"""
+            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
+            :meth:`model.fit`"""
         self.model_initializer = model_initializer
         self.initialization_params = initialization_params
         self.extra_params = extra_params or {}
@@ -127,7 +134,8 @@ class Model(object):
         self.initialize_model()
 
     def initialize_model(self):
-        """Create an instance of a model using :attr:`model_initializer`, with :attr:`initialization_params` as input"""
+        """Create an instance of a model using :attr:`model_initializer`, with
+        :attr:`initialization_params` as input"""
         #################### Model Class that can be Initialized with model_params ####################
         try:
             self.model = self.model_initializer(**self.initialization_params)
@@ -140,7 +148,7 @@ class Model(object):
             ).with_traceback(sys.exc_info()[2])
 
     def fit(self):
-        """Train a model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
+        """Train model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
         expected_fit_parameters = list(inspect.signature(self.model.fit).parameters)
         fit_kwargs = {}
         if "verbose" in expected_fit_parameters:
@@ -173,7 +181,8 @@ class Model(object):
         Parameters
         ----------
         input_data: Array-like
-            Data containing the same number of features as were trained on, for which the model will predict output values"""
+            Data containing the same number of features as were trained on, for which the model will
+            predict output values"""
         if input_data is None:
             return None
 
@@ -205,8 +214,8 @@ class XGBoostModel(Model):
         target_metric=None,
         metrics_map=None,
     ):
-        """A special Model class for handling XGBoost algorithms. Consider documentation to be identical to that of
-        :class:`Model`, except where noted
+        """A special Model class for handling XGBoost algorithms. Consider documentation to be
+        identical to that of :class:`Model`, except where noted
 
         Parameters
         ----------
@@ -214,23 +223,19 @@ class XGBoostModel(Model):
             See :class:`Model`
         initialization_params: See :class:`Model`
         extra_params: Dict, default={}
-            Useful keys: ['fit', 'predict']. If 'fit' is a key with a dict value, its contents will be provided to
-            :meth:`xgboost.sklearn.XGBModel.fit`, with the exception of the following: ['X', 'y', 'eval_set']. If any of the
-            aforementioned keys are in :attr:`extra_params['fit']` or if :attr:`extra_params['fit']` is provided, but is not a
-            dict, an Exception will be raised.
-            Unless it is explicitly given, the 'eval_metric' argument to :meth:`xgboost.sklearn.XGBModel.fit` will be
-            automatically determined by the metric string in :attr:`target_metric`, the wrapping for XGBoost of which will be
-            performed automatically.
-            The 'eval_set' argument to :meth:`xgboost.sklearn.XGBModel.fit` will be: [(`train_input`, `train_target`),
-            (`validation_input`, `validation_target`)]. If validation data is None, it will be excluded.
+            Useful keys: ['fit', 'predict']. If 'fit' is a key with a dict value, its contents will
+            be provided to :meth:`xgboost.sklearn.XGBModel.fit`, with the exception of the
+            following: ['X', 'y']. If any of the aforementioned keys are in
+            :attr:`extra_params['fit']` or if :attr:`extra_params['fit']` is provided, but is not a
+            dict, an Exception will be raised
         train_input: See :class:`Model`
         train_target: See :class:`Model`
         validation_input: See :class:`Model`
         validation_target: See :class:`Model`
         do_predict_proba: See :class:`Model`
         target_metric: Tuple
-            Used to determine the 'eval_metric' argument to :meth:`xgboost.sklearn.XGBModel.fit`. See the documentation for
-            :attr:`XGBoostModel.extra_params` for more information
+            Used to determine the 'eval_metric' argument to :meth:`xgboost.sklearn.XGBModel.fit`.
+            See the documentation for :attr:`XGBoostModel.extra_params` for more information
         metrics_map: See :class:`Model`"""
         if model_initializer.__name__ not in ("XGBClassifier", "XGBRegressor"):
             raise ValueError(
@@ -288,23 +293,26 @@ class KerasModel(Model):
         target_metric=None,
         metrics_map=None,
     ):
-        """A special Model class for handling Keras neural networks. Consider documentation to be identical to that of
-        :class:`Model`, except where noted
+        """A special Model class for handling Keras neural networks. Consider documentation to be
+        identical to that of :class:`Model`, except where noted
 
         Parameters
         ----------
         model_initializer: :class:`keras.wrappers.scikit_learn.KerasClassifier`, or `keras.wrappers.scikit_learn.KerasRegressor`
-            Expected to implement at least the following methods: 1) `__init__`, to which :attr:`initialization_params` will
-            usually be provided unless stated otherwise in a child class's documentation - like :class:`KerasModel`. 2) `fit`, to
-            which :attr:`train_input`, and :attr:`train_target` will be provided, in addition to the contents of
-            :attr:`extra_params['fit']` in some child classes - like :class:`XGBoostModel`. 3) `predict`, or `predict_proba` if
-            applicable, which should accept any array-like input of shape: (<num_samples>, `train_input.shape[1]`)
+            Expected to implement at least the following methods: 1) `__init__`, to which
+            :attr:`initialization_params` will usually be provided unless stated otherwise in a
+            child class's documentation - like :class:`KerasModel`. 2) `fit`, to which
+            :attr:`train_input`, and :attr:`train_target` will be provided, in addition to the
+            contents of :attr:`extra_params['fit']` in some child classes - like
+            :class:`XGBoostModel`. 3) `predict`, or `predict_proba` if applicable, which should
+            accept any array-like input of shape: (<num_samples>, `train_input.shape[1]`)
         initialization_params: Dict containing `build_fn`
-            A dictionary containing the single key: `build_fn`, which is a callable function that returns a compiled Keras model
+            A dictionary containing the single key: `build_fn`, which is a callable function that
+            returns a compiled Keras model
         extra_params: Dict, default={}
-            The parameters expected to be passed to the extra methods of the compiled Keras model. Such methods include (but are
-            not limited to) `fit`, `predict`, and `predict_proba`. Some of the common parameters given here include `epochs`,
-            `batch_size`, and `callbacks`
+            The parameters expected to be passed to the extra methods of the compiled Keras model.
+            Such methods include (but are not limited to) `fit`, `predict`, and `predict_proba`.
+            Some of the common parameters given here include `epochs`, `batch_size`, and `callbacks`
         train_input: `pandas.DataFrame`
             The model's training input data
         train_target: `pandas.DataFrame`
@@ -314,12 +322,14 @@ class KerasModel(Model):
         validation_target: `pandas.DataFrame`, or None
             The true labels corresponding to the rows of :attr:`validation_input`
         do_predict_proba: Boolean, default=False
-            If True, :meth:`Model.fit` will call :meth:`models.Model.model.predict_proba`. Else, it will
-            call :meth:`models.Model.model.predict`
+            If True, :meth:`Model.fit` will call :meth:`models.Model.model.predict_proba`. Else,
+            it will call :meth:`models.Model.model.predict`
         target_metric: Tuple
-            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`
+            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
+            :meth:`model.fit`
         metrics_map: Dict
-            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to :meth:`model.fit`"""
+            Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
+            :meth:`model.fit`"""
         if model_initializer.__name__ not in ("KerasClassifier", "KerasRegressor"):
             raise ValueError(
                 "KerasModel given invalid model_initializer: {} - {}\nTry using the standard Model class".format(
@@ -344,12 +354,13 @@ class KerasModel(Model):
         from keras.models import load_model
 
     def initialize_model(self):
-        """Create an instance of a model using :attr:`model_initializer`, with :attr:`initialization_params` as input"""
+        """Create an instance of a model using :attr:`model_initializer`, with
+        :attr:`initialization_params` as input"""
         self.validate_keras_params()
         self.model = self.initialize_keras_neural_network()
 
     def fit(self):
-        """Train a model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
+        """Train model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
         try:
             self.model.fit(self.train_input, self.train_target)
         except Exception as _ex:
@@ -426,8 +437,9 @@ class KerasModel(Model):
             )
 
     def initialize_keras_neural_network(self):
-        """Initialize Keras model wrapper (:attr:`model_initializer`) with :attr:`initialization_params`, :attr:`extra_params`,
-        and validation_data if it can be found, as well as the input dimensions for the model"""
+        """Initialize Keras model wrapper (:attr:`model_initializer`) with
+        :attr:`initialization_params`, :attr:`extra_params`, and validation_data if it can be found,
+        as well as the input dimensions for the model"""
         validation_data = None
         if (self.validation_input is not None) and (self.validation_target is not None):
             validation_data = (self.validation_input, self.validation_target)
