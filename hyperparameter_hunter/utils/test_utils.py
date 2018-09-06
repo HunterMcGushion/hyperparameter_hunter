@@ -1,9 +1,11 @@
-"""This module contains utilities for building and executing unit tests, as well as for reporting the results
+"""This module contains utilities for building and executing unit tests, as well as for reporting
+the results
 
 Related
 -------
 :mod:`hyperparameter_hunter.tests`
-    This module contains all unit tests for the library, and it uses :mod:`hyperparameter_hunter.utils.test_utils` throughout"""
+    This module contains all unit tests for the library, and it uses
+    :mod:`hyperparameter_hunter.utils.test_utils` throughout"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
@@ -21,19 +23,22 @@ def suite_builder(test_type, test_function, test_cases, targets, case_ids, overr
     Parameters
     ----------
     test_type: Descendant of BaseAssertionTest
-        Any class that inherits BaseAssertionTest and overrides "execute_method_override" to set new methods to an assertion
-        method defined in BaseAssertionTest
+        Any class that inherits BaseAssertionTest and overrides "execute_method_override" to set
+        new methods to an assertion method defined in BaseAssertionTest
     test_function: Callable
-        The function to be called on each set of inputs in test_cases. See "Notes" section below for usage details
+        The function to be called on each set of inputs in test_cases. See "Notes" section below for
+        usage details
     test_cases: List
         The case inputs to be tested. Should correspond to elements in targets, and case_ids
     targets: List
         The expected test results. Should correspond to elements in test_cases, and case_ids
     case_ids: List
-        The string identifiers for each test case. Should correspond to elements in test_cases, and targets
+        The string identifiers for each test case. Should correspond to elements in test_cases, and
+        targets
     override_module: String, or None
-        If string, this should be the module that is currently executing the tests. Otherwise, the file containing this docstring
-        will be listed as the location of the test. override_module will be appended to any other module information
+        If string, this should be the module that is currently executing the tests. Otherwise, the
+        file containing this docstring will be listed as the location of the test. override_module
+        will be appended to any other module information
 
     Returns
     -------
@@ -42,10 +47,9 @@ def suite_builder(test_type, test_function, test_cases, targets, case_ids, overr
 
     Notes
     -----
-    If test_function is a class method, or is set as an attribute of the class running the tests, it may need to be enclosed in
-    functools.partial(). Should work fine if test_function is: a global variable pointing to a function, a class instantiation,
-    or a partial
-    """
+    If test_function is a class method, or is set as an attribute of the class running the tests, it
+    may need to be enclosed in functools.partial(). Should work fine if test_function is: a global
+    variable pointing to a function, a class instantiation, or a partial"""
     #################### Validate Parameters ####################
     if not issubclass(test_type, BaseAssertionTest):
         raise TypeError(
@@ -196,18 +200,21 @@ def format_suites(test_suites, group_format, reindex=True):
     Parameters
     ----------
     test_suites: Dict
-        Keys should be strings that identify the test suite. Values should be lists, containing the arguments for each test case
+        Keys should be strings that identify the test suite. Values should be lists, containing the
+        arguments for each test case
     group_format: Str
-        A formatting string containing "{}" exactly once, where the supplied input will be a key in test_suites
+        A formatting string containing "{}" exactly once, where the supplied input will be a key in
+        test_suites
     reindex: Boolean, default=True
-        If True, case indexing restarts at 0 for each suite. Else, indexing progresses from 0 to the total number of cases - 1
+        If True, case indexing restarts at 0 for each suite. Else, indexing progresses from 0 to
+        the total number of cases - 1
 
     Returns
     -------
     all_cases: list
         All test case arguments; its basically a flattened version of test_suites.values()
     all_keys: list
-        The id keys from test_suites for each element in all_cases, formatted according to group_format
+        ID keys from test_suites for each element in all_cases, formatted according to group_format
 
     Examples
     --------
@@ -220,11 +227,12 @@ def format_suites(test_suites, group_format, reindex=True):
 
     Notes
     -----
-    Notice in the example above that suites contains two test suites ('a', and 'b'), each of which contains dummy data for two
-    test cases. See that the result of the first print statement names suite b's first key "suites_b_00" because it restarts
-    indexing for each suite. Conversely, the same result key from the second print statement is "suites_b_02" because indexing
-    is never restarted. reindex=True can facilitate locating test cases, especially with a multiplicity of cases/suites
-    """
+    Notice in the example above that suites contains two test suites ('a', and 'b'), each of which
+    contains dummy data for two test cases. See that the result of the first print statement names
+    suite b's first key "suites_b_00" because it restarts indexing for each suite. Conversely, the
+    same result key from the second print statement is "suites_b_02" because indexing is never
+    restarted. reindex=True can facilitate locating test cases, especially with a multiplicity of
+    cases/suites"""
     group_format = group_format if group_format else "{}"
     all_cases, all_keys = [], []
 
