@@ -1,18 +1,20 @@
-"""Defines hyperparameter search space dimension classes used for declaring hyperparameter choices, as well as some utility
-functions for processing dimensions and the hyperparameter space as a whole
+"""Defines hyperparameter search space dimension classes used for declaring hyperparameter choices,
+as well as some utility functions for processing dimensions and the hyperparameter space as a whole
 
 Related
 -------
 :mod:`hyperparameter_hunter.optimization_core`
     Defines optimization protocol classes that expect to receive hyperparameter dimension inputs
 :mod:`hyperparameter_hunter.utils.optimization_utils`
-    Defines utilities for matching a current hyperparameter space with the hyperparameters of saved Experiments. Also defines
-    :class:`utils.optimization_utils.AskingOptimizer`, which determines the values in the given choices to search next
+    Defines utilities for matching a current hyperparameter space with the hyperparameters of saved
+    Experiments. Also defines :class:`utils.optimization_utils.AskingOptimizer`, which determines
+    the values in the given choices to search next
 
 Notes
 -----
-This module heavily relies on the Scikit-Optimize library, so thank you to the creators and contributors of `scikit-optimize` for
-their excellent work. Their documentation may also be useful to help understand this module"""
+This module heavily relies on the Scikit-Optimize library, so thank you to the creators and
+contributors of `scikit-optimize` for their excellent work. Their documentation may also be useful
+to help understand this module"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -43,7 +45,8 @@ class Dimension(skopt_space.Dimension, metaclass=ABCMeta):
         Attributes
         ----------
         id: String
-            A stringified UUID used to link space dimensions to their locations in a model's overall hyperparameter structure"""
+            A stringified UUID used to link space dimensions to their locations in a model's overall
+            hyperparameter structure"""
         self.id = str(uuid())
         super().__init__(**kwargs)
 
@@ -79,11 +82,13 @@ class Real(Dimension, skopt_space.Real):
         high: Float
             Upper bound (inclusive)
         prior: String in ['uniform', 'log-uniform'], default='uniform'
-            Distribution to use when sampling random points for this dimension. If 'uniform', points are sampled uniformly between
-            the lower and upper bounds. If 'log-uniform', points are sampled uniformly between `log10(lower)` and `log10(upper)`
+            Distribution to use when sampling random points for this dimension. If 'uniform', points
+            are sampled uniformly between the lower and upper bounds. If 'log-uniform', points are
+            sampled uniformly between `log10(lower)` and `log10(upper)`
         transform: String in ['identity', 'normalize'], default='identity'
-            Transformation to apply to the original space. If 'identity', the transformed space is the same as the original space.
-            If 'normalize', the transformed space is scaled between 0 and 1
+            Transformation to apply to the original space. If 'identity', the transformed space is
+            the same as the original space. If 'normalize', the transformed space is scaled
+            between 0 and 1
         name: String, tuple, or None, default=None
             A name associated with the dimension"""
         super().__init__(low=low, high=high, prior=prior, transform=transform, name=name)
@@ -106,8 +111,9 @@ class Integer(Dimension, skopt_space.Integer):
         high: Float
             Upper bound (inclusive)
         transform: String in ['identity', 'normalize'], default='identity'
-            Transformation to apply to the original space. If 'identity', the transformed space is the same as the original space.
-            If 'normalize', the transformed space is scaled between 0 and 1
+            Transformation to apply to the original space. If 'identity', the transformed space is
+            the same as the original space. If 'normalize', the transformed space is scaled
+            between 0 and 1
         name: String, tuple, or None, default=None
             A name associated with the dimension"""
         super().__init__(low=low, high=high, transform=transform, name=name)
@@ -128,10 +134,12 @@ class Categorical(Dimension, skopt_space.Categorical):
         categories: List
             Sequence of possible categories of shape (n_categories,)
         prior: List, or None, default=None
-            If list, prior probabilities for each category of shape (categories,). By default all categories are equally likely
+            If list, prior probabilities for each category of shape (categories,). By default all
+            categories are equally likely
         transform: String in ['onehot', 'identity'], default='onehot'
-            Transformation to apply to the original space. If 'identity', the transformed space is the same as the original
-            space. If 'onehot', the transformed space is a one-hot encoded representation of the original space
+            Transformation to apply to the original space. If 'identity', the transformed space is
+            the same as the original space. If 'onehot', the transformed space is a one-hot encoded
+            representation of the original space
         name: String, tuple, or None, default=None
             A name associated with the dimension"""
         super().__init__(categories=categories, prior=prior, transform=transform, name=name)
@@ -147,10 +155,11 @@ class Space(skopt_space.Space):
         Parameters
         ----------
         dimensions: List
-            List of search space dimensions. Each search dimension can be defined as any of the following: 1) a
-            `(lower_bound, upper_bound)` tuple (for `Real` or `Integer` dimensions). 2) A `(lower_bound, upper_bound, "prior")`
-            tuple (for `Real` dimensions). 3) A list of categories (for `Categorical` dimensions). 4) An instance of a
-            `Dimension` object (`Real`, `Integer`, or `Categorical`)
+            List of search space dimensions. Each search dimension can be defined as any of the
+            following: 1) a `(lower_bound, upper_bound)` tuple (for `Real` or `Integer` dimensions).
+            2) A `(lower_bound, upper_bound, "prior")` tuple (for `Real` dimensions).
+            3) A list of categories (for `Categorical` dimensions).
+            4) An instance of a `Dimension` object (`Real`, `Integer`, or `Categorical`)
         random_state: None
             ... Experimental..."""
         # self.space_random_state = check_random_state(None)  # FLAG: THIS BREAKS AND REPEATS RESULTS OF `rvs`
@@ -158,8 +167,8 @@ class Space(skopt_space.Space):
         super().__init__(dimensions=dimensions)
 
     def rvs(self, n_samples=1, random_state=None):
-        """Draw random samples from the search space. The samples are in the original space. They need to be transformed before
-        being passed to a model or minimizer by :meth:`transform`
+        """Draw random samples from the search space. The samples are in the original space. They
+        need to be transformed before being passed to a model or minimizer by :meth:`transform`
 
         Parameters
         ----------
@@ -187,11 +196,11 @@ class Space(skopt_space.Space):
         else:
             search_space_size = reduce(
                 lambda x, y: x * y,
-                [1]
-                + [
+                [
                     (_.high - _.low + 1) if isinstance(_, Integer) else len(_.bounds)
                     for _ in self.dimensions
                 ],
+                1,
             )
 
         return search_space_size
@@ -202,12 +211,14 @@ class Space(skopt_space.Space):
         Parameters
         ----------
         use_location: Boolean, default=True
-            If True and a dimension has a non-null attribute called 'location', its value will be used instead of 'name'
+            If True and a dimension has a non-null attribute called 'location', its value will be
+            used instead of 'name'
 
         Returns
         -------
         names: List
-            A list of strings or tuples, in which each value is the name or location of the dimension at that index"""
+            A list of strings or tuples, in which each value is the name or location of the
+            dimension at that index"""
         names = []
         for dimension in self.dimensions:
             if use_location and hasattr(dimension, "location") and dimension.location:
@@ -226,10 +237,11 @@ def normalize_dimensions(dimensions):
     Parameters
     ----------
     dimensions: List
-        List of search space dimensions. Each search dimension can be defined as any of the following: 1) a
-        `(lower_bound, upper_bound)` tuple (for `Real` or `Integer` dimensions). 2) A `(lower_bound, upper_bound, "prior")` tuple
-        (for `Real` dimensions). 3) A list of categories (for `Categorical` dimensions). 4) An instance of a `Dimension` object
-        (`Real`, `Integer`, or `Categorical`)
+        List of search space dimensions. Each search dimension can be defined as any of the
+        following: 1) a `(lower_bound, upper_bound)` tuple (for `Real` or `Integer` dimensions).
+        2) A `(lower_bound, upper_bound, "prior")` tuple (for `Real` dimensions).
+        3) A list of categories (for `Categorical` dimensions).
+        4) An instance of a `Dimension` object (`Real`, `Integer`, or `Categorical`)
 
     Returns
     -------
@@ -239,11 +251,12 @@ def normalize_dimensions(dimensions):
     Raises
     ------
     RuntimeError
-        If any of the processed elements of `dimensions` is not one of the following: `Real`, `Integer`, `Categorical`
+        If a processed element of `dimensions` is not one of: `Real`, `Integer`, `Categorical`
 
     Notes
     -----
-    The upper and lower bounds are inclusive for `Integer` dimensions. Based on :func:`skopt.utils.normalize_dimensions`"""
+    The upper and lower bounds are inclusive for `Integer` dimensions. Based on
+    :func:`skopt.utils.normalize_dimensions`"""
     space = Space(dimensions)
     transformed_dimensions = []
 
@@ -285,16 +298,17 @@ def normalize_dimensions(dimensions):
 
 
 def dimension_subset(hyperparameters, dimensions):
-    """Return only the values of `hyperparameters` specified by `dimensions`, in the same order as `dimensions`
+    """Return only the values of `hyperparameters` specified by `dimensions`, in the same order as
+    `dimensions`
 
     Parameters
     ----------
     hyperparameters: Dict
-        A dictionary of hyperparameters containing at least the following keys: ['model_init_params', 'model_extra_params',
-        'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
+        Dict of hyperparameters containing at least the following keys: ['model_init_params',
+        'model_extra_params', 'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
     dimensions: List of: (strings, or tuples)
-        The locations and order of the values to return from `hyperparameters`. If a value is a string, it is assumed to belong
-        to `model_init_params`, and its path will be adjusted accordingly
+        Locations and order of the values to return from `hyperparameters`. If a value is a string,
+        it is assumed to belong to `model_init_params`, and its path will be adjusted accordingly
 
     Returns
     -------

@@ -363,15 +363,16 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
                 self._execute_experiment()
             except RepeatedExperimentError:
                 # G.debug_(F'Skipping repeated Experiment: {_ex!s}\n')
+                if len(self.similar_experiments) + len(self.tested_keys) >= self.search_space_size:
+                    G.log_(f"Hyperparameter search space has been exhausted")
+                    break
                 self.skipped_iterations += 1
                 continue
             except StopIteration:
-                if len(self.tested_keys) >= self.search_space_size:
-                    G.log_(
-                        f"Hyperparameter search space has been exhausted after testing {len(self.tested_keys)} keys"
-                    )
+                if len(self.similar_experiments) + len(self.tested_keys) >= self.search_space_size:
+                    G.log_(f"Hyperparameter search space has been exhausted")
                     break
-                # G.debug_(F'Re-initializing hyperparameter grid after testing {len(self.tested_keys)} keys')
+                # G.debug_(f'Re-initializing hyperparameter grid after testing {len(self.tested_keys)} keys')
                 self._set_hyperparameter_space()
                 continue
 
