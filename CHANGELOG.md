@@ -1,3 +1,19 @@
+<a name="Unreleased"></a>
+### Unreleased
+
+#### Bug-Fixes
+* Fixed bug where OptimizationProtocols would not take into account saved result files when 
+determining whether the hyperparameter search space had been exhausted
+
+#### Changes
+* Adopted [Black](https://github.com/ambv/black) code formatting
+    * Breaks compatibility with result files created by previous HyperparameterHunter versions due 
+    to docstring reformatting of default functions used by `cross_experiment_key`
+* Miscellaneous formatting changes and code cleanup suggested by Black, Flake8, Codacy, and Code 
+Climate
+* Development-related changes, including minor TravisCI revisions, pre-commit hooks, and updated 
+utility/documentation files
+
 <a name="1.0.2"></a>
 ### 1.0.2 (2018-08-26)
 
