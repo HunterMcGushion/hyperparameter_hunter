@@ -1,11 +1,11 @@
 <a name="Unreleased"></a>
-### Unreleased
+## [Unreleased]
 
-#### Bug-Fixes
+### Bug-Fixes
 * Fixed bug where OptimizationProtocols would not take into account saved result files when 
 determining whether the hyperparameter search space had been exhausted
 
-#### Changes
+### Changes
 * Adopted [Black](https://github.com/ambv/black) code formatting
     * Breaks compatibility with result files created by previous HyperparameterHunter versions due 
     to docstring reformatting of default functions used by `cross_experiment_key`
@@ -15,9 +15,9 @@ Climate
 utility/documentation files
 
 <a name="1.0.2"></a>
-### 1.0.2 (2018-08-26)
+## [1.0.2] (2018-08-26)
 
-#### Features
+### Features
 * Added `sentinels` module, which includes :class:`DatasetSentinel` that allows users to pass yet-undefined datasets as arguments
 to Experiments or OptimizationProtocols
     * This functionality can be achieved by using the following new properties of :class:`environment.Environment`:
@@ -53,22 +53,22 @@ to Experiments or OptimizationProtocols
 :class:`hyperparameter_hunter.reporting.OptimizationReporter` (#42)
 * Lots of other documentation additions, and improvements to example scripts
 
-#### Bug-Fixes
+### Bug-Fixes
 * Moved the temporary `build_fn` file created during Keras optimization, so there isn't a temporary file floating around in the
 present working directory (#54)
 * Fixed :meth:`models.XGBoostModel.fit` using `eval_set` by default with introduction of :class:`sentinels.DatasetSentinel`,
 allowing users to define `eval_set` only if they want to (#22)
 
 <a name="1.0.1"></a>
-### 1.0.1 (2018-08-19)
+## [1.0.1] (2018-08-19)
 
-#### Bug-Fixes
+### Bug-Fixes
 * Fixed bug where `nbconvert`, and `nbformat` were required even when not using an iPython notebook
 
 <a name="1.0.0"></a>
-### 1.0.0 (2018-08-19)
+## [1.0.0] (2018-08-19)
 
-#### Features
+### Features
 * Simplified providing hyperparameter search dimensions during optimization
     * Old method of providing search dimensions:
 
@@ -164,7 +164,13 @@ allowing users to define `eval_set` only if they want to (#22)
 * Lots of other new features and bug-fixes
 
 <a name="0.0.1"></a>
-### 0.0.1 (2018-06-14)
+## 0.0.1 (2018-06-14)
 
-#### Features
+### Features
 * Initial release
+
+
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v0.0.1...v1.0.0
