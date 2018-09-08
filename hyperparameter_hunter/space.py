@@ -205,7 +205,7 @@ class Space(skopt_space.Space):
 
         return search_space_size
 
-    def get_names(self, use_location=True):
+    def names(self, use_location=True):
         """Retrieve the names, or locations of all dimensions in the hyperparameter search space
 
         Parameters

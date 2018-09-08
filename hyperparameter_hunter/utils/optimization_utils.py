@@ -378,7 +378,7 @@ def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters fit within `hyperparameter_space`"""
-    dimension_names = hyperparameter_space.get_names()
+    dimension_names = hyperparameter_space.names()
     hyperparameters_and_scores = list(
         filter(
             lambda _: dimension_subset(_[0], dimension_names) in hyperparameter_space,
@@ -426,8 +426,7 @@ def filter_by_guidelines(
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters matched guideline hyperparameters"""
     dimensions = [
-        ("model_init_params", _) if isinstance(_, str) else _
-        for _ in hyperparameter_space.get_names()
+        ("model_init_params", _) if isinstance(_, str) else _ for _ in hyperparameter_space.names()
     ]
     # `dimensions` = hyperparameters to be ignored. Filter by all remaining
 
@@ -440,11 +439,8 @@ def filter_by_guidelines(
         (None, "seed"),
         ("model_init_params", "n_jobs"),
         ("model_init_params", "nthread"),
-        (
-            "model_init_params",
-            "compile_params",
-            "loss_functions",
-        ),  # TODO: Remove this once loss_functions are hashed in description files
+        # TODO: Remove below once loss_functions are hashed in description files
+        ("model_init_params", "compile_params", "loss_functions"),
     ]
 
     temp_guidelines = dict(
@@ -465,9 +461,7 @@ def filter_by_guidelines(
                 return False
         return True
 
-    guidelines = remap(
-        temp_guidelines, visit=_visit
-    )  # (Hyperparameters that were set values and affect Experiment results)
+    guidelines = remap(temp_guidelines, visit=_visit)
     # `guidelines` = `temp_guidelines` that are neither `hyperparameter_space` choices, nor in `dimensions_to_ignore`
 
     hyperparameters_and_scores = list(
@@ -478,14 +472,12 @@ def filter_by_guidelines(
 
 
 def get_choice_dimensions(params, iter_attrs=None):
-    """Compile a list of all elements in the nested structure `params` that are hyperparameter space
-    choices
+    """List all elements in the nested structure `params` that are hyperparameter space choices
 
     Parameters
     ----------
     params: Dict
-        A dictionary of params that may be nested and that may contain hyperparameter space choices
-        to collect
+        Parameters that may be nested and that may contain hyperparameter space choices to collect
     iter_attrs: Callable, list of callables, or None, default=None
         If callable, must evaluate to True or False when given three inputs: (path, key, value).
         Callable should return True if the current value should be entered by `remap`. If callable

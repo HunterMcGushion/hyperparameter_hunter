@@ -23,8 +23,7 @@ class ReportingHandler(object):
         heartbeat_params=None,
         add_frame=False,
     ):
-        """The class in control of custom logging methods, how logs are formatted, and initializing
-        logging for Experiments
+        """Class in control of logging methods, log formatting, and initializing Experiment logging
 
         Parameters
         ----------
@@ -34,15 +33,13 @@ class ReportingHandler(object):
             If not default, must be a valid formatting string for floating point values. If invalid,
             default will be used
         console_params: Dict, or None, default=None
-            Parameters passed to :meth:`_configure_console_logger_handler`
+            Parameters passed to :meth:`_configure_console_handler`
         heartbeat_params: Dict, or None, default=None
-            Parameters passed to :meth:`_configure_heartbeat_logger_handler`
+            Parameters passed to :meth:`_configure_heartbeat_handler`
         add_frame: Boolean, default=False
             If True, whenever :meth:`log` is called, the source of the call will be prepended to
             the content being logged"""
-        self.reporting_type = (
-            "logging"
-        )  # TODO: Add `reporting_type` as kwarg to `__init__`, with options: logging, advanced
+        self.reporting_type = "logging"  # TODO: Add `reporting_type` kwarg (logging, advanced)
         self.heartbeat_path = heartbeat_path
         self.float_format = float_format
         self.console_params = console_params or {}
@@ -57,77 +54,42 @@ class ReportingHandler(object):
         #################### reporting_type ####################
         valid_types = ["logging", "standard", "advanced"]
         if not isinstance(self.reporting_type, str):
-            raise TypeError(
-                "reporting_type must be a str. Received {}: {}".format(
-                    *type_val(self.reporting_type)
-                )
-            )
+            raise TypeError(f"reporting_type must be a str. Received {self.reporting_type}")
         if self.reporting_type not in valid_types:
-            raise ValueError(
-                "reporting_type must be in {}. Received: {}".format(
-                    valid_types, self.reporting_type
-                )
-            )
+            raise ValueError(f"reporting_type must be in {valid_types}, not {self.reporting_type}")
 
         #################### heartbeat_path ####################
         if self.heartbeat_path is not None:
             if not isinstance(self.heartbeat_path, str):
-                raise TypeError(
-                    "heartbeat_path must be of type str. Received {}: {}".format(
-                        *type_val(self.heartbeat_path)
-                    )
-                )
+                raise TypeError(f"heartbeat_path must be a str. Received {self.heartbeat_path}")
 
             head, tail = os.path.split(self.heartbeat_path)
 
             if not tail.endswith(".log"):
-                raise ValueError(
-                    'heartbeat_path must end with the extension ".log". Received: {}'.format(
-                        self.heartbeat_path
-                    )
-                )
+                raise ValueError(f"heartbeat_path must end in '.log'. Given {self.heartbeat_path}")
             if not os.path.exists(head):
                 raise FileNotFoundError(
-                    "heartbeat_path must start with an existing dir. Received {}".format(
-                        self.heartbeat_path
-                    )
+                    f"heartbeat_path must start with an existing dir. Given {self.heartbeat_path}"
                 )
 
         #################### float_format ####################
         if not isinstance(self.float_format, str):
-            raise TypeError(
-                "float_format must be a format str. Received {}: {}".format(
-                    *type_val(self.float_format)
-                )
-            )
+            raise TypeError(f"float_format must be a format str. Received {self.float_format}")
         if (not self.float_format.startswith("{")) or (not self.float_format.endswith("}")):
-            raise ValueError(
-                'float_format must start with "{{" and end with "}}". Received: {}'.format(
-                    self.float_format
-                )
-            )
+            raise ValueError(f"float_format must be inside '{{' and '}}'. Got {self.float_format}")
 
         #################### console_params ####################
         if not isinstance(self.console_params, dict):
-            raise TypeError(
-                "console_params must be a dict or None. Received {}".format(
-                    type(self.console_params)
-                )
-            )
+            raise TypeError(f"console_params must be dict or None. Given {self.console_params}")
 
         #################### heartbeat_params ####################
         if not isinstance(self.heartbeat_params, dict):
-            raise TypeError(
-                "heartbeat_params must be a dict or None. Received {}".format(
-                    type(self.heartbeat_params)
-                )
-            )
+            raise TypeError(f"heartbeat_params must be dict or None. Given {self.heartbeat_params}")
 
     def _configure_reporting_type(self):
-        """Update the placeholder logging methods to those specified by :attr:`reporting_type`, and
-        initialize logging"""
+        """Set placeholder logging methods to :attr:`reporting_type` specs and initialize logging"""
         if self.reporting_type == "standard":
-            raise ValueError('Standard logging is not yet implemented. Please choose "logging"')
+            raise ValueError("Standard logging is not yet implemented. Please choose 'logging'")
             # setattr(self, 'log', self._standard_log)
             # setattr(self, 'debug', self._standard_debug)
             # setattr(self, 'warn', self._standard_warn)
@@ -138,9 +100,7 @@ class ReportingHandler(object):
 
             self._initialize_logging_logging()
         elif self.reporting_type == "advanced":
-            raise ValueError(
-                'Advanced logging is not yet implemented. Please choose one of: ["logging", "standard"]'
-            )
+            raise ValueError("Advanced logging unimplemented. Please use 'logging'")
 
     def _initialize_logging_logging(self):
         """Initialize and configure logging to be handled by the `logging` library"""
@@ -149,22 +109,17 @@ class ReportingHandler(object):
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
 
-        logger_handlers = [self._configure_console_logger_handler(**self.console_params)]
+        handlers = [self._configure_console_handler(**self.console_params)]
 
-        # Suppress FileExistsError because it is raised when self.heartbeat_path is None, which means heartbeat is blacklisted
+        # Suppress FileExistsError - Raised when self.heartbeat_path is None, meaning heartbeat blacklisted
         with suppress(FileExistsError):
-            logger_handlers.append(
-                self._configure_heartbeat_logger_handler(**self.heartbeat_params)
-            )
+            handlers.append(self._configure_heartbeat_handler(**self.heartbeat_params))
 
-        logging.basicConfig(handlers=logger_handlers, level=logging.DEBUG)
-
+        logging.basicConfig(handlers=handlers, level=logging.DEBUG)
         self.debug("Logging Logging has been initialized!")
 
     @staticmethod
-    def _configure_console_logger_handler(
-        level="INFO", fmt=None, datefmt=None, style="%", **kwargs
-    ):
+    def _configure_console_handler(level="INFO", fmt=None, datefmt=None, style="%", **kwargs):
         """Configure the console handler in charge of printing log messages
 
         Parameters
@@ -192,7 +147,7 @@ class ReportingHandler(object):
         console_handler.setFormatter(formatter)
         return console_handler
 
-    def _configure_heartbeat_logger_handler(
+    def _configure_heartbeat_handler(
         self, level="DEBUG", fmt=None, datefmt=None, style="%", **kwargs
     ):
         """Configure the file handler in charge of adding log messages to the heartbeat file
@@ -261,9 +216,7 @@ class ReportingHandler(object):
         **kwargs: Dict
             Extra keyword arguments"""
         if self.add_frame is True:
-            previous_frame = (
-                inspect.currentframe().f_back if previous_frame is None else previous_frame
-            )
+            previous_frame = previous_frame or inspect.currentframe().f_back
             try:
                 frame_source = format_frame_source(previous_frame)
             finally:
@@ -287,9 +240,7 @@ class ReportingHandler(object):
         **kwargs: Dict
             Extra keyword arguments"""
         if self.add_frame is True:
-            previous_frame = (
-                inspect.currentframe().f_back if previous_frame is None else previous_frame
-            )
+            previous_frame = previous_frame or inspect.currentframe().f_back
             try:
                 frame_source = format_frame_source(previous_frame)
             finally:
@@ -382,16 +333,14 @@ class OptimizationReporter:
         self.start_time = datetime.now()
         self.last_round = datetime.now()
 
-        _skip = (
+        skip = (
             "model_init_params",
             "model_extra_params",
             "preprocessing_pipeline",
             "preprocessing_params",
             "feature_selector",
         )
-        self.parameter_names = [
-            _[1:] if _[0] in _skip else _ for _ in self.original_parameter_names
-        ]
+        self.parameter_names = [_[1:] if _[0] in skip else _ for _ in self.original_parameter_names]
         self.parameter_names = [_[1:] if _[0] == "params" else _ for _ in self.parameter_names]
         self.parameter_names = [
             _[0] if len(_) == 1 else str(_).replace("'", "").replace('"', "")
@@ -406,35 +355,29 @@ class OptimizationReporter:
     def print_saved_results_header(self):
         """Print a header signifying that saved Experiment results are being read"""
         header = f"{_Color.RED}Saved Result Files{_Color.STOP}"
-        line_len = (
-            29
-            + sum([_ + 5 for _ in self.sizes])
-            + (self.show_experiment_id + 3 if self.show_experiment_id else 0)
-        )
-        line = _Color.RED + "_" * line_len + _Color.STOP
-        self.print_header(header, line)
+        self.print_header(header, (_Color.RED + "_" * self._line_len + _Color.STOP))
 
     def print_random_points_header(self):
         """Print a header signifying that random point evaluation rounds are starting"""
         header = f"{_Color.RED}Random Point Evaluation{_Color.STOP}"
-        line_len = (
-            29
-            + sum([_ + 5 for _ in self.sizes])
-            + (self.show_experiment_id + 3 if self.show_experiment_id else 0)
-        )
-        line = _Color.RED + "_" * line_len + _Color.STOP
-        self.print_header(header, line)
+        self.print_header(header, (_Color.RED + "_" * self._line_len + _Color.STOP))
 
     def print_optimization_header(self):
         """Print a header signifying that Optimization rounds are starting"""
         header = f"{_Color.RED}Hyperparameter Optimization{_Color.STOP}"
-        line_len = (
-            29
-            + sum([_ + 5 for _ in self.sizes])
-            + (self.show_experiment_id + 3 if self.show_experiment_id else 0)
-        )
-        line = _Color.RED + "_" * line_len + _Color.STOP
-        self.print_header(header, line)
+        self.print_header(header, (_Color.RED + "_" * self._line_len + _Color.STOP))
+
+    def _line_len(self):
+        """Calculate number of characters a header's underlining should span
+
+        Returns
+        -------
+        line_len: Int
+            The number of characters the line should span"""
+        line_len = 29
+        line_len += sum([_ + 5 for _ in self.sizes])
+        line_len += self.show_experiment_id + 3 if self.show_experiment_id else 0
+        return line_len
 
     def print_header(self, header, line):
         """Utility to perform actual printing of headers given formatted inputs
@@ -469,7 +412,7 @@ class OptimizationReporter:
             The number of characters that `value` should span"""
         try:
             print("{0:>{1}}".format(value, size), end=self.end)
-        except TypeError:  # Probably received a tuple including where param came from (init_params, extra_params, etc.)
+        except TypeError:  # Probably given tuple including param origin (init_params, extra_params, etc.)
             if len(value) == 1:
                 print("{0:>{1}}".format(value[0], size), end=self.end)
             else:
@@ -572,14 +515,12 @@ def format_frame_source(previous_frame, **kwargs):
     -------
     The stringified frame source information of `previous_frame`"""
     source = inspect.getframeinfo(previous_frame)
-    source_script, source_line_no, source_func, source_class = source[0], source[1], source[2], None
+    src_script, src_line_no, src_func, src_class = source[0], source[1], source[2], None
 
     with suppress(AttributeError, KeyError):
-        source_class = type(previous_frame.f_locals["self"]).__name__
+        src_class = type(previous_frame.f_locals["self"]).__name__
 
-    return stringify_frame_source(
-        source_script, source_line_no, source_func, source_class, **kwargs
-    )
+    return stringify_frame_source(src_script, src_line_no, src_func, src_class, **kwargs)
 
 
 def stringify_frame_source(
@@ -653,7 +594,7 @@ def add_time_to_content(content, add_time=False):
     add_time = now_time() if add_time is True else add_time
     add_content += "Time: {}".format(add_time) if add_time else ""
 
-    #################### Combine Original Content with New Content ####################
+    #################### Combine Original and New Content ####################
     if add_content != "":
         content += "   " if ((content != "") and (not content.endswith(" "))) else ""
         content += add_content
@@ -743,9 +684,7 @@ def format_evaluation_results(results, separator="  |  ", float_format="{:.5f}")
     content: Str
         The model's evaluation results"""
     if isinstance(results, list):
-        raise TypeError(
-            "Sorry, I can't deal with results of type list. Please send me an OrderedDict, instead"
-        )
+        raise TypeError("Incompatible with results of type list. Please use OrderedDict, instead")
 
     content = []
 

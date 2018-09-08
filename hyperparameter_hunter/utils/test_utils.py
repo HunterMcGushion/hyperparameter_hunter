@@ -17,8 +17,7 @@ from unittest import TestCase, TestSuite
 # Test Suites
 ##################################################
 def suite_builder(test_type, test_function, test_cases, targets, case_ids, override_module):
-    """
-    Handles creation of custom test suites of test_type
+    """Handles creation of custom test suites of test_type
 
     Parameters
     ----------
@@ -196,7 +195,8 @@ def format_case_id(method_name_prefix, test_case_index):
 
 
 def format_suites(test_suites, group_format, reindex=True):
-    """
+    """...
+
     Parameters
     ----------
     test_suites: Dict

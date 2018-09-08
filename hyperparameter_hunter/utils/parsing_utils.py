@@ -47,8 +47,7 @@ def build_temp_model_file(build_fn_str, source_script):
     build_fn_str: Str
         The stringified source code of a callable
     source_script: Str
-        Absolute path to a Python file. Expected to end with one of the following extensions:
-        '.py', '.ipynb'
+        Absolute path to a Python file. Expected to end with '.py', or '.ipynb'
 
     Returns
     -------
@@ -76,8 +75,7 @@ def read_source_script(filepath):
     Parameters
     ----------
     filepath: Str
-        Absolute path to a Python file. Expected to end with one of the following extensions:
-        '.py', '.ipynb'
+        Absolute path to a Python file. Expected to end with '.py', or '.ipynb'
 
     Returns
     -------
@@ -195,9 +193,7 @@ def remove_imports(source):
     tree = parse(source)
     import_parser = ImportParser()
     import_parser.visit(tree)
-    lines = source.split(
-        "\n"
-    )  # Source including all comments, since line numbers are parsed with comments
+    lines = source.split("\n")  # Source including all comments
     lines_to_remove = set(import_parser.line_numbers)
     non_import_lines = [
         _line for _i, _line in enumerate(lines, start=1) if _i not in lines_to_remove

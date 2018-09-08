@@ -34,29 +34,23 @@ class LoggerFitStatus(BaseLoggerCallback):
 
     def on_experiment_start(self):
         G.log("\n", previous_frame=inspect.currentframe().f_back)
-
         super().on_experiment_start()
 
     def on_repetition_start(self):
         G.log(f"Starting Repetition {self._rep}", previous_frame=inspect.currentframe().f_back)
         G.log("", previous_frame=inspect.currentframe().f_back)
-
         super().on_repetition_start()
 
     def on_fold_start(self):
         # fold_start_time = self.stat_aggregates['times']['folds'][-1]
         G.log("", previous_frame=inspect.currentframe().f_back)
-
         super().on_fold_start()
 
     def on_run_start(self):
         content = ""
-
         content += format_fold_run(fold=self._fold, run=self._run)
-
         content += format(self.log_separator if content != "" and self.current_seed else "")
         content += "Seed: {}".format(self.current_seed) if self.current_seed else ""
-
         G.log(content, previous_frame=inspect.currentframe().f_back, add_time=True)
         super().on_run_start()
 
@@ -84,7 +78,6 @@ class LoggerFitStatus(BaseLoggerCallback):
         )
 
         G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
-
         super().on_fold_end()
 
     def on_repetition_end(self):
@@ -100,7 +93,6 @@ class LoggerFitStatus(BaseLoggerCallback):
 
         G.log("", previous_frame=inspect.currentframe().f_back)
         G.log(content, previous_frame=inspect.currentframe().f_back)
-
         super().on_repetition_end()
 
     def on_experiment_end(self):
