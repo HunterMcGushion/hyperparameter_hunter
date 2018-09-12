@@ -7,6 +7,7 @@ from hyperparameter_hunter.callbacks.bases import BasePredictorCallback
 # Import Miscellaneous Assets
 ##################################################
 import numpy as np
+import pandas as pd
 
 
 class PredictorOOF(BasePredictorCallback):
@@ -31,22 +32,32 @@ class PredictorOOF(BasePredictorCallback):
         ]
         for attr in required_attributes:
             if not hasattr(self, attr):
-                raise AttributeError(
-                    "Missing required attribute for `PredictorOOF` class: {}".format(attr)
-                )
+                raise AttributeError("Missing required `PredictorOOF` attribute: {}".format(attr))
 
-        self.final_oof_predictions = 0 * self.train_dataset[self.target_column]
+        self.final_oof_predictions = self.__zeros_df()
         super().on_experiment_start()
 
     def on_repetition_start(self):
-        self.repetition_oof_predictions = 0 * self.train_dataset[self.target_column]
+        self.repetition_oof_predictions = self.__zeros_df()
         super().on_repetition_start()
 
     def on_run_end(self):
         self.run_validation_predictions = self.model.predict(self.fold_validation_input)
+        _p_shape = self.run_validation_predictions.shape
+        if (len(self.target_column) > 1) and ((len(_p_shape) == 1) or (_p_shape[1] == 1)):
+            self.run_validation_predictions = pd.get_dummies(self.run_validation_predictions).values
+
+        self.run_validation_predictions = pd.DataFrame(
+            data=self.run_validation_predictions,
+            index=self.validation_index,
+            columns=self.target_column,
+            dtype=np.float64,
+        )
+
         self.repetition_oof_predictions.iloc[
             self.validation_index
         ] += self.run_validation_predictions
+
         super().on_run_end()
 
     def on_fold_end(self):
@@ -62,6 +73,9 @@ class PredictorOOF(BasePredictorCallback):
     def on_experiment_end(self):
         self.final_oof_predictions /= self.cross_validation_params.get("n_repeats", 1)
         super().on_experiment_end()
+
+    def __zeros_df(self):
+        return pd.DataFrame(0, index=np.arange(len(self.train_dataset)), columns=self.target_column)
 
 
 class PredictorHoldout(BasePredictorCallback):
