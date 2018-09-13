@@ -355,17 +355,17 @@ class OptimizationReporter:
     def print_saved_results_header(self):
         """Print a header signifying that saved Experiment results are being read"""
         header = f"{_Color.RED}Saved Result Files{_Color.STOP}"
-        self.print_header(header, (_Color.RED + "_" * self._line_len + _Color.STOP))
+        self.print_header(header, (_Color.RED + "_" * self._line_len() + _Color.STOP))
 
     def print_random_points_header(self):
         """Print a header signifying that random point evaluation rounds are starting"""
         header = f"{_Color.RED}Random Point Evaluation{_Color.STOP}"
-        self.print_header(header, (_Color.RED + "_" * self._line_len + _Color.STOP))
+        self.print_header(header, (_Color.RED + "_" * self._line_len() + _Color.STOP))
 
     def print_optimization_header(self):
         """Print a header signifying that Optimization rounds are starting"""
         header = f"{_Color.RED}Hyperparameter Optimization{_Color.STOP}"
-        self.print_header(header, (_Color.RED + "_" * self._line_len + _Color.STOP))
+        self.print_header(header, (_Color.RED + "_" * self._line_len() + _Color.STOP))
 
     def _line_len(self):
         """Calculate number of characters a header's underlining should span
