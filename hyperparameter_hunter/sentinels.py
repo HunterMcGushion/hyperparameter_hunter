@@ -130,7 +130,7 @@ def locate_sentinels(parameters):
     Returns
     -------
     Dict
-        Dict mirroring `parameters`, except where a `Sentinel` was found, the value it represents
+        Mirror of `parameters`, except where a `Sentinel` was found, the value it represents
         is returned instead"""
     if len(G.sentinel_registry) == 0:
         return parameters
@@ -154,10 +154,9 @@ class DatasetSentinel(Sentinel):
         Parameters
         ----------
         dataset_type: Str
-            String specifying the dataset type, suffixed with '_input', or '_target', for which a
-            sentinel should be created. Acceptable values are as follows: ['train_input',
-            'train_target', 'validation_input', 'validation_target', 'holdout_input',
-            'holdout_target']
+            Dataset type, suffixed with '_input', or '_target', for which a sentinel should be
+            created. Acceptable values are as follows: ['train_input', 'train_target',
+            'validation_input', 'validation_target', 'holdout_input', 'holdout_target']
         dataset_hash: Str
             The hash of the dataset for which a sentinel should be created that was generated while
             creating :attr:`hyperparameter_hunter.environment.Environment.cross_experiment_key`
@@ -231,26 +230,26 @@ class DatasetSentinel(Sentinel):
         ]
 
         if self.dataset_type not in acceptable_values:
-            raise ValueError('Received invalid `dataset_type`: "{}"'.format(self.dataset_type))
+            raise ValueError("Received invalid `dataset_type`: '{}'".format(self.dataset_type))
 
         #################### cross_validation_type ####################
         if self.dataset_type in ("holdout_input", "holdout_target"):
             self.cross_validation_type = None
         elif self.cross_validation_type is None:
             raise ValueError(
-                '`cross_validation_type` may only be None if `dataset_type` is from "holdout"'
+                "`cross_validation_type` may only be None if `dataset_type` is from 'holdout'"
             )
 
         #################### global_random_seed ####################
         if self.dataset_type in ("holdout_input", "holdout_target"):
             self.global_random_seed = None
         elif self.global_random_seed is None:
-            raise ValueError('`global_random_seed` may only be None if `dataset_type` is "holdout"')
+            raise ValueError("`global_random_seed` may only be None if `dataset_type` is 'holdout'")
 
         #################### random_seeds ####################
         if self.dataset_type in ("holdout_input", "holdout_target"):
             self.random_seeds = None
         elif self.random_seeds is None and self.global_random_seed is None:
             raise ValueError(
-                '`random_seeds` may only be None if `dataset_type` is from "holdout", or `global_random_seed` given'
+                "`random_seeds` may only be None if `dataset_type` is from 'holdout', or `global_random_seed` given"
             )

@@ -128,9 +128,7 @@ class BaseExperiment(ScoringMixIn):
             used as the `target_metric` input to this function are acceptable values for
             :attr:`BaseExperiment.target_metric`"""
         self.model_initializer = model_initializer
-        self.model_init_params = identify_algorithm_hyperparameters(
-            self.model_initializer
-        )  # FLAG: Play nice with Keras
+        self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
         try:
             self.model_init_params.update(model_init_params)
         except TypeError:
@@ -286,11 +284,11 @@ class BaseExperiment(ScoringMixIn):
         #     setattr(self, dataset_name, new_val)
 
         self.train_input_data = self.train_dataset.copy().loc[:, self.feature_selector]
-        self.train_target_data = self.train_dataset.copy()[[self.target_column]]
+        self.train_target_data = self.train_dataset.copy().loc[:, self.target_column]
 
         if isinstance(self.holdout_dataset, pd.DataFrame):
             self.holdout_input_data = self.holdout_dataset.copy().loc[:, self.feature_selector]
-            self.holdout_target_data = self.holdout_dataset.copy()[[self.target_column]]
+            self.holdout_target_data = self.holdout_dataset.copy().loc[:, self.target_column]
 
         if isinstance(self.test_dataset, pd.DataFrame):
             self.test_input_data = self.test_dataset.copy().loc[:, self.feature_selector]
@@ -306,11 +304,9 @@ class BaseExperiment(ScoringMixIn):
         self.target_metric = get_formatted_target_metric(self.target_metric, self.metrics_map)
 
         #################### feature_selector ####################
-        if self.feature_selector is None:
-            restricted_cols = [_ for _ in [self.target_column, self.id_column] if _ is not None]
-            self.feature_selector = [
-                _ for _ in self.train_dataset.columns.values if _ not in restricted_cols
-            ]
+        self.feature_selector = self.feature_selector or self.train_dataset.columns.values
+        restricted_cols = [_ for _ in self.target_column + [self.id_column] if _ is not None]
+        self.feature_selector = [_ for _ in self.feature_selector if _ not in restricted_cols]
 
         G.debug("Experiment parameters have been validated")
 
@@ -320,11 +316,9 @@ class BaseExperiment(ScoringMixIn):
             raise EnvironmentInactiveError("")
         if G.Env.current_task is None:
             G.Env.current_task = self
-            G.log(f'Validated Environment with key: "{self.cross_experiment_key}"')
+            G.log(f"Validated Environment with key: '{self.cross_experiment_key}'")
         else:
-            raise EnvironmentInvalidError(
-                "An experiment is in progress. It must finish before a new one can be started"
-            )
+            raise EnvironmentInvalidError("Current experiment must finish before starting another")
 
     @staticmethod
     def _clean_up():
@@ -361,34 +355,32 @@ class BaseExperiment(ScoringMixIn):
         try:
             if G.Env.result_paths["script_backup"] is not None:
                 try:
-                    shutil.copyfile(
-                        self.source_script,
-                        f'{self.result_paths["script_backup"]}/{self.experiment_id}.py',
-                    )
+                    self._source_copy_helper()
                 except FileNotFoundError:
                     os.makedirs(self.result_paths["script_backup"], exist_ok=False)
-                    shutil.copyfile(
-                        self.source_script,
-                        f'{self.result_paths["script_backup"]}/{self.experiment_id}.py',
-                    )
-                G.log('Created backup of file: "{}"'.format(self.source_script))
+                    self._source_copy_helper()
+                G.log("Created backup of file: '{}'".format(self.source_script))
             else:
-                G.log('Skipped creating backup of file: "{}"'.format(self.source_script))
+                G.log("Skipped creating backup of file: '{}'".format(self.source_script))
         #################### Exception Handling ####################
         except AttributeError as _ex:
             if G.Env is None:
                 raise EnvironmentInactiveError(extra="\n{!s}".format(_ex))
             if not hasattr(G.Env, "result_paths"):
-                raise EnvironmentInvalidError(
-                    extra='G.Env lacks "result_paths" attribute\n{!s}'.format(_ex)
-                )
+                raise EnvironmentInvalidError(extra=f"G.Env lacks 'result_paths' attr\n{_ex!s}")
             raise
         except KeyError as _ex:
             if "script_backup" not in G.Env.result_paths:
                 raise EnvironmentInvalidError(
-                    extra='G.Env.result_paths lacks "script_backup" key\n{!s}'.format(_ex)
+                    extra=f"G.Env.result_paths lacks 'script_backup' key\n{_ex!s}"
                 )
             raise
+
+    def _source_copy_helper(self):
+        """Helper method to handle attempting to copy source script to backup file"""
+        shutil.copyfile(
+            self.source_script, f"{self.result_paths['script_backup']}/{self.experiment_id}.py"
+        )
 
     ##################################################
     # Utility Methods:

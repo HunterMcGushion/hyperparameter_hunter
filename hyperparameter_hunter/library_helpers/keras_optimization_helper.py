@@ -73,9 +73,8 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
     Returns
     -------
     reusable_build_fn: Callable
-        A modified `build_fn` in which hyperparameter space choices are replaced with dict lookups,
-        and the signature is given a standard name, and additional input parameters necessary for
-        reuse
+        Modified `build_fn` in which hyperparameter space choices are replaced by dict lookups, and
+        the signature is given a standard name, and additional input parameters necessary for reuse
     reusable_wrapper_params: Dict
         The parameters expected to be passed to the extra methods of the compiled Keras model. Such
         methods include (but are not limited to) `fit`, `predict`, and `predict_proba`. Some of the
@@ -363,9 +362,7 @@ def initialize_dummy_model(model_initializer, build_fn, wrapper_params):
     -------
     dummy: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
         An initialized, compiled descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper`"""
-    setattr(
-        G, "use_dummy_keras_tracer", True
-    )  # `use_dummy_keras_tracer`=True handles dummifying params via `KerasTracer`
+    setattr(G, "use_dummy_keras_tracer", True)  # Handles dummifying params via `KerasTracer`
 
     wrapper_params = deepcopy(wrapper_params)
 
@@ -491,14 +488,13 @@ def iter_fragments(string, is_match=None):
     string: String
         A string containing fragments, which, when passed to `is_match` return True
     is_match: Callable, or None, default=lambda _: False
-        A callable to be given a single string input that is a fragment of `string`, starting at
-        any given index. Expected to return a boolean value, which is truthy when the given
-        fragment is of the desired form
+        Callable given a single string input that is a fragment of `string`, starting at any index.
+        Expected to return boolean, which is truthy when the given fragment is of the desired form
 
     Yields
     ------
     String
-        A fragment of `string` starting at an index and continuing to the end, for which `is_match`
+        Fragment of `string` starting at an index and continuing to the end, for which `is_match`
         returned a truthy value
     Int
         The index at which the aforementioned string fragment begins"""

@@ -120,13 +120,10 @@ class AggregatorEvaluations(BaseAggregatorCallback):
         for agg_key, agg_val in self.stat_aggregates["evaluations"].items():
             agg_val["final"] = self.__loop_helper(agg_key)
 
-            #################### Reshape Run/Fold Aggregates to be of Proper Dimensions ####################
-            agg_val["runs"] = np.reshape(
-                agg_val["runs"], (self._rep + 1, self._fold + 1, self._run + 1)
-            ).tolist()
-            agg_val["folds"] = np.reshape(
-                agg_val["folds"], (self._rep + 1, self._fold + 1)
-            ).tolist()
+            #################### Reshape Aggregates to be of Proper Dimensions ####################
+            runs_shape = (self._rep + 1, self._fold + 1, self._run + 1)
+            agg_val["runs"] = np.reshape(agg_val["runs"], runs_shape).tolist()
+            agg_val["folds"] = np.reshape(agg_val["folds"], runs_shape[:-1]).tolist()
 
         super().on_experiment_end()
 

@@ -145,12 +145,16 @@ class Environment:
             `test_dataset` predictions will never be evaluated. If str, will attempt to read file at
             path via :func:`pandas.read_csv`. For more information on which columns will be used
             during fitting/predicting, see the "Dataset columns" note in the "Notes" section below
-        target_column: str, default='target'
-            Str denoting the column name in all provided datasets (except test) that contains the
-            target output
-        id_column: str, or None, default=None
-            If not None, str denoting the column name in all provided datasets that contains sample
-            IDs
+        target_column: Str, or list, default='target'
+            If str, denotes the column name in all provided datasets (except test) that contains the
+            target output. If list, should be a list of strs designating multiple target columns.
+            For example, in a multi-class classification dataset like UCI's hand-written digits,
+            `target_column` would be a list containing ten strings. In this example, the
+            `target_column` data would be sparse, with a 1 to signify that a sample is a written
+            example of a digit (0-9). For a working example, see
+            'hyperparameter_hunter/examples/lib_keras_multi_classification_example.py'
+        id_column: Str, or None, default=None
+            If not None, str denoting the column name in all provided datasets containing sample IDs
         do_predict_proba: Boolean, default=False
             If True, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict_proba`.
             Else, it will call :meth:`models.Model.model.predict`
@@ -356,11 +360,11 @@ class Environment:
             if not os.path.exists(self.root_results_path):
                 os.makedirs(self.root_results_path, exist_ok=True)
         else:
-            raise TypeError(
-                "root_results_path must be None or str, not {}: {}".format(
-                    *type_val(self.root_results_path)
-                )
-            )
+            raise TypeError(f"root_results_path must be None or str, not {self.root_results_path}")
+
+        #################### target_column ####################
+        if isinstance(self.target_column, str):
+            self.target_column = [self.target_column]
 
         #################### verbose ####################
         if not isinstance(self.verbose, bool):
@@ -392,7 +396,7 @@ class Environment:
                 self.cross_validation_type = sk_cv.__getattribute__(self.cross_validation_type)
             except AttributeError:
                 raise AttributeError(
-                    f"`sklearn.model_selection._split` has no attribute '{self.cross_validation_type}'"
+                    f"'{self.cross_validation_type}' not in `sklearn.model_selection._split`"
                 )
 
         #################### to_csv_params ####################

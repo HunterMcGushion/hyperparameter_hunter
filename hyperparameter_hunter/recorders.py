@@ -60,16 +60,14 @@ class BaseRecorder(metaclass=ABCMeta):
             if G.Env is None:
                 raise EnvironmentInactiveError(str(_ex)).with_traceback(exc_info()[2])
             if not hasattr(G.Env, "result_paths"):
-                raise EnvironmentInvalidError(
-                    f'{_ex!s}\nG.Env missing "result_paths" attr'
-                ).with_traceback(exc_info()[2])
+                _err_message = f"{_ex!s}\nG.Env missing 'result_paths' attr"
+                raise EnvironmentInvalidError(_err_message).with_traceback(exc_info()[2])
         except KeyError as _ex:
-            _err_message = f'{_ex!s}\nG.Env.result_paths missing the key: "{self.result_path_key}"'
+            _err_message = f"{_ex!s}\nG.Env.result_paths missing the key: '{self.result_path_key}'"
             raise EnvironmentInvalidError(_err_message).with_traceback(exc_info()[2])
 
         if self.result_path is None:
-            # This result file was blacklisted and should not be recorded. Kill recording process now
-            return
+            return  # Result file blacklisted and should not be recorded. Kill recording process now
 
         ##################################################
         # Gather Attributes Required for Record
@@ -79,9 +77,8 @@ class BaseRecorder(metaclass=ABCMeta):
                 setattr(self, required_attribute, getattr(G.Env.current_task, required_attribute))
             except AttributeError as _ex:
                 if G.Env.current_task is None:
-                    raise EnvironmentInvalidError(
-                        f"{_ex!s}\nNo active experiment found"
-                    ).with_traceback(exc_info()[2])
+                    _err_message = f"{_ex!s}\nNo active experiment found"
+                    raise EnvironmentInvalidError(_err_message).with_traceback(exc_info()[2])
                 raise EnvironmentInvalidError(str(_ex)).with_traceback(exc_info()[2])
 
     @property
@@ -211,7 +208,7 @@ class DescriptionRecorder(BaseRecorder):
             ]
         )
 
-        #################### Filter hyperparameters' model_init_params ####################
+        #################### Filter Hyperparameters' model_init_params ####################
         bad_keys = {"random_state", "seed"}
 
         self.result["hyperparameters"]["model_init_params"] = {
@@ -238,9 +235,7 @@ class DescriptionRecorder(BaseRecorder):
             write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
 
         if (self.do_full_save is not None) and (not self.do_full_save(self.result)):
-            G.warn(
-                "Breaking out of result-saving loop early! Remaining result files will not be saved"
-            )
+            G.warn("Breaking result-saving loop early! Remaining result files will not be saved")
             return "break"
 
 
@@ -256,25 +251,25 @@ class HeartbeatRecorder(BaseRecorder):
         pass
 
     def save_result(self):
-        """Copy the global heartbeat log, and add it to the results dir as a .log file, named after
-        :attr:`experiment_id`"""
+        """Copy global Heartbeat log to results dir as .log file named for :attr:`experiment_id`"""
         try:
-            shutil.copyfile(
-                f'{G.Env.result_paths["root"]}/Heartbeat.log',
-                f"{self.result_path}/{self.experiment_id}.log",
-            )
+            self._copy_heartbeat()
         except FileNotFoundError:
             os.makedirs(self.result_path, exist_ok=False)
-            shutil.copyfile(
-                f'{G.Env.result_paths["root"]}/Heartbeat.log',
-                f"{self.result_path}/{self.experiment_id}.log",
-            )
+            self._copy_heartbeat()
+
+    def _copy_heartbeat(self):
+        """Helper method to copy the global Heartbeat log to a file named for the Experiment"""
+        shutil.copyfile(
+            f"{G.Env.result_paths['root']}/Heartbeat.log",
+            f"{self.result_path}/{self.experiment_id}.log",
+        )
 
 
 ##################################################
 # Predictions
 ##################################################
-prediction_recorder_attributes = [
+prediction_requirements = [
     "experiment_id",
     "prediction_formatter",
     "target_column",
@@ -285,18 +280,12 @@ prediction_recorder_attributes = [
 
 class PredictionsHoldoutRecorder(BaseRecorder):
     result_path_key = "predictions_holdout"
-    required_attributes = [
-        "final_holdout_predictions",
-        "holdout_dataset",
-    ] + prediction_recorder_attributes
+    required_attributes = ["final_holdout_predictions", "holdout_dataset"] + prediction_requirements
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_holdout_predictions,
-            self.holdout_dataset,
-            self.target_column,
-            id_column=self.id_column,
+            self.final_holdout_predictions, self.holdout_dataset, self.target_column, self.id_column
         )
 
     def save_result(self):
@@ -310,18 +299,12 @@ class PredictionsHoldoutRecorder(BaseRecorder):
 
 class PredictionsOOFRecorder(BaseRecorder):
     result_path_key = "predictions_oof"
-    required_attributes = [
-        "final_oof_predictions",
-        "train_dataset",
-    ] + prediction_recorder_attributes
+    required_attributes = ["final_oof_predictions", "train_dataset"] + prediction_requirements
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_oof_predictions,
-            self.train_dataset,
-            self.target_column,
-            id_column=self.id_column,
+            self.final_oof_predictions, self.train_dataset, self.target_column, self.id_column
         )
 
     def save_result(self):
@@ -335,18 +318,12 @@ class PredictionsOOFRecorder(BaseRecorder):
 
 class PredictionsTestRecorder(BaseRecorder):
     result_path_key = "predictions_test"
-    required_attributes = [
-        "final_test_predictions",
-        "test_dataset",
-    ] + prediction_recorder_attributes
+    required_attributes = ["final_test_predictions", "test_dataset"] + prediction_requirements
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_test_predictions,
-            self.test_dataset,
-            self.target_column,
-            id_column=self.id_column,
+            self.final_test_predictions, self.test_dataset, self.target_column, self.id_column
         )
 
     def save_result(self):
@@ -360,7 +337,7 @@ class PredictionsTestRecorder(BaseRecorder):
 
 # class PredictionsInFoldRecorder(BaseRecorder):
 #     result_path_key = 'predictions_in_fold'
-#     required_attributes = ['final_in_fold_predictions', 'train_dataset'] + prediction_recorder_attributes
+#     required_attributes = ['final_in_fold_predictions', 'train_dataset'] + prediction_requirements
 
 
 ##################################################

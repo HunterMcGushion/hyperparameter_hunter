@@ -326,9 +326,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         :class:`InformedOptimizationProtocol`\s; and executing :meth:`_optimization_loop`, which
         actually sets off the Experiment execution process"""
         if self.model_initializer is None:
-            raise ValueError(
-                "Experiment guidelines and options must be set before hyperparameter optimization can be started"
-            )
+            raise ValueError("Experiment guidelines must be set before starting optimization")
 
         self.logger = OptimizationReporter(
             [_.name for _ in self.dimensions], **self.reporter_parameters
@@ -433,15 +431,13 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     def _update_current_hyperparameters(self):
         """Update :attr:`current_init_params`, and :attr:`current_extra_params` according to the
         upcoming set of hyperparameters to be searched"""
-        current_hyperparameters = self._get_current_hyperparameters()
+        current_hyperparameters = self._get_current_hyperparameters().items()
 
         init_params = {
-            _k[1:]: _v for _k, _v in current_hyperparameters.items() if _k[0] == "model_init_params"
+            _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "model_init_params"
         }
         extra_params = {
-            _k[1:]: _v
-            for _k, _v in current_hyperparameters.items()
-            if _k[0] == "model_extra_params"
+            _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "model_extra_params"
         }
 
         self.current_init_params = deep_restricted_update(
@@ -500,9 +496,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         if G.Env.current_task is None:
             G.log_(f'Validated Environment with key: "{G.Env.cross_experiment_key}"')
         else:
-            raise EnvironmentInvalidError(
-                "A task is in progress. It must finish before a new one can be started"
-            )
+            raise EnvironmentInvalidError("Must finish current task before starting a new one")
 
     def _validate_parameters(self):
         """Ensure provided input parameters are properly formatted"""
@@ -516,11 +510,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         id_column = G.Env.id_column
         train_dataset = G.Env.train_dataset.copy()
 
-        if self.feature_selector is None:
-            restricted_cols = [_ for _ in [target_column, id_column] if _ is not None]
-            self.feature_selector = [
-                _ for _ in train_dataset.columns.values if _ not in restricted_cols
-            ]
+        self.feature_selector = self.feature_selector or train_dataset.columns.values
+        restricted_cols = [_ for _ in target_column + [id_column] if _ is not None]
+        self.feature_selector = [_ for _ in self.feature_selector if _ not in restricted_cols]
 
     def _find_similar_experiments(self):
         """Look for Experiments that were performed under similar conditions (algorithm and
@@ -749,16 +741,14 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         if _current_hyperparameters == self.current_hyperparameters_list:
             new_parameters = self.hyperparameter_space.rvs(random_state=None)[0]
-            G.debug_(
-                "REPEATED     asked={}     new={}".format(_current_hyperparameters, new_parameters)
-            )
+            G.debug_("REPEATED  asked={}  new={}".format(_current_hyperparameters, new_parameters))
             _current_hyperparameters = new_parameters
 
         self.current_hyperparameters_list = _current_hyperparameters
 
         current_hyperparameters = dict(
             zip(
-                self.hyperparameter_space.get_names(use_location=False),
+                self.hyperparameter_space.names(use_location=False),
                 self.current_hyperparameters_list,
             )
         )
@@ -772,9 +762,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         super()._find_similar_experiments()
 
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
-            _hyperparameters = dimension_subset(
-                _experiment[0], self.hyperparameter_space.get_names()
-            )
+            _hyperparameters = dimension_subset(_experiment[0], self.hyperparameter_space.names())
             _evaluation = _experiment[1]
             _experiment_id = _experiment[2] if len(_experiment) > 2 else None
             self.logger.print_result(_hyperparameters, _evaluation, experiment_id=_experiment_id)

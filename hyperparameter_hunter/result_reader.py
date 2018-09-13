@@ -67,9 +67,8 @@ class ResultFinder:
         descriptions_dir: String
             Path to a directory containing the description files of saved Experiments
         model_params: Dict
-            A dict containing concrete hyperparameters for the model. Common keys include
-            'model_init_params', and 'model_extra_params', both of which can be pointers to dicts
-            of hyperparameters"""
+            Concrete hyperparameters for the model. Common keys include 'model_init_params', and
+            'model_extra_params', both of which can be pointers to dicts of hyperparameters"""
         self.algorithm_name = algorithm_name
         self.module_name = module_name
         self.cross_experiment_key = cross_experiment_key
@@ -95,7 +94,7 @@ class ResultFinder:
 
         if self.module_name == "keras":
             multi_targets = [("model_init_params", "compile_params", "optimizer")]
-            if multi_targets[0] in self.hyperparameter_space.get_names():
+            if multi_targets[0] in self.hyperparameter_space.names():
                 self._filter_by_guidelines_multi(multi_targets[0])
             else:
                 self._filter_by_guidelines()
@@ -104,8 +103,7 @@ class ResultFinder:
         G.debug_(f"Experiments matching current guidelines: {len(self.similar_experiments)}")
 
     def _get_ids(self):
-        """Locate the ids of Experiments that match :attr:`algorithm_name` and
-        :attr:`cross_experiment_key`"""
+        """Get ids of Experiments matching :attr:`algorithm_name` and :attr:`cross_experiment_key`"""
         self.experiment_ids = get_ids_by(
             leaderboard_path=self.leaderboard_path,
             algorithm_name=self.algorithm_name,
@@ -151,10 +149,9 @@ class ResultFinder:
         Parameters
         ----------
         location: Tuple
-            The tuple location of the hyperparameter space choice that affects the acceptable
-            guideline values of a particular hyperparameter. In other words, this is the path of a
-            hyperparameter, which, if changed, would change the expected default value of another
-            hyperparameter
+            Location of the hyperparameter space choice that affects the acceptable guideline values
+            of a particular hyperparameter. In other words, this is the path of a hyperparameter,
+            which, if changed, would change the expected default value of another hyperparameter
 
         Notes
         -----
@@ -206,8 +203,7 @@ class KerasResultFinder(ResultFinder):
         descriptions_dir,
         model_params,
     ):
-        """ResultFinder class for locating saved Keras Experiments that are compatible with the
-        given constraints
+        """ResultFinder for locating saved Keras Experiments compatible with the given constraints
 
         Parameters
         ----------
@@ -228,9 +224,8 @@ class KerasResultFinder(ResultFinder):
         descriptions_dir: String
             Path to a directory containing the description files of saved Experiments
         model_params: Dict
-            Dict containing concrete hyperparameters for the model. Common keys include
-            'model_init_params', and 'model_extra_params', both of which can be pointers to dicts
-            of hyperparameters"""
+            Concrete hyperparameters for the model. Common keys include 'model_init_params', and
+            'model_extra_params', both of which can be pointers to dicts of hyperparameters"""
         super().__init__(
             algorithm_name=algorithm_name,
             module_name=module_name,

@@ -158,11 +158,7 @@ class Model(object):
 
         fit_kwargs = dict(
             fit_kwargs,
-            **{
-                _k: _v
-                for _k, _v in self.extra_params.get("fit", {}).items()
-                if _k not in ["X", "y"]
-            },
+            **{k: v for k, v in self.extra_params.get("fit", {}).items() if k not in ["X", "y"]},
         )
 
         try:
@@ -170,7 +166,7 @@ class Model(object):
         except (TypeError, sklearn_utils.DataConversionWarning):
             try:
                 self.model = self.model.fit(
-                    self.train_input.values, self.train_target.values[:, 0], **fit_kwargs
+                    self.train_input.values, self.train_target.values, **fit_kwargs
                 )
             except Exception as _ex:
                 raise _ex
