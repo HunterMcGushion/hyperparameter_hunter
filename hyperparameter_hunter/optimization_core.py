@@ -510,11 +510,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         id_column = G.Env.id_column
         train_dataset = G.Env.train_dataset.copy()
 
-        if self.feature_selector is None:
-            restricted_cols = [_ for _ in [target_column, id_column] if _ is not None]
-            self.feature_selector = [
-                _ for _ in train_dataset.columns.values if _ not in restricted_cols
-            ]
+        self.feature_selector = self.feature_selector or train_dataset.columns.values
+        restricted_cols = [_ for _ in target_column + [id_column] if _ is not None]
+        self.feature_selector = [_ for _ in self.feature_selector if _ not in restricted_cols]
 
     def _find_similar_experiments(self):
         """Look for Experiments that were performed under similar conditions (algorithm and

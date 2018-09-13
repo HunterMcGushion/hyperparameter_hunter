@@ -304,11 +304,9 @@ class BaseExperiment(ScoringMixIn):
         self.target_metric = get_formatted_target_metric(self.target_metric, self.metrics_map)
 
         #################### feature_selector ####################
-        if self.feature_selector is None:
-            restricted_cols = [_ for _ in self.target_column + [self.id_column] if _ is not None]
-            self.feature_selector = [
-                _ for _ in self.train_dataset.columns.values if _ not in restricted_cols
-            ]
+        self.feature_selector = self.feature_selector or self.train_dataset.columns.values
+        restricted_cols = [_ for _ in self.target_column + [self.id_column] if _ is not None]
+        self.feature_selector = [_ for _ in self.feature_selector if _ not in restricted_cols]
 
         G.debug("Experiment parameters have been validated")
 
