@@ -53,6 +53,7 @@ problems (for example, multi-class image classification)
     ```
 
 ### Bug-Fixes
+* Fixed bug requiring Keras to be installed even when not in use
 * Fixed bug where OptimizationProtocols would not take into account saved result files when 
 determining whether the hyperparameter search space had been exhausted
 * Fixed bug where Hyperparameter Optimization headers were not properly underlined
