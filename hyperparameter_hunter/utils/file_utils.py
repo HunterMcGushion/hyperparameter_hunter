@@ -12,6 +12,8 @@ import simplejson as json
 # JSON File Functions
 ##################################################
 def default_json_write(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
     if isinstance(obj, np.integer):
         return int(obj)
     if isinstance(obj, np.floating):

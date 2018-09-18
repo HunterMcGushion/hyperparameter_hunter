@@ -51,6 +51,11 @@ problems (for example, multi-class image classification)
       model_extra_params=dict(batch_size=32, epochs=10, verbose=0, shuffle=True),
   )
     ```
+* Added callback recipes, which contains some commonly-used extra callbacks created using 
+`hyperparameter_hunter.callbacks.bases.lambda_callback`
+    * This serves not only to provide additional callback functionality like creating confusion 
+    matrices, but also to create examples for how anyone can use `lambda_callback` to implement 
+    their own custom functionality
 
 ### Bug-Fixes
 * Fixed bug requiring Keras to be installed even when not in use

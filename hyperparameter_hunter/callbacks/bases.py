@@ -26,6 +26,12 @@ Related
 ##################################################
 from hyperparameter_hunter.settings import G
 
+##################################################
+# Import Miscellaneous Assets
+##################################################
+import numpy as np
+from uuid import uuid4 as uuid
+
 
 class BaseCallback(object):
     """The base class from which all callbacks and all intermediate base callbacks are descendants.
@@ -108,6 +114,7 @@ def lambda_callback(
     on_fold_end=None,
     on_run_start=None,
     on_run_end=None,
+    agg_name=None,
 ):
     """Utility for creating custom callbacks to be declared by :class:`Environment` and used by
     Experiments
@@ -133,6 +140,8 @@ def lambda_callback(
         Callable that receives Experiment's values of `required_attributes` at run start
     on_run_end: Callable, or None, default=None
         Callable that receives Experiment's values of `required_attributes` at run end
+    agg_name: # TODO: Add this
+        # TODO: Add this
 
     Returns
     -------
@@ -157,33 +166,68 @@ def lambda_callback(
     See :mod:`hyperparameter_hunter.examples.lambda_callback_example` for more"""
 
     methods = [
-        ("on_experiment_start", on_experiment_start),
-        ("on_experiment_end", on_experiment_end),
-        ("on_repetition_start", on_repetition_start),
-        ("on_repetition_end", on_repetition_end),
-        ("on_fold_start", on_fold_start),
-        ("on_fold_end", on_fold_end),
-        ("on_run_start", on_run_start),
-        ("on_run_end", on_run_end),
+        ("on_experiment_start", on_experiment_start, "final"),
+        ("on_repetition_start", on_repetition_start, "reps"),
+        ("on_fold_start", on_fold_start, "folds"),
+        ("on_run_start", on_run_start, "runs"),
+        ("on_run_end", on_run_end, "runs"),
+        ("on_fold_end", on_fold_end, "folds"),
+        ("on_repetition_end", on_repetition_end, "reps"),
+        ("on_experiment_end", on_experiment_end, "final"),
     ]
 
     LambdaCallback = type("LambdaCallback", (BaseCallback,), dict())
+    agg_name = "_{}".format(agg_name or str(uuid()))
+    does_aggregate = False
+    aggregated_shapes = dict(runs=None, folds=None)
 
-    for method_name, method_content in methods:
-        if callable(method_content):
+    for meth_name, meth_content, agg_key in methods:
 
-            def _method_factory(_method_name=method_name, _method_content=method_content):
-                """Provide `_method_name` and `_method_content` for :func:`_method`"""
+        def _method_factory(_meth_name=meth_name, _meth_content=meth_content, _agg_key=agg_key):
+            """Provide `_meth_name`, `_meth_content`, and `_agg_key` for :func:`_method`"""
 
-                def _method(self):
-                    """Perform the tasks given in `_method_content`, then call parent's method of
-                    name `_method_name`"""
-                    _method_content(*[getattr(self, _) for _ in required_attributes])
-                    getattr(super(LambdaCallback, self), _method_name)()
+            def _method(self):
+                """Execute `_meth_content`, then call parent's method of name `_method_name`"""
+                nonlocal does_aggregate
 
-                return _method
+                #################### Execute Custom Callback Method ####################
+                try:
+                    return_value = _meth_content(*[getattr(self, _) for _ in required_attributes])
+                except TypeError:
+                    return_value = None
 
-            setattr(LambdaCallback, method_name, _method_factory())
+                #################### Handle Return Values ####################
+                if return_value is not None:
+                    does_aggregate = True
+                    self.stat_aggregates.setdefault(agg_name, dict())
+
+                    if _agg_key == "final":
+                        self.stat_aggregates[agg_name][_agg_key] = return_value
+                    else:
+                        self.stat_aggregates[agg_name].setdefault(_agg_key, []).append(return_value)
+
+                        try:  # Record shapes of aggregated return values
+                            aggregated_shapes[_agg_key] = np.shape(return_value)
+                        except:
+                            aggregated_shapes[_agg_key] = (1,)
+
+                #################### Reshape Aggregated Values ####################
+                if _meth_name == "on_experiment_end" and does_aggregate is True:
+                    runs_shape = (self._rep + 1, self._fold + 1, self._run + 1)
+
+                    for (key, shape) in [("runs", runs_shape), ("folds", runs_shape[:-1])]:
+                        if key not in self.stat_aggregates[agg_name]:
+                            continue
+                        self.stat_aggregates[agg_name][key] = np.reshape(
+                            self.stat_aggregates[agg_name][key], shape + aggregated_shapes[key]
+                        ).tolist()
+
+                #################### Call Next Callback Method in Chain ####################
+                getattr(super(LambdaCallback, self), _meth_name)()
+
+            return _method
+
+        setattr(LambdaCallback, meth_name, _method_factory())
 
     return LambdaCallback
 
