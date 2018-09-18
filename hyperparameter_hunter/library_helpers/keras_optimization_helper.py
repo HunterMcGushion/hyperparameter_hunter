@@ -44,7 +44,10 @@ from types import FunctionType, MethodType
 ##################################################
 # Import Learning Assets
 ##################################################
-from keras.callbacks import Callback as base_keras_callback
+try:
+    from keras.callbacks import Callback as base_keras_callback
+except ModuleNotFoundError:
+    base_keras_callback = type("PlaceholderBaseKerasCallback", (), {})
 
 
 def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script):
