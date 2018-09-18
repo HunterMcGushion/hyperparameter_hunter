@@ -1,13 +1,14 @@
 ##################################################
 # Execute Import Interceptors
 ##################################################
+from pkg_resources import DistributionNotFound
 from .importer import hook_keras_layer
 
 try:
     hook_keras_layer()
+except DistributionNotFound:
+    pass
 except Exception as _ex:
-    # TODO: Probably need to raise only certain exceptions - If keras is even available to import
-    # TODO: If keras isn't available at all, `pass` - Wasn't installed by user
     raise
 
 
