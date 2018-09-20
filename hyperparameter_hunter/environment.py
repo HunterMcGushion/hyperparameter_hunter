@@ -438,7 +438,7 @@ class Environment:
                 self.holdout_dataset = pd.read_csv(self.holdout_dataset)
             except FileNotFoundError:
                 raise
-        elif self.holdout_dataset is not None and (not isinstance(self.holdout_dataset, pd.DataFrame)):
+        elif self.holdout_dataset and (not isinstance(self.holdout_dataset, pd.DataFrame)):
             raise TypeError(
                 f"holdout_dataset must be one of: [None, DataFrame, callable, str], not {type(self.holdout_dataset)}"
             )
