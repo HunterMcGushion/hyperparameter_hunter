@@ -48,7 +48,6 @@ jobs:
 #      before_script:
       script:
         - black --check hyperparameter_hunter setup.py
-
     - name: "Running unit tests..."
       script:
         - python setup.py nosetests
