@@ -14,7 +14,7 @@ jobs:
   include:
     - stage: lint
       name: "Checking Black code formatting..."
-      script: black --check --verbose hyperparameter_hunter setup.py
+      script: black --check hyperparameter_hunter setup.py
     - stage: test
       name: "Running unit tests..."
       script: python setup.py nosetests
