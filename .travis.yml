@@ -13,6 +13,7 @@ before_script:
 script:
   # - "make test"
   - python setup.py nosetests
+  - black --check --verbose hyperparameter_hunter setup.py
 #matrix:
 #  include:
 #  - python: "3.6"
