@@ -13,8 +13,10 @@ before_script:
 jobs:
   include:
     - stage: black-formatting
+      name: "Checking Black code formatting..."
       script: black --check --verbose hyperparameter_hunter setup.py
     - stage: unit-tests
+      name: "Running unit tests..."
       script: python setup.py nosetests
 #script:
 #  # - "make test"
