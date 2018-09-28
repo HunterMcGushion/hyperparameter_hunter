@@ -333,6 +333,8 @@ class KerasModel(Model):
                 )
             )
 
+        self.model_history = None
+
         super().__init__(
             model_initializer,
             initialization_params,
@@ -358,14 +360,15 @@ class KerasModel(Model):
     def fit(self):
         """Train model according to :attr:`extra_params['fit']` (if appropriate) on training data"""
         try:
-            self.model.fit(self.train_input, self.train_target)
+            self.model_history = self.model.fit(self.train_input, self.train_target)
         except Exception as _ex:
             G.warn(f"KerasModel.fit() failed with Exception: {_ex}\nAttempting standard fit method")
             super().fit()
         finally:
             #################### Record Epochs Elapsed if Model has 'epoch' Attribute ####################
             with suppress(AttributeError):
-                self.epochs_elapsed = len(self.model.epoch)
+                # self.epochs_elapsed = len(self.model.epoch)
+                self.epochs_elapsed = len(self.model_history.epoch)
 
             #################### Load Model Checkpoint if Possible ####################
             for callback in self.extra_params.get("callbacks", []):
