@@ -32,11 +32,7 @@ the future"""
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.callbacks.aggregators import (
-    AggregatorEvaluations,
-    AggregatorEpochsElapsed,
-    AggregatorTimes,
-)
+from hyperparameter_hunter.callbacks.aggregators import AggregatorEvaluations, AggregatorTimes
 from hyperparameter_hunter.callbacks.bases import (
     BaseCallback,
     BasePredictorCallback,
@@ -83,7 +79,6 @@ class ExperimentMeta(type):
 
         # Add Class-Wide Aggregator Bases
         namespace["__class_wide_bases"].append(AggregatorEvaluations)
-        namespace["__class_wide_bases"].append(AggregatorEpochsElapsed)
         namespace["__class_wide_bases"].append(AggregatorTimes)
 
         # Add Class-Wide Logger Bases
