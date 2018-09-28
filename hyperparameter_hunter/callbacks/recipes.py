@@ -26,6 +26,11 @@ from hyperparameter_hunter.callbacks.bases import lambda_callback
 from hyperparameter_hunter.metrics import get_clean_prediction
 
 ##################################################
+# Import Miscellaneous Assets
+##################################################
+import numpy as np
+
+##################################################
 # Import Learning Assets
 ##################################################
 from sklearn.metrics import confusion_matrix as sk_confusion_matrix
@@ -290,3 +295,60 @@ def _confusion_matrix(targets, predictions):
 # FLAG: When done, move this section below the "Confusion Matrix Callbacks" section below
 # FLAG: Consider adding option to save Experiment descriptions as yaml by default
 # FLAG: ... Will probably need to employ special `--- !!omap` yaml tags (http://yaml.org/spec/1.1/ ["Example 2.26"])
+
+##################################################
+# Keras Epochs Elapsed Callback
+##################################################
+def aggregator_epochs_elapsed(on_run=True, on_fold=True, on_repetition=True, on_experiment=True):
+    """Callback function to aggregate and average the number of epochs elapsed during model training
+    at each stage of the Experiment
+
+    Parameters
+    ----------
+    on_run: Boolean, default=True
+        If False, skip recording epochs elapsed for individual Experiment runs
+    on_fold: Boolean, default=True
+        If False, skip making epochs-elapsed averages for individual Experiment folds
+    on_repetition: Boolean, default=True
+        If False, skip making epochs-elapsed averages for individual Experiment repetitions
+    on_experiment: Boolean, default=True
+        If False, skip making epochs-elapsed average for the Experiment
+
+    Returns
+    -------
+    LambdaCallback
+        An uninitialized :class:`LambdaCallback` to aggregate the number of epochs elapsed during
+        training, produced by :func:`hyperparameter_hunter.callbacks.bases.lambda_callback`"""
+
+    def _on_run_end(model):
+        """Return the number of epochs elapsed after fitting model"""
+        if model.epochs_elapsed is not None:
+            return model.epochs_elapsed
+
+    def _on_fold_end(stat_aggregates, _run):
+        """Average the number of epochs elapsed across all runs in the fold"""
+        run_results = stat_aggregates["_epochs_elapsed"]["runs"]
+        if len(run_results) > 0:
+            return np.average(run_results[-_run:])
+
+    def _on_repetition_end(stat_aggregates, _run, _fold):
+        """Average the number of epochs elapsed across all runs in the repetition"""
+        run_results = stat_aggregates["_epochs_elapsed"]["runs"]
+        if len(run_results) > 0:
+            num_runs = _run * _fold
+            return np.average(run_results[-num_runs:])
+
+    def _on_experiment_end(stat_aggregates, _run, _fold, _rep):
+        """Average the number of epochs elapsed across all runs in the Experiment"""
+        run_results = stat_aggregates["_epochs_elapsed"]["runs"]
+        if len(run_results) > 0:
+            num_runs = _run * _fold * _rep
+            return np.average(run_results[-num_runs:])
+
+    return lambda_callback(
+        on_run_end=_on_run_end if on_run else None,
+        on_fold_end=_on_fold_end if on_fold else None,
+        on_repetition_end=_on_repetition_end if on_repetition else None,
+        on_experiment_end=_on_experiment_end if on_experiment else None,
+        agg_name="epochs_elapsed",
+    )
