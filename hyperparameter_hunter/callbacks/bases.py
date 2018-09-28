@@ -252,11 +252,8 @@ def lambda_callback(
                         self.stat_aggregates[agg_name][_agg_key] = return_value
                     else:
                         self.stat_aggregates[agg_name].setdefault(_agg_key, []).append(return_value)
-
-                        try:  # Record shapes of aggregated return values
-                            aggregated_shapes[_agg_key] = np.shape(return_value)
-                        except:  # TODO: Specify exception, or remove - NumPy seems to handle this
-                            aggregated_shapes[_agg_key] = (1,)
+                        # Record shapes of aggregated return values
+                        aggregated_shapes[_agg_key] = np.shape(return_value)
 
                 #################### Reshape Aggregated Values ####################
                 if _meth_name == "on_experiment_end" and does_aggregate is True:
