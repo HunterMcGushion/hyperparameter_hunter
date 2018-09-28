@@ -56,12 +56,22 @@ problems (for example, multi-class image classification)
     * This serves not only to provide additional callback functionality like creating confusion 
     matrices, but also to create examples for how anyone can use `lambda_callback` to implement 
     their own custom functionality
+    * This also contains the replacement for the broken `AggregatorEpochsElapsed` callback: 
+    `aggregator_epochs_elapsed`
+* Updated `hyperparameter_hunter.callbacks.bases.lambda_callback` to handle automatically 
+aggregating values returned by "on_..." callable parameters
+    * This new functionality is used in `callbacks.recipes.confusion_matrix_oof`; whereas, 
+    `callbacks.recipes.confusion_matrix_holdout` continues to aggregate values using the original 
+    method for comparison 
+
 
 ### Bug-Fixes
 * Fixed bug requiring Keras to be installed even when not in use
 * Fixed bug where OptimizationProtocols would not take into account saved result files when 
 determining whether the hyperparameter search space had been exhausted
 * Fixed bug where Hyperparameter Optimization headers were not properly underlined
+* Fixed bug where `AggregatorEpochsElapsed` would not work with repeated cross validation schemes 
+(#47) by converting it to a `lambda_callback` recipe in `hyperparameter_hunter.callbacks.recipes` 
 
 ### Changes
 * Adopted [Black](https://github.com/ambv/black) code formatting
@@ -71,6 +81,8 @@ determining whether the hyperparameter search space had been exhausted
 Climate
 * Development-related changes, including minor TravisCI revisions, pre-commit hooks, and updated 
 utility/documentation files
+* `experiment_core` no longer applies a callback to record epochs elapsed for Keras NNs by default. 
+For this functionality, use `callbacks.recipes.aggregator_epochs_elapsed`
 
 <a name="1.0.2"></a>
 ## [1.0.2] (2018-08-26)
