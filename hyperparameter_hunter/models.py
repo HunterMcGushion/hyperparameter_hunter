@@ -153,7 +153,7 @@ class Model(object):
         fit_kwargs = {}
         if "verbose" in expected_fit_parameters:
             fit_kwargs["verbose"] = False
-        if "silent" in expected_fit_parameters:
+        if "silent" in expected_fit_parameters and 'verbose' not in fit_kwargs:
             fit_kwargs["silent"] = True
 
         fit_kwargs = dict(
