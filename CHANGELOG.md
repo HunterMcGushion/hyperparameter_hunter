@@ -1,6 +1,10 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+
+<a name="1.1.0"></a>
+## [1.1.0] (2018-10-4)
+
 ### Features
 * Added support for multiple `target_column` values. Previously, `target_column` was required to be a string naming a single 
 target output column in the dataset. Now, `target_column` can also be a list of strings, enabling usage with multiple-output 
@@ -72,6 +76,8 @@ determining whether the hyperparameter search space had been exhausted
 * Fixed bug where Hyperparameter Optimization headers were not properly underlined
 * Fixed bug where `AggregatorEpochsElapsed` would not work with repeated cross validation schemes 
 (#47) by converting it to a `lambda_callback` recipe in `hyperparameter_hunter.callbacks.recipes` 
+* Fixed bug where `holdout_dataset` was not properly recognized as a `DataFrame` (#78)
+* Fixed bug where CatBoost was given both `silent` and `verbose` kwargs (#80)
 
 ### Changes
 * Adopted [Black](https://github.com/ambv/black) code formatting
@@ -240,7 +246,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v0.0.1...v1.0.0

@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name="hyperparameter_hunter",
-    version="1.0.2",
+    version="1.1.0",
     description=(
         "Easy hyperparameter optimization and automatic result "
         "saving across machine learning algorithms and libraries"
