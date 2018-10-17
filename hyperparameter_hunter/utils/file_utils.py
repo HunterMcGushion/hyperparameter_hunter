@@ -12,6 +12,22 @@ import simplejson as json
 # JSON File Functions
 ##################################################
 def default_json_write(obj):
+    """Convert values that are not JSON-friendly to a more acceptable type
+
+    Parameters
+    ----------
+    obj: Object
+        The object that is expected to be of a type that is incompatible with JSON files
+
+    Returns
+    -------
+    Object
+        The value of `obj` after being cast to a type accepted by JSON
+
+    Raises
+    ------
+    TypeError
+        If the type of `obj` is unhandled"""
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     if isinstance(obj, np.integer):
@@ -22,6 +38,17 @@ def default_json_write(obj):
 
 
 def write_json(file_path, data, do_clear=False):
+    """Write `data` to the JSON file specified by `file_path`, optionally clearing the file before
+    adding `data`
+
+    Parameters
+    ----------
+    file_path: String
+        The target .json file path to which `data` will be written
+    data: Object
+        The content to save at the .json file given by `file_path`
+    do_clear: Boolean, default=False
+        If True, the contents of the file at `file_path` will be cleared before saving `data`"""
     file_path = validate_extension(file_path, "json")
 
     if do_clear is True:
@@ -32,6 +59,19 @@ def write_json(file_path, data, do_clear=False):
 
 
 def read_json(file_path, np_arr=False):
+    """Get the contents of the .json file located at `file_path`
+
+    Parameters
+    ----------
+    file_path: String
+        The path of the .json file to be read
+    np_arr: Boolean, default=False
+        If True, the contents read from `file_path` will be cast to a numpy array before returning
+
+    Returns
+    -------
+    content: Object
+        The contents of the .json file located at `file_path`"""
     try:
         content = json.loads(open(file_path).read())
     except json.JSONDecodeError as _ex:
@@ -44,6 +84,33 @@ def read_json(file_path, np_arr=False):
 
 
 def add_to_json(file_path, data_to_add, key=None, condition=None, default=None, append_value=False):
+    """Append `data_to_add` to the contents of the .json file specified by `file_path`
+
+    Parameters
+    ----------
+    file_path: String
+        The target .json file path to which `data_to_add` will be added and saved
+    data_to_add: Object
+        The data to add to the contents of the .json file given by `file_path`
+    key: String, or None, default=None
+        If None, the original contents of the file at `file_path` should not be of type dict. If
+        string, the original content at `file_path` is expected to be a dict, and `data_to_add` will
+        be added to the original dict under the key `key`. Therefore, `key` is expected to be a
+        unique key to the original dict contents of `file_path`, unless `append_value` is True
+    condition: Callable, or None, default=None
+        If callable, will be given the original contents of the .json file at `file_path` as input,
+        and should return a boolean value. If `condition(original_data)` is truthy, `data_to_add`
+        will be added to the contents of the file at `file_path` as usual. Otherwise, `data_to_add`
+        will not be added to the file, and the contents at `file_path` will remain unchanged. If
+        `condition` is None, it will be treated as having been truthy, and will proceed to append
+        `data_to_add` to the target file
+    default: Object, or None, default=None
+        If the attempt to read the original content at `file_path` raises a `FileNotFoundError` and
+        `default` is not None, `default` will be used as the original data for the file. Otherwise,
+        the error will be raised
+    append_value: Boolean, default=False
+        If True and the original data at `file_path` is a dict, then `data_to_add` will be appended
+        as a list to the value of the original data at key `key`"""
     try:
         original_data = read_json(file_path)
     except FileNotFoundError:
@@ -138,6 +205,12 @@ def read_file(file_path):
 
 
 def clear_file(file_path):
+    """Erase the contents of the file located at `file_path`
+
+    Parameters
+    ----------
+    file_path: String
+        The path of the file whose contents should be cleared out"""
     clear_target = open(file_path, "w")
     clear_target.truncate()
     clear_target.close()
