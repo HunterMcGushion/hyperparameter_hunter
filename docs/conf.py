@@ -24,8 +24,19 @@ copyright = "2018, Hunter McGushion"
 author = "Hunter McGushion"
 
 
+def get_version():
+    """Get the current version number for the library
+
+    Returns
+    -------
+    String
+        Of the form "<major>.<minor>.<micro>", in which "major", "minor" and "micro" are numbers"""
+    with open("../VERSION") as f:
+        return f.read().strip()
+
+
 version = ""  # The short X.Y version
-release = "1.1.0"  # The full version, including alpha/beta/rc tags
+release = get_version()  # The full version, including alpha/beta/rc tags
 
 ##################################################
 # General Configuration

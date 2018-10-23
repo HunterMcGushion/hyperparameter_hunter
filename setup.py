@@ -1,14 +1,31 @@
 from setuptools import setup, find_packages
 
 
+def get_version():
+    """Get the current version number for the library
+
+    Returns
+    -------
+    String
+        Of the form "<major>.<minor>.<micro>", in which "major", "minor" and "micro" are numbers"""
+    with open("VERSION") as f:
+        return f.read().strip()
+
+
 def readme():
+    """Get the content of the library's readme file
+
+    Returns
+    -------
+    String
+        The content of the "README.md" file located in the project's root directory"""
     with open("README.md") as f:
         return f.read()
 
 
 setup(
     name="hyperparameter_hunter",
-    version="1.1.0",
+    version=get_version(),
     description=(
         "Easy hyperparameter optimization and automatic result "
         "saving across machine learning algorithms and libraries"
