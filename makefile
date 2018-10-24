@@ -12,6 +12,9 @@ setup: env
 dev: setup
 	sh ./scripts/dev.sh $(ENV)
 
+ml_install:
+	sh ./scripts/ml_install.sh $(ENV)
+
 release: lint test clean
 	sh ./scripts/release.sh
 
