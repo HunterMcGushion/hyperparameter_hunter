@@ -14,6 +14,7 @@ fi
 ##################################################
 function try_setup() {
     source ./${MY_ENV}/bin/activate
+    pip install --upgrade pip
     pip install -U black isort nose twine
 }
 
