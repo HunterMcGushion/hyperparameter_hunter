@@ -1,10 +1,5 @@
-from hyperparameter_hunter import (
-    Environment,
-    Real,
-    Integer,
-    Categorical,
-    GradientBoostedRegressionTreeOptimization,
-)
+from hyperparameter_hunter import Environment, Real, Integer, Categorical
+from hyperparameter_hunter import GradientBoostedRegressionTreeOptimization
 from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data
 from catboost import CatBoostClassifier
 
