@@ -11,7 +11,7 @@ from datetime import datetime
 from functools import wraps
 import string
 from textwrap import dedent
-from warnings import warn
+from warnings import warn, simplefilter
 
 
 def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
@@ -260,7 +260,11 @@ class Deprecated(object):
         if self.do_warn:
             warn_cls = UnsupportedWarning if self.is_unsupported else DeprecatedWarning
             warning = warn_cls(obj.__name__, self.v_deprecate, self.v_remove, self.details)
+            simplefilter("always", DeprecatedWarning)
+            simplefilter("always", UnsupportedWarning)
             warn(warning, category=DeprecationWarning, stacklevel=2)
+            simplefilter("default", DeprecatedWarning)
+            simplefilter("default", UnsupportedWarning)
 
         #################### Decorate and Return Callable ####################
         if isinstance(obj, type):
