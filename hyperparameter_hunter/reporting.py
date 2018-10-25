@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import exception_handler
+from hyperparameter_hunter import exceptions
 from hyperparameter_hunter.utils.general_utils import now_time, type_val
 
 ##################################################
@@ -104,7 +104,7 @@ class ReportingHandler(object):
 
     def _initialize_logging_logging(self):
         """Initialize and configure logging to be handled by the `logging` library"""
-        exception_handler.hook_exception_handler()
+        exceptions.hook_exception_handler()
 
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)

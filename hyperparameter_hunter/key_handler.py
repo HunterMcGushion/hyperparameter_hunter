@@ -17,10 +17,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exception_handler import (
-    EnvironmentInvalidError,
-    EnvironmentInactiveError,
-)
+from hyperparameter_hunter.exceptions import EnvironmentInvalidError, EnvironmentInactiveError
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,
     parameterize_compiled_keras_model,

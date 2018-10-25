@@ -26,7 +26,7 @@ from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
 )
-from hyperparameter_hunter.exception_handler import (
+from hyperparameter_hunter.exceptions import (
     EnvironmentInactiveError,
     EnvironmentInvalidError,
     RepeatedExperimentError,
