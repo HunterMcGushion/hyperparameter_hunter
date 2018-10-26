@@ -21,11 +21,13 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+# noinspection PyProtectedMember
+from hyperparameter_hunter import __version__
 from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
 )
-from hyperparameter_hunter.exception_handler import (
+from hyperparameter_hunter.exceptions import (
     EnvironmentInactiveError,
     EnvironmentInvalidError,
     RepeatedExperimentError,
@@ -42,7 +44,7 @@ from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.space import Space, dimension_subset
 from hyperparameter_hunter.utils.boltons_utils import get_path
-from hyperparameter_hunter.utils.general_utils import deep_restricted_update
+from hyperparameter_hunter.utils.general_utils import deep_restricted_update, Deprecated
 from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions
 
 ##################################################
@@ -323,7 +325,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         """Begin hyperparameter optimization process after experiment guidelines have been set and
         search dimensions are in place. This process includes the following: setting the
         hyperparameter space; locating similar experiments to be used as learning material for
-        :class:`InformedOptimizationProtocol`\s; and executing :meth:`_optimization_loop`, which
+        :class:`InformedOptimizationProtocol` s; and executing :meth:`_optimization_loop`, which
         actually sets off the Experiment execution process"""
         if self.model_initializer is None:
             raise ValueError("Experiment guidelines must be set before starting optimization")
@@ -803,6 +805,12 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         return self._search_space_size
 
 
+@Deprecated(
+    v_deprecate="1.0.9",
+    v_remove="1.2.0",
+    v_current=__version__,
+    details="This was never finished and has been rendered unnecessary. Try the optimization protocols defined in :mod:`optimization`, or the other base optimization protocols in :mod:`optimization_core`",
+)
 class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
     def __init__(
         self,
