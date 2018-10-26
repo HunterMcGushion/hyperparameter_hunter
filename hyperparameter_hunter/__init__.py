@@ -14,8 +14,10 @@ except Exception as _ex:
 ##################################################
 # Store Library Version
 ##################################################
+import os.path
+
 try:
-    with open("VERSION") as f:
+    with open(os.path.join(os.path.dirname(__file__), "VERSION"), "rb") as f:
         __version__ = f.read().strip()
 except Exception:
     raise
