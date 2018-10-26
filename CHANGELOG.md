@@ -8,7 +8,11 @@
 ### Changes
 * Deprecated `optimization_core.UninformedOptimizationProtocol`. This class was never finished, and is no longer necessary. 
 It is scheduled for removal in v1.2.0, and the classes that descended from it have been removed
-* Renamed `exception_handler` module (which was only used internally) to `exceptions` 
+* Renamed `exception_handler` module (which was only used internally) to `exceptions`
+* Added aliases for the particularly long optimization protocol classes defined in `optimization`:
+    * `GradientBoostedRegressionTreeOptimization`, or `GBRT`,
+    * `RandomForestOptimization`, or `RF`,
+    * `ExtraTreesOptimization`, or `ET` 
 
 
 <a name="1.1.0"></a>

@@ -28,9 +28,9 @@ except Exception:
 from .environment import Environment
 from .experiments import CrossValidationExperiment
 from .optimization import BayesianOptimization
-from .optimization import GradientBoostedRegressionTreeOptimization
-from .optimization import RandomForestOptimization
-from .optimization import ExtraTreesOptimization
+from .optimization import GradientBoostedRegressionTreeOptimization, GBRT
+from .optimization import RandomForestOptimization, RF
+from .optimization import ExtraTreesOptimization, ET
 from .optimization import DummySearch
 from .space import Real
 from .space import Integer
@@ -45,8 +45,11 @@ __all__ = [
     #################### Hyperparameter Optimization ####################
     "BayesianOptimization",
     "GradientBoostedRegressionTreeOptimization",
+    "GBRT",
     "RandomForestOptimization",
+    "RF",
     "ExtraTreesOptimization",
+    "ET",
     "DummySearch",
     #################### Search Space ####################
     "Real",

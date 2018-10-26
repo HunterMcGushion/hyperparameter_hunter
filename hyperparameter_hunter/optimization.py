@@ -273,6 +273,17 @@ class DummySearch(InformedOptimizationProtocol):
         )
 
 
+##################################################
+# Optimization Protocol Aliases
+##################################################
+GBRT = GradientBoostedRegressionTreeOptimization
+RF = RandomForestOptimization
+ET = ExtraTreesOptimization
+
+
+##################################################
+# Unimplemented Optimization Protocols
+##################################################
 class TreeStructuredParzenEstimatorsOptimization(InformedOptimizationProtocol):
     # FLAG: http://neupy.com/2016/12/17/hyperparameter_optimization_for_neural_networks.html#id24
     pass
