@@ -189,6 +189,7 @@ class Deprecated(object):
             self.is_deprecated = True
 
         self.do_warn = any([self.is_deprecated, self.is_unsupported])
+        self.warning = None
 
     def __call__(self, obj):
         """Call method on callable `obj` to deprecate
@@ -200,12 +201,8 @@ class Deprecated(object):
         #################### Log Deprecation Warning ####################
         if self.do_warn:
             warn_cls = UnsupportedWarning if self.is_unsupported else DeprecatedWarning
-            warning = warn_cls(obj.__name__, self.v_deprecate, self.v_remove, self.details)
-            simplefilter("always", DeprecatedWarning)
-            simplefilter("always", UnsupportedWarning)
-            warn(warning, category=DeprecationWarning, stacklevel=2)
-            simplefilter("default", DeprecatedWarning)
-            simplefilter("default", UnsupportedWarning)
+            self.warning = warn_cls(obj.__name__, self.v_deprecate, self.v_remove, self.details)
+            warn(self.warning, category=DeprecationWarning, stacklevel=2)
 
         #################### Decorate and Return Callable ####################
         if isinstance(obj, type):
@@ -217,6 +214,7 @@ class Deprecated(object):
         init = cls.__init__
 
         def wrapped(*args, **kwargs):
+            self._verbose_warning()
             return init(*args, **kwargs)
 
         cls.__init__ = wrapped
@@ -228,6 +226,7 @@ class Deprecated(object):
     def _decorate_fun(self, fun):
         @wraps(fun)
         def wrapped(*args, **kwargs):
+            self._verbose_warning()
             return fun(*args, **kwargs)
 
         wrapped.__doc__ = self._update_doc(wrapped.__doc__)
@@ -261,6 +260,15 @@ class Deprecated(object):
         string_list.insert(loc, "\n\n")
 
         return "".join(string_list)
+
+    def _verbose_warning(self):
+        """Issue :attr:`warning`, bypassing the standard filter that silences DeprecationWarnings"""
+        if self.do_warn:
+            simplefilter("always", DeprecatedWarning)
+            simplefilter("always", UnsupportedWarning)
+            warn(self.warning, category=DeprecationWarning, stacklevel=4)
+            simplefilter("default", DeprecatedWarning)
+            simplefilter("default", UnsupportedWarning)
 
 
 def split_version(s):
