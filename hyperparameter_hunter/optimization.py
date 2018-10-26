@@ -21,7 +21,6 @@ import numpy as np
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.model_selection import ParameterGrid, ParameterSampler
 from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
 from skopt.learning.gbrt import GradientBoostingQuantileRegressor
 from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
