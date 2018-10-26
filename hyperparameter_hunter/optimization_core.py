@@ -10,14 +10,14 @@ Related
     :class:`optimization_core.BaseOptimizationProtocol`
 :mod:`hyperparameter_hunter.result_reader`
     Used to locate result files for Experiments that are similar to the current optimization
-    constraints, and produce data to learn from in the case of :class:`InformedOptimizationProtocol`
+    constraints, and produce data to learn from in the case of :class:`SKOptimizationProtocol`
 :mod:`hyperparameter_hunter.space`
     Defines the child classes of `hyperparameter_hunter.space.Dimension`, which are used to define
     the hyperparameters to optimize
 :mod:`hyperparameter_hunter.utils.optimization_utils`:
     Provides utility functions for locating saved Experiments that fit within the constraints
     currently being optimized, as well as :class:`AskingOptimizer`, which guides the search of
-    :class:`optimization_core.InformedOptimizationProtocol`"""
+    :class:`optimization_core.SKOptimizationProtocol`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -106,8 +106,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         read_experiments=True,
         reporter_parameters=None,
     ):
-        """Base class for :class:`InformedOptimizationProtocol`, and
-        :class:`UninformedOptimizationProtocol`
+        """Base class for intermediate base optimization protocol classes
 
         Parameters
         ----------
@@ -325,7 +324,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         """Begin hyperparameter optimization process after experiment guidelines have been set and
         search dimensions are in place. This process includes the following: setting the
         hyperparameter space; locating similar experiments to be used as learning material for
-        :class:`InformedOptimizationProtocol` s; and executing :meth:`_optimization_loop`, which
+        :class:`SKOptimizationProtocol` s; and executing :meth:`_optimization_loop`, which
         actually sets off the Experiment execution process"""
         if self.model_initializer is None:
             raise ValueError("Experiment guidelines must be set before starting optimization")
@@ -559,7 +558,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         G.Env.result_paths["script_backup"] = None
 
 
-class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
+class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
     def __init__(
         self,
         target_metric=None,
@@ -581,7 +580,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         #################### Other Parameters ####################
         base_estimator_kwargs=None,
     ):
-        """Base class for Informed Optimization Protocols
+        """Base class for SKOpt-based Optimization Protocols
 
         Parameters
         ----------
@@ -648,7 +647,7 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         to instantiating an Optimization Protocol. The results of these Experiments will
         automatically be detected and cherished by the optimizer.
 
-        :class:`.InformedOptimizationProtocol` and its children in :mod:`.optimization` rely heavily
+        :class:`.SKOptimizationProtocol` and its children in :mod:`.optimization` rely heavily
         on the utilities provided by the `Scikit-Optimize` library, so thank you to the creators and
         contributors for their excellent work."""
         # TODO: Add 'EIps', and 'PIps' to the allowable `acquisition_function` values - Will need to return execution times
@@ -802,6 +801,16 @@ class InformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         if self._search_space_size is None:
             self._search_space_size = len(self.hyperparameter_space)
         return self._search_space_size
+
+
+@Deprecated(
+    v_deprecate="1.1.0",
+    v_remove="1.2.0",
+    v_current=__version__,
+    details="This has been renamed to `SKOptimizationProtocol`. Please use it instead",
+)
+class InformedOptimizationProtocol(SKOptimizationProtocol):
+    pass
 
 
 @Deprecated(

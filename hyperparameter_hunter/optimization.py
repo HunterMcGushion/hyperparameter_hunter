@@ -10,7 +10,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.optimization_core import InformedOptimizationProtocol
+from hyperparameter_hunter.optimization_core import SKOptimizationProtocol
 from hyperparameter_hunter.space import normalize_dimensions
 
 ##################################################
@@ -22,9 +22,9 @@ from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
 
 
 ##################################################
-# Informed Optimization Protocols
+# SKOpt-Based Optimization Protocols
 ##################################################
-class BayesianOptimization(InformedOptimizationProtocol):
+class BayesianOptimization(SKOptimizationProtocol):
     """Bayesian optimization with Gaussian Processes"""
 
     def __init__(
@@ -78,7 +78,7 @@ class BayesianOptimization(InformedOptimizationProtocol):
         super().go()
 
 
-class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
+class GradientBoostedRegressionTreeOptimization(SKOptimizationProtocol):
     """Sequential optimization with gradient boosted regression trees"""
 
     def __init__(
@@ -127,7 +127,7 @@ class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
         )
 
 
-class RandomForestOptimization(InformedOptimizationProtocol):
+class RandomForestOptimization(SKOptimizationProtocol):
     """Sequential optimization with random forest regressor decision trees"""
 
     def __init__(
@@ -174,7 +174,7 @@ class RandomForestOptimization(InformedOptimizationProtocol):
         )
 
 
-class ExtraTreesOptimization(InformedOptimizationProtocol):
+class ExtraTreesOptimization(SKOptimizationProtocol):
     """Sequential optimization with extra trees regressor decision trees"""
 
     def __init__(
@@ -221,9 +221,8 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
         )
 
 
-class DummySearch(InformedOptimizationProtocol):
-    """Random search by uniform sampling. Technically this is not "Informed", but it fits better as
-    an Informed subclass due to its reliance on `Scikit-Optimize`"""
+class DummySearch(SKOptimizationProtocol):
+    """Random search by uniform sampling"""
 
     def __init__(
         self,
@@ -278,17 +277,17 @@ ET = ExtraTreesOptimization
 ##################################################
 # Unimplemented Optimization Protocols
 ##################################################
-class TreeStructuredParzenEstimatorsOptimization(InformedOptimizationProtocol):
+class TreeStructuredParzenEstimatorsOptimization(SKOptimizationProtocol):
     # FLAG: http://neupy.com/2016/12/17/hyperparameter_optimization_for_neural_networks.html#id24
     pass
 
 
-class EvolutionaryOptimization(InformedOptimizationProtocol):
+class EvolutionaryOptimization(SKOptimizationProtocol):
     # FLAG: See TPOT's Genetic Programming approach
     pass
 
 
-class ParticleSwarmOptimization(InformedOptimizationProtocol):
+class ParticleSwarmOptimization(SKOptimizationProtocol):
     # FLAG: ...
     pass
 
