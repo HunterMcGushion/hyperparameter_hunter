@@ -1,3 +1,11 @@
+"""This module defines assorted general-use utilities used throughout the library. The contents are
+primarily small functions that perform oft-repeated tasks. This module also defines deprecation
+utilities, namely :class:`Deprecated`, which is used to deprecate callables
+
+Related
+-------
+:mod:`hyperparameter_hunter.exceptions`
+    Defines the deprecation warnings issued by :class:`Deprecated`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -197,7 +205,11 @@ class Deprecated(object):
         Parameters
         ----------
         obj: Object
-            The callable being decorated as deprecated"""
+            The callable being decorated as deprecated
+
+        Object
+            Callable result of either: 1) :meth:`_decorate_class` if `obj` is a class, or
+            2) :meth:`_decorate_function` if `obj` is a function/method"""
         #################### Log Deprecation Warning ####################
         if self.do_warn:
             warn_cls = UnsupportedWarning if self.is_unsupported else DeprecatedWarning
@@ -208,9 +220,21 @@ class Deprecated(object):
         if isinstance(obj, type):
             return self._decorate_class(obj)
         else:
-            return self._decorate_fun(obj)
+            return self._decorate_function(obj)
 
     def _decorate_class(self, cls):
+        """Helper method to handle wrapping of class callables
+
+        Parameters
+        ----------
+        cls: Class
+            The class to be wrapped with a deprecation warning, and an updated docstring
+
+        Returns
+        -------
+        cls: Class
+            Updated `cls` that raises a deprecation warning before being called, and contains
+            an updated docstring"""
         init = cls.__init__
 
         def wrapped(*args, **kwargs):
@@ -223,17 +247,41 @@ class Deprecated(object):
         wrapped.deprecated_original = init
         return cls
 
-    def _decorate_fun(self, fun):
-        @wraps(fun)
+    def _decorate_function(self, f):
+        """Helper method to handle wrapping of function/method callables
+
+        Parameters
+        ----------
+        f: Function
+            The function to be wrapped with a deprecation warning, and an updated docstring
+
+        Returns
+        -------
+        wrapped: Function
+            Updated `f` that raises a deprecation warning before being called, and contains
+            an updated docstring"""
+
+        @wraps(f)
         def wrapped(*args, **kwargs):
             self._verbose_warning()
-            return fun(*args, **kwargs)
+            return f(*args, **kwargs)
 
         wrapped.__doc__ = self._update_doc(wrapped.__doc__)
-        wrapped.__wrapped__ = fun
+        wrapped.__wrapped__ = f
         return wrapped
 
     def _update_doc(self, old_doc):
+        """Create a docstring containing the old docstring, in addition to a deprecation warning
+
+        Parameters
+        ----------
+        old_doc: String
+            Original docstring for the callable being deprecated, to which a warning will be added
+
+        Returns
+        -------
+        String
+            A new docstring with both the original docstring and a deprecation warning"""
         if not self.do_warn:
             return old_doc
 

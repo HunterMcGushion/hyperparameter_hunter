@@ -1,3 +1,4 @@
+"""This module defines utilities for reading, writing, and modifying different types of files"""
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
