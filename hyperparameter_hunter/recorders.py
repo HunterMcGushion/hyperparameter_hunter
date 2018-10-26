@@ -9,10 +9,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exception_handler import (
-    EnvironmentInactiveError,
-    EnvironmentInvalidError,
-)
+from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, add_to_json

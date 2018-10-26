@@ -1,4 +1,4 @@
-"""This module handles the creation of `cross_experiment_key`\s and `hyperparameter_key`\s for
+"""This module handles the creation of `cross_experiment_key` s and `hyperparameter_key` s for
 :class:`hyperparameter_hunter.environment.Environment`, and
 :class:`hyperparameter_hunter.experiments.BaseExperiment`, respectively. It also handles the
 treatment of complex-typed inputs and their storage in the 'KeyAttributeLookup' subdirectory. The
@@ -17,10 +17,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exception_handler import (
-    EnvironmentInvalidError,
-    EnvironmentInactiveError,
-)
+from hyperparameter_hunter.exceptions import EnvironmentInvalidError, EnvironmentInactiveError
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,
     parameterize_compiled_keras_model,
@@ -281,7 +278,7 @@ class CrossExperimentKeyMaker(KeyMaker):
         """A KeyMaker class dedicated to creating cross-experiment keys, which determine when
         experiments were executed under sufficiently similar conditions to permit proper comparison.
         Two separate instances of :class:`environment.Environment` should produce identical
-        `cross_experiment_key`\s if their arguments are the same (or close enough)
+        `cross_experiment_key` s if their arguments are the same (or close enough)
 
         Parameters
         ----------
@@ -320,7 +317,7 @@ class HyperparameterKeyMaker(KeyMaker):
         """A KeyMaker class dedicated to creating hyperparameter keys, which determine when
         experiments were executed using identical hyperparameters. Two separate instances of
         :class:`experiments.CrossValidationExperiment` should produce identical
-        `hyperparameter_key`\s if their hyperparameters are the same (or close enough)
+        `hyperparameter_key` s if their hyperparameters are the same (or close enough)
 
         Parameters
         ----------

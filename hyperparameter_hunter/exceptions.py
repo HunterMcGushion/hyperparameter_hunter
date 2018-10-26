@@ -53,6 +53,9 @@ def hook_exception_handler():
     sys.excepthook = handle_exception
 
 
+##################################################
+# Custom Exceptions
+##################################################
 class EnvironmentInactiveError(Exception):
     def __init__(self, message=None, extra=""):
         """Exception raised when an active instance of
@@ -99,6 +102,54 @@ class RepeatedExperimentError(Exception):
         if not message:
             message = "An Experiment with identical hyperparameters has already been conducted and has saved results"
         super(RepeatedExperimentError, self).__init__(message + extra)
+
+
+##################################################
+# Deprecation Warnings
+##################################################
+class DeprecatedWarning(DeprecationWarning):
+    """Warning class for deprecated callables. This is a specialization of the built-in
+    :class:`DeprecationWarning`, adding parameters that allow us to get information into the __str__
+    that ends up being sent through the :mod:`warnings` system. The attributes aren't able to be
+    retrieved after the warning gets raised and passed through the system as only the class--not the
+    instance--and message are what gets preserved
+
+    Parameters
+    ----------
+    obj_name: String
+        The name of the callable being deprecated
+    v_deprecate: String
+        The version that `obj` is deprecated in
+    v_remove: String
+        The version that `obj` gets removed in
+    details: String, default=""
+        Deprecation details, such as directions on what to use instead of the deprecated code"""
+
+    def __init__(self, obj_name, v_deprecate, v_remove, details=""):
+        # Docstring only works under class, not __init__. Likely due to being an exception class
+        self.obj_name = obj_name
+        self.v_deprecate = v_deprecate
+        self.v_remove = v_remove
+        self.details = details
+        super(DeprecatedWarning, self).__init__(obj_name, v_deprecate, v_remove, details)
+
+    def __str__(self):
+        parts = dict(
+            obj_name=self.obj_name,
+            deprecated=" as of {}".format(self.v_deprecate) if self.v_deprecate else "",
+            removed=" and will be removed in {}".format(self.v_remove) if self.v_remove else "",
+            period="." if any([self.v_deprecate, self.v_remove, self.details]) else "",
+            details=" {}".format(self.details) if self.details else "",
+        )
+
+        return "{obj_name} is deprecated{deprecated}{removed}{period}{details}".format(**parts)
+
+
+class UnsupportedWarning(DeprecatedWarning):
+    """Warning class for callable to warn that it is being unsupported"""
+
+    def __str__(self):
+        return "{} is unsupported as of {}. {}".format(self.obj_name, self.v_remove, self.details)
 
 
 if __name__ == "__main__":

@@ -10,30 +10,21 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.optimization_core import (
-    InformedOptimizationProtocol,
-    UninformedOptimizationProtocol,
-)
+from hyperparameter_hunter.optimization_core import SKOptimizationProtocol
 from hyperparameter_hunter.space import normalize_dimensions
-
-##################################################
-# Import Miscellaneous Assets
-##################################################
-import numpy as np
 
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.model_selection import ParameterGrid, ParameterSampler
 from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
 from skopt.learning.gbrt import GradientBoostingQuantileRegressor
 from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
 
 
 ##################################################
-# Informed Optimization Protocols
+# SKOpt-Based Optimization Protocols
 ##################################################
-class BayesianOptimization(InformedOptimizationProtocol):
+class BayesianOptimization(SKOptimizationProtocol):
     """Bayesian optimization with Gaussian Processes"""
 
     def __init__(
@@ -87,7 +78,7 @@ class BayesianOptimization(InformedOptimizationProtocol):
         super().go()
 
 
-class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
+class GradientBoostedRegressionTreeOptimization(SKOptimizationProtocol):
     """Sequential optimization with gradient boosted regression trees"""
 
     def __init__(
@@ -136,7 +127,7 @@ class GradientBoostedRegressionTreeOptimization(InformedOptimizationProtocol):
         )
 
 
-class RandomForestOptimization(InformedOptimizationProtocol):
+class RandomForestOptimization(SKOptimizationProtocol):
     """Sequential optimization with random forest regressor decision trees"""
 
     def __init__(
@@ -183,7 +174,7 @@ class RandomForestOptimization(InformedOptimizationProtocol):
         )
 
 
-class ExtraTreesOptimization(InformedOptimizationProtocol):
+class ExtraTreesOptimization(SKOptimizationProtocol):
     """Sequential optimization with extra trees regressor decision trees"""
 
     def __init__(
@@ -230,9 +221,8 @@ class ExtraTreesOptimization(InformedOptimizationProtocol):
         )
 
 
-class DummySearch(InformedOptimizationProtocol):
-    """Random search by uniform sampling. Technically this is not "Informed", but it fits better as
-    an Informed subclass due to its reliance on `Scikit-Optimize`"""
+class DummySearch(SKOptimizationProtocol):
+    """Random search by uniform sampling"""
 
     def __init__(
         self,
@@ -276,82 +266,30 @@ class DummySearch(InformedOptimizationProtocol):
         )
 
 
-class TreeStructuredParzenEstimatorsOptimization(InformedOptimizationProtocol):
+##################################################
+# Optimization Protocol Aliases
+##################################################
+GBRT = GradientBoostedRegressionTreeOptimization
+RF = RandomForestOptimization
+ET = ExtraTreesOptimization
+
+
+##################################################
+# Unimplemented Optimization Protocols
+##################################################
+class TreeStructuredParzenEstimatorsOptimization(SKOptimizationProtocol):
     # FLAG: http://neupy.com/2016/12/17/hyperparameter_optimization_for_neural_networks.html#id24
     pass
 
 
-class EvolutionaryOptimization(InformedOptimizationProtocol):
+class EvolutionaryOptimization(SKOptimizationProtocol):
     # FLAG: See TPOT's Genetic Programming approach
     pass
 
 
-class ParticleSwarmOptimization(InformedOptimizationProtocol):
+class ParticleSwarmOptimization(SKOptimizationProtocol):
     # FLAG: ...
     pass
-
-
-##################################################
-# Uninformed Optimization Protocols
-##################################################
-class GridSearch(UninformedOptimizationProtocol):
-    def __init__(
-        self,
-        target_metric=None,
-        iterations=1,
-        verbose=1,
-        read_experiments=True,
-        reporter_parameters=None,
-    ):
-        super().__init__(
-            target_metric=target_metric,
-            iterations=iterations,
-            verbose=verbose,
-            read_experiments=read_experiments,
-            reporter_parameters=reporter_parameters,
-        )
-
-    def _set_hyperparameter_space(self):
-        self.hyperparameter_space = ParameterGrid(self.search_bounds).__iter__()
-
-    @property
-    def search_space_size(self):
-        if self._search_space_size is None:
-            self._search_space_size = len(self.hyperparameter_space)
-        return self._search_space_size
-
-
-class RandomizedGridSearch(UninformedOptimizationProtocol):
-    def __init__(
-        self,
-        target_metric=None,
-        iterations=1,
-        verbose=1,
-        read_experiments=True,
-        reporter_parameters=None,
-    ):
-        super().__init__(
-            target_metric=target_metric,
-            iterations=iterations,
-            verbose=verbose,
-            read_experiments=read_experiments,
-            reporter_parameters=reporter_parameters,
-        )
-
-    def _set_hyperparameter_space(self):
-        # FLAG: Might be more efficient to use ParameterGrid with __getitem__ because ParameterSampler repeats keys
-        self.hyperparameter_space = ParameterSampler(
-            self.search_bounds, n_iter=self.iterations
-        ).__iter__()
-
-    @property
-    def search_space_size(self):
-        if self._search_space_size is None:
-            if np.any([hasattr(_, "rvs") for _ in self.search_bounds.values()]):
-                self._search_space_size = np.inf
-            else:
-                self._search_space_size = len(ParameterGrid(self.search_bounds))
-        return self._search_space_size
 
 
 if __name__ == "__main__":

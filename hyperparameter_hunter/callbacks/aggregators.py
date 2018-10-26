@@ -2,12 +2,10 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import BaseAggregatorCallback
-from hyperparameter_hunter.settings import G
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from collections import OrderedDict
 from datetime import datetime
 import numpy as np
 
