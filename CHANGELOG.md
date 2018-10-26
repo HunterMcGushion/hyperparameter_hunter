@@ -7,7 +7,7 @@
 
 ### Changes
 * Deprecated `optimization_core.UninformedOptimizationProtocol`. This class was never finished, and is no longer necessary. 
-It is scheduled for removal in v1.2.0
+It is scheduled for removal in v1.2.0, and the classes that descended from it have been removed
 * Renamed `exception_handler` module (which was only used internally) to `exceptions` 
 
 

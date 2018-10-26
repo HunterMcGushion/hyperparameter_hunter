@@ -10,10 +10,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.optimization_core import (
-    InformedOptimizationProtocol,
-    UninformedOptimizationProtocol,
-)
+from hyperparameter_hunter.optimization_core import InformedOptimizationProtocol
 from hyperparameter_hunter.space import normalize_dimensions
 
 ##################################################
@@ -289,69 +286,6 @@ class EvolutionaryOptimization(InformedOptimizationProtocol):
 class ParticleSwarmOptimization(InformedOptimizationProtocol):
     # FLAG: ...
     pass
-
-
-##################################################
-# Uninformed Optimization Protocols
-##################################################
-class GridSearch(UninformedOptimizationProtocol):
-    def __init__(
-        self,
-        target_metric=None,
-        iterations=1,
-        verbose=1,
-        read_experiments=True,
-        reporter_parameters=None,
-    ):
-        super().__init__(
-            target_metric=target_metric,
-            iterations=iterations,
-            verbose=verbose,
-            read_experiments=read_experiments,
-            reporter_parameters=reporter_parameters,
-        )
-
-    def _set_hyperparameter_space(self):
-        self.hyperparameter_space = ParameterGrid(self.search_bounds).__iter__()
-
-    @property
-    def search_space_size(self):
-        if self._search_space_size is None:
-            self._search_space_size = len(self.hyperparameter_space)
-        return self._search_space_size
-
-
-class RandomizedGridSearch(UninformedOptimizationProtocol):
-    def __init__(
-        self,
-        target_metric=None,
-        iterations=1,
-        verbose=1,
-        read_experiments=True,
-        reporter_parameters=None,
-    ):
-        super().__init__(
-            target_metric=target_metric,
-            iterations=iterations,
-            verbose=verbose,
-            read_experiments=read_experiments,
-            reporter_parameters=reporter_parameters,
-        )
-
-    def _set_hyperparameter_space(self):
-        # FLAG: Might be more efficient to use ParameterGrid with __getitem__ because ParameterSampler repeats keys
-        self.hyperparameter_space = ParameterSampler(
-            self.search_bounds, n_iter=self.iterations
-        ).__iter__()
-
-    @property
-    def search_space_size(self):
-        if self._search_space_size is None:
-            if np.any([hasattr(_, "rvs") for _ in self.search_bounds.values()]):
-                self._search_space_size = np.inf
-            else:
-                self._search_space_size = len(ParameterGrid(self.search_bounds))
-        return self._search_space_size
 
 
 if __name__ == "__main__":
