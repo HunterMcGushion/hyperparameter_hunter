@@ -11,6 +11,14 @@ except DistributionNotFound:
 except Exception as _ex:
     raise
 
+##################################################
+# Store Library Version
+##################################################
+try:
+    with open("../VERSION") as f:
+        __version__ = f.read().strip()
+except Exception:
+    raise
 
 ##################################################
 # Set __all__
