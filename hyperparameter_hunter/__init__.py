@@ -15,7 +15,7 @@ except Exception as _ex:
 # Store Library Version
 ##################################################
 try:
-    with open("../VERSION") as f:
+    with open("VERSION") as f:
         __version__ = f.read().strip()
 except Exception:
     raise
