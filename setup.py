@@ -8,7 +8,7 @@ def get_version():
     -------
     String
         Of the form "<major>.<minor>.<micro>", in which "major", "minor" and "micro" are numbers"""
-    with open("VERSION") as f:
+    with open("hyperparameter_hunter/VERSION") as f:
         return f.read().strip()
 
 

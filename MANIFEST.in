@@ -1,2 +1,2 @@
 include README.md
-include VERSION
+include hyperparameter_hunter/VERSION
