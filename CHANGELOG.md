@@ -1,6 +1,15 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Features
+
+### Bug-Fixes
+
+### Changes
+* Deprecated `optimization_core.UninformedOptimizationProtocol`. This class was never finished, and is no longer necessary. 
+It is scheduled for removal in v1.2.0
+* Renamed `exception_handler` module (which was only used internally) to `exceptions` 
+
 
 <a name="1.1.0"></a>
 ## [1.1.0] (2018-10-4)
