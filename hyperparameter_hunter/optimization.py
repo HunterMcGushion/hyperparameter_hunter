@@ -14,11 +14,6 @@ from hyperparameter_hunter.optimization_core import InformedOptimizationProtocol
 from hyperparameter_hunter.space import normalize_dimensions
 
 ##################################################
-# Import Miscellaneous Assets
-##################################################
-import numpy as np
-
-##################################################
 # Import Learning Assets
 ##################################################
 from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor

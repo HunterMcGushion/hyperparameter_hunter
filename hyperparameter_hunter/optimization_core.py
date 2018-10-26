@@ -376,7 +376,6 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
                 self._set_hyperparameter_space()
                 continue
 
-            # TODO: :attr:`current_hyperparameters_list` only exists in Informed Protocols
             self.logger.print_result(
                 self.current_hyperparameters_list,
                 self.current_score,
