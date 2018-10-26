@@ -8,7 +8,7 @@ try:
     hook_keras_layer()
 except DistributionNotFound:
     pass
-except Exception as _ex:
+except Exception:
     raise
 
 ##################################################

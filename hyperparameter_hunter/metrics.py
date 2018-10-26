@@ -10,11 +10,6 @@ Related
     class that isn't bestowed upon it by
     :class:`hyperparameter_hunter.experiment_core.ExperimentMeta`)"""
 ##################################################
-# Import Own Assets
-##################################################
-from hyperparameter_hunter.utils.general_utils import type_val
-
-##################################################
 # Import Miscellaneous Assets
 ##################################################
 from collections import OrderedDict

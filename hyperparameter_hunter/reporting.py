@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import exceptions
-from hyperparameter_hunter.utils.general_utils import now_time, type_val
+from hyperparameter_hunter.utils.general_utils import now_time
 
 ##################################################
 # Import Miscellaneous Assets
