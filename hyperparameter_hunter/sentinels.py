@@ -57,6 +57,11 @@ class Sentinel(metaclass=ABCMeta):
         self._validate_parameters()
         self.sentinel = self._build_sentinel()
 
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.sentinel == other
+        return self == other
+
     @property
     def sentinel(self) -> str:
         """Retrieve :attr:`Sentinel._sentinel`
