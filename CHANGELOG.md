@@ -4,6 +4,8 @@
 ### Features
 
 ### Bug-Fixes
+* Fixed bug causing `OptimizationProtocol`s to fail to recognize similar experiments when 
+`sentinels.DatasetSentinel`s were provided as experiment guidelines (#88)
 
 ### Changes
 * Deprecated `optimization_core.UninformedOptimizationProtocol`. This class was never finished, and is no longer necessary. 
