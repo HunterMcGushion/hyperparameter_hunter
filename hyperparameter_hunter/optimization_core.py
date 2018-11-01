@@ -115,9 +115,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
             The second value should be the name of a metric being recorded according to the values
             supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or
-            used as the `target_metric` input to this function are acceptable values for
-            :attr:`BaseOptimizationProtocol.target_metric`
+            :func:`metrics.get_formatted_target_metric` for more info. Any values returned by, or
+            given as the `target_metric` input to, :func:`metrics.get_formatted_target_metric` are
+            acceptable values for :attr:`BaseOptimizationProtocol.target_metric`
         iterations: Int, default=1
             The number of distinct experiments to execute
         verbose: Int 0, 1, or 2, default=1

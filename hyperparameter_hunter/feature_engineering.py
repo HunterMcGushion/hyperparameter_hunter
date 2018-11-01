@@ -16,7 +16,8 @@ from collections import Counter
 # Import Learning Assets
 ##################################################
 from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import SMOTE, ADASYN, RandomOverSampler
+
+# from imblearn.over_sampling import SMOTE, ADASYN, RandomOverSampler
 
 
 class PreprocessingPipelineMixIn(object):
