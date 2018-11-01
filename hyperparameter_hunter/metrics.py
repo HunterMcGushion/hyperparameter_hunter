@@ -14,6 +14,7 @@ Related
 ##################################################
 from collections import OrderedDict
 import numpy as np
+from warnings import warn
 
 ##################################################
 # Import Learning Assets
@@ -24,6 +25,128 @@ from sklearn import metrics as sk_metrics
 # Declare Global Variables
 ##################################################
 data_types = ("__in_fold", "__oof", "__holdout")
+
+
+class Metric(object):
+    def __init__(self, name, metric_function=None, direction="infer"):
+        """Class to encapsulate all necessary information for identifying, calculating, and
+        evaluating metrics results
+
+        Parameters
+        ----------
+        name: String
+            Identifying name of the metric. Should be unique relative to any other metric names that
+            might be provided by the user
+        metric_function: Callable, string, None, default=None
+            If callable, should expect inputs of form (target, prediction), and return a float. If
+            string, will be treated as an attribute in :mod:`sklearn.metrics`. If None, `name`
+            will be treated as an attribute in :mod:`sklearn.metrics`, the value of which will be
+            retrieved and used as `metric_function`
+        direction: String in ["infer", "max", "min"], default="infer"
+            How to evaluate the result of `metric_function` relative to previous results produced by
+            it. "max" signifies that metric values should be maximized, and that higher metric
+            values are better than lower values; it should be used for measures of accuracy. "min"
+            signifies that metric values should be minimized, and that lower metric values are
+            better than higher values; it should be used for measures of error or loss. If "infer",
+            `direction` will be set to: 1) "min" if `name` contains one of the following strings:
+            ["error", "loss"]; or 2) "max" if `name` contains neither of the aforementioned strings
+
+        Notes
+        -----
+        Because `direction` = "infer" only looks for "error"/"loss" in `name` , common abbreviations
+        for error measures may be ignored, including but not limited to, the following:
+        "mae" for "mean_absolute_error"; "rmsle" for "root_mean_squared_logarithmic_error"; or
+        simply "hinge", or "cross_entropy" without an "error"/"loss" suffix. In cases such as these,
+        provide an explicit `direction` = "min" to avoid backwards optimization and leaderboards"""
+        self.name = name
+        self.metric_function = metric_function
+        self.direction = direction
+
+        self._validate_parameters()
+
+    def __call__(self, target, prediction):
+        return self.metric_function(target, prediction)
+
+    def _validate_parameters(self):
+        """Ensure the provided parameters are valid and properly formatted"""
+        #################### direction ####################
+        if self.direction == "infer":
+            if any(_ in self.name for _ in ["error", "loss"]):
+                self.direction = "min"
+            else:
+                self.direction = "max"
+        elif self.direction not in ["max", "min"]:
+            raise ValueError(f"`direction` must be 'infer', 'max', or 'min', not {self.direction}")
+
+        #################### metric_function ####################
+        if not callable(self.metric_function):
+            raise TypeError()  # TODO: If string, or None, lookup callable in `sklearn.metrics`
+
+    def get_xgboost_wrapper(self):
+        # TODO: Move `utils.metrics_utils.wrap_xgboost_metric` here, and remove `utils.metrics_utils`
+        raise NotImplementedError
+
+
+class MetricsMap(object):
+    def __init__(self, metrics_map):
+        """Class to build properly formatted metrics_maps containing instances of :class:`Metric`
+
+        Parameters
+        ----------
+        metrics_map: Dict, or list
+            Specifies all metrics to be used by their id keys, along with a means to compute the
+            metric.
+
+            If list, all values must be strings that are attributes in :mod:`sklearn.metrics`, or
+            :class:`Metric` instances
+
+            If dict, key/value pairs must be of the form:
+            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the
+            metric. Its corresponding value must be one of:
+
+            1. a callable to calculate the metric,
+            2. None if the "id" key is an attribute in `sklearn.metrics` and should be used to
+               fetch a callable,
+            3. a string that is an attribute in `sklearn.metrics` and should be used to fetch a
+               callable.
+
+            Metric callable functions should expect inputs of form (target, prediction), and should
+            return floats. See `metrics_params` for details on how these two are related
+
+        Examples
+        --------
+        >>> MetricsMap([""])
+        """
+        self.metrics_map = None
+
+        if isinstance(metrics_map, (list, tuple)):
+            self.metrics_map = list(self._from_list(metrics_map))
+        elif isinstance(metrics_map, dict):
+            self.metrics_map = list(self._from_dict(metrics_map))
+
+    def __getitem__(self, item):
+        return self.metrics_map[item]
+
+    def __iter__(self):
+        pass  # TODO: ??????????????????????????????????????????????????
+
+    @staticmethod
+    def _from_list(metrics_map):
+        for value in metrics_map:
+            if isinstance(value, Metric):
+                yield value
+            elif isinstance(value, str):
+                yield Metric(value)
+            else:
+                raise TypeError("Expected str or `Metric`, not {}".format(value))
+
+    @staticmethod
+    def _from_dict(metrics_map):
+        for key, value in metrics_map.items():
+            if isinstance(value, (list, tuple)):
+                yield Metric(key, *value)
+            else:
+                yield Metric(key, value)
 
 
 class ScoringMixIn(object):
