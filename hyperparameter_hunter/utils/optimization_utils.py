@@ -455,10 +455,13 @@ def filter_by_guidelines(
     # noinspection PyUnusedLocal
     def _visit(path, key, value):
         """Return False if element in hyperparameter_space dimensions, or in dimensions being
-        ignored. Else, return True"""
+        ignored. Else, return True. If `value` is of type tuple or set, it will be converted to a
+        list in order to simplify comparisons to the JSON-formatted `hyperparameters_and_scores`"""
         for dimension in dimensions + dimensions_to_ignore:
             if (path + (key,) == dimension) or (dimension[0] is None and dimension[1] == key):
                 return False
+        if isinstance(value, (tuple, set)):
+            return key, list(value)
         return True
 
     guidelines = remap(temp_guidelines, visit=_visit)

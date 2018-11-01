@@ -25,7 +25,7 @@ from hyperparameter_hunter.utils.boltons_utils import get_path
 ##################################################
 from abc import ABCMeta
 from functools import reduce
-import numpy as np
+from sys import maxsize
 from uuid import uuid4 as uuid
 
 ##################################################
@@ -38,6 +38,7 @@ from skopt.space import space as skopt_space
 ##################################################
 # Dimensions
 ##################################################
+# noinspection PyAbstractClass
 class Dimension(skopt_space.Dimension, metaclass=ABCMeta):
     def __init__(self, **kwargs):
         """Base class for hyperparameter search space dimensions
@@ -189,10 +190,12 @@ class Space(skopt_space.Space):
 
         Returns
         -------
-        search_space_size: Integer, or `numpy.inf`
-            The number of different hyperparameter search points"""
+        search_space_size: Integer, or `sys.maxsize`
+            The number of different hyperparameter search points. If the hyperparameter search space
+            is infinitely large, `sys.maxsize` is returned to represent `np.inf`, which cannot
+            itself be returned because `__len__` is required to produce an int >= 0"""
         if any(isinstance(_, Real) for _ in self.dimensions):
-            search_space_size = np.inf
+            search_space_size = maxsize
         else:
             search_space_size = reduce(
                 lambda x, y: x * y,
