@@ -123,15 +123,22 @@ class Environment:
             None or invalid, results will not be stored
         metrics_map: Dict, List, or None, default=None
             Specifies all metrics to be used by their id keys, along with a means to compute the
-            metric. If list, all values must be strings that are attributes in
-            :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
+            metric.
+
+            If list, all values must be strings that are attributes in :mod:`sklearn.metrics`.
+
+            If dict, key/value pairs must be of the form:
             (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the
-            metric. Its corresponding value must be one of: 1) a callable to calculate the metric,
-            2) None if the "id" key is an attribute in `sklearn.metrics` and should be used to fetch
-            a callable, 3) a string that is an attribute in `sklearn.metrics` and should be used to
-            fetch a callable. Metric callable functions should expect inputs of form
-            (target, prediction), and should return floats. See `metrics_params` for details on how
-            these two are related
+            metric. Its corresponding value must be one of:
+
+            * a callable to calculate the metric,
+            * None if the "id" key is an attribute in `sklearn.metrics` and should be used to fetch
+              a callable,
+            * a string that is an attribute in `sklearn.metrics` and should be used to fetch a
+              callable
+
+            Metric callable functions should expect inputs of form (target, prediction), and should
+            return floats. See `metrics_params` for details on how these two are related
         holdout_dataset: Pandas.DataFrame, callable, str path, or None, default=None
             If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes
             (self.train: DataFrame, self.target_column: str) as input and returns the new

@@ -14,8 +14,8 @@ MNIST_data/
 
 # Documentation
 _build
-_static
-_templates
+# _static
+# _templates
 
 # Distribution/Packaging
 build/
