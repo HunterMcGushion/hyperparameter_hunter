@@ -43,7 +43,14 @@ release = get_version()  # The full version, including alpha/beta/rc tags
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.githubpages", "sphinx.ext.napoleon"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "numpydoc",
+    "sphinx.ext.githubpages",
+    # "sphinx.ext.napoleon"  # FLAG: ORIGINAL
+]
+
+numpydoc_class_members_toctree = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -81,9 +88,9 @@ autodoc_default_flags = ["show-inheritance"]
 # html_show_sourcelink = False
 html_split_index = False
 
-napoleon_google_docstring = False
+# napoleon_google_docstring = False  # FLAG: ORIGINAL
 # napoleon_include_special_with_doc = True
-napoleon_use_admonition_for_notes = False  # DEFAULT
+# napoleon_use_admonition_for_notes = False  # DEFAULT  # FLAG: ORIGINAL
 # napoleon_use_param = True  # DEFAULT
 
 ##################################################
@@ -91,7 +98,6 @@ napoleon_use_admonition_for_notes = False  # DEFAULT
 ##################################################
 # The theme to use for HTML and HTML Help pages. See the documentation for a list of builtin themes.
 html_theme = "sphinx_rtd_theme"
-# html_theme = 'nature'  # FLAG: ORIGINAL
 
 # Theme options are theme-specific and customize the look and feel of a theme further. For a list of options available for each
 # theme, see the documentation.

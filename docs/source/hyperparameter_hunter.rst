@@ -53,14 +53,6 @@ hyperparameter\_hunter.experiments module
     :undoc-members:
     :show-inheritance:
 
-hyperparameter\_hunter.feature\_engineering module
---------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.feature_engineering
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 hyperparameter\_hunter.importer module
 --------------------------------------
 
