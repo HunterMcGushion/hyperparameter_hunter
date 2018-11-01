@@ -29,10 +29,10 @@ hyperparameter\_hunter.environment module
     :undoc-members:
     :show-inheritance:
 
-hyperparameter\_hunter.exception\_handler module
-------------------------------------------------
+hyperparameter\_hunter.exceptions module
+----------------------------------------
 
-.. automodule:: hyperparameter_hunter.exception_handler
+.. automodule:: hyperparameter_hunter.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
