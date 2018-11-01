@@ -1,0 +1,19 @@
+/*@import url('_build/html/_static/nature.css');*/
+/*@import url('_build/html/_static/basic.css');*/
+/*@import url('_build/html/_static/css/theme.css');*/
+
+.wy-nav-content {
+    max-width: none; !important;
+}
+
+.wy-side-nav-search {
+    background-color: #a80b00; !important;
+}
+
+ul.simple {
+    margin-left: 1px; !important;
+}
+
+/*div.related {*/
+    /*background-color: #a80b00;*/
+/*}*/

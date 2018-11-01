@@ -44,6 +44,14 @@ hyperparameter\_hunter.callbacks.predictors module
     :undoc-members:
     :show-inheritance:
 
+hyperparameter\_hunter.callbacks.recipes module
+-----------------------------------------------
+
+.. automodule:: hyperparameter_hunter.callbacks.recipes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
