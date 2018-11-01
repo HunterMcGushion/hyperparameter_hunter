@@ -15,12 +15,12 @@ Set Up an Environment
 
     data = load_breast_cancer
     df = pd.DataFrame(data=data.data, columns=data.feature_names)
-    df['target'] = data.target
+    df["target"] = data.target
 
     env = Environment(
 	    train_dataset=df,
-	    root_results_path='path/to/results/directory',
-	    metrics_map=['roc_auc_score'],
+	    root_results_path="path/to/results/directory",
+	    metrics_map=["roc_auc_score"],
 	    cross_validation_type=StratifiedKFold,
 	    cross_validation_params=dict(n_splits=5, shuffle=2, random_state=32)
     )
@@ -32,7 +32,7 @@ Individual Experimentation
 
     experiment = CrossValidationExperiment(
         model_initializer=XGBClassifier,
-        model_init_params=dict(objective='reg:linear', max_depth=3, subsample=0.5)
+        model_init_params=dict(objective="reg:linear", max_depth=3, subsample=0.5)
     )
 
 Hyperparameter Optimization
@@ -42,18 +42,19 @@ Hyperparameter Optimization
 
     from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical
 
-    optimizer = BayesianOptimization(
-        iterations=100, read_experiments=True, dimensions=[
-            Integer(name='max_depth', low=2, high=20),
-            Real(name='learning_rate', low=0.0001, high=0.5),
-            Categorical(name='booster', categories=['gbtree', 'gblinear', 'dart'])
-        ]
-    )
+    optimizer = BayesianOptimization(iterations=10, read_experiments=True)
 
     optimizer.set_experiment_guidelines(
         model_initializer=XGBClassifier,
-        model_init_params=dict(n_estimators=200, subsample=0.5, learning_rate=0.1)
+        model_init_params=dict(
+            n_estimators=200,
+            subsample=0.5,
+            max_depth=Integer(2, 20),
+            learning_rate=Real(0.0001, 0.5),
+            booster=Categorical(["gbtree", "gblinear", "dart"]),
+        )
     )
+
     optimizer.go()
 
 Plenty of examples for different libraries, and algorithms, as well as more advanced HyperparameterHunter features can be found
