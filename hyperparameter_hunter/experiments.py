@@ -350,9 +350,13 @@ class BaseExperiment(ScoringMixIn):
         G.log("Generated hyperparameter key: {}".format(self.hyperparameter_key))
 
     def _create_script_backup(self):
-        """Create and save a copy of the script that initialized the Experiment"""
+        """Create and save a copy of the script that initialized the Experiment if allowed to, and
+        if :attr:`source_script` ends with a ".py" extension"""
         #################### Attempt to Copy Source Script if Allowed ####################
         try:
+            if not self.source_script.endswith(".py"):
+                G.Env.result_paths["script_backup"] = None
+
             if G.Env.result_paths["script_backup"] is not None:
                 try:
                     self._source_copy_helper()
