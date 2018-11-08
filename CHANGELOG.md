@@ -6,6 +6,11 @@
 ### Bug-Fixes
 * Fixed bug causing `OptimizationProtocol`s to fail to recognize similar experiments when 
 `sentinels.DatasetSentinel`s were provided as experiment guidelines (#88)
+* Fixed bug in which the logging for individual Experiments performed inside an `OptimizationProtocol` was not properly 
+silenced if execution of the `OptimizationProtocol` took place immediately after executing a `CrossValidationExperiment` 
+(#74)
+    * Individual experiment logging is now only visible inside an `OptimizationProtocol` if `BaseOptimizationProtocol` 
+    is initialized with `verbose=2`, as intended 
 
 ### Changes
 * Deprecated `optimization_core.UninformedOptimizationProtocol`. This class was never finished, and is no longer necessary. 

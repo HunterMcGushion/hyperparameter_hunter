@@ -219,8 +219,11 @@ class Environment:
         file_blacklist: List of str, or None, or 'ALL', default=None
             If list of str, the result files named within are not saved to their respective
             directory in "<ASSETS_DIRNAME>/Experiments". If None, all result files are saved.
-            If 'ALL', nothing at all will be saved for the Experiments. For info on acceptable
-            values, see :func:`validate_file_blacklist`
+            If 'ALL', nothing at all will be saved for the Experiments. If the path of the file that
+            initializes an Experiment does not end with a ".py" extension, the Experiment proceeds
+            as if "script_backup" had been added to `file_blacklist`. This means that backup files
+            will not be created for Jupyter notebooks (or any other non-".py" files). For info on
+            acceptable values, see :func:`validate_file_blacklist`
         reporting_handler_params: Dict, default=dict()
             Parameters passed to initialize :class:`.reporting.ReportingHandler`
         to_csv_params: Dict, default=dict()
@@ -691,7 +694,10 @@ def validate_file_blacklist(blacklist):
     rather than waiting for the experiment to end. There are two reasons for this behavior: 1) to
     avoid saving any changes that may have been made to a file after it has been executed, and 2)
     to have the offending file in the event of a catastrophic failure that results in no other
-    files being saved.
+    files being saved. As stated in the documentation of the `file_blacklist` parameter of
+    `Environment`, if the path of the file that initializes an Experiment does not end with a ".py"
+    extension, the Experiment proceeds as if "script_backup" had been added to `blacklist`. This
+    means that backup files will not be created for Jupyter notebooks (or any other non-".py" files)
 
     'description' and 'tested_keys': These two results types constitute a bare minimum of sorts for
     experiment recording. If either of these two are blacklisted, then as far as the library is
