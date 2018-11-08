@@ -104,10 +104,16 @@ class ReportingHandler(object):
 
     def _initialize_logging_logging(self):
         """Initialize and configure logging to be handled by the `logging` library"""
+        #################### Clear Logging Configuration ####################
+        root = logging.getLogger()
+        list(map(root.removeHandler, root.handlers[:]))
+        list(map(root.removeFilter, root.filters[:]))
+
+        #################### Configure Logging ####################
         exceptions.hook_exception_handler()
 
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
+        _logger = logging.getLogger(__name__)
+        _logger.setLevel(logging.DEBUG)
 
         handlers = [self._configure_console_handler(**self.console_params)]
 
@@ -118,6 +124,7 @@ class ReportingHandler(object):
         logging.basicConfig(handlers=handlers, level=logging.DEBUG)
         self.debug("Logging Logging has been initialized!")
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def _configure_console_handler(level="INFO", fmt=None, datefmt=None, style="%", **kwargs):
         """Configure the console handler in charge of printing log messages
@@ -147,6 +154,7 @@ class ReportingHandler(object):
         console_handler.setFormatter(formatter)
         return console_handler
 
+    # noinspection PyUnusedLocal
     def _configure_heartbeat_handler(
         self, level="DEBUG", fmt=None, datefmt=None, style="%", **kwargs
     ):
@@ -188,20 +196,21 @@ class ReportingHandler(object):
     # Placeholder Methods:
     ##################################################
     def log(self, content, **kwargs):
-        """Placeholder method before properly initialization"""
+        """Placeholder method before proper initialization"""
         pass
 
     def debug(self, content, **kwargs):
-        """Placeholder method before properly initialization"""
+        """Placeholder method before proper initialization"""
         pass
 
     def warn(self, content, **kwargs):
-        """Placeholder method before properly initialization"""
+        """Placeholder method before proper initialization"""
         pass
 
     ##################################################
     # Logging-Logging Methods:
     ##################################################
+    # noinspection PyUnusedLocal
     def _logging_log(self, content, previous_frame=None, add_time=False, **kwargs):
         """Log an info message via the `logging` library
 
@@ -226,6 +235,7 @@ class ReportingHandler(object):
         content = add_time_to_content(content, add_time=add_time)
         logging.info(content)
 
+    # noinspection PyUnusedLocal
     def _logging_debug(self, content, previous_frame=None, add_time=False, **kwargs):
         """Log a debug message via the `logging` library
 
@@ -250,6 +260,7 @@ class ReportingHandler(object):
         content = add_time_to_content(content, add_time=add_time)
         logging.debug(content)
 
+    # noinspection PyUnusedLocal
     def _logging_warn(self, content, **kwargs):
         """Log a warning message via the `logging` library
 
