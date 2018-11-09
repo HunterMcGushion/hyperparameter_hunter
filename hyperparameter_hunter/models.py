@@ -179,11 +179,15 @@ class Model(object):
         input_data: Array-like
             Data containing the same number of features as were trained on, for which the model will
             predict output values"""
+        # NOTE: There are a couple places in this method that use the frowned-upon pattern of
+        # ... `type(<variable>) == <type>`, instead of the preferred use of `isinstance`.
+        # ... This is because booleans are subclasses of integers in Python; however, this method
+        # ... needs to treat them differently, so `isinstance` can't be used
         if input_data is None:
             return None
 
         try:
-            if self.do_predict_proba is True:
+            if (self.do_predict_proba is True) or type(self.do_predict_proba) == int:
                 prediction = self.model.predict_proba(input_data)
             else:
                 prediction = self.model.predict(input_data)
@@ -191,7 +195,8 @@ class Model(object):
             raise _ex
 
         with suppress(IndexError):
-            prediction = prediction[:, 0]
+            _index = self.do_predict_proba if type(self.do_predict_proba) == int else 0
+            prediction = prediction[:, _index]
 
         return prediction
 
