@@ -104,9 +104,22 @@ class Model(object):
             The model's validation input data to evaluate performance during fitting
         validation_target: `pandas.DataFrame`, or None
             The true labels corresponding to the rows of :attr:`validation_input`
-        do_predict_proba: Boolean, default=False
-            If True, :meth:`models.Model.fit` will call :meth:`models.Model.model.predict_proba`.
-            Else, it will call :meth:`models.Model.model.predict`
+        do_predict_proba: Boolean, or int, default=False
+            * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
+            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in the
+              first column (index 0) will be used as the actual prediction values
+            * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
+              :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
+              True, but the int supplied as `do_predict_proba` declares the column index to use as
+              the actual prediction values
+            * For example, for a model to call the `predict` method, `do_predict_proba=False`
+              (default). For a model to call the `predict_proba` method, and use the class
+              probabilities in the first column, `do_predict_proba=0` or `do_predict_proba=True`. To
+              use the second column (index 1) of the result, `do_predict_proba=1` - This
+              often corresponds to the positive class's probabilities in binary classification
+              problems. To use the third column `do_predict_proba=2`, and so on
+            * See the notes for the `do_predict_proba` parameter in the documentation of
+              :class:`environment.Environment` for additional usage notes
         target_metric: Tuple
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`
@@ -322,9 +335,22 @@ class KerasModel(Model):
             The model's validation input data to evaluate performance during fitting
         validation_target: `pandas.DataFrame`, or None
             The true labels corresponding to the rows of :attr:`validation_input`
-        do_predict_proba: Boolean, default=False
-            If True, :meth:`Model.fit` will call :meth:`models.Model.model.predict_proba`. Else,
-            it will call :meth:`models.Model.model.predict`
+        do_predict_proba: Boolean, or int, default=False
+            * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
+            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in the
+              first column (index 0) will be used as the actual prediction values
+            * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
+              :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
+              True, but the int supplied as `do_predict_proba` declares the column index to use as
+              the actual prediction values
+            * For example, for a model to call the `predict` method, `do_predict_proba=False`
+              (default). For a model to call the `predict_proba` method, and use the class
+              probabilities in the first column, `do_predict_proba=0` or `do_predict_proba=True`. To
+              use the second column (index 1) of the result, `do_predict_proba=1` - This
+              often corresponds to the positive class's probabilities in binary classification
+              problems. To use the third column `do_predict_proba=2`, and so on
+            * See the notes for the `do_predict_proba` parameter in the documentation of
+              :class:`environment.Environment` for additional usage notes
         target_metric: Tuple
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`
