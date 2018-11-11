@@ -162,9 +162,20 @@ class Environment:
             'hyperparameter_hunter/examples/lib_keras_multi_classification_example.py'
         id_column: Str, or None, default=None
             If not None, str denoting the column name in all provided datasets containing sample IDs
-        do_predict_proba: Boolean, default=False
-            If True, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict_proba`.
-            Else, it will call :meth:`models.Model.model.predict`
+        do_predict_proba: Boolean, or int, default=False
+            * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
+            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in the
+              first column (index 0) will be used as the actual prediction values
+            * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
+              :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
+              True, but the int supplied as `do_predict_proba` declares the column index to use as
+              the actual prediction values
+            * For example, for a model to call the `predict` method, `do_predict_proba=False`
+              (default). For a model to call the `predict_proba` method, and use the class
+              probabilities in the first column, `do_predict_proba=0` or `do_predict_proba=True`. To
+              use the second column (index 1) of the result, `do_predict_proba=1` - This
+              often corresponds to the positive class's probabilities in binary classification
+              problems. To use the third column `do_predict_proba=2`, and so on
         prediction_formatter: Callable, or None, default=None
             If callable, expected to have same signature as
             :func:`.utils.result_utils.format_predictions`. That is, the callable will receive
@@ -281,6 +292,11 @@ class Environment:
         * 1)kwargs passed directly to :meth:`.Environment.__init__` on initialization,
         * 2)keys of the file at environment_params_path (if valid .json object),
         * 3)keys of :attr:`hyperparameter_hunter.environment.Environment.DEFAULT_PARAMS`
+
+        do_predict_proba: Because this parameter can be either a boolean or an integer, it is
+        important to explicitly pass booleans rather than truthy or falsey values. Similarly, only
+        pass integers if you intend for the value to be used as a column index. Do not pass `0` to
+        mean `False`, or `1` to mean `True`
         """
         G.Env = self
         self.environment_params_path = environment_params_path
