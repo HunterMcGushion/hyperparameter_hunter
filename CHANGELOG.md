@@ -2,6 +2,12 @@
 ## [Unreleased]
 
 ### Features
+* The `do_predict_proba` parameter of `environment.Environment` (and consequently `models.Model`) is
+now allowed to be an int, as well as a bool. If `do_predict_proba` is an int, the `predict_proba` 
+method is called, and the int specifies the index of the column in the model's probability 
+predictions whose values should be passed on as the final predictions. Original behavior when 
+passing a boolean is unaffected. See `Environment` documentation for usage notes and warnings about 
+providing truthy or falsey values for the `do_predict_proba` parameter 
 
 ### Bug-Fixes
 * Fixed bug causing `OptimizationProtocol`s to fail to recognize similar experiments when 
