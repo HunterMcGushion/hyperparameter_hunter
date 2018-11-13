@@ -57,7 +57,21 @@ class Metric(object):
         for error measures may be ignored, including but not limited to, the following:
         "mae" for "mean_absolute_error"; "rmsle" for "root_mean_squared_logarithmic_error"; or
         simply "hinge", or "cross_entropy" without an "error"/"loss" suffix. In cases such as these,
-        provide an explicit `direction` = "min" to avoid backwards optimization and leaderboards"""
+        provide an explicit `direction` = "min" to avoid backwards optimization and leaderboards
+
+        Examples
+        --------
+        >>> Metric("roc_auc_score")  # doctest: +ELLIPSIS
+        Metric(roc_auc_score, <function roc_auc_score at 0x...>, max)
+        >>> Metric("roc_auc_score", sk_metrics.roc_auc_score)  # doctest: +ELLIPSIS
+        Metric(roc_auc_score, <function roc_auc_score at 0x...>, max)
+        >>> Metric("my_f1_score", "f1_score")  # doctest: +ELLIPSIS
+        Metric(my_f1_score, <function f1_score at 0x...>, max)
+        >>> Metric("hamming_loss", sk_metrics.hamming_loss)  # doctest: +ELLIPSIS
+        Metric(hamming_loss, <function hamming_loss at 0x...>, min)
+        >>> Metric("r2_score", sk_metrics.r2_score, direction="min")  # doctest: +ELLIPSIS
+        Metric(r2_score, <function r2_score at 0x...>, min)
+        """
         self.name = name
         self.metric_function = metric_function
         self.direction = direction
