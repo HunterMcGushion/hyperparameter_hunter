@@ -127,66 +127,83 @@ class Metric(object):
         raise NotImplementedError
 
 
-class MetricsMap(object):
-    def __init__(self, metrics_map):
-        """Class to build properly formatted metrics_maps containing instances of :class:`Metric`
+def format_metrics_map(metrics_map):
+    """Properly format iterable `metrics_map` to contain instances of :class:`Metric`
 
-        Parameters
-        ----------
-        metrics_map: Dict, or list
-            Specifies all metrics to be used by their id keys, along with a means to compute the
-            metric.
+    Parameters
+    ----------
+    metrics_map: Dict, List
+        Iterable describing the metrics to be recorded, along with a means to compute the value of
+        each metric. Should be of one of the two following forms:
 
-            If list, all values must be strings that are attributes in :mod:`sklearn.metrics`, or
-            :class:`Metric` instances
+        List Form:
 
-            If dict, key/value pairs must be of the form:
-            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the
-            metric. Its corresponding value must be one of:
+        * ["<metric name>", "<metric name>", ...]:
+          Where each value of the list is a string that names an attribute in :mod:`sklearn.metrics`
+        * [`Metric`, `Metric`, ...]:
+          Where each value of the list is an instance of :class:`Metric`
+        * [(<*args>), (<*args>), ...]:
+          Where each value of the list is a tuple of arguments that will be used to instantiate a
+          :class:`Metric`. Arguments given in tuples must be in order expected by :class:`Metric`
 
-            1. a callable to calculate the metric,
-            2. None if the "id" key is an attribute in `sklearn.metrics` and should be used to
-               fetch a callable,
-            3. a string that is an attribute in `sklearn.metrics` and should be used to fetch a
-               callable.
+        Dict Form:
 
-            Metric callable functions should expect inputs of form (target, prediction), and should
-            return floats. See `metrics_params` for details on how these two are related
+        * {"<metric name>": <metric_function>, ...}:
+          Where each key is a name for the corresponding metric callable, which is used to compute
+          the value of the metric
+        * {"<metric name>": (<metric_function>, <direction>), ...}:
+          Where each key is a name for the corresponding metric callable and direction, all of which
+          are used to instantiate a :class:`Metric`
+        * {"<metric name>": "<sklearn metric name>", ...}:
+          Where each key is a name for the metric, and each value is the name of the attribute in
+          :mod:`sklearn.metrics` for which the corresponding key is an alias
+        * {"<metric name>": None, ...}:
+          Where each key is the name of the attribute in :mod:`sklearn.metrics`
 
-        Examples
-        --------
-        >>> MetricsMap([""])
-        """
-        self.metrics_map = None
+        Metric callable functions should expect inputs of form (target, prediction), and should
+        return floats. See the documentation of :class:`Metric` for information regarding expected
+        parameters and types
 
-        if isinstance(metrics_map, (list, tuple)):
-            self.metrics_map = list(self._from_list(metrics_map))
-        elif isinstance(metrics_map, dict):
-            self.metrics_map = list(self._from_dict(metrics_map))
+    Returns
+    -------
+    metrics_map_dict: Dict
+        Cast of `metrics_map` to a dict, in which values are instances of :class:`Metric`
 
-    def __getitem__(self, item):
-        return self.metrics_map[item]
+    Examples
+    --------
+    >>> format_metrics_map(["roc_auc_score", "f1_score"])  # doctest: +ELLIPSIS
+    [Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), Metric(f1_score, <function f1_score at 0x...>, max)]
+    >>> format_metrics_map([Metric("log_loss"), Metric("r2_score", direction="min")])  # doctest: +ELLIPSIS
+    [Metric(log_loss, <function log_loss at 0x...>, min), Metric(r2_score, <function r2_score at 0x...>, min)]
+    >>> format_metrics_map([("log_loss", None), ("my_r2_score", "r2_score", "min")])  # doctest: +ELLIPSIS
+    [Metric(log_loss, <function log_loss at 0x...>, min), Metric(my_r2_score, <function r2_score at 0x...>, min)]
+    >>> format_metrics_map({"roc_auc": sk_metrics.roc_auc_score, "f1": sk_metrics.f1_score})  # doctest: +ELLIPSIS
+    [Metric(roc_auc, <function roc_auc_score at 0x...>, max), Metric(f1, <function f1_score at 0x...>, max)]
+    >>> format_metrics_map({"log_loss": (None, ), "my_r2_score": ("r2_score", "min")})  # doctest: +ELLIPSIS
+    [Metric(log_loss, <function log_loss at 0x...>, min), Metric(my_r2_score, <function r2_score at 0x...>, min)]
+    >>> format_metrics_map({"roc_auc": "roc_auc_score", "f1": "f1_score"})  # doctest: +ELLIPSIS
+    [Metric(roc_auc, <function roc_auc_score at 0x...>, max), Metric(f1, <function f1_score at 0x...>, max)]
+    >>> format_metrics_map({"roc_auc_score": None, "f1_score": None})  # doctest: +ELLIPSIS
+    [Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), Metric(f1_score, <function f1_score at 0x...>, max)]
 
-    def __iter__(self):
-        pass  # TODO: ??????????????????????????????????????????????????
+    """
+    if isinstance(metrics_map, dict):
+        metrics_map = [
+            (k,) + (v if isinstance(v, (tuple, Metric)) else (v,)) for k, v in metrics_map.items()
+        ]
 
-    @staticmethod
-    def _from_list(metrics_map):
-        for value in metrics_map:
-            if isinstance(value, Metric):
-                yield value
-            elif isinstance(value, str):
-                yield Metric(value)
-            else:
-                raise TypeError("Expected str or `Metric`, not {}".format(value))
+    metrics_map_dict = {}
 
-    @staticmethod
-    def _from_dict(metrics_map):
-        for key, value in metrics_map.items():
-            if isinstance(value, (list, tuple)):
-                yield Metric(key, *value)
-            else:
-                yield Metric(key, value)
+    for i, value in enumerate(metrics_map):
+        if not isinstance(value, Metric):
+            if not isinstance(value, tuple):
+                value = (value,)
+
+            metrics_map_dict[value[0]] = Metric(*value)
+        else:
+            metrics_map_dict[value.name] = value
+
+    return metrics_map_dict
 
 
 class ScoringMixIn(object):
