@@ -414,6 +414,10 @@ class Environment:
         else:
             if self.metrics_map is None:
                 self.metrics_map = self.metrics_params["metrics_map"]
+            # TODO: Below should be done here, instead of in `optimization_core.BaseOptimizationProtocol._validate_parameters`
+            # TODO: Fix how `key_handler` deals with instances of :class:`metrics.Metric`
+            # from hyperparameter_hunter.metrics import format_metrics_map
+            # self.metrics_map = format_metrics_map(self.metrics_map)
             self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
 
         #################### cross_validation_type ####################

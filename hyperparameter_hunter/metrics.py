@@ -423,9 +423,12 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
         if target_metric[0] in ok_datasets:
             # Just a dataset was provided - Need metric name
             try:
-                first_metric_key = list(metrics_map.keys())[0]
+                first_metric_key = list(metrics_map.keys())[0]  # FLAG: ORIGINAL
+                # first_metric_key = list(metrics_map.keys())[0]  # FLAG: TEST
             except AttributeError:
-                first_metric_key = metrics_map[0]
+                # first_metric_key = metrics_map[0]  # FLAG: ORIGINAL
+                # TODO: Make below default - Remove try/except
+                first_metric_key = metrics_map[0].name  # FLAG: TEST
             target_metric = target_metric + (first_metric_key,)
             # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
         else:
@@ -434,7 +437,9 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
 
     if not any([_ == target_metric[0] for _ in ok_datasets]):
         raise ValueError(f"`target_metric`[0] must be in {ok_datasets}. Received {target_metric}")
-    if not target_metric[1] in metrics_map:
+    # if not target_metric[1] in metrics_map:  # FLAG: ORIGINAL
+    # if not any(_.name == target_metric[1] for _ in metrics_map):  # FLAG: TEST
+    if not target_metric[1] in metrics_map.keys():  # FLAG: TEST
         raise ValueError(f"target_metric[1]={target_metric[1]} not in metrics_map={metrics_map}")
 
     return target_metric
