@@ -236,7 +236,7 @@ class ScoringMixIn(object):
         -----
         For each kwarg in [`in_fold`, `oof`, `holdout`], the following must be true: if the value
         of the kwarg is a list, its contents must be a subset of `metrics_map`"""
-        self.metrics_map = metrics_map
+        self.metrics_map = format_metrics_map(metrics_map)
 
         #################### ScoringMixIn-Only Mangled Attributes ####################
         self.__in_fold = in_fold if in_fold else []
@@ -246,36 +246,10 @@ class ScoringMixIn(object):
         self.do_score = do_score
 
         #################### Validate Parameters ####################
-        self._validate_metrics_map()
         self._validate_metrics_list_parameters()
         self._set_default_metrics_parameters()
 
         self.last_evaluation_results = dict(in_fold=None, oof=None, holdout=None)
-
-    def _validate_metrics_map(self):
-        """Ensure `metrics_map` input parameter is properly formatted and yields callable functions
-        for all metrics"""
-        if not (isinstance(self.metrics_map, dict) or isinstance(self.metrics_map, list)):
-            raise TypeError(f"metrics_map must be a dict, or list, not {type(self.metrics_map)}")
-
-        # If metrics_map is list, convert to dict with None values
-        if isinstance(self.metrics_map, list):
-            self.metrics_map = {_: None for _ in self.metrics_map}
-
-        for _m_key, _m_val in self.metrics_map.items():
-            if not isinstance(_m_key, str):
-                raise TypeError(f"`metrics_map` ids must be strings. Received {_m_key}")
-            if not any([callable(_m_val), isinstance(_m_val, str), _m_val is None]):
-                raise TypeError(f"metrics_map values must be callable, str, or None, not {_m_val}")
-
-            # Check sklearn.metrics for: _m_val if str, or _m_key if _m_val is None
-            if not callable(_m_val):
-                try:
-                    self.metrics_map[_m_key] = sk_metrics.__getattribute__(
-                        _m_key if _m_val is None else _m_val
-                    )
-                except AttributeError:
-                    raise AttributeError(f"`sklearn.metrics` has no attribute: {_m_val or _m_key}")
 
     def _validate_metrics_list_parameters(self):
         """Ensure metrics lists input parameters are correct types and compatible with each other"""
@@ -295,7 +269,7 @@ class ScoringMixIn(object):
         """Set default parameters if metrics_map is empty (which implies metrics lists are also
         empty)"""
         if len(self.metrics_map.keys()) == 0:
-            self.metrics_map = dict(roc_auc=sk_metrics.roc_auc_score)
+            self.metrics_map = dict(roc_auc=Metric("roc_auc", sk_metrics.roc_auc_score))
             self.in_fold_metrics = ["roc_auc"]
 
     def evaluate(self, data_type, target, prediction, return_list=False):
