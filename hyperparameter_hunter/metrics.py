@@ -14,7 +14,6 @@ Related
 ##################################################
 from collections import OrderedDict
 import numpy as np
-from warnings import warn
 
 ##################################################
 # Import Learning Assets
@@ -119,7 +118,7 @@ class Metric(object):
             try:
                 return sk_metrics.__getattribute__(self.name if f is None else f)
             except AttributeError:
-                raise AttributeError(f"`sklearn.metrics` has no attribute: {_m_val or _m_key}")
+                raise AttributeError(f"`sklearn.metrics` has no attribute: {f or self.name}")
         return f
 
     def get_xgboost_wrapper(self):
@@ -194,7 +193,7 @@ def format_metrics_map(metrics_map):
 
     metrics_map_dict = {}
 
-    for i, value in enumerate(metrics_map):
+    for value in metrics_map:
         if not isinstance(value, Metric):
             if not isinstance(value, tuple):
                 value = (value,)
