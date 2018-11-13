@@ -517,12 +517,10 @@ class BaseCVExperiment(BaseExperiment):
         )
         reshaped_indices = np.reshape(np.array(list(cv_indices)), new_shape)
 
-        for self._rep, repetition_indices in enumerate(reshaped_indices.tolist()):
+        for self._rep, rep_indices in enumerate(reshaped_indices.tolist()):
             self.on_repetition_start()
 
-            for self._fold, (self.train_index, self.validation_index) in enumerate(
-                repetition_indices
-            ):
+            for self._fold, (self.train_index, self.validation_index) in enumerate(rep_indices):
                 self.cv_fold_workflow()
 
             self.on_repetition_end()
@@ -623,18 +621,14 @@ class CrossValidationExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         """Set :attr:`folds` per cross_validation_type and :attr:`cross_validation_params`"""
         cross_validation_type = self.experiment_params["cross_validation_type"]  # Allow failure
         if not isclass(cross_validation_type):
-            raise TypeError(
-                f"Expected a class to perform cross-validation. Received: {type(cross_validation_type)}"
-            )
+            raise TypeError(f"Expected a cross-validation class, not {type(cross_validation_type)}")
 
         try:
             _split_method = getattr(cross_validation_type, "split")
             if not callable(_split_method):
                 raise TypeError("`cross_validation_type` must implement a callable :meth:`split`")
         except AttributeError:
-            raise AttributeError(
-                "`cross_validation_type` must be a class that implements :meth:`split`"
-            )
+            raise AttributeError("`cross_validation_type` must be class with :meth:`split`")
 
         self.folds = cross_validation_type(**self.cross_validation_params)
 
