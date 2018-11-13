@@ -73,28 +73,54 @@ class Metric(object):
         Metric(r2_score, <function r2_score at 0x...>, min)
         """
         self.name = name
-        self.metric_function = metric_function
-        self.direction = direction
+        self.metric_function = self._set_metric_function(metric_function)
+        self.direction = self._set_direction(direction)
 
-        self._validate_parameters()
+    def __str__(self):
+        return "Metric({}, {}, {})".format(self.name, self.metric_function.__name__, self.direction)
+
+    def __repr__(self):
+        return "Metric({}, {}, {})".format(self.name, self.metric_function, self.direction)
 
     def __call__(self, target, prediction):
         return self.metric_function(target, prediction)
 
-    def _validate_parameters(self):
-        """Ensure the provided parameters are valid and properly formatted"""
-        #################### direction ####################
-        if self.direction == "infer":
-            if any(_ in self.name for _ in ["error", "loss"]):
-                self.direction = "min"
-            else:
-                self.direction = "max"
-        elif self.direction not in ["max", "min"]:
-            raise ValueError(f"`direction` must be 'infer', 'max', or 'min', not {self.direction}")
+    def _set_direction(self, direction):
+        """Ensure provided `direction` is valid and inferred if necessary
 
-        #################### metric_function ####################
-        if not callable(self.metric_function):
-            raise TypeError()  # TODO: If string, or None, lookup callable in `sklearn.metrics`
+        Parameters
+        ----------
+        direction: {"infer", "max", "min"}
+            See `direction` documentation of :meth:`Metric.__init__`
+
+        Returns
+        -------
+        String
+            One of "min", or "max" depending on explicit `direction`/inference"""
+        if direction == "infer":
+            return "min" if any(_ in self.name for _ in ["error", "loss"]) else "max"
+        elif direction not in ["max", "min"]:
+            raise ValueError(f"`direction` must be 'infer', 'max', or 'min', not {direction}")
+        return direction
+
+    def _set_metric_function(self, f):
+        """Ensure provided `f` is a valid callable
+
+        Parameters
+        ----------
+        f: Callable, string, None
+            See `metric_function` documentation of :meth:`Metric.__init__`
+
+        Returns
+        -------
+        Callable
+            A function derived from `f` if `f` was not already callable. Else `f`"""
+        if not callable(f):
+            try:
+                return sk_metrics.__getattribute__(self.name if f is None else f)
+            except AttributeError:
+                raise AttributeError(f"`sklearn.metrics` has no attribute: {_m_val or _m_key}")
+        return f
 
     def get_xgboost_wrapper(self):
         # TODO: Move `utils.metrics_utils.wrap_xgboost_metric` here, and remove `utils.metrics_utils`
