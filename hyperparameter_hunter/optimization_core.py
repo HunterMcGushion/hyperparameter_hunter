@@ -501,10 +501,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     def _validate_parameters(self):
         """Ensure provided input parameters are properly formatted"""
         self.target_metric = get_formatted_target_metric(
-            # self.target_metric, G.Env.metrics_map, default_dataset="oof"  # FLAG: ORIGINAL
-            self.target_metric,
-            format_metrics_map(G.Env.metrics_map),
-            default_dataset="oof",
+            self.target_metric, G.Env.metrics_map, default_dataset="oof"
         )
 
     def _validate_guidelines(self):
