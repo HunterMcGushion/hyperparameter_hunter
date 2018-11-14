@@ -377,15 +377,11 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
         ['oof', 'holdout', 'in_fold'], and the second value should be the name of a metric supplied
         in :attr:`environment.Environment.metrics_params`. If str, should be one of the two values
         from the tuple form. Else, a value will be chosen
-    metrics_map: Dict, List
-        Specifies all metrics to be used by their id keys, along with a means to compute the metric.
-        If list, all values must be strings that are attributes in :mod:`sklearn.metrics`. If dict,
-        key/value pairs must be of the form: (<id>, <callable/None/str sklearn.metrics attribute>),
-        where "id" is a str name for the metric. Its corresponding value must be one of:
-        1) a callable to calculate the metric, 2) None if the "id" key is an attribute in
-        `sklearn.metrics` and should be used to fetch a callable, 3) a string that is an attribute
-        in `sklearn.metrics` and should be used to fetch a callable. Metric callable functions
-        should expect inputs of form (target, prediction), and should return floats
+    metrics_map: Dict
+        Properly formatted `metrics_map` as produced by :func:`metrics.format_metrics_map`, in which
+        keys are strings identifying metrics, and values are instances of :class:`metrics.Metric`.
+        See the documentation of :func:`metrics.format_metrics_map` for more information on
+        different metrics_map formats
     default_dataset: String in ['oof', 'holdout', 'in_fold'], default='oof'
         The default dataset type value to use if one is not provided
 
@@ -396,17 +392,17 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
 
     Examples
     --------
-    >>> get_formatted_target_metric(('holdout', 'roc_auc_score'), ['roc_auc_score', 'f1_score'])
+    >>> get_formatted_target_metric(('holdout', 'roc_auc_score'), format_metrics_map(['roc_auc_score', 'f1_score']))
     ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric(('holdout',), ['roc_auc_score', 'f1_score'])
+    >>> get_formatted_target_metric(('holdout',), format_metrics_map(['roc_auc_score', 'f1_score']))
     ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric('holdout', ['roc_auc_score', 'f1_score'])
+    >>> get_formatted_target_metric('holdout', format_metrics_map(['roc_auc_score', 'f1_score']))
     ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric('holdout', {'roc': 'roc_auc_score', 'f1': 'f1_score'})
+    >>> get_formatted_target_metric('holdout', format_metrics_map({'roc': 'roc_auc_score', 'f1': 'f1_score'}))
     ('holdout', 'roc')
-    >>> get_formatted_target_metric('roc_auc_score', ['roc_auc_score', 'f1_score'])
+    >>> get_formatted_target_metric('roc_auc_score', format_metrics_map(['roc_auc_score', 'f1_score']))
     ('oof', 'roc_auc_score')
-    >>> get_formatted_target_metric(None, ['f1_score', 'roc_auc_score'])
+    >>> get_formatted_target_metric(None, format_metrics_map(['f1_score', 'roc_auc_score']))
     ('oof', 'f1_score')
     """
     ok_datasets = ["oof", "holdout", "in_fold"]
@@ -424,12 +420,9 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
         if target_metric[0] in ok_datasets:
             # Just a dataset was provided - Need metric name
             try:
-                first_metric_key = list(metrics_map.keys())[0]  # FLAG: ORIGINAL
-                # first_metric_key = list(metrics_map.keys())[0]  # FLAG: TEST
+                first_metric_key = list(metrics_map.keys())[0]
             except AttributeError:
-                # first_metric_key = metrics_map[0]  # FLAG: ORIGINAL
-                # TODO: Make below default - Remove try/except
-                first_metric_key = metrics_map[0].name  # FLAG: TEST
+                first_metric_key = metrics_map[0].name
             target_metric = target_metric + (first_metric_key,)
             # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
         else:
@@ -438,9 +431,7 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
 
     if not any([_ == target_metric[0] for _ in ok_datasets]):
         raise ValueError(f"`target_metric`[0] must be in {ok_datasets}. Received {target_metric}")
-    # if not target_metric[1] in metrics_map:  # FLAG: ORIGINAL
-    # if not any(_.name == target_metric[1] for _ in metrics_map):  # FLAG: TEST
-    if not target_metric[1] in metrics_map.keys():  # FLAG: TEST
+    if not target_metric[1] in metrics_map.keys():
         raise ValueError(f"target_metric[1]={target_metric[1]} not in metrics_map={metrics_map}")
 
     return target_metric
