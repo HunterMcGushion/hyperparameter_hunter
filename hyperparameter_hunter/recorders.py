@@ -366,13 +366,16 @@ class TestedKeyRecorder(BaseRecorder):
 ##################################################
 class LeaderboardEntryRecorder(BaseRecorder):
     result_path_key = "tested_keys"
-    required_attributes = ["result_paths", "current_task"]
+    required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
 
     def format_result(self):
         """Read existing global leaderboard, add current entry, then sort the updated leaderboard"""
         self.result = GlobalLeaderboard.from_path(path=self.result_paths["global_leaderboard"])
         self.result.add_entry(self.current_task)
-        self.result.sort(by=list(self.result.data.columns))
+        self.result.sort(
+            by=list(self.result.data.columns),
+            ascending=(self.metrics_map[self.target_metric[-1]].direction == "min"),
+        )
 
     def save_result(self):
         """Save the updated leaderboard file"""
