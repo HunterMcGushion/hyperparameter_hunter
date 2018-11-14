@@ -38,7 +38,7 @@ from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
     keras_prep_workflow,
     link_choice_ids,
 )
-from hyperparameter_hunter.metrics import get_formatted_target_metric, format_metrics_map
+from hyperparameter_hunter.metrics import get_formatted_target_metric
 from hyperparameter_hunter.reporting import OptimizationReporter
 from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G
