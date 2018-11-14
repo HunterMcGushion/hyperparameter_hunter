@@ -171,22 +171,24 @@ def format_metrics_map(metrics_map):
     Examples
     --------
     >>> format_metrics_map(["roc_auc_score", "f1_score"])  # doctest: +ELLIPSIS
-    [Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), Metric(f1_score, <function f1_score at 0x...>, max)]
+    {'roc_auc_score': Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), 'f1_score': Metric(f1_score, <function f1_score at 0x...>, max)}
     >>> format_metrics_map([Metric("log_loss"), Metric("r2_score", direction="min")])  # doctest: +ELLIPSIS
-    [Metric(log_loss, <function log_loss at 0x...>, min), Metric(r2_score, <function r2_score at 0x...>, min)]
+    {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'r2_score': Metric(r2_score, <function r2_score at 0x...>, min)}
     >>> format_metrics_map([("log_loss", None), ("my_r2_score", "r2_score", "min")])  # doctest: +ELLIPSIS
-    [Metric(log_loss, <function log_loss at 0x...>, min), Metric(my_r2_score, <function r2_score at 0x...>, min)]
+    {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'my_r2_score': Metric(my_r2_score, <function r2_score at 0x...>, min)}
     >>> format_metrics_map({"roc_auc": sk_metrics.roc_auc_score, "f1": sk_metrics.f1_score})  # doctest: +ELLIPSIS
-    [Metric(roc_auc, <function roc_auc_score at 0x...>, max), Metric(f1, <function f1_score at 0x...>, max)]
+    {'roc_auc': Metric(roc_auc, <function roc_auc_score at 0x...>, max), 'f1': Metric(f1, <function f1_score at 0x...>, max)}
     >>> format_metrics_map({"log_loss": (None, ), "my_r2_score": ("r2_score", "min")})  # doctest: +ELLIPSIS
-    [Metric(log_loss, <function log_loss at 0x...>, min), Metric(my_r2_score, <function r2_score at 0x...>, min)]
+    {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'my_r2_score': Metric(my_r2_score, <function r2_score at 0x...>, min)}
     >>> format_metrics_map({"roc_auc": "roc_auc_score", "f1": "f1_score"})  # doctest: +ELLIPSIS
-    [Metric(roc_auc, <function roc_auc_score at 0x...>, max), Metric(f1, <function f1_score at 0x...>, max)]
+    {'roc_auc': Metric(roc_auc, <function roc_auc_score at 0x...>, max), 'f1': Metric(f1, <function f1_score at 0x...>, max)}
     >>> format_metrics_map({"roc_auc_score": None, "f1_score": None})  # doctest: +ELLIPSIS
-    [Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), Metric(f1_score, <function f1_score at 0x...>, max)]
-
+    {'roc_auc_score': Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), 'f1_score': Metric(f1_score, <function f1_score at 0x...>, max)}
     """
     if isinstance(metrics_map, dict):
+        if all(isinstance(_, Metric) for _ in metrics_map.values()):
+            return metrics_map
+
         metrics_map = [
             (k,) + (v if isinstance(v, (tuple, Metric)) else (v,)) for k, v in metrics_map.items()
         ]
