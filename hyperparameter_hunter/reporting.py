@@ -316,7 +316,7 @@ class _Color:
 
 
 class OptimizationReporter:
-    def __init__(self, parameter_names, verbose=1, show_experiment_id=8):
+    def __init__(self, parameter_names, verbose=1, show_experiment_id=8, highlight_max=True):
         """A MixIn class for reporting the results of hyperparameter optimization rounds
 
         Parameters
@@ -329,12 +329,16 @@ class OptimizationReporter:
         show_experiment_id: Int, or Boolean, default=8
             If True, the experiment_id will be printed in each result row. If False, it will not.
             If int, the first `show_experiment_id`-many characters of each experiment_id will be
-            printed in each row"""
+            printed in each row
+        highlight_max: Boolean, default=True
+            If False, smaller metric values will be considered preferred and will be highlighted to
+            stand out. Else larger metric values will be treated as preferred"""
         self.original_parameter_names = parameter_names
         self.verbose = verbose
         self.show_experiment_id = (
             36 if (show_experiment_id is True or show_experiment_id > 36) else show_experiment_id
         )
+        self.highlight_max = highlight_max
 
         self.end = " | "
         self.y_max = None
@@ -464,7 +468,11 @@ class OptimizationReporter:
                 print("{:>02d}d{:>02d}h".format(int(days), int(hours)), end=self.end)
 
         #################### Evaluation Result ####################
-        if self.y_max is None or self.y_max < evaluation:
+        if (
+            (self.y_max is None)  # First evaluation
+            or (self.highlight_max and self.y_max < evaluation)  # Found new max (best)
+            or (not self.highlight_max and self.y_max > evaluation)  # Found new min (best)
+        ):
             self.y_max, self.x_max = evaluation, hyperparameters
             self._print_target_value(evaluation, pre=_Color.MAGENTA, post=_Color.STOP)
             self._print_input_values(hyperparameters, pre=_Color.GREEN, post=_Color.STOP)
