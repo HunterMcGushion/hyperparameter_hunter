@@ -112,6 +112,8 @@ class GlobalLeaderboard(Leaderboard):
 
         entry_columns.append("experiment_#")
         entry_data.append(self.data.shape[0])
+        identifier_cols.append("experiment_#")
+
         entry = pd.DataFrame(data=[entry_data], columns=entry_columns)
 
         self.data = self.data.append(entry, ignore_index=True)[
