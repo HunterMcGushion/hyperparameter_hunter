@@ -720,18 +720,30 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             acq_optimizer_kwargs=self.acquisition_optimizer_kwargs,
         )
 
+    def _update_optimizer(self, hyperparameters, score, fit=True):
+        """Record an observation (or set of observations) of the objective function
+
+        To add observations without fitting a new model, `fit`=False. To add multiple observations
+        in a batch, pass a list-of-lists for `hyperparameters` and a list of scalars for `score`
+
+        Parameters
+        ----------
+        hyperparameters: List:
+            Hyperparameter values in the search space at which the objective function was evaluated
+        score: Number, list
+            Value of the objective function at `hyperparameters` in the hyperparameter space
+        fit: Boolean, default=True
+            Fit a model to observed evaluations of the objective. Regardless of `fit`, a model will
+            only be fitted after telling :attr:`n_initial_points` points to :attr:`optimizer`"""
+        if G.Env.metrics_map[self.target_metric[-1]].direction == "max":
+            score = -score
+        self.optimizer_result = self.optimizer.tell(hyperparameters, score, fit=fit)
+
     def _execute_experiment(self):
         """After executing parent's :meth:`_execute_experiment`, fit :attr:`optimizer` with the set
         of hyperparameters that were used, and the utility of those hyperparameters"""
         super()._execute_experiment()
-
-        # FLAG: Resolve switching between below options depending on `target_metric`
-        # self.optimizer_result = self.optimizer.tell(self.current_hyperparameters_list, self.current_score, fit=True)
-        self.optimizer_result = self.optimizer.tell(
-            self.current_hyperparameters_list, -self.current_score, fit=True
-        )
-        # FLAG: Resolve switching between above options depending on `target_metric`
-
+        self._update_optimizer(self.current_hyperparameters_list, self.current_score)
         if eval_callbacks(self.callbacks, self.optimizer_result):
             return
 
@@ -767,16 +779,13 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         results of each located experiment"""
         super()._find_similar_experiments()
 
+        # TODO: Remove below reversal of `similar_experiments` when `result_reader.ResultFinder.sort` finished
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
             _hyperparameters = dimension_subset(_experiment[0], self.hyperparameter_space.names())
             _evaluation = _experiment[1]
             _experiment_id = _experiment[2] if len(_experiment) > 2 else None
             self.logger.print_result(_hyperparameters, _evaluation, experiment_id=_experiment_id)
-
-            # FLAG: Resolve switching between below options depending on `target_metric`
-            # self.optimizer_result = self.optimizer.tell(_hyperparameters, _evaluation)
-            self.optimizer_result = self.optimizer.tell(_hyperparameters, -_evaluation)
-            # FLAG: Resolve switching between above options depending on `target_metric`
+            self._update_optimizer(_hyperparameters, _evaluation)
 
             # self.optimizer_result = self.optimizer.tell(
             #     _hyperparameters, _evaluation, fit=(_i == len(self.similar_experiments) - 1))
