@@ -128,8 +128,12 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             If True, all Experiment records that fit within the current
             :attr:`hyperparameter_space`, and are for the same :attr:`algorithm_name`, and match the
             current guidelines, will be read in and used to fit any optimizers
-        reporter_parameters: Dict, or None, default=None
-            Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
+        reporter_parameters: Dict, or None, default={}
+            Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`. Note:
+            Unless provided explicitly, the key "highlight_max" will be added by default to
+            `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
+            in `G.Env.metrics_map`. In nearly all cases, the "highlight_max" key should be ignored,
+            as there are very few reasons to explicitly include it
 
         Notes
         -----
@@ -329,9 +333,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         if self.model_initializer is None:
             raise ValueError("Experiment guidelines must be set before starting optimization")
 
-        self.logger = OptimizationReporter(
-            [_.name for _ in self.dimensions], **self.reporter_parameters
+        _reporter_params = dict(
+            dict(highlight_max=G.Env.metrics_map[self.target_metric[-1]].direction == "max"),
+            **self.reporter_parameters,
         )
+        self.logger = OptimizationReporter([_.name for _ in self.dimensions], **_reporter_params)
 
         self.tested_keys = []
         self._set_hyperparameter_space()
