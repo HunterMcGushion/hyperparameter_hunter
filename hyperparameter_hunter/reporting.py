@@ -444,15 +444,26 @@ class OptimizationReporter:
             return
         print("{:>5d}".format(self.iteration), end=self.end)
 
+        #################### Experiment ID ####################
         if self.show_experiment_id:
             if experiment_id is not None:
                 print("{}".format(experiment_id[: self.show_experiment_id]), end=self.end)
             else:
                 print(" " * self.show_experiment_id, end=self.end)
 
+        #################### Time Elapsed ####################
         minutes, seconds = divmod((datetime.now() - self.last_round).total_seconds(), 60)
-        print("{:>02d}m{:>02d}s".format(int(minutes), int(seconds)), end=self.end)
+        if minutes < 60:
+            print("{:>02d}m{:>02d}s".format(int(minutes), int(seconds)), end=self.end)
+        else:
+            hours, minutes = divmod(minutes, 60)
+            if hours < 24:
+                print("{:>02d}h{:>02d}m".format(int(hours), int(minutes)), end=self.end)
+            else:
+                days, hours = divmod(hours, 24)
+                print("{:>02d}d{:>02d}h".format(int(days), int(hours)), end=self.end)
 
+        #################### Evaluation Result ####################
         if self.y_max is None or self.y_max < evaluation:
             self.y_max, self.x_max = evaluation, hyperparameters
             self._print_target_value(evaluation, pre=_Color.MAGENTA, post=_Color.STOP)
