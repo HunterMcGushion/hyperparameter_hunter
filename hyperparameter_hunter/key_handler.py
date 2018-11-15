@@ -23,10 +23,11 @@ from hyperparameter_hunter.library_helpers.keras_helper import (
     parameterize_compiled_keras_model,
 )
 from hyperparameter_hunter.library_helpers.keras_optimization_helper import initialize_dummy_model
+from hyperparameter_hunter.metrics import Metric
 from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json
-from hyperparameter_hunter.utils.boltons_utils import remap
+from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 
 ##################################################
 # Import Miscellaneous Assets
@@ -144,6 +145,15 @@ class KeyMaker(metaclass=ABCMeta):
 
         dataframe_hashes = {}
 
+        def enter(path, key, value):
+            """Produce iterable of attributes to remap for instances of :class:`metrics.Metric`"""
+            if isinstance(value, Metric):
+                return (
+                    dict(),
+                    [(_, getattr(value, _)) for _ in ["name", "metric_function", "direction"]],
+                )
+            return default_enter(path, key, value)
+
         def visit(path, key, value):
             """Check whether a parameter is of a complex type. If not, return it unchanged.
             Otherwise, 1) create a hash for its value; 2) save a complex type lookup entry linking
@@ -182,7 +192,7 @@ class KeyMaker(metaclass=ABCMeta):
                 return (key, hashed_value)
             return (key, value)
 
-        self.parameters = remap(self.parameters, visit=visit)
+        self.parameters = remap(self.parameters, visit=visit, enter=enter)
 
         #################### Check for Identical DataFrames ####################
         for df_hash, df_names in dataframe_hashes.items():
@@ -210,11 +220,9 @@ class KeyMaker(metaclass=ABCMeta):
         shelve_params = ["model_initializer", "cross_validation_type"]
 
         if isclass(value) or (key in shelve_params):
-            with shelve.open(
-                os.path.join(self.key_attribute_lookup_dir, f"{key}"), flag="c"
-            ) as shelf:
+            with shelve.open(os.path.join(self.key_attribute_lookup_dir, f"{key}"), flag="c") as s:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
-                shelf[hashed_value] = value
+                s[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
             os.makedirs(os.path.join(self.key_attribute_lookup_dir, key), exist_ok=True)
             value.to_csv(
@@ -468,8 +476,7 @@ def make_hash_sha256(obj, **kwargs):
 
     Returns
     -------
-    Stringified sha256 hash
-    """
+    Stringified sha256 hash"""
     hasher = hashlib.sha256()
     hasher.update(repr(to_hashable(obj, **kwargs)).encode())
     return base64.urlsafe_b64encode(hasher.digest()).decode()
@@ -563,9 +570,7 @@ def hash_callable(
             raise
         # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
     else:
-        raise TypeError(
-            "Expected obj of type functools.partial, or function. Received {}".format(type(obj))
-        )
+        raise TypeError("Expected functools.partial, or callable. Received {}".format(type(obj)))
 
     #################### Format Source Code Lines ####################
     if ignore_line_comments is True:

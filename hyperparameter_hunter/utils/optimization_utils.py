@@ -328,7 +328,7 @@ def get_ids_by(
     return matching_ids
 
 
-def get_scored_params(experiment_description_path, target_metric):
+def get_scored_params(experiment_description_path, target_metric, get_description=False):
     """Retrieve the hyperparameters of a completed Experiment, along with its performance evaluation
 
     Parameters
@@ -339,6 +339,10 @@ def get_scored_params(experiment_description_path, target_metric):
         A path denoting the metric to be used. If tuple, the first value should be one of ['oof',
         'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
         :attr:`environment.Environment.metrics_params`
+    get_description: Boolean, default=False
+        If True, return a tuple of: ((`all_hyperparameters`, `evaluation`), `description`), in which
+        `description` is the original description dict for the experiment. Else, return a tuple of:
+        (`all_hyperparameters`, `evaluation`)
 
     Returns
     -------
@@ -357,6 +361,8 @@ def get_scored_params(experiment_description_path, target_metric):
             separate_args=False,
         )
 
+    if get_description:
+        return ((all_hyperparameters, evaluation), description)
     return (all_hyperparameters, evaluation)
 
 

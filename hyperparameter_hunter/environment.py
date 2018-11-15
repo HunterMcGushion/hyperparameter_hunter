@@ -22,6 +22,7 @@ Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module l
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.metrics import format_metrics_map
 from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
@@ -414,6 +415,7 @@ class Environment:
         else:
             if self.metrics_map is None:
                 self.metrics_map = self.metrics_params["metrics_map"]
+            self.metrics_map = format_metrics_map(self.metrics_map)
             self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
 
         #################### cross_validation_type ####################
