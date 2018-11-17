@@ -21,8 +21,6 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-# noinspection PyProtectedMember
-from hyperparameter_hunter import __version__
 from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
@@ -44,7 +42,7 @@ from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.space import Space, dimension_subset
 from hyperparameter_hunter.utils.boltons_utils import get_path
-from hyperparameter_hunter.utils.general_utils import deep_restricted_update, Deprecated
+from hyperparameter_hunter.utils.general_utils import deep_restricted_update
 from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions
 
 ##################################################
@@ -816,45 +814,6 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         if self._search_space_size is None:
             self._search_space_size = len(self.hyperparameter_space)
         return self._search_space_size
-
-
-@Deprecated(
-    v_deprecate="1.1.0",
-    v_remove="1.2.0",
-    v_current=__version__,
-    details="This has been renamed to `SKOptimizationProtocol`. Please use it instead",
-)
-class InformedOptimizationProtocol(SKOptimizationProtocol):
-    pass
-
-
-@Deprecated(
-    v_deprecate="1.0.9",
-    v_remove="1.2.0",
-    v_current=__version__,
-    details="This was never finished and has been rendered unnecessary. Try the optimization protocols defined in :mod:`optimization`, or the other base optimization protocols in :mod:`optimization_core`",
-)
-class UninformedOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
-    def __init__(
-        self,
-        target_metric=None,
-        iterations=1,
-        verbose=1,
-        read_experiments=True,
-        reporter_parameters=None,
-    ):
-        super().__init__(
-            target_metric=target_metric,
-            iterations=iterations,
-            verbose=verbose,
-            read_experiments=read_experiments,
-            reporter_parameters=reporter_parameters,
-        )
-
-    def _get_current_hyperparameters(self):
-        """Retrieve the upcoming set of hyperparameters to be searched"""
-        current_hyperparameters = next(self.hyperparameter_space)
-        return current_hyperparameters
 
 
 if __name__ == "__main__":
