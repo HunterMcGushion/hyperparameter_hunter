@@ -2,6 +2,38 @@
 ## [Unreleased]
 
 ### Features
+
+### Bug-Fixes
+
+### Changes
+
+
+<a name="2.0.0"></a>
+## [2.0.0] (2018-11-16)
+
+### Breaking Changes
+* The updates to `metrics_map` described below mean that the `cross_experiment_key`s produced by 
+`environment.Environment` will be different from those produced by previous versions of 
+HyperparameterHunter
+    * This means that `OptimizationProtocol`s will not recognize saved experiment results from 
+    previous versions as being compatible for learning
+
+### Features
+* Made the `metrics_map` parameter of `environment.Environment` more customizable and compatible with
+measures of error/loss. Original `metrics_map` functionality/formats are unbroken
+    * `metrics_map`s are automatically converted to dicts of `metrics.Metric` instances, which receive
+    three parameters: `name`, `metric_function`, and `direction` (new)
+        * `name` and `metric_function` mimic the original functionality of the `metrics_map`
+        * `direction` can be one of the following three strings: "infer" (default), "max", "min"
+            * "max" should be used for metrics in which greater values are preferred, like accuracy;
+            whereas, "min" should be used for measures of loss/error, where lower values are better
+            * "infer" will set `direction` to "min" if the metric's `name` contains one of the 
+            following strings: \["error", "loss"\]. Otherwise, `direction` will be "max"
+                * This means that for metrics names that do not contain the aforementioned strings
+                but are measures of error/loss (such as "mae" for "mean_absolute_error"), `direction` 
+                should be explicitly set to "min"
+    * `environment.Environment` can receive `metrics_map` in many different formats, which are 
+    documented in `environment.Environment` and `metrics.format_metrics_map`
 * The `do_predict_proba` parameter of `environment.Environment` (and consequently `models.Model`) is
 now allowed to be an int, as well as a bool. If `do_predict_proba` is an int, the `predict_proba` 
 method is called, and the int specifies the index of the column in the model's probability 
@@ -10,6 +42,9 @@ passing a boolean is unaffected. See `Environment` documentation for usage notes
 providing truthy or falsey values for the `do_predict_proba` parameter 
 
 ### Bug-Fixes
+* Fixed bug where `OptimizationProtocol`s would optimize in the wrong direction when `target_metric`
+was a measure of error/loss
+    * This is fixed by the new `metrics_map` formatting feature listed above
 * Fixed bug causing `OptimizationProtocol`s to fail to recognize similar experiments when 
 `sentinels.DatasetSentinel`s were provided as experiment guidelines (#88)
 * Fixed bug in which the logging for individual Experiments performed inside an `OptimizationProtocol` was not properly 
@@ -274,7 +309,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.0...v1.0.1
