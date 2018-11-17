@@ -158,6 +158,9 @@ def format_metrics_map(metrics_map):
           :mod:`sklearn.metrics` for which the corresponding key is an alias
         * {"<metric name>": None, ...}:
           Where each key is the name of the attribute in :mod:`sklearn.metrics`
+        * {"<metric name>": `Metric`, ...}:
+          Where each key names an instance of :class:`Metric`. This is the internally-used format to
+          which all other formats will be converted
 
         Metric callable functions should expect inputs of form (target, prediction), and should
         return floats. See the documentation of :class:`Metric` for information regarding expected

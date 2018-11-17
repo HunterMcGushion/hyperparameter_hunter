@@ -123,23 +123,40 @@ class Environment:
             <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
             None or invalid, results will not be stored
         metrics_map: Dict, List, or None, default=None
-            Specifies all metrics to be used by their id keys, along with a means to compute the
-            metric.
+            Iterable describing the metrics to be recorded, along with a means to compute the value of
+            each metric. Should be of one of the two following forms:
 
-            If list, all values must be strings that are attributes in :mod:`sklearn.metrics`.
+            List Form:
 
-            If dict, key/value pairs must be of the form:
-            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the
-            metric. Its corresponding value must be one of:
+            * ["<metric name>", "<metric name>", ...]:
+              Where each value is a string that names an attribute in :mod:`sklearn.metrics`
+            * [`Metric`, `Metric`, ...]:
+              Where each value of the list is an instance of :class:`metrics.Metric`
+            * [(<name>, <metric_function>, [<direction>]), (<*args>), ...]:
+              Where each value of the list is a tuple of arguments that will be used to instantiate
+              a :class:`metrics.Metric`. Arguments given in tuples must be in order expected by
+              :class:`metrics.Metric`: (`name`, `metric_function`, `direction`)
 
-            * a callable to calculate the metric,
-            * None if the "id" key is an attribute in `sklearn.metrics` and should be used to fetch
-              a callable,
-            * a string that is an attribute in `sklearn.metrics` and should be used to fetch a
-              callable
+            Dict Form:
+
+            * {"<metric name>": <metric_function>, ...}:
+              Where each key is a name for the corresponding metric callable, which is used to
+              compute the value of the metric
+            * {"<metric name>": (<metric_function>, <direction>), ...}:
+              Where each key is a name for the corresponding metric callable and direction, all of
+              which are used to instantiate a :class:`metrics.Metric`
+            * {"<metric name>": "<sklearn metric name>", ...}:
+              Where each key is a name for the metric, and each value is the name of the attribute
+              in :mod:`sklearn.metrics` for which the corresponding key is an alias
+            * {"<metric name>": None, ...}:
+              Where each key is the name of the attribute in :mod:`sklearn.metrics`
+            * {"<metric name>": `Metric`, ...}:
+              Where each key names an instance of :class:`metrics.Metric`. This is the
+              internally-used format to which all other formats will be converted
 
             Metric callable functions should expect inputs of form (target, prediction), and should
-            return floats. See `metrics_params` for details on how these two are related
+            return floats. See the documentation of :class:`metrics.Metric` for information
+            regarding expected parameters and types
         holdout_dataset: Pandas.DataFrame, callable, str path, or None, default=None
             If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes
             (self.train: DataFrame, self.target_column: str) as input and returns the new
