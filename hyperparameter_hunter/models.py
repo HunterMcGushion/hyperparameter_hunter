@@ -16,7 +16,6 @@ Related
 ##################################################
 from hyperparameter_hunter.sentinels import locate_sentinels
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.general_utils import type_val
 
 # from hyperparameter_hunter.utils.metrics_utils import wrap_xgboost_metric
 
@@ -154,10 +153,7 @@ class Model(object):
             self.model = self.model_initializer(**self.initialization_params)
         except Exception as _ex:
             raise type(_ex)(
-                str(_ex)
-                + "\nReceived invalid model_initializer of type {}: {}".format(
-                    *type_val(self.model_initializer)
-                )
+                f"{_ex}\nReceived invalid `model_initializer`: {self.model_initializer}"
             ).with_traceback(sys.exc_info()[2])
 
     def fit(self):
