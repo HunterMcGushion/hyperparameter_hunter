@@ -376,10 +376,9 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
     Parameters
     ----------
     target_metric: Tuple, String, or None
-        A path denoting the metric to be used. If tuple, the first value should be one of
-        ['oof', 'holdout', 'in_fold'], and the second value should be the name of a metric supplied
-        in :attr:`environment.Environment.metrics_params`. If str, should be one of the two values
-        from the tuple form. Else, a value will be chosen
+        Path denoting metric to be used. If tuple, the first value should be in ['oof', 'holdout',
+        'in_fold'], and the second value should be the name of a metric supplied in `metrics_map`.
+        If str, should be one of the two values from the tuple form. Else, a value will be chosen
     metrics_map: Dict
         Properly formatted `metrics_map` as produced by :func:`metrics.format_metrics_map`, in which
         keys are strings identifying metrics, and values are instances of :class:`metrics.Metric`.
