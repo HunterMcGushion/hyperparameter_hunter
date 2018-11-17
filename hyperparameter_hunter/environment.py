@@ -132,7 +132,7 @@ class Environment:
               Where each value is a string that names an attribute in :mod:`sklearn.metrics`
             * [`Metric`, `Metric`, ...]:
               Where each value of the list is an instance of :class:`metrics.Metric`
-            * [(<name>, <metric_function>, [<direction>]), (<*args>), ...]:
+            * [(<name>, <metric_function>, [<direction>]), (<\*args>), ...]:
               Where each value of the list is a tuple of arguments that will be used to instantiate
               a :class:`metrics.Metric`. Arguments given in tuples must be in order expected by
               :class:`metrics.Metric`: (`name`, `metric_function`, `direction`)

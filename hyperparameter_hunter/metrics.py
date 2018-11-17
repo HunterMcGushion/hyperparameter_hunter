@@ -141,7 +141,7 @@ def format_metrics_map(metrics_map):
           Where each value of the list is a string that names an attribute in :mod:`sklearn.metrics`
         * [`Metric`, `Metric`, ...]:
           Where each value of the list is an instance of :class:`Metric`
-        * [(<*args>), (<*args>), ...]:
+        * [(<\*args>), (<\*args>), ...]:
           Where each value of the list is a tuple of arguments that will be used to instantiate a
           :class:`Metric`. Arguments given in tuples must be in order expected by :class:`Metric`
 
