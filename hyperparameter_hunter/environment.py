@@ -61,7 +61,7 @@ class Environment:
         runs=1,
         global_random_seed=32,
         random_seeds=None,
-        random_seed_bounds=[0, 100000],
+        random_seed_bounds=[0, 100_000],
         cross_validation_params=dict(),
         verbose=True,
         file_blacklist=None,
@@ -551,11 +551,7 @@ class Environment:
             raise
 
         if not isinstance(user_defaults, dict):
-            raise TypeError(
-                "environment_params_path must contain a dict. Received {}: {}".format(
-                    *type_val(user_defaults)
-                )
-            )
+            raise TypeError("environment_params_path must have dict, not {}".format(user_defaults))
 
         #################### Check user_defaults ####################
         for k, v in user_defaults.items():
@@ -563,18 +559,14 @@ class Environment:
                 G.warn(
                     "\n\t".join(
                         [
-                            'Invalid key ({}) in user-defined default Environment parameter file at "{}". If expected to do something,',
+                            "Invalid key ({}) in user-defined default Environment parameter file at '{}'. If expected to do something,",
                             "it really won't, so it should be removed or fixed. The following are valid default keys: {}",
                         ]
                     ).format(k, self.environment_params_path, allowed_parameter_keys)
                 )
             elif getattr(self, k) is None:
                 setattr(self, k, v)
-                G.debug(
-                    'Environment kwarg "{}" was set to user default at "{}"'.format(
-                        k, self.environment_params_path
-                    )
-                )
+                G.debug(f"Environment.`{k}` set to user default: '{self.environment_params_path}'")
 
         #################### Check Module Default Environment Arguments ####################
         for k in allowed_parameter_keys:
@@ -600,11 +592,9 @@ class Environment:
 
     def initialize_reporting(self):
         """Initialize reporting for the Environment and Experiments conducted during its lifetime"""
-        reporting_handler_params = self.reporting_handler_params
-        reporting_handler_params["heartbeat_path"] = "{}/Heartbeat.log".format(
-            self.root_results_path
-        )
-        reporting_handler = ReportingHandler(**reporting_handler_params)
+        reporting_params = self.reporting_handler_params
+        reporting_params["heartbeat_path"] = "{}/Heartbeat.log".format(self.root_results_path)
+        reporting_handler = ReportingHandler(**reporting_params)
 
         #################### Make Unified Logging Globally Available ####################
         G.log = reporting_handler.log
