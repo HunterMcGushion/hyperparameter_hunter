@@ -6,6 +6,8 @@
 ### Bug-Fixes
 
 ### Changes
+* KeyAttributeLookup entries are now saved by full hyperparameter paths, rather than simple keys for 
+greater clarity (#75)
 
 
 <a name="2.0.0"></a>

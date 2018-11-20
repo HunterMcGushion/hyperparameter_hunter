@@ -44,6 +44,7 @@ import os.path
 import pandas as pd
 import re
 import shelve
+from _dbm import error as DBMError
 
 ##################################################
 # Import Learning Assets
@@ -87,7 +88,7 @@ class KeyMaker(metaclass=ABCMeta):
         exists: Boolean
             If `key` is not None, and was found to already exist in `tested_keys_dir`,
             `exists` = True. Else, False
-        key_attribute_lookup_dir: Str
+        lookup_dir: Str
             The directory in which complex-typed parameter entries will be saved
         tested_keys_dir: Str, or None
             The directory is which `key` will be saved if it does not already contain `key`"""
@@ -95,7 +96,7 @@ class KeyMaker(metaclass=ABCMeta):
         self.key = None
         self.exists = False
 
-        self.key_attribute_lookup_dir = G.Env.result_paths["key_attribute_lookup"]
+        self.lookup_dir = G.Env.result_paths["key_attribute_lookup"]
         self.tested_keys_dir = G.Env.result_paths["tested_keys"]
 
         self.validate_environment()
@@ -183,8 +184,8 @@ class KeyMaker(metaclass=ABCMeta):
 
                 try:
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
-                except FileNotFoundError:
-                    os.makedirs(self.key_attribute_lookup_dir, exist_ok=False)
+                except (FileNotFoundError, DBMError):
+                    os.makedirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
 
                 return (key, hashed_value)
@@ -201,7 +202,7 @@ class KeyMaker(metaclass=ABCMeta):
                 )
 
     def add_complex_type_lookup_entry(self, path, key, value, hashed_value):
-        """Add lookup entry in `key_attribute_lookup_dir` for a complex-typed parameter, linking
+        """Add lookup entry in `lookup_dir` for a complex-typed parameter, linking
         the parameter `key`, its `value`, and its `hashed_value`
 
         Parameters
@@ -214,21 +215,19 @@ class KeyMaker(metaclass=ABCMeta):
             The value of the parameter `key`
         hashed_value: Str
             The hash produced for `value`"""
-        # TODO: Combine `path` and `key` to produce actual filepaths
         shelve_params = ["model_initializer", "cross_validation_type"]
+        lookup_path = partial(os.path.join, self.lookup_dir, *path)
 
         if isclass(value) or (key in shelve_params):
-            with shelve.open(os.path.join(self.key_attribute_lookup_dir, f"{key}"), flag="c") as s:
+            with shelve.open(lookup_path(f"{key}"), flag="c") as s:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
                 s[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
-            os.makedirs(os.path.join(self.key_attribute_lookup_dir, key), exist_ok=True)
-            value.to_csv(
-                os.path.join(self.key_attribute_lookup_dir, key, f"{hashed_value}.csv"), index=False
-            )
+            os.makedirs(lookup_path(key), exist_ok=True)
+            value.to_csv(lookup_path(key, f"{hashed_value}.csv"), index=False)
         else:  # Possible types: partial, function, *other
             add_to_json(
-                file_path=os.path.join(self.key_attribute_lookup_dir, f"{key}.json"),
+                file_path=lookup_path(f"{key}.json"),
                 data_to_add=getsource(value),
                 key=hashed_value,
                 condition=lambda _: hashed_value not in _.keys(),
