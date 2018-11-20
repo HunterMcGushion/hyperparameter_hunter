@@ -148,10 +148,8 @@ class KeyMaker(metaclass=ABCMeta):
         def enter(path, key, value):
             """Produce iterable of attributes to remap for instances of :class:`metrics.Metric`"""
             if isinstance(value, Metric):
-                return (
-                    dict(),
-                    [(_, getattr(value, _)) for _ in ["name", "metric_function", "direction"]],
-                )
+                metric_attrs = ["name", "metric_function", "direction"]
+                return ({}, [(_, getattr(value, _)) for _ in metric_attrs])
             return default_enter(path, key, value)
 
         def visit(path, key, value):
@@ -339,12 +337,13 @@ class HyperparameterKeyMaker(KeyMaker):
         **kwargs: Dict
             Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         self.cross_experiment_key = cross_experiment_key
-
-        if (
+        self.is_task_keras = (
             hasattr(G.Env, "current_task")
             and G.Env.current_task
             and G.Env.current_task.module_name == "keras"
-        ):
+        )
+
+        if self.is_task_keras:
             parameters = deepcopy(parameters)
 
             #################### Initialize and Parameterize Dummy Model ####################
@@ -374,8 +373,7 @@ class HyperparameterKeyMaker(KeyMaker):
 
         KeyMaker.__init__(self, parameters, **kwargs)
 
-    @staticmethod
-    def _filter_parameters_to_hash(parameters):
+    def _filter_parameters_to_hash(self, parameters):
         """Produce a filtered version of `parameters` that does not include hyperparameters that
         should be ignored during hashing, such as those pertaining to verbosity, seeds, and random
         states, as they have no effect on the results of experiments when within the confines of
@@ -401,11 +399,7 @@ class HyperparameterKeyMaker(KeyMaker):
             "nthread",
         }
 
-        if (
-            hasattr(G.Env, "current_task")
-            and G.Env.current_task
-            and G.Env.current_task.module_name == "keras"
-        ):
+        if self.is_task_keras:
             reject_keys.add("build_fn")
 
         for k in reject_keys:
@@ -429,10 +423,8 @@ class HyperparameterKeyMaker(KeyMaker):
 
             for a_hyperparameter_key in records.keys():
                 if self.key == a_hyperparameter_key:
-                    if (
-                        isinstance(records[a_hyperparameter_key], list)
-                        and len(records[a_hyperparameter_key]) > 0
-                    ):
+                    experiments_run = records[a_hyperparameter_key]
+                    if isinstance(experiments_run, list) and len(experiments_run) > 0:
                         self.exists = True
                         return self.exists
 
@@ -444,19 +436,11 @@ class HyperparameterKeyMaker(KeyMaker):
         list if :attr:`exists` is False"""
         if not self.exists:
             if self.cross_experiment_key.exists is False:
-                raise ValueError(
-                    'Cannot save hyperparameter_key: "{}", before cross_experiment_key "{}" has been saved'.format(
-                        self.key, self.cross_experiment_key.key
-                    )
-                )
+                _err = "Cannot save hyperparameter_key: '{}', before cross_experiment_key '{}'"
+                raise ValueError(_err.format(self.key, self.cross_experiment_key.key))
 
             key_path = f"{self.tested_keys_dir}/{self.cross_experiment_key.key}.json"
-            add_to_json(
-                file_path=key_path,
-                data_to_add=[],
-                key=self.key,
-                condition=lambda _: self.key not in _.keys(),
-            )
+            add_to_json(key_path, [], key=self.key, condition=lambda _: self.key not in _.keys())
 
             self.exists = True
             G.log(f'Saved {self.key_type}_key: "{self.key}"')
