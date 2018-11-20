@@ -6,7 +6,8 @@ from subprocess import check_call, CalledProcessError
 def _filter_files(dirpath):
     for filename in listdir(dirpath):
         if filename.endswith(".py") and filename not in ["_example_runner.py"]:
-            yield filename
+            if not filename.startswith("temp"):
+                yield filename
 
 
 def _file_execution_loop(dirpath):

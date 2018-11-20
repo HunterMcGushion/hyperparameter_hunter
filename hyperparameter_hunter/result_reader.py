@@ -45,6 +45,7 @@ class ResultFinder:
         leaderboard_path,
         descriptions_dir,
         model_params,
+        sort=None,  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
     ):
         """Locate saved Experiments that are compatible with the given constraints
 
@@ -68,7 +69,17 @@ class ResultFinder:
             Path to a directory containing the description files of saved Experiments
         model_params: Dict
             Concrete hyperparameters for the model. Common keys include 'model_init_params', and
-            'model_extra_params', both of which can be pointers to dicts of hyperparameters"""
+            'model_extra_params', both of which can be pointers to dicts of hyperparameters
+        sort: "target_asc", "target_desc", "chronological", "reverse_chronological", int
+            How to sort the experiment results that fit within the given constraints
+
+            * "target_asc": Sort from experiments with the lowest value for `target_metric` to
+              those with the greatest
+            * "target_desc": Sort from experiments with the highest value for `target_metric` to
+              those with the lowest
+            * "chronological": Sort from oldest experiments to newest
+            * "reverse_chronological": Sort from newest experiments to oldest
+            * int: Random seed with which to shuffle experiments"""
         self.algorithm_name = algorithm_name
         self.module_name = module_name
         self.cross_experiment_key = cross_experiment_key
@@ -77,6 +88,7 @@ class ResultFinder:
         self.leaderboard_path = leaderboard_path
         self.descriptions_dir = descriptions_dir
         self.model_params = model_params
+        self.sort = sort  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
 
         self.experiment_ids = []
         self.hyperparameters_and_scores = []
@@ -85,9 +97,7 @@ class ResultFinder:
     def find(self):
         """Execute full result-finding workflow"""
         self._get_ids()
-        G.debug_(
-            f"Experiments matching cross-experiment key and algorithm: {len(self.experiment_ids)}"
-        )
+        G.debug_(f"Experiments matching cross-experiment key/algorithm: {len(self.experiment_ids)}")
         self._get_scored_params()
         self._filter_by_space()
         G.debug_(f"Experiments fitting in the given space: {len(self.hyperparameters_and_scores)}")
@@ -104,6 +114,7 @@ class ResultFinder:
 
     def _get_ids(self):
         """Get ids of Experiments matching :attr:`algorithm_name` and :attr:`cross_experiment_key`"""
+        # TODO: If `sort`-ing chronologically, can use the "experiment_#" column in leaderboard
         self.experiment_ids = get_ids_by(
             leaderboard_path=self.leaderboard_path,
             algorithm_name=self.algorithm_name,
@@ -115,6 +126,7 @@ class ResultFinder:
         """For all :attr:`experiment_ids`, add a tuple of the Experiment's hyperparameters, and its
         :attr:`target_metric` value"""
         for _id in self.experiment_ids:
+            # TODO: Receive `description` from `get_scored_params` and extract whatever value is required by :attr:`sort`
             vals = get_scored_params(f"{self.descriptions_dir}/{_id}.json", self.target_metric)
             self.hyperparameters_and_scores.append(vals + (_id,))
 
@@ -202,6 +214,7 @@ class KerasResultFinder(ResultFinder):
         leaderboard_path,
         descriptions_dir,
         model_params,
+        sort=None,  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
     ):
         """ResultFinder for locating saved Keras Experiments compatible with the given constraints
 
@@ -225,7 +238,17 @@ class KerasResultFinder(ResultFinder):
             Path to a directory containing the description files of saved Experiments
         model_params: Dict
             Concrete hyperparameters for the model. Common keys include 'model_init_params', and
-            'model_extra_params', both of which can be pointers to dicts of hyperparameters"""
+            'model_extra_params', both of which can be pointers to dicts of hyperparameters
+        sort: "target_asc", "target_desc", "chronological", "reverse_chronological", int
+            How to sort the experiment results that fit within the given constraints
+
+            * "target_asc": Sort from experiments with the lowest value for `target_metric` to
+              those with the greatest
+            * "target_desc": Sort from experiments with the highest value for `target_metric` to
+              those with the lowest
+            * "chronological": Sort from oldest experiments to newest
+            * "reverse_chronological": Sort from newest experiments to oldest
+            * int: Random seed with which to shuffle experiments"""
         super().__init__(
             algorithm_name=algorithm_name,
             module_name=module_name,
@@ -235,6 +258,7 @@ class KerasResultFinder(ResultFinder):
             leaderboard_path=leaderboard_path,
             descriptions_dir=descriptions_dir,
             model_params=model_params,
+            sort=sort,  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
         )
 
         from keras.callbacks import Callback as BaseKerasCallback

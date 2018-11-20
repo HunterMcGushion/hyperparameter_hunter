@@ -122,7 +122,7 @@ def lambda_callback(
     """Utility for creating custom callbacks to be declared by :class:`Environment` and used by
     Experiments. The callable "on_<...>_<start/end>" parameters provided will receive as input
     whichever attributes of the Experiment are included in the signature of the given callable. If
-    `**kwargs` is given in the callable's signature, a dict of all of the Experiment's attributes
+    `\*\*kwargs` is given in the callable's signature, a dict of all of the Experiment's attributes
     will be provided. This can be helpful for trying to figure out how to build a custom callback,
     but should not be used unless absolutely necessary. If the Experiment does not have an attribute
     specified in the callable's signature, the following placeholder will be given: "INVALID KWARG"
@@ -165,7 +165,7 @@ def lambda_callback(
 
     - All input parameters in the signature of "f" are attributes of the Experiment being executed
 
-        - If "**kwargs" is a parameter, a dict of all the Experiment's attributes will be provided
+        - If "\*\*kwargs" is a parameter, a dict of all the Experiment's attributes will be provided
 
     - "f" will be treated as a method of a parent class of the Experiment
 

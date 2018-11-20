@@ -23,10 +23,11 @@ from hyperparameter_hunter.library_helpers.keras_helper import (
     parameterize_compiled_keras_model,
 )
 from hyperparameter_hunter.library_helpers.keras_optimization_helper import initialize_dummy_model
+from hyperparameter_hunter.metrics import Metric
 from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json
-from hyperparameter_hunter.utils.boltons_utils import remap
+from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 
 ##################################################
 # Import Miscellaneous Assets
@@ -86,7 +87,7 @@ class KeyMaker(metaclass=ABCMeta):
         exists: Boolean
             If `key` is not None, and was found to already exist in `tested_keys_dir`,
             `exists` = True. Else, False
-        key_attribute_lookup_dir: Str
+        lookup_dir: Str
             The directory in which complex-typed parameter entries will be saved
         tested_keys_dir: Str, or None
             The directory is which `key` will be saved if it does not already contain `key`"""
@@ -94,7 +95,7 @@ class KeyMaker(metaclass=ABCMeta):
         self.key = None
         self.exists = False
 
-        self.key_attribute_lookup_dir = G.Env.result_paths["key_attribute_lookup"]
+        self.lookup_dir = G.Env.result_paths["key_attribute_lookup"]
         self.tested_keys_dir = G.Env.result_paths["tested_keys"]
 
         self.validate_environment()
@@ -144,6 +145,13 @@ class KeyMaker(metaclass=ABCMeta):
 
         dataframe_hashes = {}
 
+        def enter(path, key, value):
+            """Produce iterable of attributes to remap for instances of :class:`metrics.Metric`"""
+            if isinstance(value, Metric):
+                metric_attrs = ["name", "metric_function", "direction"]
+                return ({}, [(_, getattr(value, _)) for _ in metric_attrs])
+            return default_enter(path, key, value)
+
         def visit(path, key, value):
             """Check whether a parameter is of a complex type. If not, return it unchanged.
             Otherwise, 1) create a hash for its value; 2) save a complex type lookup entry linking
@@ -175,14 +183,14 @@ class KeyMaker(metaclass=ABCMeta):
 
                 try:
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
-                except FileNotFoundError:
-                    os.makedirs(self.key_attribute_lookup_dir, exist_ok=False)
+                except (FileNotFoundError, OSError):
+                    os.makedirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
 
                 return (key, hashed_value)
             return (key, value)
 
-        self.parameters = remap(self.parameters, visit=visit)
+        self.parameters = remap(self.parameters, visit=visit, enter=enter)
 
         #################### Check for Identical DataFrames ####################
         for df_hash, df_names in dataframe_hashes.items():
@@ -193,7 +201,7 @@ class KeyMaker(metaclass=ABCMeta):
                 )
 
     def add_complex_type_lookup_entry(self, path, key, value, hashed_value):
-        """Add lookup entry in `key_attribute_lookup_dir` for a complex-typed parameter, linking
+        """Add lookup entry in `lookup_dir` for a complex-typed parameter, linking
         the parameter `key`, its `value`, and its `hashed_value`
 
         Parameters
@@ -206,23 +214,19 @@ class KeyMaker(metaclass=ABCMeta):
             The value of the parameter `key`
         hashed_value: Str
             The hash produced for `value`"""
-        # TODO: Combine `path` and `key` to produce actual filepaths
         shelve_params = ["model_initializer", "cross_validation_type"]
+        lookup_path = partial(os.path.join, self.lookup_dir, *path)
 
         if isclass(value) or (key in shelve_params):
-            with shelve.open(
-                os.path.join(self.key_attribute_lookup_dir, f"{key}"), flag="c"
-            ) as shelf:
+            with shelve.open(lookup_path(f"{key}"), flag="c") as s:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
-                shelf[hashed_value] = value
+                s[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
-            os.makedirs(os.path.join(self.key_attribute_lookup_dir, key), exist_ok=True)
-            value.to_csv(
-                os.path.join(self.key_attribute_lookup_dir, key, f"{hashed_value}.csv"), index=False
-            )
+            os.makedirs(lookup_path(key), exist_ok=True)
+            value.to_csv(lookup_path(key, f"{hashed_value}.csv"), index=False)
         else:  # Possible types: partial, function, *other
             add_to_json(
-                file_path=os.path.join(self.key_attribute_lookup_dir, f"{key}.json"),
+                file_path=lookup_path(f"{key}.json"),
                 data_to_add=getsource(value),
                 key=hashed_value,
                 condition=lambda _: hashed_value not in _.keys(),
@@ -331,12 +335,13 @@ class HyperparameterKeyMaker(KeyMaker):
         **kwargs: Dict
             Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
         self.cross_experiment_key = cross_experiment_key
-
-        if (
+        self.is_task_keras = (
             hasattr(G.Env, "current_task")
             and G.Env.current_task
             and G.Env.current_task.module_name == "keras"
-        ):
+        )
+
+        if self.is_task_keras:
             parameters = deepcopy(parameters)
 
             #################### Initialize and Parameterize Dummy Model ####################
@@ -366,8 +371,7 @@ class HyperparameterKeyMaker(KeyMaker):
 
         KeyMaker.__init__(self, parameters, **kwargs)
 
-    @staticmethod
-    def _filter_parameters_to_hash(parameters):
+    def _filter_parameters_to_hash(self, parameters):
         """Produce a filtered version of `parameters` that does not include hyperparameters that
         should be ignored during hashing, such as those pertaining to verbosity, seeds, and random
         states, as they have no effect on the results of experiments when within the confines of
@@ -393,11 +397,7 @@ class HyperparameterKeyMaker(KeyMaker):
             "nthread",
         }
 
-        if (
-            hasattr(G.Env, "current_task")
-            and G.Env.current_task
-            and G.Env.current_task.module_name == "keras"
-        ):
+        if self.is_task_keras:
             reject_keys.add("build_fn")
 
         for k in reject_keys:
@@ -421,10 +421,8 @@ class HyperparameterKeyMaker(KeyMaker):
 
             for a_hyperparameter_key in records.keys():
                 if self.key == a_hyperparameter_key:
-                    if (
-                        isinstance(records[a_hyperparameter_key], list)
-                        and len(records[a_hyperparameter_key]) > 0
-                    ):
+                    experiments_run = records[a_hyperparameter_key]
+                    if isinstance(experiments_run, list) and len(experiments_run) > 0:
                         self.exists = True
                         return self.exists
 
@@ -436,19 +434,11 @@ class HyperparameterKeyMaker(KeyMaker):
         list if :attr:`exists` is False"""
         if not self.exists:
             if self.cross_experiment_key.exists is False:
-                raise ValueError(
-                    'Cannot save hyperparameter_key: "{}", before cross_experiment_key "{}" has been saved'.format(
-                        self.key, self.cross_experiment_key.key
-                    )
-                )
+                _err = "Cannot save hyperparameter_key: '{}', before cross_experiment_key '{}'"
+                raise ValueError(_err.format(self.key, self.cross_experiment_key.key))
 
             key_path = f"{self.tested_keys_dir}/{self.cross_experiment_key.key}.json"
-            add_to_json(
-                file_path=key_path,
-                data_to_add=[],
-                key=self.key,
-                condition=lambda _: self.key not in _.keys(),
-            )
+            add_to_json(key_path, [], key=self.key, condition=lambda _: self.key not in _.keys())
 
             self.exists = True
             G.log(f'Saved {self.key_type}_key: "{self.key}"')
@@ -468,8 +458,7 @@ def make_hash_sha256(obj, **kwargs):
 
     Returns
     -------
-    Stringified sha256 hash
-    """
+    Stringified sha256 hash"""
     hasher = hashlib.sha256()
     hasher.update(repr(to_hashable(obj, **kwargs)).encode())
     return base64.urlsafe_b64encode(hasher.digest()).decode()
@@ -563,9 +552,7 @@ def hash_callable(
             raise
         # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
     else:
-        raise TypeError(
-            "Expected obj of type functools.partial, or function. Received {}".format(type(obj))
-        )
+        raise TypeError("Expected functools.partial, or callable. Received {}".format(type(obj)))
 
     #################### Format Source Code Lines ####################
     if ignore_line_comments is True:

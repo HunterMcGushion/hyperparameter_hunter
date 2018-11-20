@@ -22,6 +22,7 @@ Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module l
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.metrics import format_metrics_map
 from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
@@ -60,7 +61,7 @@ class Environment:
         runs=1,
         global_random_seed=32,
         random_seeds=None,
-        random_seed_bounds=[0, 100000],
+        random_seed_bounds=[0, 100_000],
         cross_validation_params=dict(),
         verbose=True,
         file_blacklist=None,
@@ -122,23 +123,40 @@ class Environment:
             <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
             None or invalid, results will not be stored
         metrics_map: Dict, List, or None, default=None
-            Specifies all metrics to be used by their id keys, along with a means to compute the
-            metric.
+            Iterable describing the metrics to be recorded, along with a means to compute the value of
+            each metric. Should be of one of the two following forms:
 
-            If list, all values must be strings that are attributes in :mod:`sklearn.metrics`.
+            List Form:
 
-            If dict, key/value pairs must be of the form:
-            (<id>, <callable/None/str sklearn.metrics attribute>), where "id" is a str name for the
-            metric. Its corresponding value must be one of:
+            * ["<metric name>", "<metric name>", ...]:
+              Where each value is a string that names an attribute in :mod:`sklearn.metrics`
+            * [`Metric`, `Metric`, ...]:
+              Where each value of the list is an instance of :class:`metrics.Metric`
+            * [(<name>, <metric_function>, [<direction>]), (<\*args>), ...]:
+              Where each value of the list is a tuple of arguments that will be used to instantiate
+              a :class:`metrics.Metric`. Arguments given in tuples must be in order expected by
+              :class:`metrics.Metric`: (`name`, `metric_function`, `direction`)
 
-            * a callable to calculate the metric,
-            * None if the "id" key is an attribute in `sklearn.metrics` and should be used to fetch
-              a callable,
-            * a string that is an attribute in `sklearn.metrics` and should be used to fetch a
-              callable
+            Dict Form:
+
+            * {"<metric name>": <metric_function>, ...}:
+              Where each key is a name for the corresponding metric callable, which is used to
+              compute the value of the metric
+            * {"<metric name>": (<metric_function>, <direction>), ...}:
+              Where each key is a name for the corresponding metric callable and direction, all of
+              which are used to instantiate a :class:`metrics.Metric`
+            * {"<metric name>": "<sklearn metric name>", ...}:
+              Where each key is a name for the metric, and each value is the name of the attribute
+              in :mod:`sklearn.metrics` for which the corresponding key is an alias
+            * {"<metric name>": None, ...}:
+              Where each key is the name of the attribute in :mod:`sklearn.metrics`
+            * {"<metric name>": `Metric`, ...}:
+              Where each key names an instance of :class:`metrics.Metric`. This is the
+              internally-used format to which all other formats will be converted
 
             Metric callable functions should expect inputs of form (target, prediction), and should
-            return floats. See `metrics_params` for details on how these two are related
+            return floats. See the documentation of :class:`metrics.Metric` for information
+            regarding expected parameters and types
         holdout_dataset: Pandas.DataFrame, callable, str path, or None, default=None
             If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes
             (self.train: DataFrame, self.target_column: str) as input and returns the new
@@ -162,9 +180,21 @@ class Environment:
             'hyperparameter_hunter/examples/lib_keras_multi_classification_example.py'
         id_column: Str, or None, default=None
             If not None, str denoting the column name in all provided datasets containing sample IDs
-        do_predict_proba: Boolean, default=False
-            If True, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict_proba`.
-            Else, it will call :meth:`models.Model.model.predict`
+        do_predict_proba: Boolean, or int, default=False
+            * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
+            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in all
+             columns will be used as the actual prediction values
+            * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
+              :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
+              True, but the int supplied as `do_predict_proba` declares the column index to use as
+              the actual prediction values
+            * For example, for a model to call the `predict` method, `do_predict_proba=False`
+              (default). For a model to call the `predict_proba` method, and use all of the class
+              probabilities, `do_predict_proba=True`. To call the `predict_proba` method, and use
+              the class probabilities in the first column, `do_predict_proba=0`. To use the second
+              column (index 1) of the result, `do_predict_proba=1` - This often corresponds to the
+              positive class's probabilities in binary classification problems. To use the third
+              column `do_predict_proba=2`, and so on
         prediction_formatter: Callable, or None, default=None
             If callable, expected to have same signature as
             :func:`.utils.result_utils.format_predictions`. That is, the callable will receive
@@ -281,6 +311,11 @@ class Environment:
         * 1)kwargs passed directly to :meth:`.Environment.__init__` on initialization,
         * 2)keys of the file at environment_params_path (if valid .json object),
         * 3)keys of :attr:`hyperparameter_hunter.environment.Environment.DEFAULT_PARAMS`
+
+        do_predict_proba: Because this parameter can be either a boolean or an integer, it is
+        important to explicitly pass booleans rather than truthy or falsey values. Similarly, only
+        pass integers if you intend for the value to be used as a column index. Do not pass `0` to
+        mean `False`, or `1` to mean `True`
         """
         G.Env = self
         self.environment_params_path = environment_params_path
@@ -398,6 +433,7 @@ class Environment:
         else:
             if self.metrics_map is None:
                 self.metrics_map = self.metrics_params["metrics_map"]
+            self.metrics_map = format_metrics_map(self.metrics_map)
             self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
 
         #################### cross_validation_type ####################
@@ -516,11 +552,7 @@ class Environment:
             raise
 
         if not isinstance(user_defaults, dict):
-            raise TypeError(
-                "environment_params_path must contain a dict. Received {}: {}".format(
-                    *type_val(user_defaults)
-                )
-            )
+            raise TypeError("environment_params_path must have dict, not {}".format(user_defaults))
 
         #################### Check user_defaults ####################
         for k, v in user_defaults.items():
@@ -528,18 +560,14 @@ class Environment:
                 G.warn(
                     "\n\t".join(
                         [
-                            'Invalid key ({}) in user-defined default Environment parameter file at "{}". If expected to do something,',
+                            "Invalid key ({}) in user-defined default Environment parameter file at '{}'. If expected to do something,",
                             "it really won't, so it should be removed or fixed. The following are valid default keys: {}",
                         ]
                     ).format(k, self.environment_params_path, allowed_parameter_keys)
                 )
             elif getattr(self, k) is None:
                 setattr(self, k, v)
-                G.debug(
-                    'Environment kwarg "{}" was set to user default at "{}"'.format(
-                        k, self.environment_params_path
-                    )
-                )
+                G.debug(f"Environment.`{k}` set to user default: '{self.environment_params_path}'")
 
         #################### Check Module Default Environment Arguments ####################
         for k in allowed_parameter_keys:
@@ -565,11 +593,9 @@ class Environment:
 
     def initialize_reporting(self):
         """Initialize reporting for the Environment and Experiments conducted during its lifetime"""
-        reporting_handler_params = self.reporting_handler_params
-        reporting_handler_params["heartbeat_path"] = "{}/Heartbeat.log".format(
-            self.root_results_path
-        )
-        reporting_handler = ReportingHandler(**reporting_handler_params)
+        reporting_params = self.reporting_handler_params
+        reporting_params["heartbeat_path"] = "{}/Heartbeat.log".format(self.root_results_path)
+        reporting_handler = ReportingHandler(**reporting_params)
 
         #################### Make Unified Logging Globally Available ####################
         G.log = reporting_handler.log

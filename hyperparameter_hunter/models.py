@@ -16,7 +16,6 @@ Related
 ##################################################
 from hyperparameter_hunter.sentinels import locate_sentinels
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.general_utils import type_val
 
 # from hyperparameter_hunter.utils.metrics_utils import wrap_xgboost_metric
 
@@ -104,9 +103,23 @@ class Model(object):
             The model's validation input data to evaluate performance during fitting
         validation_target: `pandas.DataFrame`, or None
             The true labels corresponding to the rows of :attr:`validation_input`
-        do_predict_proba: Boolean, default=False
-            If True, :meth:`models.Model.fit` will call :meth:`models.Model.model.predict_proba`.
-            Else, it will call :meth:`models.Model.model.predict`
+        do_predict_proba: Boolean, or int, default=False
+            * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
+            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in all
+             columns will be used as the actual prediction values
+            * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
+              :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
+              True, but the int supplied as `do_predict_proba` declares the column index to use as
+              the actual prediction values
+            * For example, for a model to call the `predict` method, `do_predict_proba=False`
+              (default). For a model to call the `predict_proba` method, and use all of the class
+              probabilities, `do_predict_proba=True`. To call the `predict_proba` method, and use
+              the class probabilities in the first column, `do_predict_proba=0`. To use the second
+              column (index 1) of the result, `do_predict_proba=1` - This often corresponds to the
+              positive class's probabilities in binary classification problems. To use the third
+              column `do_predict_proba=2`, and so on
+            * See the notes for the `do_predict_proba` parameter in the documentation of
+              :class:`environment.Environment` for additional usage notes
         target_metric: Tuple
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`
@@ -141,10 +154,7 @@ class Model(object):
             self.model = self.model_initializer(**self.initialization_params)
         except Exception as _ex:
             raise type(_ex)(
-                str(_ex)
-                + "\nReceived invalid model_initializer of type {}: {}".format(
-                    *type_val(self.model_initializer)
-                )
+                f"{_ex}\nReceived invalid `model_initializer`: {self.model_initializer}"
             ).with_traceback(sys.exc_info()[2])
 
     def fit(self):
@@ -179,11 +189,15 @@ class Model(object):
         input_data: Array-like
             Data containing the same number of features as were trained on, for which the model will
             predict output values"""
+        # NOTE: There are a couple places in this method that use the frowned-upon pattern of
+        # ... `type(<variable>) == <type>`, instead of the preferred use of `isinstance`.
+        # ... This is because booleans are subclasses of integers in Python; however, this method
+        # ... needs to treat them differently, so `isinstance` can't be used
         if input_data is None:
             return None
 
         try:
-            if self.do_predict_proba is True:
+            if (self.do_predict_proba is True) or type(self.do_predict_proba) == int:
                 prediction = self.model.predict_proba(input_data)
             else:
                 prediction = self.model.predict(input_data)
@@ -191,7 +205,8 @@ class Model(object):
             raise _ex
 
         with suppress(IndexError):
-            prediction = prediction[:, 0]
+            _index = self.do_predict_proba if type(self.do_predict_proba) == int else ...
+            prediction = prediction[:, _index]
 
         return prediction
 
@@ -317,9 +332,23 @@ class KerasModel(Model):
             The model's validation input data to evaluate performance during fitting
         validation_target: `pandas.DataFrame`, or None
             The true labels corresponding to the rows of :attr:`validation_input`
-        do_predict_proba: Boolean, default=False
-            If True, :meth:`Model.fit` will call :meth:`models.Model.model.predict_proba`. Else,
-            it will call :meth:`models.Model.model.predict`
+        do_predict_proba: Boolean, or int, default=False
+            * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
+            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in all
+             columns will be used as the actual prediction values
+            * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
+              :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
+              True, but the int supplied as `do_predict_proba` declares the column index to use as
+              the actual prediction values
+            * For example, for a model to call the `predict` method, `do_predict_proba=False`
+              (default). For a model to call the `predict_proba` method, and use all of the class
+              probabilities, `do_predict_proba=True`. To call the `predict_proba` method, and use
+              the class probabilities in the first column, `do_predict_proba=0`. To use the second
+              column (index 1) of the result, `do_predict_proba=1` - This often corresponds to the
+              positive class's probabilities in binary classification problems. To use the third
+              column `do_predict_proba=2`, and so on
+            * See the notes for the `do_predict_proba` parameter in the documentation of
+              :class:`environment.Environment` for additional usage notes
         target_metric: Tuple
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`

@@ -113,45 +113,45 @@ class TestHashing(TestCase):
         # FLAG: ... or to the module name can cause them to break. This behavior is intentional.
         "lambda": [
             [lambda_0, "jVqMujmZrfTQ_ghu45UEQCsiojoW1XA2-UxnzmVYqPw="],
-            [lambda_1, "vEXfVnK7iQLNc_dWGRLKmzq0UYeH202dT0YKF1a6Jtg="],
-            [lambda_2, "4tXhp4qQ0s2_19igDvhF6so9Q0wbvxsOE8V7ZV2N2TQ="],
+            [lambda_1, "bINmmRPfDw_w7gpvZmnBBbisU_2jjk7o6zsZiEfVXB0="],
+            [lambda_2, "ffdUtskHZM5a6sh6UZwuOah4_zvbGHVrLYngpDIpFIo="],
         ],
         "partial": [
-            [partial_0, "Lzy_FgITj6cPqmpO4Z4czbSXB86o3stIBGIRqJAXG4c="],
-            [partial_1, "WNE7m5W5pFlM1e0Ewnf9KpaffM5JVhCoJB6dEbeP7Y4="],
-            [partial_2, "OYNt0N4MSprG7II088xQQ2xidEaBZoV2IDNsZ2hpTN4="],
-            [partial_3, "xs-EaoYaXDUKF1u0GmFUJQH7YlIxnAK67VPtvN_f3GM="],
-            [partial_4, "oosun9ZXISNyKmzK9xx28pAK-YALEGkLwUID7sCrwNQ="],
+            [partial_0, "U8mKyyREb7AsazKq4NpqEx5S84NOkzJqO9MgLgVZMRI="],
+            [partial_1, "K8bcoIh5rY5sTKEw_iIAbsYTFVUJgI59BAUjBZLb8oY="],
+            [partial_2, "9hfqU_ok9W3Co9tmbrq9DndPallclyJp_9qHicKvnxA="],
+            [partial_3, "gc4vinFOVr-nBbI0MGT2DTKZWrwYBePQGNpP61E6t_Q="],
+            [partial_4, "AYb7OpGRaSYF2fmPKkhdB7KmL9VMr-ed0BvnE0fzo2Q="],
         ],
         "function": [
-            [function_0, "rNXPNHNeXt75nRmtBwcgexq4r6_HSo8lHVT36RGLVVU=", params_0],  # 0.0 (0)
-            [function_0, "rNXPNHNeXt75nRmtBwcgexq4r6_HSo8lHVT36RGLVVU=", params_1],  # 0.1 (1)
-            [function_0, "rNXPNHNeXt75nRmtBwcgexq4r6_HSo8lHVT36RGLVVU=", params_2],  # 0.2 (2)
-            [function_0, "YxUI9Pc7QVIPC2JluLqpiTWH4_Q9vxzi13xKsgGXhEA=", params_3],  # 0.3 (3)
+            [function_0, "Cb2TUYwjXfcjwIBvT-bBc6HAwAadhzuDwCTEtB-bMO0=", params_0],  # 0.0 (0)
+            [function_0, "Cb2TUYwjXfcjwIBvT-bBc6HAwAadhzuDwCTEtB-bMO0=", params_1],  # 0.1 (1)
+            [function_0, "Cb2TUYwjXfcjwIBvT-bBc6HAwAadhzuDwCTEtB-bMO0=", params_2],  # 0.2 (2)
+            [function_0, "WrN40EWtq4wfgOLe6gtHxa0iw96bwtgn9wS9BdGvMmQ=", params_3],  # 0.3 (3)
             [function_0, "oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=", params_4],  # 0.4 (4)
             [function_0, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 0.5 (5)
-            [function_1, "TcISnIxBYdmJLI7gFvAy1u16Iz-QSOz0CYH3A1dA8uI=", params_0],  # 1.0 (6)
-            [function_1, "TcISnIxBYdmJLI7gFvAy1u16Iz-QSOz0CYH3A1dA8uI=", params_1],  # 1.1 (7)
-            [function_1, "TcISnIxBYdmJLI7gFvAy1u16Iz-QSOz0CYH3A1dA8uI=", params_2],  # 1.2 (8)
-            [function_1, "6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=", params_3],  # 1.3 (9)
+            [function_1, "SKhekwGS2XXI-w_Eh6hdH7Z9I9T_y2J7Eo1k7HVNEVs=", params_0],  # 1.0 (6)
+            [function_1, "SKhekwGS2XXI-w_Eh6hdH7Z9I9T_y2J7Eo1k7HVNEVs=", params_1],  # 1.1 (7)
+            [function_1, "SKhekwGS2XXI-w_Eh6hdH7Z9I9T_y2J7Eo1k7HVNEVs=", params_2],  # 1.2 (8)
+            [function_1, "U9866f0OuEbX77rPqwgU69cYnSpy-XIbbS9JlK3jHmc=", params_3],  # 1.3 (9)
             [function_1, "oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=", params_4],  # 1.4 (10)
             [function_1, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 1.5 (11)
-            [function_2, "aGpU6pHp_nMAVLR2IauGWFF1kQxwf1bDBASs_zloSsQ=", params_0],  # 2.0 (12)
-            [function_2, "aGpU6pHp_nMAVLR2IauGWFF1kQxwf1bDBASs_zloSsQ=", params_1],  # 2.1 (13)
-            [function_2, "kbdhcPeNmPc3p8mHCKYux3x3OZSC2YawePmur47s_x0=", params_2],  # 2.2 (14)
-            [function_2, "6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=", params_3],  # 2.3 (15)
+            [function_2, "f-KKuNUimE0gvshlm6_lYAZWcXxe5-OtFHrMmBPUBIY=", params_0],  # 2.0 (12)
+            [function_2, "f-KKuNUimE0gvshlm6_lYAZWcXxe5-OtFHrMmBPUBIY=", params_1],  # 2.1 (13)
+            [function_2, "bKNrJcDuyvaFTVXaK8dVwobnmNF9Tr1jmH-DkzWwOBc=", params_2],  # 2.2 (14)
+            [function_2, "U9866f0OuEbX77rPqwgU69cYnSpy-XIbbS9JlK3jHmc=", params_3],  # 2.3 (15)
             [function_2, "oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=", params_4],  # 2.4 (16)
             [function_2, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 2.5 (17)
-            [function_3, "T6ey_hqPgB5CkxHI6PV3mK01kKIhMieuJBkJNJv9szM=", params_0],  # 3.0 (18)
-            [function_3, "T6ey_hqPgB5CkxHI6PV3mK01kKIhMieuJBkJNJv9szM=", params_1],  # 3.1 (19)
-            [function_3, "2y6ZrKlE0v2xSGqUklnLhiYuimji3YdFHX-aq0XEVi4=", params_2],  # 3.2 (20)
-            [function_3, "6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=", params_3],  # 3.3 (21)
+            [function_3, "6APbPpWnYCupflXiz2UDPGaXFsMNEOdqCGvBiGilDTw=", params_0],  # 3.0 (18)
+            [function_3, "6APbPpWnYCupflXiz2UDPGaXFsMNEOdqCGvBiGilDTw=", params_1],  # 3.1 (19)
+            [function_3, "0rVSc96v3go-p0FXtFgf8ICFN1NtczKyr3efqHGr0To=", params_2],  # 3.2 (20)
+            [function_3, "U9866f0OuEbX77rPqwgU69cYnSpy-XIbbS9JlK3jHmc=", params_3],  # 3.3 (21)
             [function_3, "oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=", params_4],  # 3.4 (22)
             [function_3, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 3.5 (23)
-            [function_4, "q951DymktgCBsp_fihNrVUEjldwqGgrATIIv0XKAiRo=", params_0],  # 4.0 (24)
-            [function_4, "q951DymktgCBsp_fihNrVUEjldwqGgrATIIv0XKAiRo=", params_1],  # 4.1 (25)
-            [function_4, "LAM0_0uqb1LD1EnnTYdaAu5aQ5aFTft45-LH-tjKDFI=", params_2],  # 4.2 (26)
-            [function_4, "6hXudrmeOzenqKZj3Xduht3iy0ZWjDwmwlitHnGgzHc=", params_3],  # 4.3 (27)
+            [function_4, "cgefnjGlRiBTfcXR5spb6U2WJ3cKhr19ZEhRN5kAxoY=", params_0],  # 4.0 (24)
+            [function_4, "cgefnjGlRiBTfcXR5spb6U2WJ3cKhr19ZEhRN5kAxoY=", params_1],  # 4.1 (25)
+            [function_4, "fmNJN3jD5jC_BaBYd1gxzwsgVNqPoUH3rbQ3_UBNY40=", params_2],  # 4.2 (26)
+            [function_4, "U9866f0OuEbX77rPqwgU69cYnSpy-XIbbS9JlK3jHmc=", params_3],  # 4.3 (27)
             [function_4, "oW1isd367-zUz0DaBRiY9-sx0Y0NCYbvh3QSH4rZAlk=", params_4],  # 4.4 (28)
             [function_4, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 4.5 (29)
             # Notes:

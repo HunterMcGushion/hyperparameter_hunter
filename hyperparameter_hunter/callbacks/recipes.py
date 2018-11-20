@@ -64,7 +64,7 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
     -----
     Unlike :func:`hyperparameter_hunter.callbacks.recipes.confusion_matrix_holdout`, this callback
     function allows `lambda_callback` to automatically aggregate the stats returned by each of the
-    "on_..." functions given to `lambda_callback`
+    "on..." functions given to `lambda_callback`
 
     If the size of this `lambda_callback` implementation is daunting, minimize the helper functions'
     docstrings. It's surprisingly simple"""
@@ -174,12 +174,12 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
     Notes
     -----
     Unlike :func:`hyperparameter_hunter.callbacks.recipes.confusion_matrix_oof`, this callback
-    bypasses `lambda_callback`\'s ability to automatically aggregate stats returned by the "on_..."
-    functions. It does this simply by not returning values in the "on_..." functions, and manually
+    bypasses `lambda_callback`\'s ability to automatically aggregate stats returned by the "on..."
+    functions. It does this simply by not returning values in the "on..." functions, and manually
     aggregating the stats in :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`.
     This offers greater control over how your values are collected, but also requires additional
     overhead, namely, instantiating a dict to collect the values via :func:`_on_experiment_start`.
-    Note also that each of the "on_..." functions must append their values to an explicitly named
+    Note also that each of the "on..." functions must append their values to an explicitly named
     container in :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates` when using
     this method as opposed to :func:`hyperparameter_hunter.callbacks.recipes.confusion_matrix_oof`\'s
 

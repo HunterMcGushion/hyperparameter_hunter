@@ -167,9 +167,9 @@ class Deprecated(object):
             will be immediate, and the `v_remove` and `v_current` arguments are ignored
         v_remove: String, default=None
             Version in which the decorated callable will be removed. If None, the callable is not
-            currently planned to be removed. Cannot be set if `v_deprecate`=None
+            currently planned to be removed. Cannot be set if `v_deprecate` = None
         v_current: String, default=None
-            Source of version information for currently running code. When `v_current`=None, the
+            Source of version information for currently running code. When `v_current` = None, the
             ability to determine whether the wrapped callable is actually in a period of deprecation
             or time for removal fails, raising a :class:`DeprecatedWarning` in all cases
         details: String, default=""
