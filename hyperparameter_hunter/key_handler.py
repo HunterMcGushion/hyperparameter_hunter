@@ -44,7 +44,6 @@ import os.path
 import pandas as pd
 import re
 import shelve
-from dbm import error as DBMError
 
 ##################################################
 # Import Learning Assets
@@ -184,7 +183,7 @@ class KeyMaker(metaclass=ABCMeta):
 
                 try:
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
-                except (FileNotFoundError, DBMError):
+                except (FileNotFoundError, OSError):
                     os.makedirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
 
