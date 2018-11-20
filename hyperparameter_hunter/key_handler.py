@@ -44,7 +44,7 @@ import os.path
 import pandas as pd
 import re
 import shelve
-from _dbm import error as DBMError
+from dbm import error as DBMError
 
 ##################################################
 # Import Learning Assets
