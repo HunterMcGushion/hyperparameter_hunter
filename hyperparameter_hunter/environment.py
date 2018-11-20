@@ -182,18 +182,19 @@ class Environment:
             If not None, str denoting the column name in all provided datasets containing sample IDs
         do_predict_proba: Boolean, or int, default=False
             * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
-            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in the
-              first column (index 0) will be used as the actual prediction values
+            * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in all
+             columns will be used as the actual prediction values
             * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
               :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
               True, but the int supplied as `do_predict_proba` declares the column index to use as
               the actual prediction values
             * For example, for a model to call the `predict` method, `do_predict_proba=False`
-              (default). For a model to call the `predict_proba` method, and use the class
-              probabilities in the first column, `do_predict_proba=0` or `do_predict_proba=True`. To
-              use the second column (index 1) of the result, `do_predict_proba=1` - This
-              often corresponds to the positive class's probabilities in binary classification
-              problems. To use the third column `do_predict_proba=2`, and so on
+              (default). For a model to call the `predict_proba` method, and use all of the class
+              probabilities, `do_predict_proba=True`. To call the `predict_proba` method, and use
+              the class probabilities in the first column, `do_predict_proba=0`. To use the second
+              column (index 1) of the result, `do_predict_proba=1` - This often corresponds to the
+              positive class's probabilities in binary classification problems. To use the third
+              column `do_predict_proba=2`, and so on
         prediction_formatter: Callable, or None, default=None
             If callable, expected to have same signature as
             :func:`.utils.result_utils.format_predictions`. That is, the callable will receive

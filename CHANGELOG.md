@@ -8,6 +8,9 @@
 ### Changes
 * KeyAttributeLookup entries are now saved by full hyperparameter paths, rather than simple keys for 
 greater clarity (#75)
+* Changed behavior of the `do_predict_proba` parameter of `environment.Environment` when `True`
+    * All other behavior remains unchanged. However, instead of behaving identically to `do_predict_proba=0`,
+    `do_predict_proba=True` will now use all predicted probability columns for the final predictions
 
 
 <a name="2.0.0"></a>
