@@ -6,6 +6,12 @@
 ### Bug-Fixes
 
 ### Changes
+
+
+<a name="2.0.1"></a>
+## [2.0.1] (2018-11-25)
+
+### Changes
 * KeyAttributeLookup entries are now saved by full hyperparameter paths, rather than simple keys for 
 greater clarity (#75)
 * Changed behavior of the `do_predict_proba` parameter of `environment.Environment` when `True`
@@ -318,7 +324,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.1...v1.0.2
