@@ -22,6 +22,8 @@ on whats going on in :mod:`experiment_core`, and its related modules"""
 ##################################################
 # Import Own Assets
 ##################################################
+# noinspection PyProtectedMember
+from hyperparameter_hunter import __version__
 from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
@@ -37,6 +39,7 @@ from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_met
 from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.utils.general_utils import Deprecated
 
 ##################################################
 # Import Miscellaneous Assets
@@ -636,6 +639,12 @@ class CrossValidationExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
 ##################################################
 # Other Experiment Classes:
 ##################################################
+@Deprecated(
+    v_deprecate="2.0.0",
+    v_remove="2.1.0",
+    v_current=__version__,
+    details="Superseded by :class:`CrossValidationExperiment`, which is always preferred",
+)
 class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
         self,
@@ -675,6 +684,12 @@ class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
             self.folds = RepeatedKFold(**self.cross_validation_params)
 
 
+@Deprecated(
+    v_deprecate="2.0.0",
+    v_remove="2.1.0",
+    v_current=__version__,
+    details="Superseded by :class:`CrossValidationExperiment`, which is always preferred",
+)
 class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
         self,
