@@ -15,7 +15,7 @@ dev: setup
 ml_install:
 	sh ./scripts/ml_install.sh $(ENV)
 
-release: lint test clean
+release: clean lint test
 	sh ./scripts/release.sh
 
 format:
@@ -30,6 +30,7 @@ test:
 
 clean:
 	rm -rf build dist *.egg-info
+	rm -f hyperparameter_hunter/library_helpers/__temp_model_builder.py
 
 distclean: clean
 	rm -rf env
