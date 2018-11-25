@@ -182,7 +182,9 @@ class PreprocessingPipelineMixIn(object):
             raise ValueError(_err)
 
     def build_pipeline(self):
-        new_pipeline = []  # (<str id>, <callable transformation>, <sets to fit on>, <sets to transform>)
+        new_pipeline = (
+            []
+        )  # (<str id>, <callable transformation>, <sets to fit on>, <sets to transform>)
 
         if not isinstance(self.pipeline, list):
             raise TypeError(
