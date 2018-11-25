@@ -126,7 +126,7 @@ class ReportingHandler(object):
 
     # noinspection PyUnusedLocal
     @staticmethod
-    def _configure_console_handler(level="INFO", fmt=None, datefmt=None, style="%", **kwargs):
+    def _configure_console_handler(level="INFO", fmt=None, datefmt="%H:%M:%S", style="%", **kwargs):
         """Configure the console handler in charge of printing log messages
 
         Parameters
@@ -135,8 +135,9 @@ class ReportingHandler(object):
             Minimum message level for the console. Passed to :meth:`logging.StreamHandler.setlevel`
         fmt: String, or None, default=None
             Message formatting string for the console. Passed to :meth:`logging.Formatter.__init__`
-        datefmt: String, or None, default=None
-            Date formatting string for the console. Passed to :meth:`logging.Formatter.__init__`
+        datefmt: String, or None, default="%H:%M:%S"
+            Date formatting string for the console. Passed to :meth:`logging.Formatter.__init__`.
+            For the `logging` library default, use `datefmt=None` ("%Y-%m-%d %H:%M:%S" + <ms>)
         style: String, default='%'
             Type of string formatting used. Passed to :meth:`logging.Formatter.__init__`
         **kwargs: Dict
