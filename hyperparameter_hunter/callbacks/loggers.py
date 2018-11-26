@@ -58,7 +58,7 @@ class LoggerFitStatus(BaseLoggerCallback):
         content = [
             format_fold_run(fold=self._fold, run=self._run),
             format_evaluation(self.last_evaluation_results, float_format=self.float_format),
-            f"Time Elapsed: {sec_to_hms(self.stat_aggregates['times']['runs'][-1], as_str=True)}",
+            self.__elapsed_helper("runs"),
         ]
 
         G.log(self.log_separator.join(content), previous_frame=inspect.currentframe().f_back)
@@ -68,12 +68,8 @@ class LoggerFitStatus(BaseLoggerCallback):
         content = "F{}.{} AVG:   ".format(self._rep, self._fold)
 
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
-
         content += self.log_separator if not content.endswith(" ") else ""
-
-        content += "Time Elapsed: {}".format(
-            sec_to_hms(self.stat_aggregates["times"]["folds"][-1], as_str=True)
-        )
+        content += self.__elapsed_helper("folds")
 
         G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
         super().on_fold_end()
@@ -83,9 +79,7 @@ class LoggerFitStatus(BaseLoggerCallback):
         content += "Repetition {} AVG:   ".format(self._rep)
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
-        content += "Time Elapsed: {}".format(
-            sec_to_hms(self.stat_aggregates["times"]["reps"][-1], as_str=True)
-        )
+        content += self.__elapsed_helper("reps")
 
         G.log("", previous_frame=inspect.currentframe().f_back)
         G.log(content, previous_frame=inspect.currentframe().f_back)
@@ -96,14 +90,18 @@ class LoggerFitStatus(BaseLoggerCallback):
 
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
-
-        content += "Time Elapsed: {}".format(
-            sec_to_hms(self.stat_aggregates["times"]["total_elapsed"], as_str=True)
-        )
+        content += self.__elapsed_helper("total_elapsed")
 
         G.log("")
         G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
         super().on_experiment_end()
+
+    def __elapsed_helper(self, period):
+        times = self.stat_aggregates["times"]
+        if period == "total_elapsed":
+            return "Time Elapsed: {}".format(sec_to_hms(times[period], as_str=True))
+        else:
+            return "Time Elapsed: {}".format(sec_to_hms(times[period][-1], as_str=True))
 
 
 class LoggerOOF(BaseLoggerCallback):
