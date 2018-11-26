@@ -672,7 +672,7 @@ def format_fold_run(fold=None, run=None, mode="concise"):
     return content
 
 
-# def format_evaluation_results(results, separator='   ', float_format='{:.5f}'):
+# def format_evaluation(results, separator='   ', float_format='{:.5f}'):
 #     if isinstance(results, list):
 #         raise TypeError('Sorry, I can\'t deal with results of type list. Please send me an OrderedDict, instead')
 #
@@ -697,7 +697,7 @@ def format_fold_run(fold=None, run=None, mode="concise"):
 #     return content
 
 
-def format_evaluation_results(results, separator="  |  ", float_format="{:.5f}"):
+def format_evaluation(results, separator="  |  ", float_format="{:.5f}"):
     """Construct a string to neatly display the results of a model evaluation
 
     Parameters

@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import BaseLoggerCallback
-from hyperparameter_hunter.reporting import format_evaluation_results, format_fold_run
+from hyperparameter_hunter.reporting import format_evaluation, format_fold_run
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import sec_to_hms
 
@@ -57,7 +57,7 @@ class LoggerFitStatus(BaseLoggerCallback):
     def on_run_end(self):
         content = [
             format_fold_run(fold=self._fold, run=self._run),
-            format_evaluation_results(self.last_evaluation_results, float_format=self.float_format),
+            format_evaluation(self.last_evaluation_results, float_format=self.float_format),
             f"Time Elapsed: {sec_to_hms(self.stat_aggregates['times']['runs'][-1], as_str=True)}",
         ]
 
@@ -67,9 +67,7 @@ class LoggerFitStatus(BaseLoggerCallback):
     def on_fold_end(self):
         content = "F{}.{} AVG:   ".format(self._rep, self._fold)
 
-        content += format_evaluation_results(
-            self.last_evaluation_results, float_format=self.float_format
-        )
+        content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
 
         content += self.log_separator if not content.endswith(" ") else ""
 
@@ -83,9 +81,7 @@ class LoggerFitStatus(BaseLoggerCallback):
     def on_repetition_end(self):
         content = ""
         content += "Repetition {} AVG:   ".format(self._rep)
-        content += format_evaluation_results(
-            self.last_evaluation_results, float_format=self.float_format
-        )
+        content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
         content += "Time Elapsed: {}".format(
             sec_to_hms(self.stat_aggregates["times"]["reps"][-1], as_str=True)
@@ -98,9 +94,7 @@ class LoggerFitStatus(BaseLoggerCallback):
     def on_experiment_end(self):
         content = "FINAL:    "
 
-        content += format_evaluation_results(
-            self.last_evaluation_results, float_format=self.float_format
-        )
+        content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
 
         content += "Time Elapsed: {}".format(
