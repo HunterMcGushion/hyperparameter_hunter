@@ -62,15 +62,6 @@ class G(object):
         modules to check if :attr:`settings.G.Env` is None. If None, a
         :class:`environment.Environment` has not yet been instantiated. If not None, any attributes
         or methods of the instantiated Env may be called
-    log: print
-        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version
-        of :meth:`reporting.ReportingHandler.log`
-    debug: print
-        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version
-        of :meth:`reporting.ReportingHandler.debug`
-    warn: warnings.warn
-        This is set in :meth:`environment.Environment.initialize_reporting` to the updated version
-        of :meth:`reporting.ReportingHandler.warn`
     log_: print
         ... # TODO: ...
     debug_: print
@@ -86,9 +77,23 @@ class G(object):
     Env = None
 
     #################### Standard Logging Set by :class:`environment.Environment` ####################
-    log = print
-    debug = print
-    warn = warnings.warn
+    @staticmethod
+    def log(content, *args, **kwargs):
+        """Set in :meth:`environment.Environment.initialize_reporting` to the updated version of
+        :meth:`reporting.ReportingHandler.log`"""
+        print(content, *args, **kwargs)
+
+    @staticmethod
+    def debug(content, *args, **kwargs):
+        """Set in :meth:`environment.Environment.initialize_reporting` to the updated version of
+        :meth:`reporting.ReportingHandler.debug`"""
+        print(content, *args, **kwargs)
+
+    @staticmethod
+    def warn(content, *args, **kwargs):
+        """Set in :meth:`environment.Environment.initialize_reporting` to the updated version of
+        :meth:`reporting.ReportingHandler.warn`"""
+        warnings.warn(content, *args, **kwargs)
 
     #################### Optimization Logging Set by :class:`optimization_core.BaseOptimizationProtocol` ####################
     log_ = print
