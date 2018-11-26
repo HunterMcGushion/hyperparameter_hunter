@@ -29,8 +29,7 @@ test:
 	nosetests
 
 clean:
-	rm -rf build dist *.egg-info
-	rm -f hyperparameter_hunter/library_helpers/__temp_model_builder.py
+	sh ./scripts/clean.sh
 
 distclean: clean
 	rm -rf env
