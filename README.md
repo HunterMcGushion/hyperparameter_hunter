@@ -10,6 +10,7 @@ HyperparameterHunter
 [![PyPI version](https://badge.fury.io/py/hyperparameter-hunter.svg)](https://badge.fury.io/py/hyperparameter-hunter)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Q3EX3PQUV256G)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Downloads](https://pepy.tech/badge/hyperparameter-hunter/month)](https://pepy.tech/project/hyperparameter-hunter)
 
 Automatically save and learn from Experiment results, leading to long-term, persistent optimization that remembers all your tests.
 
