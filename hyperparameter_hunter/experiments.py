@@ -228,7 +228,7 @@ class BaseExperiment(ScoringMixIn):
 
         recorders = RecorderList(file_blacklist=G.Env.file_blacklist)
         recorders.format_result()
-        G.log(f'Saving results for Experiment: "{self.experiment_id}"')
+        G.log(f"Saving results for Experiment: '{self.experiment_id}'")
         recorders.save_result()
         self._clean_up()
 
@@ -297,7 +297,7 @@ class BaseExperiment(ScoringMixIn):
         if isinstance(self.test_dataset, pd.DataFrame):
             self.test_input_data = self.test_dataset.copy().loc[:, self.feature_selector]
 
-        G.log("Initial preprocessing stage complete")
+        G.log("Initial preprocessing stage complete", 4)
 
     ##################################################
     # Supporting Methods:
@@ -320,7 +320,7 @@ class BaseExperiment(ScoringMixIn):
             raise EnvironmentInactiveError("")
         if G.Env.current_task is None:
             G.Env.current_task = self
-            G.log(f"Validated Environment with key: '{self.cross_experiment_key}'")
+            G.log(f"Validated Environment:  '{self.cross_experiment_key}'")
         else:
             raise EnvironmentInvalidError("Current experiment must finish before starting another")
 
@@ -335,8 +335,7 @@ class BaseExperiment(ScoringMixIn):
     def _generate_experiment_id(self):
         """Set :attr:`experiment_id` to a UUID"""
         self.experiment_id = str(uuid())
-        G.log("")
-        G.log("Initialized new Experiment with ID: {}".format(self.experiment_id))
+        G.log("Initialized Experiment: '{}'".format(self.experiment_id))
 
     def _generate_hyperparameter_key(self):
         """Set :attr:`hyperparameter_key` to a key to describe the experiment's hyperparameters"""
@@ -351,7 +350,7 @@ class BaseExperiment(ScoringMixIn):
         )
 
         self.hyperparameter_key = HyperparameterKeyMaker(parameters, self.cross_experiment_key)
-        G.log("Generated hyperparameter key: {}".format(self.hyperparameter_key))
+        G.log("Hyperparameter Key:     '{}'".format(self.hyperparameter_key))
 
     def _create_script_backup(self):
         """Create and save a copy of the script that initialized the Experiment if allowed to, and
@@ -367,9 +366,9 @@ class BaseExperiment(ScoringMixIn):
                 except FileNotFoundError:
                     os.makedirs(self.result_paths["script_backup"], exist_ok=False)
                     self._source_copy_helper()
-                G.log("Created source backup: '{}'".format(self.source_script))
+                G.log("Created source backup:  '{}'".format(self.source_script), 4)
             else:
-                G.log("Skipped source backup: '{}'".format(self.source_script))
+                G.log("Skipped source backup:  '{}'".format(self.source_script), 4)
         #################### Exception Handling ####################
         except AttributeError as _ex:
             if G.Env is None:
