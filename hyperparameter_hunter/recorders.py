@@ -156,7 +156,7 @@ class RecorderList(object):
         are saved (to ensure the experiment is not duplicated, and to enable optimization protocol
         learning), while extra results like Predictions are not saved"""
         for recorder in self.recorders:
-            G.log(f'Saving result file for "{type(recorder).__name__}"')
+            G.log(f"Saving result file for '{type(recorder).__name__}'", 4)
             exit_code = recorder.save_result()
 
             if exit_code and exit_code == "break":
