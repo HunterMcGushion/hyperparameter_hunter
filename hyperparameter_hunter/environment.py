@@ -551,9 +551,7 @@ class Environment:
             self.environment_params_path is not None
         ):
             raise TypeError(
-                "environment_params_path must be a str, not {}: {}".format(
-                    *type_val(self.environment_params_path)
-                )
+                f"environment_params_path must be a str, not: {self.environment_params_path}"
             )
 
         try:
@@ -690,17 +688,12 @@ class Environment:
 
     def _dataset_sentinel_helper(self):
         """Helper method for retrieving train/validation sentinel parameters"""
+        params = self.cross_experiment_key.parameters
         return dict(
-            dataset_hash=self.cross_experiment_key.parameters["train_dataset"],
-            cross_validation_type=self.cross_experiment_key.parameters["cross_experiment_params"][
-                "cross_validation_type"
-            ],
-            global_random_seed=self.cross_experiment_key.parameters["cross_experiment_params"][
-                "global_random_seed"
-            ],
-            random_seeds=self.cross_experiment_key.parameters["cross_experiment_params"][
-                "random_seeds"
-            ],
+            dataset_hash=params["train_dataset"],
+            cross_validation_type=params["cross_experiment_params"]["cross_validation_type"],
+            global_random_seed=params["cross_experiment_params"]["global_random_seed"],
+            random_seeds=params["cross_experiment_params"]["random_seeds"],
         )
 
 
@@ -762,27 +755,15 @@ def validate_file_blacklist(blacklist):
     if not blacklist:
         return []
     elif not isinstance(blacklist, list):
-        raise TypeError(
-            "Expected blacklist to be a list, but received {}: {}".format(
-                type(blacklist), blacklist
-            )
-        )
+        raise TypeError("Expected blacklist to be a list, not: {}".format(blacklist))
     elif not all([isinstance(_, str) for _ in blacklist]):
         invalid_files = [(type(_).__name__, _) for _ in blacklist if not isinstance(_, str)]
-        raise TypeError(
-            "Expected contents of blacklist to be strings, but received {}".format(invalid_files)
-        )
+        raise TypeError("Expected blacklist contents to be strings, not: {}".format(invalid_files))
 
     for a_file in blacklist:
         if a_file not in valid_values:
-            raise ValueError(
-                "Received invalid blacklist value: {}.\nExpected one of: [{}]".format(
-                    a_file, valid_values
-                )
-            )
+            raise ValueError(f"Invalid blacklist value: {a_file}.\nExpected one of: {valid_values}")
         if a_file in ["description", "tested_keys"]:
-            G.warn(
-                f"Including {a_file!r} in file_blacklist will severely impede the functionality of this library"
-            )
+            G.warn(f"Including {a_file!r} in blacklist will severely impede library functionality")
 
     return blacklist
