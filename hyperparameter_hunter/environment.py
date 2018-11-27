@@ -63,7 +63,7 @@ class Environment:
         random_seeds=None,
         random_seed_bounds=[0, 100_000],
         cross_validation_params=dict(),
-        verbose=True,
+        verbose=3,
         file_blacklist=None,
         reporting_handler_params=dict(
             # reporting_type='logging',
@@ -244,8 +244,25 @@ class Environment:
             any args accepted by :meth:`cross_validation_type.__init__`. Number of fold splits must
             be provided here via "n_splits", and number of repeats (if applicable according to
             `cross_validation_type`) must be provided via "n_repeats"
-        verbose: Boolean, default=True
+        verbose: Int, boolean, default=3
             Verbosity of printing for any experiments performed while this Environment is active
+
+            Higher values indicate more frequent logging. Logs are still recorded in the heartbeat
+            file regardless of verbosity level. `verbose` only dictates which logs are visible in
+            the console. The following table illustrates which types of logging messages will be
+            visible with each verbosity level:
+
+            | Verbosity | Keys/IDs | Final Score | Repetitions* | Folds | Runs* | Run Starts* | Result Files | Other |
+            |:---------:|:--------:|:-----------:|:------------:|:-----:|:-----:|:-----------:|:------------:|:-----:|
+            |     0     |          |             |              |       |       |             |              |       |
+            |     1     |    Yes   |     Yes     |              |       |       |             |              |       |
+            |     2     |    Yes   |     Yes     |      Yes     |  Yes  |       |             |              |       |
+            |     3     |    Yes   |     Yes     |      Yes     |  Yes  |  Yes  |             |              |       |
+            |     4     |    Yes   |     Yes     |      Yes     |  Yes  |  Yes  |     Yes     |      Yes     |  Yes  |
+
+            * \*: If such logging is deemed appropriate with the given cross-validation parameters. In
+            other words, repetition/run logging will only be verbose if Environment was given more
+            than one repetition/run, respectively *
         file_blacklist: List of str, or None, or 'ALL', default=None
             If list of str, the result files named within are not saved to their respective
             directory in "<ASSETS_DIRNAME>/Experiments". If None, all result files are saved.
@@ -391,7 +408,7 @@ class Environment:
         self.define_holdout_set()
         self.format_result_paths()
         self.generate_cross_experiment_key()
-        G.log("Cross-Experiment Key: {!s}".format(self.cross_experiment_key))
+        G.log("Cross-Experiment Key:   '{!s}'".format(self.cross_experiment_key))
 
     def validate_parameters(self):
         """Ensure the provided parameters are valid and properly formatted"""
@@ -410,10 +427,6 @@ class Environment:
         #################### target_column ####################
         if isinstance(self.target_column, str):
             self.target_column = [self.target_column]
-
-        #################### verbose ####################
-        if not isinstance(self.verbose, bool):
-            raise TypeError("`verbose` must be bool, not {}: {}".format(*type_val(self.verbose)))
 
         #################### file_blacklist ####################
         self.file_blacklist = validate_file_blacklist(self.file_blacklist)
