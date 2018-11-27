@@ -219,7 +219,8 @@ class BaseExperiment(ScoringMixIn):
             if self.do_raise_repeated is True:
                 self._clean_up()
                 raise RepeatedExperimentError(_ex)
-            G.warn(_ex)
+            G.debug(_ex)
+            G.warn("WARNING: Duplicate experiment!")
 
         self._initialize_random_seeds()
         self._initial_preprocessing()
@@ -366,9 +367,9 @@ class BaseExperiment(ScoringMixIn):
                 except FileNotFoundError:
                     os.makedirs(self.result_paths["script_backup"], exist_ok=False)
                     self._source_copy_helper()
-                G.log("Created backup of file: '{}'".format(self.source_script))
+                G.log("Created source backup: '{}'".format(self.source_script))
             else:
-                G.log("Skipped creating backup of file: '{}'".format(self.source_script))
+                G.log("Skipped source backup: '{}'".format(self.source_script))
         #################### Exception Handling ####################
         except AttributeError as _ex:
             if G.Env is None:
