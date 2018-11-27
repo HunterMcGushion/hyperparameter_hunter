@@ -33,11 +33,8 @@ the future"""
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.aggregators import AggregatorEvaluations, AggregatorTimes
-from hyperparameter_hunter.callbacks.bases import (
-    BaseCallback,
-    BasePredictorCallback,
-    BaseEvaluatorCallback,
-)
+from hyperparameter_hunter.callbacks.bases import BaseCallback
+from hyperparameter_hunter.callbacks.bases import BasePredictorCallback, BaseEvaluatorCallback
 from hyperparameter_hunter.callbacks.bases import BaseAggregatorCallback, BaseLoggerCallback
 from hyperparameter_hunter.callbacks.evaluators import EvaluatorOOF, EvaluatorHoldout
 from hyperparameter_hunter.callbacks.loggers import LoggerFitStatus
