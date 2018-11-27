@@ -33,45 +33,54 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().__init__()
 
     def on_experiment_start(self):
-        G.log("\n", previous_frame=inspect.currentframe().f_back)
+        G.log("", previous_frame=inspect.currentframe().f_back)
         super().on_experiment_start()
 
     def on_repetition_start(self):
-        G.log(f"Starting Repetition {self._rep}", previous_frame=inspect.currentframe().f_back)
-        G.log("", previous_frame=inspect.currentframe().f_back)
+        if G.Env.verbose >= 3 and G.Env.cross_validation_params.get("n_repeats", 1) > 1:
+            G.log("", previous_frame=inspect.currentframe().f_back)
         super().on_repetition_start()
 
     def on_fold_start(self):
-        # fold_start_time = self.stat_aggregates['times']['folds'][-1]
-        G.log("", previous_frame=inspect.currentframe().f_back)
+        if G.Env.verbose >= 4 and G.Env.runs > 1:
+            G.log("", previous_frame=inspect.currentframe().f_back)
         super().on_fold_start()
 
     def on_run_start(self):
         content = ""
-        content += format_fold_run(fold=self._fold, run=self._run)
+        content += format_fold_run(fold=self._fold, run=self._run)  # TODO: Add repetition count
         content += format(self.log_separator if content != "" and self.current_seed else "")
         content += "Seed: {}".format(self.current_seed) if self.current_seed else ""
-        G.log(content, previous_frame=inspect.currentframe().f_back, add_time=True)
+
+        if G.Env.verbose >= 4 and G.Env.runs > 1:
+            G.log(content, previous_frame=inspect.currentframe().f_back, add_time=True)
+        else:
+            G.debug(content, previous_frame=inspect.currentframe().f_back, add_time=True)
         super().on_run_start()
 
     def on_run_end(self):
         content = [
-            format_fold_run(fold=self._fold, run=self._run),
+            format_fold_run(fold=self._fold, run=self._run),  # TODO: Add repetition count
             format_evaluation(self.last_evaluation_results, float_format=self.float_format),
             self.__elapsed_helper("runs"),
         ]
 
-        G.log(self.log_separator.join(content), previous_frame=inspect.currentframe().f_back)
+        if G.Env.verbose >= 3 and G.Env.runs > 1:
+            G.log(self.log_separator.join(content), previous_frame=inspect.currentframe().f_back)
+        else:
+            G.debug(self.log_separator.join(content), previous_frame=inspect.currentframe().f_back)
         super().on_run_end()
 
     def on_fold_end(self):
-        content = "F{}.{} AVG:   ".format(self._rep, self._fold)
-
+        content = "F{}.{} AVG:   ".format(self._rep, self._fold)  # TODO: Prepend rep count
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
         content += self.__elapsed_helper("folds")
 
-        G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
+        if G.Env.verbose >= 2 and G.Env.cross_validation_params["n_splits"] > 1:
+            G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
+        else:
+            G.debug(content, previous_frame=inspect.currentframe().f_back, add_time=False)
         super().on_fold_end()
 
     def on_repetition_end(self):
@@ -81,8 +90,10 @@ class LoggerFitStatus(BaseLoggerCallback):
         content += self.log_separator if not content.endswith(" ") else ""
         content += self.__elapsed_helper("reps")
 
-        G.log("", previous_frame=inspect.currentframe().f_back)
-        G.log(content, previous_frame=inspect.currentframe().f_back)
+        if G.Env.verbose >= 2 and G.Env.cross_validation_params.get("n_repeats", 1) > 1:
+            G.log(content, previous_frame=inspect.currentframe().f_back)
+        else:
+            G.debug(content, previous_frame=inspect.currentframe().f_back)
         super().on_repetition_end()
 
     def on_experiment_end(self):
