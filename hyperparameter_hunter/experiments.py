@@ -422,7 +422,7 @@ class BaseExperiment(ScoringMixIn):
             elif "seed" in self.model_init_params:
                 self.model_init_params["seed"] = self.current_seed
             else:
-                G.log("Model has no random_state/seed parameter to update")
+                G.debug("WARNING: Model has no random_state/seed parameter to update")
                 # FLAG: HIGH PRIORITY BELOW
                 # TODO: BELOW IS NOT THE CASE IF MODEL IS NN - SETTING THE GLOBAL RANDOM SEED DOES SOMETHING
                 # TODO: If this is logged, there is no reason to execute multiple-run-averaging, so don't
@@ -430,7 +430,7 @@ class BaseExperiment(ScoringMixIn):
                 # TODO: ... 2) Set the results of all subsequent runs to the results of the first run (this could be difficult)
                 # FLAG: HIGH PRIORITY ABOVE
         except Exception as _ex:
-            G.log("Failed to update model's random_state     {}".format(_ex.__repr__()))
+            G.log("WARNING: Failed to update model's random_state     {}".format(_ex.__repr__()))
 
 
 class BaseCVExperiment(BaseExperiment):
