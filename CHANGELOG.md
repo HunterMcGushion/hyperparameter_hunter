@@ -6,11 +6,21 @@
 ### Bug-Fixes
 
 ### Changes
+
+
+<a name="2.0.1"></a>
+## [2.0.1] (2018-11-25)
+
+### Changes
 * KeyAttributeLookup entries are now saved by full hyperparameter paths, rather than simple keys for 
 greater clarity (#75)
 * Changed behavior of the `do_predict_proba` parameter of `environment.Environment` when `True`
     * All other behavior remains unchanged. However, instead of behaving identically to `do_predict_proba=0`,
     `do_predict_proba=True` will now use all predicted probability columns for the final predictions
+* Deprecated classes `experiments.RepeatedCVExperiment` and `experiments.StandardCVExperiment`. The 
+goals of both of these classes are accomplished by the preferred `experiments.CrossValidationExperiment`
+class. The two aforementioned deprecated classes are scheduled for removal in v2.1.0. All uses of the 
+deprecated classes should be replaced with `experiments.CrossValidationExperiment`
 
 
 <a name="2.0.0"></a>
@@ -314,7 +324,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.1...v1.0.2

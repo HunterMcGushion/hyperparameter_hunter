@@ -48,8 +48,7 @@ class Interceptor(PathFinder):
 ##################################################
 class KerasLayerLoader(SourceFileLoader):
     def exec_module(self, module):
-        """Set `module.Layer` a traced version of itself via
-        :class:`hyperparameter_hunter.tracers.KerasTracer`"""
+        """Set `module.Layer` to a traced version of itself via :class:`tracers.KerasTracer`"""
         super().exec_module(module)
         module.Layer = KerasTracer(
             module.Layer.__name__, module.Layer.__bases__, module.Layer.__dict__
@@ -61,20 +60,13 @@ def hook_keras_layer():
     """If Keras has yet to be imported, modify the inheritance structure of its base `Layer` class
     to inject attributes that keep track of the parameters provided to each layer"""
     if "keras" in sys.modules:
-        raise ImportError(
-            "{} must be executed before importing Keras or other hyperparameter_hunter assets".format(
-                "hyperparameter_hunter.importer.hook_keras_layer()"
-            )
-        )
+        _name = "hyperparameter_hunter.importer.hook_keras_layer"
+        raise ImportError(f"Call {_name} before importing Keras/other hyperparameter_hunter assets")
 
-    if get_distribution("keras").version >= "2.2.0":
-        sys.meta_path.insert(
-            0, Interceptor("keras.engine.base_layer", KerasLayerLoader)
-        )  # Keras == 2.2.0
-    else:
-        sys.meta_path.insert(
-            0, Interceptor("keras.engine.topology", KerasLayerLoader)
-        )  # Keras == 2.1.3
+    if get_distribution("keras").version >= "2.2.0":  # Keras == 2.2.0
+        sys.meta_path.insert(0, Interceptor("keras.engine.base_layer", KerasLayerLoader))
+    else:  # Keras == 2.1.3
+        sys.meta_path.insert(0, Interceptor("keras.engine.topology", KerasLayerLoader))
         # Determine version number at which this becomes untrue (Minimum Keras version requirement)
 
     G.import_hooks.append("keras_layer")

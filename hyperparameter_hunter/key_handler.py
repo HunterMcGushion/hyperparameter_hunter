@@ -309,9 +309,9 @@ class CrossExperimentKeyMaker(KeyMaker):
         if not self.exists:
             write_json(f"{self.tested_keys_dir}/{self.key}.json", {})
             self.exists = True
-            G.log(f'Saved {self.key_type}_key: "{self.key}"')
+            G.log(f'Saved {self.key_type}_key: "{self.key}"', 4)
         else:
-            G.log(f'{self.key_type}_key "{self.key}" already exists - Skipped saving')
+            G.log(f'{self.key_type}_key "{self.key}" already exists - Skipped saving', 4)
 
 
 class HyperparameterKeyMaker(KeyMaker):
@@ -441,9 +441,9 @@ class HyperparameterKeyMaker(KeyMaker):
             add_to_json(key_path, [], key=self.key, condition=lambda _: self.key not in _.keys())
 
             self.exists = True
-            G.log(f'Saved {self.key_type}_key: "{self.key}"')
+            G.log(f'Saved {self.key_type}_key: "{self.key}"', 4)
         else:
-            G.log(f'{self.key_type}_key "{self.key}" already exists - Skipped saving')
+            G.log(f'{self.key_type}_key "{self.key}" already exists - Skipped saving', 4)
 
 
 def make_hash_sha256(obj, **kwargs):

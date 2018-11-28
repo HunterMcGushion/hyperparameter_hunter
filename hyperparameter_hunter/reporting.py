@@ -2,6 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import exceptions
+from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import now_time
 
 ##################################################
@@ -126,7 +127,7 @@ class ReportingHandler(object):
 
     # noinspection PyUnusedLocal
     @staticmethod
-    def _configure_console_handler(level="INFO", fmt=None, datefmt=None, style="%", **kwargs):
+    def _configure_console_handler(level="INFO", fmt=None, datefmt="%H:%M:%S", style="%", **kwargs):
         """Configure the console handler in charge of printing log messages
 
         Parameters
@@ -135,8 +136,9 @@ class ReportingHandler(object):
             Minimum message level for the console. Passed to :meth:`logging.StreamHandler.setlevel`
         fmt: String, or None, default=None
             Message formatting string for the console. Passed to :meth:`logging.Formatter.__init__`
-        datefmt: String, or None, default=None
-            Date formatting string for the console. Passed to :meth:`logging.Formatter.__init__`
+        datefmt: String, or None, default="%H:%M:%S"
+            Date formatting string for the console. Passed to :meth:`logging.Formatter.__init__`.
+            For the `logging` library default, use `datefmt=None` ("%Y-%m-%d %H:%M:%S" + <ms>)
         style: String, default='%'
             Type of string formatting used. Passed to :meth:`logging.Formatter.__init__`
         **kwargs: Dict
@@ -211,13 +213,19 @@ class ReportingHandler(object):
     # Logging-Logging Methods:
     ##################################################
     # noinspection PyUnusedLocal
-    def _logging_log(self, content, previous_frame=None, add_time=False, **kwargs):
+    def _logging_log(
+        self, content, verbose_threshold=None, previous_frame=None, add_time=False, **kwargs
+    ):
         """Log an info message via the `logging` library
 
         Parameters
         ----------
         content: String
             The message to log
+        verbose_threshold: Int, or None, default=None
+            If None, `content` logged normally. If int and `G.Env.verbose` >= `verbose_threshold`,
+            `content` is logged normally. Else if int and `G.Env.verbose` < `verbose_threshold`,
+            then `content` is logged on the `logging.debug` level, instead of `logging.info`
         previous_frame: Frame, or None, default=None
             The frame preceding the log call. If not provided, it will be inferred
         add_time: Boolean, default=False
@@ -233,7 +241,11 @@ class ReportingHandler(object):
             content = frame_source + " - " + content
 
         content = add_time_to_content(content, add_time=add_time)
-        logging.info(content)
+
+        if (verbose_threshold is None) or (G.Env.verbose >= verbose_threshold):
+            logging.info(content)
+        else:
+            logging.debug(content)
 
     # noinspection PyUnusedLocal
     def _logging_debug(self, content, previous_frame=None, add_time=False, **kwargs):
@@ -632,7 +644,7 @@ def add_time_to_content(content, add_time=False):
     return content
 
 
-def format_fold_run(fold=None, run=None, mode="concise"):
+def format_fold_run(fold=None, run=None, mode="concise"):  # TODO: Add repetition count
     """Construct a string to display the fold, and run currently being executed
 
     Parameters
@@ -671,7 +683,7 @@ def format_fold_run(fold=None, run=None, mode="concise"):
     return content
 
 
-# def format_evaluation_results(results, separator='   ', float_format='{:.5f}'):
+# def format_evaluation(results, separator='   ', float_format='{:.5f}'):
 #     if isinstance(results, list):
 #         raise TypeError('Sorry, I can\'t deal with results of type list. Please send me an OrderedDict, instead')
 #
@@ -696,7 +708,7 @@ def format_fold_run(fold=None, run=None, mode="concise"):
 #     return content
 
 
-def format_evaluation_results(results, separator="  |  ", float_format="{:.5f}"):
+def format_evaluation(results, separator="  |  ", float_format="{:.5f}"):
     """Construct a string to neatly display the results of a model evaluation
 
     Parameters

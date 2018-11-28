@@ -15,7 +15,7 @@ dev: setup
 ml_install:
 	sh ./scripts/ml_install.sh $(ENV)
 
-release: lint test clean
+release: clean lint test
 	sh ./scripts/release.sh
 
 format:
@@ -29,7 +29,7 @@ test:
 	nosetests
 
 clean:
-	rm -rf build dist *.egg-info
+	sh ./scripts/clean.sh
 
 distclean: clean
 	rm -rf env
