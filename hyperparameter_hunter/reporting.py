@@ -13,6 +13,7 @@ from datetime import datetime
 import inspect
 import logging
 import os.path
+import sys
 
 
 class ReportingHandler(object):
@@ -148,7 +149,7 @@ class ReportingHandler(object):
         -------
         console_handler: `logging.StreamHandler` instance
             The instantiated handler for the console"""
-        console_handler = logging.StreamHandler()
+        console_handler = logging.StreamHandler(stream=sys.stdout)
         console_handler.setLevel(level)
 
         fmt = fmt or "<%(asctime)s> %(message)s"
