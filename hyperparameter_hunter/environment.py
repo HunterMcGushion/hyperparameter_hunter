@@ -420,7 +420,9 @@ class Environment:
                 self.root_results_path = os.path.join(self.root_results_path, ASSETS_DIRNAME)
                 self.result_paths["root"] = self.root_results_path
             if not os.path.exists(self.root_results_path):
-                os.makedirs(self.root_results_path, exist_ok=True)
+                old_mask = os.umask(000)
+                os.makedirs(self.root_results_path, mode=0o0777, exist_ok=True)
+                os.umask(old_mask)
         else:
             raise TypeError(f"root_results_path must be None or str, not {self.root_results_path}")
 
