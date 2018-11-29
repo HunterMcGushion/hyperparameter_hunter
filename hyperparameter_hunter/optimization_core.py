@@ -50,8 +50,8 @@ from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_
 ##################################################
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-import inspect
-import os
+from inspect import currentframe, getframeinfo
+from os.path import abspath
 
 ##################################################
 # Import Learning Assets
@@ -81,11 +81,7 @@ class OptimizationProtocolMeta(type):
     def __call__(cls, *args, **kwargs):
         """Set the instance's :attr:`source_script` to the absolute path of the file that
         instantiated the OptimizationProtocol"""
-        setattr(
-            cls,
-            "source_script",
-            os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]),
-        )
+        setattr(cls, "source_script", abspath(getframeinfo(currentframe().f_back)[0]))
         return super().__call__(*args, **kwargs)
 
 
@@ -260,9 +256,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.do_raise_repeated = do_raise_repeated
 
         if self.do_raise_repeated is False:
-            G.warn_(
-                "WARNING: Setting `do_raise_repeated`=False will allow Experiments to be unnecessarily duplicated"
-            )
+            G.warn_("WARNING: Setting `do_raise_repeated`=False allows duplicated Experiments")
 
         self.algorithm_name, self.module_name = identify_algorithm(self.model_initializer)
         self._validate_guidelines()
@@ -290,25 +284,19 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         #################### Remap Extra Objects ####################
         if self.module_name == "keras":
-            from keras.callbacks import Callback as BaseKerasCallback
+            from keras.callbacks import Callback as KerasCB
 
-            self.extra_iter_attrs.append(
-                lambda _path, _key, _value: isinstance(_value, BaseKerasCallback)
-            )
+            self.extra_iter_attrs.append(lambda _path, _key, _value: isinstance(_value, KerasCB))
 
         #################### Collect Choice Dimensions ####################
-        init_dimension_choices = get_choice_dimensions(
-            self.model_init_params, iter_attrs=self.init_iter_attrs
-        )
-        extra_dimension_choices = get_choice_dimensions(
-            self.model_extra_params, iter_attrs=self.extra_iter_attrs
-        )
+        init_dim_choices = get_choice_dimensions(self.model_init_params, self.init_iter_attrs)
+        extra_dim_choices = get_choice_dimensions(self.model_extra_params, self.extra_iter_attrs)
 
-        for (path, choice) in init_dimension_choices:
+        for (path, choice) in init_dim_choices:
             choice._name = ("model_init_params",) + path
             all_dimension_choices.append(choice)
 
-        for (path, choice) in extra_dimension_choices:
+        for (path, choice) in extra_dim_choices:
             choice._name = ("model_extra_params",) + path
             all_dimension_choices.append(choice)
 
@@ -385,9 +373,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
                 experiment_id=self.current_experiment.experiment_id,
             )
 
+            # TODO: Below is bugged - Does not work with minimized metrics
             if (self.best_experiment is None) or (self.current_score > self.best_score):
                 self.best_experiment = self.current_experiment.experiment_id
                 self.best_score = self.current_score
+            # TODO: Above is bugged - Does not work with minimized metrics
 
             iteration += 1
 
