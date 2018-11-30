@@ -14,6 +14,11 @@ Thank you to the Hyperas creators, and contributors for their excellent work and
 approach to Keras hyperparameter optimization. Without them, Keras hyperparameter optimization in
 `hyperparameter_hunter` would be far less pretty"""
 ##################################################
+# Import Own Assets
+##################################################
+from hyperparameter_hunter.utils.file_utils import make_dirs
+
+##################################################
 # Import Miscellaneous Assets
 ##################################################
 from ast import NodeVisitor, parse
@@ -110,7 +115,7 @@ def write_python_source(source_str, filepath="temp_modified.py"):
             f.write(source_str)
             f.close()
     except FileNotFoundError:
-        os.mkdir(os.path.split(filepath)[0])
+        make_dirs(os.path.split(filepath)[0])
         write_python_source(source_str, filepath=filepath)
 
 
