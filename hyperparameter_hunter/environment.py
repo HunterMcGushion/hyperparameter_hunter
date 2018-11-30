@@ -28,7 +28,6 @@ from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DI
 from hyperparameter_hunter.reporting import ReportingHandler
 from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
 from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
-from hyperparameter_hunter.utils.general_utils import type_val
 from hyperparameter_hunter.utils.result_utils import format_predictions, default_do_full_save
 
 ##################################################
