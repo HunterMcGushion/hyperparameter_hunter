@@ -12,14 +12,13 @@ Related
 from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.file_utils import write_json, add_to_json
+from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
-import os
 from platform import node
 import shutil
 from sys import exc_info
@@ -228,7 +227,7 @@ class DescriptionRecorder(BaseRecorder):
         try:
             write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
         except FileNotFoundError:
-            os.makedirs(self.result_path, exist_ok=False)
+            make_dirs(self.result_path, exist_ok=False)
             write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
 
         if (self.do_full_save is not None) and (not self.do_full_save(self.result)):
@@ -252,7 +251,7 @@ class HeartbeatRecorder(BaseRecorder):
         try:
             self._copy_heartbeat()
         except FileNotFoundError:
-            os.makedirs(self.result_path, exist_ok=False)
+            make_dirs(self.result_path, exist_ok=False)
             self._copy_heartbeat()
 
     def _copy_heartbeat(self):
@@ -290,7 +289,7 @@ class PredictionsHoldoutRecorder(BaseRecorder):
         try:
             self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
         except FileNotFoundError:
-            os.makedirs(self.result_path, exist_ok=False)
+            make_dirs(self.result_path, exist_ok=False)
             self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
@@ -309,7 +308,7 @@ class PredictionsOOFRecorder(BaseRecorder):
         try:
             self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
         except FileNotFoundError:
-            os.makedirs(self.result_path, exist_ok=False)
+            make_dirs(self.result_path, exist_ok=False)
             self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
@@ -328,7 +327,7 @@ class PredictionsTestRecorder(BaseRecorder):
         try:
             self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
         except FileNotFoundError:
-            os.makedirs(self.result_path, exist_ok=False)
+            make_dirs(self.result_path, exist_ok=False)
             self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
@@ -382,7 +381,7 @@ class LeaderboardEntryRecorder(BaseRecorder):
         try:
             self.result.save(path=self.result_paths["global_leaderboard"])
         except FileNotFoundError:
-            os.makedirs(self.result_paths["leaderboards"], exist_ok=False)
+            make_dirs(self.result_paths["leaderboards"], exist_ok=False)
             self.result.save(path=self.result_paths["global_leaderboard"])
 
 

@@ -45,7 +45,11 @@ from types import FunctionType, MethodType
 # Import Learning Assets
 ##################################################
 try:
+    stderr = sys.stderr
+    sys.stderr = open(os.devnull, "w")
     from keras.callbacks import Callback as base_keras_callback
+
+    sys.stderr = stderr
 except ModuleNotFoundError:
     base_keras_callback = type("PlaceholderBaseKerasCallback", (), {})
 

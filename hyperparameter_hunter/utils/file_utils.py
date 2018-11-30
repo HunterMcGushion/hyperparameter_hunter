@@ -7,6 +7,7 @@ import os
 import os.path
 import pickle
 import simplejson as json
+import sys
 
 
 ##################################################
@@ -159,14 +160,10 @@ def write_pickle(file_path, content, do_create=True):
         target_file = open(file_path, "wb")
     except IOError as err:
         if do_create is True:
-            os.makedirs(os.path.dirname(file_path))
+            make_dirs(os.path.dirname(file_path))
             target_file = open(file_path, "wb")
         else:
-            raise IOError(
-                "write_pickle() received an invalid file_path and did not create it --- {}".format(
-                    err
-                )
-            )
+            raise IOError("Invalid `file_path`\n{}".format(err)).with_traceback(sys.exc_info()[2])
 
     pickle.dump(content, target_file)
     target_file.close()
@@ -175,6 +172,23 @@ def write_pickle(file_path, content, do_create=True):
 ##################################################
 # General File Functions
 ##################################################
+def make_dirs(name, mode=0o0777, exist_ok=False):
+    """Permissive version of `os.makedirs` that gives full permissions by default
+
+    Parameters
+    ----------
+    name: Str
+        Path/name of directory to create. Will make intermediate-level directories needed to contain
+        the leaf directory
+    mode: Number, default=0o0777
+        File permission bits for creating the leaf directory
+    exist_ok: Boolean, default=False
+        If False, an `OSError` is raised if the directory targeted by `name` already exists"""
+    old_mask = os.umask(000)
+    os.makedirs(name, mode=mode, exist_ok=exist_ok)
+    os.umask(old_mask)
+
+
 def validate_extension(file_path, extension, do_fix=False):
     extension = extension if extension.startswith(".") else ".{}".format(extension)
 
@@ -182,9 +196,7 @@ def validate_extension(file_path, extension, do_fix=False):
         if do_fix is True:
             return "{}{}".format(file_path, extension)
         else:
-            raise ValueError(
-                'Invalid extension ({}) for file_path="{}"'.format(extension, file_path)
-            )
+            raise ValueError(f"Invalid extension ({extension}) for file_path='{file_path}'")
     else:
         return file_path
 
@@ -237,9 +249,8 @@ def print_tree(start_path, depth=-1):
     prefix = 0
 
     if start_path != "/":
-        if start_path.endswith(
-            "/"
-        ):  # If True, the last dir in start_path will be treated as root, rather than the whole thing
+        if start_path.endswith("/"):
+            # If True, the last dir in start_path will be treated as root, rather than the whole thing
             start_path = start_path[:-1]
             prefix = len(start_path)
 

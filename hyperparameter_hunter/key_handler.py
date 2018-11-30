@@ -26,7 +26,7 @@ from hyperparameter_hunter.library_helpers.keras_optimization_helper import init
 from hyperparameter_hunter.metrics import Metric
 from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json
+from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json, make_dirs
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 
 ##################################################
@@ -134,7 +134,7 @@ class KeyMaker(metaclass=ABCMeta):
         except TypeError:  # Key-making blacklisted
             if self.tested_keys_dir is None:
                 return
-            os.makedirs(self.tested_keys_dir)
+            make_dirs(self.tested_keys_dir)
 
     def handle_complex_types(self):
         """Locate complex types in :attr:`parameters`, create hashes for them, add lookup entries
@@ -184,7 +184,7 @@ class KeyMaker(metaclass=ABCMeta):
                 try:
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
                 except (FileNotFoundError, OSError):
-                    os.makedirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
+                    make_dirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
                     self.add_complex_type_lookup_entry(path, key, value, hashed_value)
 
                 return (key, hashed_value)
@@ -222,7 +222,7 @@ class KeyMaker(metaclass=ABCMeta):
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
                 s[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
-            os.makedirs(lookup_path(key), exist_ok=True)
+            make_dirs(lookup_path(key), exist_ok=True)
             value.to_csv(lookup_path(key, f"{hashed_value}.csv"), index=False)
         else:  # Possible types: partial, function, *other
             add_to_json(
