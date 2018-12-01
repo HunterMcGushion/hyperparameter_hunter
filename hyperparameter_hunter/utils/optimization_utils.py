@@ -450,11 +450,11 @@ def filter_by_guidelines(
     ]
 
     temp_guidelines = dict(
-        model_init_params=model_init_params,
-        model_extra_params=model_extra_params,
-        preprocessing_pipeline=preprocessing_pipeline,
-        preprocessing_params=preprocessing_params,
-        feature_selector=feature_selector,
+        model_init_params=model_init_params if model_init_params is not None else {},
+        model_extra_params=model_extra_params if model_extra_params is not None else {},
+        preprocessing_pipeline=preprocessing_pipeline if preprocessing_pipeline is not None else {},
+        preprocessing_params=preprocessing_params if preprocessing_params is not None else {},
+        feature_selector=feature_selector if feature_selector is not None else [],
         **kwargs,
     )
 
@@ -463,8 +463,14 @@ def filter_by_guidelines(
         """Return False if element in hyperparameter_space dimensions, or in dimensions being
         ignored. Else, return True. If `value` is of type tuple or set, it will be converted to a
         list in order to simplify comparisons to the JSON-formatted `hyperparameters_and_scores`"""
+        if path and path[0] == "model_extra_params" and value == {}:
+            # This removes any empty dicts in ("model_extra_params")
+            # This is done to simplify comparisons between experiments with no `model_extra_params`,
+            # ... and those with, for example, `model_extra_params=dict(fit=dict(verbose=True))`
+            return False
+
         for dimension in dimensions + dimensions_to_ignore:
-            if (path + (key,) == dimension) or (dimension[0] is None and dimension[1] == key):
+            if (path + (key,) == dimension) or (dimension[0] is None and dimension[-1] == key):
                 return False
         if isinstance(value, (tuple, set)):
             return key, list(value)
