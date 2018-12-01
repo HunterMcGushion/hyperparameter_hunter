@@ -58,9 +58,7 @@ class Sentinel(metaclass=ABCMeta):
         self.sentinel = self._build_sentinel()
 
     def __eq__(self, other):
-        if isinstance(other, str):
-            return self.sentinel == other
-        return self == other
+        return self.sentinel == other
 
     @property
     def sentinel(self) -> str:
@@ -241,20 +239,18 @@ class DatasetSentinel(Sentinel):
         if self.dataset_type in ("holdout_input", "holdout_target"):
             self.cross_validation_type = None
         elif self.cross_validation_type is None:
-            raise ValueError(
-                "`cross_validation_type` may only be None if `dataset_type` is from 'holdout'"
-            )
+            raise ValueError("`cross_validation_type` may only be None if 'holdout' `dataset_type`")
 
         #################### global_random_seed ####################
         if self.dataset_type in ("holdout_input", "holdout_target"):
             self.global_random_seed = None
         elif self.global_random_seed is None:
-            raise ValueError("`global_random_seed` may only be None if `dataset_type` is 'holdout'")
+            raise ValueError("`global_random_seed` may only be None if 'holdout' `dataset_type`")
 
         #################### random_seeds ####################
         if self.dataset_type in ("holdout_input", "holdout_target"):
             self.random_seeds = None
         elif self.random_seeds is None and self.global_random_seed is None:
             raise ValueError(
-                "`random_seeds` may only be None if `dataset_type` is from 'holdout', or `global_random_seed` given"
+                "`random_seeds=None` requires 'holdout' `dataset_type`, or `global_random_seed`"
             )
