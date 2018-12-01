@@ -137,10 +137,11 @@ class BaseExperiment(ScoringMixIn):
         except TypeError:
             self.model_init_params.update(dict(build_fn=model_init_params))
 
-        self.model_extra_params = model_extra_params
-        self.feature_selector = feature_selector
-        self.preprocessing_pipeline = preprocessing_pipeline
-        self.preprocessing_params = preprocessing_params
+        self.model_extra_params = model_extra_params if model_extra_params is not None else {}
+        self.feature_selector = feature_selector if feature_selector is not None else []
+        self.preprocessing_pipeline = preprocessing_pipeline or {}
+        self.preprocessing_params = preprocessing_params if preprocessing_params is not None else {}
+
         self.notes = notes
         self.do_raise_repeated = do_raise_repeated
         self.auto_start = auto_start
