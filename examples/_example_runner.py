@@ -1,13 +1,23 @@
 from datetime import datetime
-from os import listdir, getcwd
+from os import getcwd, walk
+import os.path
 from subprocess import check_call, CalledProcessError
+
+reject_names = ["_example_runner.py"]
+reject_paths = [
+    "catboost_examples/classification.py",  # Takes too long (forest cover type dataset)
+    "lightgbm_examples/classification.py",  # Takes too long (forest cover type dataset)
+]
 
 
 def _filter_files(dirpath):
-    for filename in listdir(dirpath):
-        if filename.endswith(".py") and filename not in ["_example_runner.py"]:
-            if not filename.startswith("temp"):
-                yield filename
+    for (root, dirs, files) in walk(dirpath):
+        for filename in files:
+            if filename.endswith(".py") and filename not in reject_names:
+                if not filename.startswith("temp"):
+                    file_path = os.path.join(root, filename)
+                    if not any(file_path.endswith(_) for _ in reject_paths):
+                        yield file_path
 
 
 def _file_execution_loop(dirpath):
@@ -33,9 +43,8 @@ def _file_execution_loop(dirpath):
 
 
 def _execute():
-    dirpath = getcwd()
     start_time = datetime.now()
-    num_attempts, successful_executions, failed_executions = _file_execution_loop(dirpath)
+    num_attempts, successful_executions, failed_executions = _file_execution_loop(getcwd())
 
     print(("!" * 80 + "\n") * 3)
     print("ALL DONE IN {}".format(datetime.now() - start_time))
