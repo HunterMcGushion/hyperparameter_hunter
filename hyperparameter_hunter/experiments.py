@@ -352,6 +352,8 @@ class BaseExperiment(ScoringMixIn):
 
         self.hyperparameter_key = HyperparameterKeyMaker(parameters, self.cross_experiment_key)
         G.log("Hyperparameter Key:     '{}'".format(self.hyperparameter_key))
+        G.debug("Raw hyperparameters...")
+        G.debug(self.hyperparameter_key.parameters)
 
     def _create_script_backup(self):
         """Create and save a copy of the script that initialized the Experiment if allowed to, and
