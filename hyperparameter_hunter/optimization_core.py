@@ -124,9 +124,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             current guidelines, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default={}
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`. Note:
-            Unless provided explicitly, the key "highlight_max" will be added by default to
+            Unless provided explicitly, the key "do_maximize" will be added by default to
             `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
-            in `G.Env.metrics_map`. In nearly all cases, the "highlight_max" key should be ignored,
+            in `G.Env.metrics_map`. In nearly all cases, the "do_maximize" key should be ignored,
             as there are very few reasons to explicitly include it
 
         Notes
@@ -182,6 +182,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         self.logger = None
         self._preparation_workflow()
+        self.do_maximize = G.Env.metrics_map[self.target_metric[-1]].direction == "max"
 
     ##################################################
     # Core Methods:
@@ -320,10 +321,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         if self.model_initializer is None:
             raise ValueError("Experiment guidelines must be set before starting optimization")
 
-        _reporter_params = dict(
-            dict(highlight_max=G.Env.metrics_map[self.target_metric[-1]].direction == "max"),
-            **self.reporter_parameters,
-        )
+        _reporter_params = dict(dict(do_maximize=self.do_maximize), **self.reporter_parameters)
         self.logger = OptimizationReporter([_.name for _ in self.dimensions], **_reporter_params)
 
         self.tested_keys = []
@@ -374,11 +372,13 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
                 experiment_id=self.current_experiment.experiment_id,
             )
 
-            # TODO: Below is bugged - Does not work with minimized metrics
-            if (self.best_experiment is None) or (self.current_score > self.best_score):
+            if (
+                (self.best_experiment is None)  # First evaluation
+                or (self.do_maximize and (self.best_score < self.current_score))  # New best max
+                or (not self.do_maximize and (self.best_score > self.current_score))  # New best min
+            ):
                 self.best_experiment = self.current_experiment.experiment_id
                 self.best_score = self.current_score
-            # TODO: Above is bugged - Does not work with minimized metrics
 
             iteration += 1
 
@@ -724,7 +724,7 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         fit: Boolean, default=True
             Fit a model to observed evaluations of the objective. Regardless of `fit`, a model will
             only be fitted after telling :attr:`n_initial_points` points to :attr:`optimizer`"""
-        if G.Env.metrics_map[self.target_metric[-1]].direction == "max":
+        if self.do_maximize:
             score = -score
         self.optimizer_result = self.optimizer.tell(hyperparameters, score, fit=fit)
 
