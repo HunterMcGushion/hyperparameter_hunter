@@ -50,8 +50,8 @@ from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_
 ##################################################
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-import inspect
-import os
+from inspect import currentframe, getframeinfo
+from os.path import abspath
 
 ##################################################
 # Import Learning Assets
@@ -81,11 +81,7 @@ class OptimizationProtocolMeta(type):
     def __call__(cls, *args, **kwargs):
         """Set the instance's :attr:`source_script` to the absolute path of the file that
         instantiated the OptimizationProtocol"""
-        setattr(
-            cls,
-            "source_script",
-            os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]),
-        )
+        setattr(cls, "source_script", abspath(getframeinfo(currentframe().f_back)[0]))
         return super().__call__(*args, **kwargs)
 
 
@@ -128,9 +124,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             current guidelines, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default={}
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`. Note:
-            Unless provided explicitly, the key "highlight_max" will be added by default to
+            Unless provided explicitly, the key "do_maximize" will be added by default to
             `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
-            in `G.Env.metrics_map`. In nearly all cases, the "highlight_max" key should be ignored,
+            in `G.Env.metrics_map`. In nearly all cases, the "do_maximize" key should be ignored,
             as there are very few reasons to explicitly include it
 
         Notes
@@ -186,6 +182,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         self.logger = None
         self._preparation_workflow()
+        self.do_maximize = G.Env.metrics_map[self.target_metric[-1]].direction == "max"
 
     ##################################################
     # Core Methods:
@@ -252,17 +249,16 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         except TypeError:
             self.model_init_params.update(dict(build_fn=model_init_params))
 
-        self.model_extra_params = model_extra_params
-        self.feature_selector = feature_selector
-        self.preprocessing_pipeline = preprocessing_pipeline
-        self.preprocessing_params = preprocessing_params
+        self.model_extra_params = model_extra_params if model_extra_params is not None else {}
+        self.feature_selector = feature_selector if feature_selector is not None else []
+        self.preprocessing_pipeline = preprocessing_pipeline or {}
+        self.preprocessing_params = preprocessing_params if preprocessing_params is not None else {}
+
         self.notes = notes
         self.do_raise_repeated = do_raise_repeated
 
         if self.do_raise_repeated is False:
-            G.warn_(
-                "WARNING: Setting `do_raise_repeated`=False will allow Experiments to be unnecessarily duplicated"
-            )
+            G.warn_("WARNING: Setting `do_raise_repeated`=False allows duplicated Experiments")
 
         self.algorithm_name, self.module_name = identify_algorithm(self.model_initializer)
         self._validate_guidelines()
@@ -290,25 +286,19 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         #################### Remap Extra Objects ####################
         if self.module_name == "keras":
-            from keras.callbacks import Callback as BaseKerasCallback
+            from keras.callbacks import Callback as KerasCB
 
-            self.extra_iter_attrs.append(
-                lambda _path, _key, _value: isinstance(_value, BaseKerasCallback)
-            )
+            self.extra_iter_attrs.append(lambda _path, _key, _value: isinstance(_value, KerasCB))
 
         #################### Collect Choice Dimensions ####################
-        init_dimension_choices = get_choice_dimensions(
-            self.model_init_params, iter_attrs=self.init_iter_attrs
-        )
-        extra_dimension_choices = get_choice_dimensions(
-            self.model_extra_params, iter_attrs=self.extra_iter_attrs
-        )
+        init_dim_choices = get_choice_dimensions(self.model_init_params, self.init_iter_attrs)
+        extra_dim_choices = get_choice_dimensions(self.model_extra_params, self.extra_iter_attrs)
 
-        for (path, choice) in init_dimension_choices:
+        for (path, choice) in init_dim_choices:
             choice._name = ("model_init_params",) + path
             all_dimension_choices.append(choice)
 
-        for (path, choice) in extra_dimension_choices:
+        for (path, choice) in extra_dim_choices:
             choice._name = ("model_extra_params",) + path
             all_dimension_choices.append(choice)
 
@@ -331,10 +321,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         if self.model_initializer is None:
             raise ValueError("Experiment guidelines must be set before starting optimization")
 
-        _reporter_params = dict(
-            dict(highlight_max=G.Env.metrics_map[self.target_metric[-1]].direction == "max"),
-            **self.reporter_parameters,
-        )
+        _reporter_params = dict(dict(do_maximize=self.do_maximize), **self.reporter_parameters)
         self.logger = OptimizationReporter([_.name for _ in self.dimensions], **_reporter_params)
 
         self.tested_keys = []
@@ -385,7 +372,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
                 experiment_id=self.current_experiment.experiment_id,
             )
 
-            if (self.best_experiment is None) or (self.current_score > self.best_score):
+            if (
+                (self.best_experiment is None)  # First evaluation
+                or (self.do_maximize and (self.best_score < self.current_score))  # New best max
+                or (not self.do_maximize and (self.best_score > self.current_score))  # New best min
+            ):
                 self.best_experiment = self.current_experiment.experiment_id
                 self.best_score = self.current_score
 
@@ -733,7 +724,7 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         fit: Boolean, default=True
             Fit a model to observed evaluations of the objective. Regardless of `fit`, a model will
             only be fitted after telling :attr:`n_initial_points` points to :attr:`optimizer`"""
-        if G.Env.metrics_map[self.target_metric[-1]].direction == "max":
+        if self.do_maximize:
             score = -score
         self.optimizer_result = self.optimizer.tell(hyperparameters, score, fit=fit)
 

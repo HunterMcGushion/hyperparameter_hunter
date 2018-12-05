@@ -4,8 +4,24 @@
 ### Features
 
 ### Bug-Fixes
+* Fix bug when comparing identical dataset sentinels used in a `CrossValidationExperiment`, followed 
+by use in `BaseOptimizationProtocol.set_experiment_guidelines`
 
 ### Changes
+
+### Breaking Changes
+* Hyperparameter keys are not compatible with those created using previous versions due to updated
+defaults for core Experiment parameters
+    * This is in order to improve proper matching to saved Experiment results, especially when using
+    "non-essential"/extra hyperparameters such as `verbose`
+    * The following parameters of `experiments.BaseExperiment.__init__` will now be set to the 
+    corresponding value by default if `None`:
+        * `model_extra_params`: {}
+        * `feature_selector`: []
+        * `preprocessing_pipeline`: {}
+        * `preprocessing_params`: {}
+    * These changes are also reflected in `optimization_core.BaseOptimizationProtocol.set_experiment_guidelines`,
+    and `utils.optimization_utils.filter_by_guidelines`
 
 
 <a name="2.0.1"></a>

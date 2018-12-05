@@ -8,7 +8,7 @@ import pandas as pd
 ###############################################
 # Import Learning Assets
 ###############################################
-from sklearn.datasets import load_breast_cancer, make_classification
+from sklearn.datasets import load_breast_cancer, make_classification, load_diabetes
 
 # from sklearn.preprocessing import OneHotEncoder, LabelBinarizer
 
@@ -29,6 +29,24 @@ def get_breast_cancer_data(target="diagnosis"):
     df: `pandas.DataFrame`
         The breast cancer dataset, with friendly column names"""
     data = load_breast_cancer()
+    df = pd.DataFrame(data=data.data, columns=[_.replace(" ", "_") for _ in data.feature_names])
+    df[target] = data.target
+    return df
+
+
+def get_diabetes_data(target="progression"):
+    """Get the SKLearn Diabetes regression dataset, formatted as a DataFrame
+
+    Parameters
+    ----------
+    target: String, default='progression'
+        What to name the column in `df` that contains the target output values
+
+    Returns
+    -------
+    df: `pandas.DataFrame`
+        The diabetes dataset, with friendly column names"""
+    data = load_diabetes()
     df = pd.DataFrame(data=data.data, columns=[_.replace(" ", "_") for _ in data.feature_names])
     df[target] = data.target
     return df

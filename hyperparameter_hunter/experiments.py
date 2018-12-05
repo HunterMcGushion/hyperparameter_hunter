@@ -39,6 +39,7 @@ from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_met
 from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.utils.file_utils import make_dirs
 from hyperparameter_hunter.utils.general_utils import Deprecated
 
 ##################################################
@@ -47,7 +48,6 @@ from hyperparameter_hunter.utils.general_utils import Deprecated
 from abc import abstractmethod
 from inspect import isclass
 import numpy as np
-import os
 import pandas as pd
 import random
 import shutil
@@ -137,10 +137,11 @@ class BaseExperiment(ScoringMixIn):
         except TypeError:
             self.model_init_params.update(dict(build_fn=model_init_params))
 
-        self.model_extra_params = model_extra_params
-        self.feature_selector = feature_selector
-        self.preprocessing_pipeline = preprocessing_pipeline
-        self.preprocessing_params = preprocessing_params
+        self.model_extra_params = model_extra_params if model_extra_params is not None else {}
+        self.feature_selector = feature_selector if feature_selector is not None else []
+        self.preprocessing_pipeline = preprocessing_pipeline or {}
+        self.preprocessing_params = preprocessing_params if preprocessing_params is not None else {}
+
         self.notes = notes
         self.do_raise_repeated = do_raise_repeated
         self.auto_start = auto_start
@@ -351,6 +352,8 @@ class BaseExperiment(ScoringMixIn):
 
         self.hyperparameter_key = HyperparameterKeyMaker(parameters, self.cross_experiment_key)
         G.log("Hyperparameter Key:     '{}'".format(self.hyperparameter_key))
+        G.debug("Raw hyperparameters...")
+        G.debug(self.hyperparameter_key.parameters)
 
     def _create_script_backup(self):
         """Create and save a copy of the script that initialized the Experiment if allowed to, and
@@ -364,7 +367,7 @@ class BaseExperiment(ScoringMixIn):
                 try:
                     self._source_copy_helper()
                 except FileNotFoundError:
-                    os.makedirs(self.result_paths["script_backup"], exist_ok=False)
+                    make_dirs(self.result_paths["script_backup"], exist_ok=False)
                     self._source_copy_helper()
                 G.log("Created source backup:  '{}'".format(self.source_script), 4)
             else:
@@ -422,7 +425,7 @@ class BaseExperiment(ScoringMixIn):
             elif "seed" in self.model_init_params:
                 self.model_init_params["seed"] = self.current_seed
             else:
-                G.log("Model has no random_state/seed parameter to update")
+                G.debug("WARNING: Model has no random_state/seed parameter to update")
                 # FLAG: HIGH PRIORITY BELOW
                 # TODO: BELOW IS NOT THE CASE IF MODEL IS NN - SETTING THE GLOBAL RANDOM SEED DOES SOMETHING
                 # TODO: If this is logged, there is no reason to execute multiple-run-averaging, so don't
@@ -430,7 +433,7 @@ class BaseExperiment(ScoringMixIn):
                 # TODO: ... 2) Set the results of all subsequent runs to the results of the first run (this could be difficult)
                 # FLAG: HIGH PRIORITY ABOVE
         except Exception as _ex:
-            G.log("Failed to update model's random_state     {}".format(_ex.__repr__()))
+            G.log("WARNING: Failed to update model's random_state     {}".format(_ex.__repr__()))
 
 
 class BaseCVExperiment(BaseExperiment):

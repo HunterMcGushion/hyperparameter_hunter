@@ -16,22 +16,23 @@ def get_holdout_set(train, target_column):
 def execute():
     env = Environment(
         train_dataset=get_toy_classification_data(),
-        root_results_path='HyperparameterHunterAssets',
+        root_results_path="HyperparameterHunterAssets",
         # Both `holdout_dataset`, and `train_dataset` can be any of the following: pandas.DataFrame, filepath, or None
         # If a filepath is provided, it will be passed to :meth:`pandas.read_csv`.
         # In addition to the above types, `holdout_dataset` can also be provided as a callable (see above :func:`get_holdout_set`)
         holdout_dataset=get_holdout_set,
         test_dataset=get_toy_classification_data(),
-
         # By default, `holdout_dataset` will be scored with the provided metrics_map, just like OOF predictions
         # However, you can provide the additional `metrics_params` kwarg to specify which metrics are calculated for each dataset
         # See the documentation in :class:`environment.Environment` and :class:`metrics.ScoringMixIn` for more information
-        metrics_map=['roc_auc_score'],
+        metrics_map=["roc_auc_score"],
         cross_validation_type=StratifiedKFold,
         cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
 
-    experiment = CrossValidationExperiment(model_initializer=XGBClassifier, model_init_params=dict(subsample=0.5))
+    experiment = CrossValidationExperiment(
+        model_initializer=XGBClassifier, model_init_params=dict(subsample=0.5)
+    )
     # At the end of the Experiment, notice a few differences from the results of an Experiment given only training data:
     # 1) A "PredictionsHoldout" directory is created to house holdout predictions for Experiments given holdout data,
     # 2) A "PredictionsTest" directory is created to house test predictions for Experiments given test data,
@@ -41,5 +42,5 @@ def execute():
     # The new "KeyAttributeLookup" entries serve to ensure the same datasets are used, and improper comparisons aren't made
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     execute()

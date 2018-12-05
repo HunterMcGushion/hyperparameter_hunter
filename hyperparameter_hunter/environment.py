@@ -27,8 +27,7 @@ from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
 from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
-from hyperparameter_hunter.utils.file_utils import read_json
-from hyperparameter_hunter.utils.general_utils import type_val
+from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
 from hyperparameter_hunter.utils.result_utils import format_predictions, default_do_full_save
 
 ##################################################
@@ -36,7 +35,6 @@ from hyperparameter_hunter.utils.result_utils import format_predictions, default
 ##################################################
 from inspect import signature, isclass
 import numpy as np
-import os
 import os.path
 import pandas as pd
 
@@ -420,7 +418,7 @@ class Environment:
                 self.root_results_path = os.path.join(self.root_results_path, ASSETS_DIRNAME)
                 self.result_paths["root"] = self.root_results_path
             if not os.path.exists(self.root_results_path):
-                os.makedirs(self.root_results_path, exist_ok=True)
+                make_dirs(self.root_results_path, exist_ok=True)
         else:
             raise TypeError(f"root_results_path must be None or str, not {self.root_results_path}")
 

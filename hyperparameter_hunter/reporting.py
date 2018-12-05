@@ -13,6 +13,7 @@ from datetime import datetime
 import inspect
 import logging
 import os.path
+import sys
 
 
 class ReportingHandler(object):
@@ -148,7 +149,7 @@ class ReportingHandler(object):
         -------
         console_handler: `logging.StreamHandler` instance
             The instantiated handler for the console"""
-        console_handler = logging.StreamHandler()
+        console_handler = logging.StreamHandler(stream=sys.stdout)
         console_handler.setLevel(level)
 
         fmt = fmt or "<%(asctime)s> %(message)s"
@@ -328,7 +329,7 @@ class _Color:
 
 
 class OptimizationReporter:
-    def __init__(self, parameter_names, verbose=1, show_experiment_id=8, highlight_max=True):
+    def __init__(self, parameter_names, verbose=1, show_experiment_id=8, do_maximize=True):
         """A MixIn class for reporting the results of hyperparameter optimization rounds
 
         Parameters
@@ -342,7 +343,7 @@ class OptimizationReporter:
             If True, the experiment_id will be printed in each result row. If False, it will not.
             If int, the first `show_experiment_id`-many characters of each experiment_id will be
             printed in each row
-        highlight_max: Boolean, default=True
+        do_maximize: Boolean, default=True
             If False, smaller metric values will be considered preferred and will be highlighted to
             stand out. Else larger metric values will be treated as preferred"""
         self.original_parameter_names = parameter_names
@@ -350,7 +351,7 @@ class OptimizationReporter:
         self.show_experiment_id = (
             36 if (show_experiment_id is True or show_experiment_id > 36) else show_experiment_id
         )
-        self.highlight_max = highlight_max
+        self.do_maximize = do_maximize
 
         self.end = " | "
         self.y_max = None
@@ -482,8 +483,8 @@ class OptimizationReporter:
         #################### Evaluation Result ####################
         if (
             (self.y_max is None)  # First evaluation
-            or (self.highlight_max and self.y_max < evaluation)  # Found new max (best)
-            or (not self.highlight_max and self.y_max > evaluation)  # Found new min (best)
+            or (self.do_maximize and self.y_max < evaluation)  # Found new max (best)
+            or (not self.do_maximize and self.y_max > evaluation)  # Found new min (best)
         ):
             self.y_max, self.x_max = evaluation, hyperparameters
             self._print_target_value(evaluation, pre=_Color.MAGENTA, post=_Color.STOP)
