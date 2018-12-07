@@ -244,12 +244,12 @@ class KeyMaker(metaclass=ABCMeta):
 
         Parameters
         ----------
-        parameters: dict
+        parameters: Dict
             The full dictionary of initial parameters to be filtered
 
         Returns
         -------
-        parameters: dict
+        parameters: Dict
             The filtered version of the given `parameters`"""
         return parameters
 
@@ -374,18 +374,17 @@ class HyperparameterKeyMaker(KeyMaker):
     def _filter_parameters_to_hash(self, parameters):
         """Produce a filtered version of `parameters` that does not include hyperparameters that
         should be ignored during hashing, such as those pertaining to verbosity, seeds, and random
-        states, as they have no effect on the results of experiments when within the confines of
-        hyperparameter_hunter
+        states, as they have no effect on HyperparameterHunter experiment results
 
         Parameters
         ----------
-        parameters: dict
-            The full dictionary of initial parameters to be filtered
+        parameters: Dict
+            Full dictionary of initial parameters to be filtered
 
         Returns
         -------
-        parameters: dict
-            The filtered version of the given `parameters`"""
+        parameters: Dict
+            Filtered version of the given `parameters`"""
         reject_keys = {
             "verbose",
             "verbosity",
@@ -409,9 +408,8 @@ class HyperparameterKeyMaker(KeyMaker):
         return parameters
 
     def does_key_exist(self):
-        """Check that 1) there is a file corresponding to :attr:`cross_experiment_key.key`,
-        2) the aforementioned file contains the key :attr:`key`, and
-        3) the value of the file at :attr:`key` is a non-empty list
+        """Check that 1) there is a file for :attr:`cross_experiment_key.key`, 2) the aforementioned
+        file contains the key :attr:`key`, and 3) the value at :attr:`key` is a non-empty list
 
         Returns
         -------
@@ -429,9 +427,8 @@ class HyperparameterKeyMaker(KeyMaker):
         return self.exists
 
     def save_key(self):
-        """Create an entry in the dict corresponding to the file at
-        :attr:`cross_experiment_key.key`, whose key is :attr:`key`, and whose value is an empty
-        list if :attr:`exists` is False"""
+        """Create an entry in the dict contained in the file at :attr:`cross_experiment_key.key`,
+        whose key is :attr:`key`, and whose value is an empty list if :attr:`exists` is False"""
         if not self.exists:
             if self.cross_experiment_key.exists is False:
                 _err = "Cannot save hyperparameter_key: '{}', before cross_experiment_key '{}'"
@@ -447,14 +444,14 @@ class HyperparameterKeyMaker(KeyMaker):
 
 
 def make_hash_sha256(obj, **kwargs):
-    """Create an sha256 hash of the input obj
+    """Create an sha256 hash of the input `obj`
 
     Parameters
     ----------
-    obj: Any object
-        The object for which a hash will be created
+    obj: Object
+        Object for which a hash will be created
     **kwargs: Dict
-        Any extra kwargs will be supplied to :func:`key_handler.hash_callable`
+        Extra kwargs to supply to :func:`key_handler.hash_callable`
 
     Returns
     -------
@@ -465,14 +462,14 @@ def make_hash_sha256(obj, **kwargs):
 
 
 def to_hashable(obj, **kwargs):
-    """Format the input obj to be hashable
+    """Format the input `obj` to be hashable
 
     Parameters
     ----------
-    obj: Any object
-        The object to convert to a hashable format
+    obj: Object
+        Object to convert to a hashable format
     **kwargs: Dict
-        Any extra kwargs will be supplied to :func:`key_handler.hash_callable`
+        Extra kwargs to supply to :func:`key_handler.hash_callable`
 
     Returns
     -------
@@ -499,73 +496,59 @@ def hash_callable(
     ignore_keywords=False,
     ignore_source_lines=False,
 ):
-    """Prepare callable object for hashing
+    """Prepare callable object for hashing by selecting important characterization properties
 
     Parameters
     ----------
-    obj: callable
-        The callable to convert to a hashable format. Currently supported types are: function,
-        class, :class:`functools.partial`
-    ignore_line_comments: boolean, default=True
+    obj: Callable
+        Callable to convert to a hashable format. Supports: function, class, `functools.partial`
+    ignore_line_comments: Boolean, default=True
         If True, any line comments will be stripped from the source code of `obj`, specifically any
         lines that start with zero or more whitespaces, followed by an octothorpe (#). This does not
         apply to comments on the same line as code
-    ignore_first_line: boolean, default=False
-        If True, the first line will be stripped from the callable's source code, specifically the
-        function's name and signature. If ignore_name=True, this will be treated as True
-    ignore_module: boolean, default=False
-        If True, the name of the module in which the source code is located (:attr:`obj.__module__`)
-        will be ignored
-    ignore_name: boolean, default=False
-        If True, :attr:`obj.__name__` will be ignored. Note the distinction between this and
-        `ignore_first_line`, which strips the entire callable signature from the source code.
-        `ignore_name` does not alter the source code. To ensure thorough ignorance,
-        ignore_first_line=True is recommended
-    ignore_keywords: boolean, default=False
-        If True and `obj` is a :class:`functools.partial` (not a normal function/method),
-        :attr:`obj.keywords` will be ignored
-    ignore_source_lines: boolean, default=False
+    ignore_first_line: Boolean, default=False
+        If True, strip the first line from the callable's source code, specifically its name and
+        signature. If `ignore_name=True`, this will be treated as True
+    ignore_module: Boolean, default=False
+        If True, ignore the name of the module containing the source code (:attr:`obj.__module__`)
+    ignore_name: Boolean, default=False
+        If True, ignore :attr:`obj.__name__`. Note the difference from `ignore_first_line`, which
+        strips the entire callable signature from the source code. `ignore_name` does not alter the
+        source code. To ensure thorough ignorance, `ignore_first_line=True` is recommended
+    ignore_keywords: Boolean, default=False
+        If True and `obj` is a :class:`functools.partial`, ignore :attr:`obj.keywords`
+    ignore_source_lines: Boolean, default=False
         If True, all source code will be ignored by the hashing function. Ignoring all other kwargs,
         this means that only :attr:`obj.__module__`, and :attr:`obj.__name__`,
         (and :attr:`obj.keywords` if `obj` is partial) will be used for hashing
 
     Returns
     -------
-    Hashable properties of the callable object input"""
-    source_lines, module, name, keywords = None, None, None, None
+    Tuple
+        Hashable properties of the callable object input"""
+    keywords, source_lines = None, None
+
+    #################### Clean Up Partial ####################
+    if isinstance(obj, partial):
+        keywords = None if ignore_keywords else obj.keywords
+        obj = obj.func  # Set partial to "func" attr - Expose same functionality as normal callable
 
     #################### Get Identifying Data ####################
-    if isinstance(obj, partial):
-        module = obj.func.__module__
-        name = obj.func.__name__
-        keywords = obj.keywords
-        source_lines = getsourcelines(obj.func)[0]
-    elif callable(obj):
-        module = obj.__module__
-        name = obj.__name__
-        # TODO: Below only works on modified Keras `build_fn` during optimization if temp file still exists
-        try:
-            source_lines = getsourcelines(obj)[0]
-        except Exception as _ex:
-            print(_ex)
-            print()
-            raise
-        # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
-    else:
-        raise TypeError("Expected functools.partial, or callable. Received {}".format(type(obj)))
+    module = None if ignore_module else obj.__module__
+    name = None if ignore_name else obj.__name__
 
     #################### Format Source Code Lines ####################
-    if ignore_line_comments is True:
-        source_lines = [_ for _ in source_lines if not is_line_comment(_)]
-    if (ignore_first_line is True) or (ignore_name is True):
-        source_lines = source_lines[1:]
+    if not ignore_source_lines:
+        # TODO: Below only works on modified Keras `build_fn` during optimization if temp file still exists
+        source_lines = getsourcelines(obj)[0]
+        # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
+
+        if ignore_line_comments:
+            source_lines = [_ for _ in source_lines if not is_line_comment(_)]
+        if (ignore_first_line is True) or (ignore_name is True):
+            source_lines = source_lines[1:]
 
     #################### Select Relevant Data ####################
-    source_lines = None if ignore_source_lines is True else source_lines
-    module = None if ignore_module is True else module
-    name = None if ignore_name is True else name
-    keywords = None if ignore_keywords is True else keywords
-
     relevant_data = [_ for _ in [module, name, keywords, source_lines] if _ is not None]
     # noinspection PyTypeChecker
     return tuple(to_hashable(relevant_data))
@@ -576,7 +559,7 @@ def is_line_comment(string):
 
     Parameters
     ----------
-    string: str
+    string: Str
         The str in which to check for a line comment
 
     Returns
