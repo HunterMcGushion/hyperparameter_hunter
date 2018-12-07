@@ -264,38 +264,27 @@ def normalize_dimensions(dimensions):
     transformed_dimensions = []
 
     if space.is_categorical:
-        for dimension in space:
+        for dim in space:
             transformed_dimensions.append(
-                Categorical(
-                    dimension.categories, dimension.prior, transform="identity", name=dimension.name
-                )
+                Categorical(dim.categories, dim.prior, transform="identity", name=dim.name)
             )
     else:
-        for dimension in space.dimensions:
-            if isinstance(dimension, Categorical):
-                transformed_dimensions.append(dimension)
-            elif isinstance(dimension, Real):
+        for dim in space.dimensions:
+            if isinstance(dim, Categorical):
+                transformed_dimensions.append(dim)
+            elif isinstance(dim, Real):
                 transformed_dimensions.append(
-                    Real(
-                        dimension.low,
-                        dimension.high,
-                        dimension.prior,
-                        transform="normalize",
-                        name=dimension.name,
-                    )
+                    Real(dim.low, dim.high, dim.prior, transform="normalize", name=dim.name)
                 )
-            elif isinstance(dimension, Integer):
+            elif isinstance(dim, Integer):
                 transformed_dimensions.append(
-                    Integer(
-                        dimension.low, dimension.high, transform="normalize", name=dimension.name
-                    )
+                    Integer(dim.low, dim.high, transform="normalize", name=dim.name)
                 )
             else:
-                raise RuntimeError(f"Unknown dimension type: {type(dimension)}")
-
+                raise RuntimeError(f"Unknown dimension type: {type(dim)}")
             #################### Replace Lost Attributes ####################
-            if hasattr(dimension, "location"):
-                transformed_dimensions[-1].location = dimension.location
+            if hasattr(dim, "location"):
+                transformed_dimensions[-1].location = dim.location
 
     return Space(transformed_dimensions)
 
