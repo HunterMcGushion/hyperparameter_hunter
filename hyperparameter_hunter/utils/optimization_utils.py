@@ -366,9 +366,8 @@ def get_scored_params(experiment_description_path, target_metric, get_descriptio
     return (all_hyperparameters, evaluation)
 
 
-def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
-    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not fit within
-    `hyperparameter_space`
+def filter_by_space(hyperparameters_and_scores, space):
+    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not fit in `space`
 
     Parameters
     ----------
@@ -377,27 +376,23 @@ def filter_by_space(hyperparameters_and_scores, hyperparameter_space):
         where the hyperparameter dict should contain at least the following keys:
         ['model_init_params', 'model_extra_params', 'preprocessing_pipeline',
         'preprocessing_params', 'feature_selector']
-    hyperparameter_space: instance of :class:`space.Space`
+    space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
 
     Returns
     -------
     hyperparameters_and_scores: List of tuples
-        Filtered to include only those whose hyperparameters fit within `hyperparameter_space`"""
-    dimension_names = hyperparameter_space.names()
-    hyperparameters_and_scores = list(
-        filter(
-            lambda _: dimension_subset(_[0], dimension_names) in hyperparameter_space,
-            hyperparameters_and_scores,
-        )
+        Filtered to include only those whose hyperparameters fit within `space`"""
+    hyperparameters_and_scores = filter(
+        lambda _: dimension_subset(_[0], space.names()) in space, hyperparameters_and_scores
     )
 
-    return hyperparameters_and_scores
+    return list(hyperparameters_and_scores)
 
 
 def filter_by_guidelines(
     hyperparameters_and_scores,
-    hyperparameter_space,
+    space,
     model_init_params,
     model_extra_params,
     preprocessing_pipeline,
@@ -405,9 +400,8 @@ def filter_by_guidelines(
     feature_selector,
     **kwargs,
 ):
-    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not match the
-    guideline hyperparameters (all hyperparameters not in `hyperparameter_space`), after ignoring
-    unimportant hyperparameters
+    """Reject any `hyperparameters_and_scores` tuples whose hyperparameters do not match guideline
+    hyperparameters (all hyperparameters not in `space`), after ignoring unimportant hyperparameters
 
     Parameters
     ----------
@@ -415,7 +409,7 @@ def filter_by_guidelines(
         Each tuple should be of form (hyperparameters <dict>, evaluation <float>), in which
         hyperparameters contains at least the keys: ['model_init_params', 'model_extra_params',
         'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
-    hyperparameter_space: instance of :class:`space.Space`
+    space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
     model_init_params: Dict
     model_extra_params: Dict, or None
@@ -431,9 +425,7 @@ def filter_by_guidelines(
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters matched guideline hyperparameters"""
-    dimensions = [
-        ("model_init_params", _) if isinstance(_, str) else _ for _ in hyperparameter_space.names()
-    ]
+    dimensions = [("model_init_params", _) if isinstance(_, str) else _ for _ in space.names()]
     # `dimensions` = hyperparameters to be ignored. Filter by all remaining
 
     dimensions_to_ignore = [
@@ -460,9 +452,9 @@ def filter_by_guidelines(
 
     # noinspection PyUnusedLocal
     def _visit(path, key, value):
-        """Return False if element in hyperparameter_space dimensions, or in dimensions being
-        ignored. Else, return True. If `value` is of type tuple or set, it will be converted to a
-        list in order to simplify comparisons to the JSON-formatted `hyperparameters_and_scores`"""
+        """Return False if element in space dimensions, or in dimensions being ignored. Else, return
+        True. If `value` is of type tuple or set, it will be converted to a list in order to
+        simplify comparisons to the JSON-formatted `hyperparameters_and_scores`"""
         if path and path[0] == "model_extra_params" and value == {}:
             # This removes any empty dicts in ("model_extra_params")
             # This is done to simplify comparisons between experiments with no `model_extra_params`,
@@ -477,7 +469,7 @@ def filter_by_guidelines(
         return True
 
     guidelines = remap(temp_guidelines, visit=_visit)
-    # `guidelines` = `temp_guidelines` that are neither `hyperparameter_space` choices, nor in `dimensions_to_ignore`
+    # `guidelines` = `temp_guidelines` that are neither `space` choices, nor `dimensions_to_ignore`
 
     hyperparameters_and_scores = list(
         filter(lambda _: remap(_[0], visit=_visit) == guidelines, hyperparameters_and_scores)

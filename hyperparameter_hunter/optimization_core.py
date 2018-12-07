@@ -119,9 +119,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             Protocol. 2: In addition to logs shown when verbose=1, also show the logs from individual
             Experiments
         read_experiments: Boolean, default=True
-            If True, all Experiment records that fit within the current
-            :attr:`hyperparameter_space`, and are for the same :attr:`algorithm_name`, and match the
-            current guidelines, will be read in and used to fit any optimizers
+            If True, all Experiment records that fit in the current :attr:`space` and guidelines,
+            and match :attr:`algorithm_name`, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default={}
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`. Note:
             Unless provided explicitly, the key "do_maximize" will be added by default to
@@ -156,7 +155,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.dimensions = []
         self.search_bounds = dict()
 
-        self.hyperparameter_space = None
+        self.space = None
         self.similar_experiments = []
         self.best_experiment = None
         self.best_score = None
@@ -452,8 +451,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     ##################################################
     @abstractmethod
     def _set_hyperparameter_space(self):
-        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search
-        dimensions"""
+        """Initialize :attr:`space` according to the provided hyperparameter search dimensions"""
         raise NotImplementedError()
 
     @abstractmethod
@@ -534,7 +532,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             self.module_name,
             G.Env.cross_experiment_key,
             self.target_metric,
-            self.hyperparameter_space,
+            self.space,
             G.Env.result_paths["global_leaderboard"],
             G.Env.result_paths["description"],
             model_params,
@@ -594,9 +592,8 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             Protocol. 2: In addition to logs shown when verbose=1, also show the logs from
             individual Experiments
         read_experiments: Boolean, default=True
-            If True, all Experiment records that fit within the current
-            :attr:`hyperparameter_space`, and are for the same :attr:`algorithm_name`, and match the
-            current guidelines, will be read in and used to fit any optimizers
+            If True, all Experiment records that fit in the current :attr:`space` and guidelines,
+            and match :attr:`algorithm_name`, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default=None
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
         base_estimator: String in ['GP', 'GBRT', 'RF', 'ET', 'DUMMY'], or an `sklearn` regressor, default='GP'
@@ -681,17 +678,16 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         )
 
     def _set_hyperparameter_space(self):
-        """Initialize :attr:`hyperparameter_space` according to the provided hyperparameter search
-        dimensions, and :attr:`base_estimator` and :attr:`optimizer`"""
-        self.hyperparameter_space = Space(dimensions=self.dimensions)
+        """Initialize :attr:`space` according to the provided hyperparameter search dimensions, and
+        :attr:`base_estimator`, and :attr:`optimizer`"""
+        self.space = Space(dimensions=self.dimensions)
         self._prepare_estimator()
         self._build_optimizer()
 
     def _prepare_estimator(self):
-        """Initialize :attr:`base_estimator` with :attr:`hyperparameter_space` and any other kwargs,
-        using `skopt.utils.cook_estimator`"""
+        """Initialize :attr:`base_estimator` with :attr:`space` via `skopt.utils.cook_estimator`"""
         self.base_estimator = cook_estimator(
-            self.base_estimator, space=self.hyperparameter_space, **self.base_estimator_kwargs
+            self.base_estimator, space=self.space, **self.base_estimator_kwargs
         )
 
     def _build_optimizer(self):
@@ -699,7 +695,7 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         of hyperparameters by learning from executed Experiments, and suggest points at which the
         objective should be evaluated"""
         self.optimizer = AskingOptimizer(
-            dimensions=self.hyperparameter_space,
+            dimensions=self.space,
             base_estimator=self.base_estimator,
             n_initial_points=self.n_initial_points,
             acq_func=self.acquisition_function,
@@ -747,17 +743,14 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         _current_hyperparameters = self.optimizer.ask()
 
         if _current_hyperparameters == self.current_hyperparameters_list:
-            new_parameters = self.hyperparameter_space.rvs(random_state=None)[0]
+            new_parameters = self.space.rvs(random_state=None)[0]
             G.debug_("REPEATED  asked={}  new={}".format(_current_hyperparameters, new_parameters))
             _current_hyperparameters = new_parameters
 
         self.current_hyperparameters_list = _current_hyperparameters
 
         current_hyperparameters = dict(
-            zip(
-                self.hyperparameter_space.names(use_location=False),
-                self.current_hyperparameters_list,
-            )
+            zip(self.space.names(use_location=False), self.current_hyperparameters_list)
         )
 
         return current_hyperparameters
@@ -770,7 +763,7 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         # TODO: Remove below reversal of `similar_experiments` when `result_reader.ResultFinder.sort` finished
         for _i, _experiment in enumerate(self.similar_experiments[::-1]):
-            _hyperparameters = dimension_subset(_experiment[0], self.hyperparameter_space.names())
+            _hyperparameters = dimension_subset(_experiment[0], self.space.names())
             _evaluation = _experiment[1]
             _experiment_id = _experiment[2] if len(_experiment) > 2 else None
             self.logger.print_result(_hyperparameters, _evaluation, experiment_id=_experiment_id)
@@ -798,12 +791,11 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         Returns
         -------
         :attr:`_search_space_size`: Int, or `numpy.inf`
-            Infinity will be returned if any of the following constraints are met: 1) the
-            hyperparameter dimensions include any real-valued boundaries, 2) the boundaries include
-            values that are neither categorical nor integer, or 3) the search space size is
-            otherwise incalculable"""
+            Infinity returned if any of the following constraints are met: 1) the hyperparameter
+            dimensions include any real-valued boundaries, 2) the boundaries include values that are
+            neither categorical nor integer, or 3) search space size is otherwise incalculable"""
         if self._search_space_size is None:
-            self._search_space_size = len(self.hyperparameter_space)
+            self._search_space_size = len(self.space)
         return self._search_space_size
 
 
