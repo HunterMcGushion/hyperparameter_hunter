@@ -55,13 +55,10 @@ class ArgumentTracer(type):
         return class_obj
 
     def __call__(cls, *args, **kwargs):
-        if getattr(G, "use_dummy_keras_tracer", False) is True:
-            spaces = (Real, Integer, Categorical)
-
-            _args = [_ if not isinstance(_, spaces) else _.bounds[0] for _ in args]
-            _kwargs = {
-                _k: _v if not isinstance(_v, spaces) else _v.bounds[0] for _k, _v in kwargs.items()
-            }
+        if getattr(G, "use_dummy_tracer", False) is True:
+            space = (Real, Integer, Categorical)
+            _args = [_ if not isinstance(_, space) else _.bounds[0] for _ in args]
+            _kwargs = {k: v if not isinstance(v, space) else v.bounds[0] for k, v in kwargs.items()}
             instance = super().__call__(*_args, **_kwargs)
         else:
             instance = super().__call__(*args, **kwargs)
