@@ -10,7 +10,7 @@ Related
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.tracers import KerasTracer
+from hyperparameter_hunter.tracers import ArgumentTracer
 
 ##################################################
 # Import Miscellaneous Assets
@@ -48,9 +48,9 @@ class Interceptor(PathFinder):
 ##################################################
 class KerasLayerLoader(SourceFileLoader):
     def exec_module(self, module):
-        """Set `module.Layer` to a traced version of itself via :class:`tracers.KerasTracer`"""
+        """Set `module.Layer` to a traced version of itself via :class:`tracers.ArgumentTracer`"""
         super().exec_module(module)
-        module.Layer = KerasTracer(
+        module.Layer = ArgumentTracer(
             module.Layer.__name__, module.Layer.__bases__, module.Layer.__dict__
         )
         return module

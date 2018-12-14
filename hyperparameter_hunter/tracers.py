@@ -22,12 +22,13 @@ from hyperparameter_hunter.space import Real, Integer, Categorical
 ##################################################
 # noinspection PyProtectedMember
 from inspect import signature, _empty
+from functools import wraps
+import sys
 
 
-class KerasTracer(type):
-    """This metaclass traces the default arguments and explicitly provided arguments of descendants
-    of `keras.engine.base_layer.Layer`. It also has special provisions for instantiating dummy
-    Keras models if directed to"""
+class ArgumentTracer(type):
+    """Metaclass to trace the default arguments and explicitly provided arguments of its
+    descendants. It also has special provisions for instantiating dummy models if directed to"""
 
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
