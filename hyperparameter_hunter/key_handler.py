@@ -85,8 +85,7 @@ class KeyMaker(metaclass=ABCMeta):
         key: Str, or None
             If a key has been generated for `parameters`, it is saved here. Else, None
         exists: Boolean
-            If `key` is not None, and was found to already exist in `tested_keys_dir`,
-            `exists` = True. Else, False
+            True if `key` is not None, and already exists in `tested_keys_dir`. Else, False
         lookup_dir: Str
             The directory in which complex-typed parameter entries will be saved
         tested_keys_dir: Str, or None
@@ -259,14 +258,12 @@ class KeyMaker(metaclass=ABCMeta):
     @property
     @abstractmethod
     def key_type(self) -> str:
-        """A string in ['hyperparameter', 'cross_experiment'] denoting which type of key is
-        being processed"""
+        """Str in ["hyperparameter", "cross_experiment"], denoting the key type being processed"""
         raise NotImplementedError()
 
     @abstractmethod
     def does_key_exist(self) -> bool:
-        """Check if the key hash already exists among previously saved keys in the contents of
-        :attr:`tested_keys_dir`"""
+        """Check if key hash exists among saved keys in the contents of :attr:`tested_keys_dir`"""
         raise NotImplementedError()
 
     @abstractmethod
