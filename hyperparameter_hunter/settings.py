@@ -102,6 +102,7 @@ class G(object):
 
     import_hooks = []
     sentinel_registry = []
+    mirror_registry = []
 
     @classmethod
     def reset_attributes(cls):
