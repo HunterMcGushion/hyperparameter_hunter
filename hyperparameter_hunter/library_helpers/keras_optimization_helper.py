@@ -369,7 +369,7 @@ def initialize_dummy_model(model_initializer, build_fn, wrapper_params):
     -------
     dummy: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
         An initialized, compiled descendant of :class:`keras.wrappers.scikit_learn.BaseWrapper`"""
-    setattr(G, "use_dummy_keras_tracer", True)  # Handles dummifying params via `KerasTracer`
+    setattr(G, "use_dummy_tracer", True)  # Handles dummifying params via `ArgumentTracer`
 
     wrapper_params = deepcopy(wrapper_params)
 
@@ -389,7 +389,7 @@ def initialize_dummy_model(model_initializer, build_fn, wrapper_params):
     else:
         dummy.model = dummy.build_fn(**dummy.filter_sk_params(dummy.build_fn))
 
-    setattr(G, "use_dummy_keras_tracer", False)
+    setattr(G, "use_dummy_tracer", False)
     return dummy
 
 

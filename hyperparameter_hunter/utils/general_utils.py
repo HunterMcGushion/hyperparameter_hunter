@@ -334,5 +334,35 @@ def split_version(s):
     return tuple([int(_) for _ in s.split(".")])
 
 
+class Alias:
+    def __init__(self, primary_name, aliases):
+        """Convert uses of `aliases` to `primary_name` upon calling the decorated function/method
+
+        Parameters
+        ----------
+        primary_name: String
+            Preferred name for the parameter, the value of which will be set to the value of the
+            used alias. If `primary_name` is already explicitly used on call in addition to any
+            aliases, the value of `primary_name` will remain unchanged. It only assumes the value of
+            an alias if the `primary_name` is not used
+        aliases: List, string
+            One or multiple string aliases for `primary_name`. If `primary_name` is not used on
+            call, its value will be set to that of a random alias in `aliases`. Before calling the
+            decorated callable, all `aliases` are removed from its kwargs"""
+        self.primary_name = primary_name
+        self.aliases = aliases if isinstance(aliases, list) else [aliases]
+
+    def __call__(self, obj):
+        @wraps(obj)
+        def wrapped(*args, **kwargs):
+            for alias in set(self.aliases).intersection(kwargs):
+                kwargs.setdefault(self.primary_name, kwargs[alias])  # Only set if no `primary_name`
+                del kwargs[alias]  # Remove `aliases`, leaving only `primary_name`
+
+            return obj(*args, **kwargs)
+
+        return wrapped
+
+
 if __name__ == "__main__":
     pass

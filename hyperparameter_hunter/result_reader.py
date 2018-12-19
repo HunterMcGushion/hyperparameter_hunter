@@ -41,7 +41,7 @@ class ResultFinder:
         module_name,
         cross_experiment_key,
         target_metric,
-        hyperparameter_space,
+        space,
         leaderboard_path,
         descriptions_dir,
         model_params,
@@ -61,7 +61,7 @@ class ResultFinder:
             A path denoting the metric to be used. The first value should be one of ['oof',
             'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
             :attr:`environment.Environment.metrics_params`
-        hyperparameter_space: :class:`space.Space`
+        space: :class:`space.Space`
             Hyperparameter search space constraints
         leaderboard_path: String
             Path to a leaderboard file, whose listed Experiments will be tested for compatibility
@@ -84,7 +84,7 @@ class ResultFinder:
         self.module_name = module_name
         self.cross_experiment_key = cross_experiment_key
         self.target_metric = target_metric
-        self.hyperparameter_space = hyperparameter_space
+        self.space = space
         self.leaderboard_path = leaderboard_path
         self.descriptions_dir = descriptions_dir
         self.model_params = model_params
@@ -104,7 +104,7 @@ class ResultFinder:
 
         if self.module_name == "keras":
             multi_targets = [("model_init_params", "compile_params", "optimizer")]
-            if multi_targets[0] in self.hyperparameter_space.names():
+            if multi_targets[0] in self.space.names():
                 self._filter_by_guidelines_multi(multi_targets[0])
             else:
                 self._filter_by_guidelines()
@@ -132,14 +132,14 @@ class ResultFinder:
 
     def _filter_by_space(self):
         """Remove any elements of :attr:`hyperparameters_and_scores` whose values are declared in
-        :attr:`hyperparameter_space`, but do not fit within the space constraints"""
+        :attr:`space`, but do not fit within the space constraints"""
         self.hyperparameters_and_scores = filter_by_space(
-            self.hyperparameters_and_scores, self.hyperparameter_space
+            self.hyperparameters_and_scores, self.space
         )
 
     def _filter_by_guidelines(self, model_params=None):
         """Remove any elements of :attr:`hyperparameters_and_scores` whose values are not declared
-        in :attr:`hyperparameter_space` but are provided in :attr:`model_params` that do not match
+        in :attr:`space` but are provided in :attr:`model_params` that do not match
         the values in :attr:`model_params`
 
         Parameters
@@ -148,9 +148,7 @@ class ResultFinder:
             If not None, a dict of model parameters that closely resembles :attr:`model_params`"""
         self.similar_experiments.extend(
             filter_by_guidelines(
-                self.hyperparameters_and_scores,
-                self.hyperparameter_space,
-                **(model_params or self.model_params),
+                self.hyperparameters_and_scores, self.space, **(model_params or self.model_params)
             )
         )
 
@@ -210,7 +208,7 @@ class KerasResultFinder(ResultFinder):
         module_name,
         cross_experiment_key,
         target_metric,
-        hyperparameter_space,
+        space,
         leaderboard_path,
         descriptions_dir,
         model_params,
@@ -230,7 +228,7 @@ class KerasResultFinder(ResultFinder):
             Path denoting the metric to be used. The first value should be one of ['oof',
             'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
             :attr:`environment.Environment.metrics_params`
-        hyperparameter_space: :class:`space.Space`
+        space: :class:`space.Space`
             Hyperparameter search space constraints
         leaderboard_path: String
             Path to a leaderboard file, whose listed Experiments will be tested for compatibility
@@ -254,7 +252,7 @@ class KerasResultFinder(ResultFinder):
             module_name=module_name,
             cross_experiment_key=cross_experiment_key,
             target_metric=target_metric,
-            hyperparameter_space=hyperparameter_space,
+            space=space,
             leaderboard_path=leaderboard_path,
             descriptions_dir=descriptions_dir,
             model_params=model_params,
