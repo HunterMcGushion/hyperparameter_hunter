@@ -23,7 +23,6 @@ from hyperparameter_hunter.space import Real, Integer, Categorical
 # noinspection PyProtectedMember
 from inspect import signature, _empty
 from functools import wraps
-import sys
 
 
 class ArgumentTracer(type):
