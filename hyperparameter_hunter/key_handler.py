@@ -42,8 +42,10 @@ from inspect import getsourcelines, isclass, getsource
 from os import listdir
 import os.path
 import pandas as pd
+from pickle import PicklingError
 import re
 import shelve
+import sys
 
 ##################################################
 # Import Learning Assets
@@ -175,6 +177,10 @@ class KeyMaker(metaclass=ABCMeta):
             if isinstance(value, Sentinel):
                 return (key, value.sentinel)
             elif callable(value) or isinstance(value, pd.DataFrame):
+                # TODO: Check here if callable, and using a `Trace`d model/model_initializer
+                # TODO: If so, pass extra kwargs to below `make_hash_sha256`, which are eventually given to `hash_callable`
+                # TODO: Notably, `ignore_source_lines=True` should be included
+                # FLAG: Also, look into adding package version number to hashed attributes
                 hashed_value = make_hash_sha256(value)
 
                 if isinstance(value, pd.DataFrame):
@@ -219,7 +225,15 @@ class KeyMaker(metaclass=ABCMeta):
         if isclass(value) or (key in shelve_params):
             with shelve.open(lookup_path(f"{key}"), flag="c") as s:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
-                s[hashed_value] = value
+                try:
+                    s[hashed_value] = value
+                except PicklingError:
+                    # "is not the same object" error can be raised due to `Mirror`/`TranslateTrace`
+                    # Instead of saving the object that raised the error, save `getsourcelines`
+                    # Source lines of traced object are identical to those of its un-traced original
+                    s[hashed_value] = getsourcelines(value)
+                except Exception:
+                    raise
         elif isinstance(value, pd.DataFrame):
             make_dirs(lookup_path(key), exist_ok=True)
             value.to_csv(lookup_path(key, f"{hashed_value}.csv"), index=False)
@@ -537,7 +551,18 @@ def hash_callable(
     #################### Format Source Code Lines ####################
     if not ignore_source_lines:
         # TODO: Below only works on modified Keras `build_fn` during optimization if temp file still exists
-        source_lines = getsourcelines(obj)[0]
+        # FLAG: May need to wrap below in try/except TypeError to handle "built-in class" errors during mirroring
+        # FLAG: ... Reference `settings.G.mirror_registry` for approval and its `original_sys_module_entry` attribute
+        try:
+            source_lines = getsourcelines(obj)[0]
+        except TypeError as _ex:
+            for a_mirror in G.mirror_registry:
+                if obj.__name__ == a_mirror.import_name:
+                    # TODO: Also, check `a_mirror.original_full_path` somehow, or object equality
+                    source_lines = a_mirror.asset_source_lines[0]
+                    break
+            else:
+                raise _ex.with_traceback(sys.exc_traceback)
         # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
 
         if ignore_line_comments:
