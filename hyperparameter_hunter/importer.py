@@ -21,7 +21,7 @@ import sys
 
 
 class Interceptor(PathFinder):
-    def __init__(self, module_name, custom_loader):
+    def __init__(self, module_name, custom_loader, asset_name=None):
         """Class to intercept loading of an external module in order to provide custom loading logic
 
         Parameters
@@ -33,12 +33,17 @@ class Interceptor(PathFinder):
             :meth:`exec_module`, then perform the custom loading logic, and return `module`"""
         self.module_name = module_name
         self.custom_loader = custom_loader
+        self.asset_name = asset_name
 
     def find_spec(self, full_name, path=None, target=None):
         """Perform custom loading logic if `full_name` == :attr:`module_name`"""
         if full_name == self.module_name:
             spec = super().find_spec(full_name, path, target)
-            loader = self.custom_loader(full_name, spec.origin)
+
+            if self.asset_name:  # Some loaders need `asset_name` (like `TraceLoader`). Others don't
+                loader = self.custom_loader(full_name, spec.origin, self.asset_name)
+            else:
+                loader = self.custom_loader(full_name, spec.origin)
 
             return ModuleSpec(full_name, loader)
 
