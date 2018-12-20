@@ -1,9 +1,4 @@
-from hyperparameter_hunter import (
-    Environment,
-    CrossValidationExperiment,
-    BayesianOptimization,
-    RandomForestOptimization,
-)
+from hyperparameter_hunter import Environment, CrossValidationExperiment, BayesianOptimization
 from hyperparameter_hunter import Real, Integer, Categorical
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 import os.path
