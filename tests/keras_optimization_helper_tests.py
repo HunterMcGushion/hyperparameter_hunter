@@ -270,7 +270,7 @@ class TestConsolidateLayers(TestCase):
     valid_layers_tests = dict(
         simple=[
             (
-                {"layers": simple_mlp_layers, "class_name_key": True, "separate_args": True},
+                {"layers": simple_mlp_layers, "class_name_key": True, "split_args": True},
                 [
                     {
                         "class_name": "Dense",
@@ -312,7 +312,7 @@ class TestConsolidateLayers(TestCase):
         ],
         class_name_key_false=[
             (
-                {"layers": simple_mlp_layers, "class_name_key": False, "separate_args": True},
+                {"layers": simple_mlp_layers, "class_name_key": False, "split_args": True},
                 [
                     {
                         "Dense": {
@@ -355,9 +355,9 @@ class TestConsolidateLayers(TestCase):
                 ],
             )
         ],
-        separate_args_false=[
+        split_args_false=[
             (
-                {"layers": simple_mlp_layers, "class_name_key": True, "separate_args": False},
+                {"layers": simple_mlp_layers, "class_name_key": True, "split_args": False},
                 [
                     {
                         "class_name": "Dense",
@@ -391,7 +391,7 @@ class TestConsolidateLayers(TestCase):
         ],
         both_false=[
             (
-                {"layers": simple_mlp_layers, "class_name_key": False, "separate_args": False},
+                {"layers": simple_mlp_layers, "class_name_key": False, "split_args": False},
                 [
                     {
                         "Dense": {

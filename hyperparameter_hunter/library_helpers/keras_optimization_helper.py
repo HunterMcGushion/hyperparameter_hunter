@@ -27,7 +27,7 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update
 from hyperparameter_hunter.utils.parsing_utils import (
     stringify_model_builder,
-    write_python_source,
+    write_python,
     build_temp_model_file,
 )
 
@@ -74,8 +74,7 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
         methods include (but are not limited to) `fit`, `predict`, and `predict_proba`. Some of the
         common parameters given here include `epochs`, `batch_size`, and `callbacks`
     source_script: Str
-        Absolute path to a Python file. Expected to end with one of the following extensions:
-        '.py', '.ipynb'
+        Absolute path to a Python file. Should end with one of following extensions: ".py", ".ipynb"
 
     Returns
     -------
@@ -95,17 +94,15 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
         by the `compile` method, but is not explicitly given, its default value is included in
         `dummy_compile_params`"""
     #################### Prepare Model-Builder String ####################
-    temp_builder_name = "__temp_model_builder"
+    temp_module = "__temp_model_builder"
     reusable_build_fn, expected_params = rewrite_model_builder(stringify_model_builder(build_fn))
-    temp_model_file_str = build_temp_model_file(reusable_build_fn, source_script)
+    temp_module_str = build_temp_model_file(reusable_build_fn, source_script)
 
     #################### Save and Import Temporary Model Builder ####################
-    write_python_source(
-        temp_model_file_str, "{}/{}.py".format(os.path.split(__file__)[0], temp_builder_name)
-    )
+    write_python(temp_module_str, "{}/{}.py".format(os.path.split(__file__)[0], temp_module))
 
-    if temp_builder_name in sys.modules:
-        del sys.modules[temp_builder_name]
+    if temp_module in sys.modules:
+        del sys.modules[temp_module]
 
     try:
         from .__temp_model_builder import build_fn as temp_build_fn
@@ -113,30 +110,24 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
         raise
 
     #################### Translate Hyperparameter Names to Universal Paths ####################
-    wrapper_params = dict(
-        params={_k: eval(_v) for _k, _v in expected_params.items()}, **extra_params
-    )
+    wrapper_params = dict(params={k: eval(v) for k, v in expected_params.items()}, **extra_params)
     wrapper_params, dummified_params = check_dummy_params(wrapper_params)
 
     if ("optimizer_params" in dummified_params) and ("optimizer" in dummified_params):
-        raise ValueError(
-            "Unable to optimize both `optimizer` and `optimizer_params`. Please try optimizing them separately"
-        )
+        raise ValueError("Can't optimize `optimizer` with `optimizer_params`. Try them separately")
 
     compiled_dummy = initialize_dummy_model(model_initializer, temp_build_fn, wrapper_params)
     dummy_layers, dummy_compile_params = parameterize_compiled_keras_model(compiled_dummy)
     merged_compile_params = merge_compile_params(dummy_compile_params, dummified_params)
-    # FLAG: Will need to deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
+    # FLAG: Will need to deal with capitalization conflicts when comparing similar experiments: `optimizer`="Adam" vs "adam"
 
-    consolidated_layers = consolidate_layers(
-        dummy_layers, class_name_key=False, separate_args=False
-    )
+    consolidated_layers = consolidate_layers(dummy_layers, class_name_key=False, split_args=False)
     wrapper_params = deep_restricted_update(wrapper_params, dummified_params)
 
     return (temp_build_fn, wrapper_params, consolidated_layers, merged_compile_params)
 
 
-def consolidate_layers(layers, class_name_key=True, separate_args=True):
+def consolidate_layers(layers, class_name_key=True, split_args=False):
     """For each of the layer dicts in `layers`, merge the dict's keys to reflect the end value of
     the key, rather than its default value, and whether a value was explicitly given
 
@@ -146,20 +137,19 @@ def consolidate_layers(layers, class_name_key=True, separate_args=True):
         A list of dicts, wherein each dict represents a layer in a Keras model, and contains
         information about its arguments
     class_name_key: Boolean, default=True
-        If True, 'class_name' will be added as a key to the dict describing each layer. Else, it
-        will be used as a key to create an outer dict containing the rest of the keys describing
-        each layer
-    separate_args: Boolean, default=True
-        If True, each layer dict will be given two keys: 'arg_vals', and 'kwarg_vals', which are
+        If True, "class_name" is added as a key to the dict describing each layer. Else, it will be
+        used as a key to create an outer dict containing the rest of the keys describing each layer
+    split_args: Boolean, default=False
+        If True, each layer dict will be given two keys: "arg_vals", and "kwarg_vals", which are
         both dicts containing their respective values. Else, each layer dict will directly contain
-        all the keys of 'arg_vals', and 'kwarg_vals', removing any indication of whether the
+        all the keys of "arg_vals", and "kwarg_vals", removing any indication of whether the
         parameter was a positional or keyword argument, aside from order
 
     Returns
     -------
     consolidated_layers: List
         A list of the same length as `layers`, except each element has fewer keys than it did in
-        `layers`. The new keys are as follows: 'class_name', 'arg_vals', 'kwarg_vals'"""
+        `layers`. The new keys are as follows: ["class_name", "arg_vals", "kwarg_vals"]"""
     consolidated_layers = []
 
     for layer in layers:
@@ -180,16 +170,14 @@ def consolidate_layers(layers, class_name_key=True, separate_args=True):
         # This means that kwargs like `input_shape` won't make it through because they have no default values, also
         # nonsensical kwargs won't make it through because the defaults are the point of reference
         kwarg_vals = {
-            _k: layer["__hh_used_kwargs"].get(_k, _v)
-            for _k, _v in layer["__hh_default_kwargs"].items()
+            k: layer["__hh_used_kwargs"].get(k, v) for k, v in layer["__hh_default_kwargs"].items()
         }
 
         #################### Consolidate ####################
-        new_layer_dict = (
-            dict(arg_vals=arg_vals, kwarg_vals=kwarg_vals)
-            if separate_args
-            else {**arg_vals, **kwarg_vals}
-        )
+        if split_args:
+            new_layer_dict = dict(arg_vals=arg_vals, kwarg_vals=kwarg_vals)
+        else:
+            new_layer_dict = {**arg_vals, **kwarg_vals}
 
         if class_name_key:
             new_layer_dict["class_name"] = layer["class_name"]
@@ -221,9 +209,9 @@ def merge_compile_params(compile_params, dummified_params):
         A dictionary that mirrors `compile_params`, except where an element of `dummified_params`
         has the same path/key, in which case the hyperparameter space choice value in
         `dummified_params` is used"""
-    # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
+    # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`="Adam" vs "adam"
     _dummified_params = {
-        (_k[1:] if _k[0] == "params" else _k): _v for _k, _v in dummified_params.copy().items()
+        (k[1:] if k[0] == "params" else k): v for k, v in dummified_params.copy().items()
     }
 
     def _visit(path, key, value):
@@ -281,7 +269,7 @@ def check_dummy_params(params):
 
 
 def link_choice_ids(layers, compile_params, extra_params, dimensions):
-    """Update `extra_params` to include a 'location' attribute on any descendants of
+    """Update `extra_params` to include a "location" attribute on any descendants of
     :class:`space.Dimension`, specifying its position among all hyperparameters
 
     Parameters
@@ -301,14 +289,14 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
     -------
     extra_params: Dict
         Mirrors the given `extra_params`, except any descendants of :class:`space.Dimension` now
-        have a 'location' attribute"""
+        have a "location" attribute"""
 
-    def visit_builder(param_type):
-        """Make visit func that prepends `param_type` to the 'location' tuple added in `_visit`"""
+    def visit_as(param_type):
+        """Make visit func that prepends `param_type` to the "location" tuple added in `_visit`"""
         param_type = (param_type,) if not isinstance(param_type, tuple) else param_type
 
         def _visit(path, key, value):
-            """If `value` is a descendant of :class:`space.Dimension`, add 'location' to itself and
+            """If `value` is a descendant of :class:`space.Dimension`, add "location" to itself and
             its copy in `dimensions`"""
             if isinstance(value, (Real, Integer, Categorical)):
                 for i in range(len(dimensions)):
@@ -327,17 +315,14 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
         return default_enter(path, key, value)
 
     # noinspection PyUnusedLocal
-    _new_layers = remap(layers.copy(), visit=visit_builder(("model_init_params", "layers")))
+    _new_layers = remap(layers.copy(), visit=visit_as(("model_init_params", "layers")))
     # noinspection PyUnusedLocal
     _new_compile_params = remap(
-        compile_params.copy(), visit=visit_builder(("model_init_params", "compile_params"))
+        compile_params.copy(), visit=visit_as(("model_init_params", "compile_params"))
     )
     # noinspection PyUnusedLocal
-    _new_extra_params = remap(
-        {_k: _v for _k, _v in extra_params.items() if _k != "params"},
-        visit=visit_builder("model_extra_params"),
-        enter=_enter,
-    )
+    _extra_params = {k: v for k, v in extra_params.items() if k != "params"}
+    _new_extra_params = remap(_extra_params, visit=visit_as("model_extra_params"), enter=_enter)
 
     # `extra_params` has locations for `layers`, `compile_params`, `extra_params` - Of form expected by `build_fn` (less choices)
     return extra_params
@@ -454,7 +439,7 @@ def find_space_fragments(string):
 
     for choice in unclipped_choices:
         name = re.findall(r"(\w+(?=\s*[=(]\s*" + re.escape(choice) + r"))", string)
-        # FLAG: Might need to prepend name with '_' to prevent possible duplicate extra params
+        # FLAG: Might need to prepend name with "_" to prevent possible duplicate extra params
         names.append(name[0] if (len(name) > 0) else names[-1])
         clipped_choices.append(clean_parenthesized_string(choice))
 
@@ -527,19 +512,15 @@ def clean_parenthesized_string(string):
     clean_string: String
         A substring of `string`, extending from the beginning of `string`, through the closing paren
         that matches the first opening paren found, producing a valid parenthesized statement"""
-    extra_closing_parens = 0
+    close_paren = 0
 
     for i in range(len(string)):
         if string[i] == "(":
-            extra_closing_parens += 1
+            close_paren += 1
         elif string[i] == ")":
-            if extra_closing_parens > 1:
-                extra_closing_parens -= 1
+            if close_paren > 1:
+                close_paren -= 1
             else:
                 return string[: i + 1]
 
-    raise ValueError(
-        'No closing paren for """\n{}\n"""\nRemaining extra_closing_parens: {}'.format(
-            string, extra_closing_parens
-        )
-    )
+    raise ValueError(f'Need closing paren:"""\n{string}\n"""\nRemaining close_paren: {close_paren}')

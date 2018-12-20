@@ -356,9 +356,7 @@ def get_scored_params(experiment_description_path, target_metric, get_descriptio
 
     if description["module_name"].lower() == "keras":
         all_hyperparameters["model_init_params"]["layers"] = consolidate_layers(
-            all_hyperparameters["model_init_params"]["layers"],
-            class_name_key=False,
-            separate_args=False,
+            all_hyperparameters["model_init_params"]["layers"], class_name_key=False
         )
 
     if get_description:

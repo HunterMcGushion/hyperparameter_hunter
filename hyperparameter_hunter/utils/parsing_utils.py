@@ -101,7 +101,7 @@ def read_source_script(filepath):
     return source
 
 
-def write_python_source(source_str, filepath="temp_modified.py"):
+def write_python(source_str, filepath="temp_modified.py"):
     """Save `source_str` to the file located at `filepath`
 
     Parameters
@@ -116,7 +116,7 @@ def write_python_source(source_str, filepath="temp_modified.py"):
             f.close()
     except FileNotFoundError:
         make_dirs(os.path.split(filepath)[0])
-        write_python_source(source_str, filepath=filepath)
+        write_python(source_str, filepath=filepath)
 
 
 ##################################################
