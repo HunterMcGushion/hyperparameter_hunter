@@ -44,8 +44,8 @@ from hyperparameter_hunter.settings import G
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-import inspect
-import os
+from inspect import currentframe, getframeinfo
+from os.path import abspath
 
 
 class ExperimentMeta(type):
@@ -91,11 +91,7 @@ class ExperimentMeta(type):
         instance_bases = []
 
         # Get source_script for use by Experiment later
-        setattr(
-            cls,
-            "source_script",
-            os.path.abspath(inspect.getframeinfo(inspect.currentframe().f_back)[0]),
-        )
+        setattr(cls, "source_script", abspath(getframeinfo(currentframe().f_back)[0]))
 
         # Add callbacks explicitly supplied on class initialization
         if kwargs.get("callbacks", None) is not None:
@@ -183,9 +179,7 @@ def base_callback_class_sorter(auxiliary_bases, parent_class_order=None):
         sorted_auxiliary_bases.extend(callback_holder)
 
     if len(auxiliary_bases) > 0:
-        raise ValueError(
-            f"Received base class that does not inherit any of the given parent classes: {auxiliary_bases}"
-        )
+        raise ValueError(f"Base class not descendant of acceptable parent class: {auxiliary_bases}")
 
     return sorted_auxiliary_bases
 
