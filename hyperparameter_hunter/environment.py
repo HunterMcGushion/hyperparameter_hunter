@@ -457,9 +457,7 @@ class Environment:
                 )
 
         #################### to_csv_params ####################
-        self.to_csv_params = {
-            _k: _v for _k, _v in self.to_csv_params.items() if _k != "path_or_buf"
-        }
+        self.to_csv_params = {k: v for k, v in self.to_csv_params.items() if k != "path_or_buf"}
 
         #################### cross_experiment_params ####################
         self.cross_experiment_params = dict(
@@ -473,15 +471,11 @@ class Environment:
         #################### experiment_callbacks ####################
         if not isinstance(self.experiment_callbacks, list):
             self.experiment_callbacks = [self.experiment_callbacks]
-        for callback in self.experiment_callbacks:
-            if not isclass(callback):
-                raise TypeError(
-                    f"experiment_callbacks must be classes. Received {type(callback)}: {callback}"
-                )
-            if callback.__name__ != "LambdaCallback":
-                raise ValueError(
-                    f"experiment_callbacks must be LambdaCallback instances, not {callback.__name__}: {callback}"
-                )
+        for cb in self.experiment_callbacks:
+            if not isclass(cb):
+                raise TypeError(f"experiment_callbacks must be classes, not {type(cb)}: {cb}")
+            if cb.__name__ != "LambdaCallback":
+                raise ValueError(f"experiment_callbacks must be LambdaCallback instances, not {cb}")
 
     def define_holdout_set(self):
         """Define :attr:`Environment.holdout_dataset`, and (if holdout_dataset is callable), also
@@ -517,26 +511,26 @@ class Environment:
 
     def format_result_paths(self):
         """Remove paths contained in file_blacklist, and format others to prepare for saving results"""
-        if self.file_blacklist == "ALL":
+        if self.file_blacklist == "ALL" or self.root_results_path is None:
             return
 
-        if self.root_results_path is not None:
-            # Blacklist prediction files for datasets not given
-            if self.holdout_dataset is None:
-                self.file_blacklist.append("predictions_holdout")
-            if self.test_dataset is None:
-                self.file_blacklist.append("predictions_test")
+        # Blacklist the prediction files for any datasets that were not given
+        if self.holdout_dataset is None:
+            self.file_blacklist.append("predictions_holdout")
+        if self.test_dataset is None:
+            self.file_blacklist.append("predictions_test")
 
-            for k in self.result_paths.keys():
-                if k == "root":
-                    continue
-                elif k not in self.file_blacklist:
-                    self.result_paths[k] = os.path.join(
-                        self.root_results_path, RESULT_FILE_SUB_DIR_PATHS[k]
-                    )
-                else:
-                    self.result_paths[k] = None
-                    # G.debug('Result file "{}" has been blacklisted'.format(k))
+        # Set full filepath for result files relative to `root_results_path`, or to None (blacklist)
+        for k in self.result_paths.keys():
+            if k == "root":
+                continue
+            elif k not in self.file_blacklist:
+                self.result_paths[k] = os.path.join(
+                    self.root_results_path, RESULT_FILE_SUB_DIR_PATHS[k]
+                )
+            else:
+                self.result_paths[k] = None
+                # G.debug('Result file "{}" has been blacklisted'.format(k))
 
     def update_custom_environment_params(self):
         """Try to update null parameters from environment_params_path, or DEFAULT_PARAMS"""
@@ -548,15 +542,14 @@ class Environment:
         if (not isinstance(self.environment_params_path, str)) and (
             self.environment_params_path is not None
         ):
-            raise TypeError(
-                f"environment_params_path must be a str, not: {self.environment_params_path}"
-            )
+            raise TypeError(f"Non-str `environment_params_path`: {self.environment_params_path}")
 
         try:
             user_defaults = read_json(self.environment_params_path)
         except TypeError:
             if self.environment_params_path is not None:
                 raise
+            # If `environment_params_path=None`, no error raised - `user_defaults` continues as {}
         except FileNotFoundError:
             raise
 
