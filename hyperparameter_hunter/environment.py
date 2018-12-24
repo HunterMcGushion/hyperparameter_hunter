@@ -511,26 +511,26 @@ class Environment:
 
     def format_result_paths(self):
         """Remove paths contained in file_blacklist, and format others to prepare for saving results"""
-        if self.file_blacklist == "ALL":
+        if self.file_blacklist == "ALL" or self.root_results_path is None:
             return
 
-        if self.root_results_path is not None:
-            # Blacklist prediction files for datasets not given
-            if self.holdout_dataset is None:
-                self.file_blacklist.append("predictions_holdout")
-            if self.test_dataset is None:
-                self.file_blacklist.append("predictions_test")
+        # Blacklist the prediction files for any datasets that were not given
+        if self.holdout_dataset is None:
+            self.file_blacklist.append("predictions_holdout")
+        if self.test_dataset is None:
+            self.file_blacklist.append("predictions_test")
 
-            for k in self.result_paths.keys():
-                if k == "root":
-                    continue
-                elif k not in self.file_blacklist:
-                    self.result_paths[k] = os.path.join(
-                        self.root_results_path, RESULT_FILE_SUB_DIR_PATHS[k]
-                    )
-                else:
-                    self.result_paths[k] = None
-                    # G.debug('Result file "{}" has been blacklisted'.format(k))
+        # Set full filepath for result files relative to `root_results_path`, or to None (blacklist)
+        for k in self.result_paths.keys():
+            if k == "root":
+                continue
+            elif k not in self.file_blacklist:
+                self.result_paths[k] = os.path.join(
+                    self.root_results_path, RESULT_FILE_SUB_DIR_PATHS[k]
+                )
+            else:
+                self.result_paths[k] = None
+                # G.debug('Result file "{}" has been blacklisted'.format(k))
 
     def update_custom_environment_params(self):
         """Try to update null parameters from environment_params_path, or DEFAULT_PARAMS"""
