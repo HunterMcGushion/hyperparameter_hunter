@@ -24,6 +24,9 @@ class Leaderboard(metaclass=ABCMeta):
             The starting state of the Leaderboard. If None, an empty DataFrame is used"""
         self.data = data if data is not None else pd.DataFrame()
 
+    def __getattr__(self, item):
+        return self.data.__getattribute__(item)
+
     @classmethod
     def from_path(cls, path, assert_existence=False):
         """Initialize a Leaderboard from a .csv `path`
