@@ -542,15 +542,14 @@ class Environment:
         if (not isinstance(self.environment_params_path, str)) and (
             self.environment_params_path is not None
         ):
-            raise TypeError(
-                f"environment_params_path must be a str, not: {self.environment_params_path}"
-            )
+            raise TypeError(f"Non-str `environment_params_path`: {self.environment_params_path}")
 
         try:
             user_defaults = read_json(self.environment_params_path)
         except TypeError:
             if self.environment_params_path is not None:
                 raise
+            # If `environment_params_path=None`, no error raised - `user_defaults` continues as {}
         except FileNotFoundError:
             raise
 
