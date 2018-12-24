@@ -389,5 +389,28 @@ class LeaderboardEntryRecorder(BaseRecorder):
             self.result.save(path=self.result_paths["global_leaderboard"])
 
 
+class UnsortedIDLeaderboardEntryRecorder(BaseRecorder):
+    result_path_key = "tested_keys"
+    required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
+
+    def format_result(self):
+        """Read existing global leaderboard, add current entry, then sort the updated leaderboard"""
+        self.result = GlobalLeaderboard.from_path(path=self.result_paths["unsorted_id_leaderboard"])
+        self.result.add_entry(self.current_task)
+        no_sort = ["experiment_id", "hyperparameter_key", "cross_experiment_key", "algorithm_name"]
+        self.result.sort(
+            by=[_ for _ in list(self.result.data.columns) if _ not in no_sort],
+            ascending=(self.metrics_map[self.target_metric[-1]].direction == "min"),
+        )
+
+    def save_result(self):
+        """Save the updated leaderboard file"""
+        try:
+            self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
+        except FileNotFoundError:
+            make_dirs(self.result_paths["leaderboards"], exist_ok=False)
+            self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
+
+
 if __name__ == "__main__":
     pass
