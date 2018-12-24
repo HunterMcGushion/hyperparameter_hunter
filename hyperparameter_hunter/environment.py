@@ -457,9 +457,7 @@ class Environment:
                 )
 
         #################### to_csv_params ####################
-        self.to_csv_params = {
-            _k: _v for _k, _v in self.to_csv_params.items() if _k != "path_or_buf"
-        }
+        self.to_csv_params = {k: v for k, v in self.to_csv_params.items() if k != "path_or_buf"}
 
         #################### cross_experiment_params ####################
         self.cross_experiment_params = dict(
@@ -473,15 +471,11 @@ class Environment:
         #################### experiment_callbacks ####################
         if not isinstance(self.experiment_callbacks, list):
             self.experiment_callbacks = [self.experiment_callbacks]
-        for callback in self.experiment_callbacks:
-            if not isclass(callback):
-                raise TypeError(
-                    f"experiment_callbacks must be classes. Received {type(callback)}: {callback}"
-                )
-            if callback.__name__ != "LambdaCallback":
-                raise ValueError(
-                    f"experiment_callbacks must be LambdaCallback instances, not {callback.__name__}: {callback}"
-                )
+        for cb in self.experiment_callbacks:
+            if not isclass(cb):
+                raise TypeError(f"experiment_callbacks must be classes, not {type(cb)}: {cb}")
+            if cb.__name__ != "LambdaCallback":
+                raise ValueError(f"experiment_callbacks must be LambdaCallback instances, not {cb}")
 
     def define_holdout_set(self):
         """Define :attr:`Environment.holdout_dataset`, and (if holdout_dataset is callable), also
