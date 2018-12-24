@@ -374,9 +374,10 @@ class LeaderboardEntryRecorder(BaseRecorder):
         """Read existing global leaderboard, add current entry, then sort the updated leaderboard"""
         self.result = GlobalLeaderboard.from_path(path=self.result_paths["global_leaderboard"])
         self.result.add_entry(self.current_task)
+        # Sort rows by first column (target metric), then descending "experiment_#" (newest first)
         self.result.sort(
-            by=list(self.result.data.columns),
-            ascending=(self.metrics_map[self.target_metric[-1]].direction == "min"),
+            by=[list(self.result.data.columns)[0], "experiment_#"],
+            ascending=[(self.metrics_map[self.target_metric[-1]].direction == "min"), False],
         )
 
     def save_result(self):
