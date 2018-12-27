@@ -190,4 +190,11 @@
         </td>
         <td>Recording multiple metrics and how to use each for hyperparameter optimization</td>
     </tr>
+    <tr>
+        <th nowrap>recorders</th>
+        <td nowrap>
+            <a href="advanced_examples/recorder_example.py">Script</a>
+        </td>
+        <td>Make custom recorders to save your own result files for Experiments</td>
+    </tr>
 </table>
