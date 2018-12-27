@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import GBRT, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_diabetes
@@ -22,7 +22,7 @@ env = Environment(
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:
 #################### 1. Perform Experiments ####################
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=XGBRegressor,
     model_init_params=dict(max_depth=4, n_estimators=400, subsample=0.5),
     model_extra_params=dict(fit=dict(eval_metric="mae")),

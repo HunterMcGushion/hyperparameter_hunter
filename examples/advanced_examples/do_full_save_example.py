@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data
 from sklearn.model_selection import RepeatedStratifiedKFold
 from xgboost import XGBClassifier
@@ -22,7 +22,7 @@ def execute():
         do_full_save=do_full_save,
     )
 
-    experiment_0 = CrossValidationExperiment(
+    experiment_0 = CVExperiment(
         model_initializer=XGBClassifier, model_init_params=dict(subsample=0.01)
     )
     # Pro Tip: By setting XGBoost's subsample ridiculously low, we can get bad scores on purpose
@@ -37,7 +37,7 @@ def execute():
     # For even finer control over what gets saved, use `do_full_save` together with `file_blacklist`
 
     # Now, lets perform another Experiment that does a bit better than our intentionally miserable one
-    experiment_1 = CrossValidationExperiment(
+    experiment_1 = CVExperiment(
         model_initializer=XGBClassifier, model_init_params=dict(subsample=0.5)
     )
     # Our second Experiment was executed in the same Environment, so it was still subject to the `do_full_save` constraint

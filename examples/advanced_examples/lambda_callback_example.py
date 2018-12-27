@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.callbacks.bases import lambda_callback
 from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data
 from hyperparameter_hunter.callbacks.recipes import confusion_matrix_oof
@@ -7,7 +7,7 @@ from xgboost import XGBClassifier
 
 
 def printer_callback():
-    """This is a simple callback example that will print out :attr:`CrossValidationExperiment.last_evaluation_results` at all
+    """This is a simple callback example that will print out :attr:`CVExperiment.last_evaluation_results` at all
     available time intervals, along with the repetition, fold, and run number. Of course, printing evaluations at the beginning
     of each of the intervals, as is shown below, is pretty much useless. However, this shows that if you want to, you can do it
     anyways and create your own replacement for the default logger... Or make anything else you might want"""
@@ -41,7 +41,7 @@ def execute():
         # This, and other callbacks, can be found in `hyperparameter_hunter.callbacks.recipes`
     )
 
-    experiment = CrossValidationExperiment(
+    experiment = CVExperiment(
         model_initializer=XGBClassifier,
         model_init_params={},
         model_extra_params=dict(fit=dict(verbose=False)),

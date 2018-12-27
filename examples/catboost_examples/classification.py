@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import GBRT, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import fetch_covtype
@@ -27,7 +27,7 @@ env = Environment(
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:
 #################### 1. Perform Experiments ####################
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=CatBoostClassifier,
     model_init_params=dict(
         iterations=100,

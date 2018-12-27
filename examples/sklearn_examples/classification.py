@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import RandomForestOptimization, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
@@ -31,22 +31,22 @@ env = Environment(
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:
 #################### 1. Perform Experiments ####################
-# `CrossValidationExperiment`'s `model_init_params={}` means use the `model_initializer`'s defaults
-experiment_0 = CrossValidationExperiment(KNeighborsClassifier, {})
-experiment_1 = CrossValidationExperiment(SVC, {})
-experiment_2 = CrossValidationExperiment(LinearSVC, {})
-experiment_3 = CrossValidationExperiment(NuSVC, {})
-experiment_4 = CrossValidationExperiment(DecisionTreeClassifier, {})
-experiment_5 = CrossValidationExperiment(RandomForestClassifier, {})
-experiment_6 = CrossValidationExperiment(AdaBoostClassifier, {})
-experiment_7 = CrossValidationExperiment(GradientBoostingClassifier, {})
-experiment_8 = CrossValidationExperiment(GaussianNB, {})
-experiment_9 = CrossValidationExperiment(LinearDiscriminantAnalysis, {})
-experiment_10 = CrossValidationExperiment(QuadraticDiscriminantAnalysis, {})
-experiment_11 = CrossValidationExperiment(MLPClassifier, {})
+# `CVExperiment`'s `model_init_params={}` means use the `model_initializer`'s defaults
+experiment_0 = CVExperiment(KNeighborsClassifier, {})
+experiment_1 = CVExperiment(SVC, {})
+experiment_2 = CVExperiment(LinearSVC, {})
+experiment_3 = CVExperiment(NuSVC, {})
+experiment_4 = CVExperiment(DecisionTreeClassifier, {})
+experiment_5 = CVExperiment(RandomForestClassifier, {})
+experiment_6 = CVExperiment(AdaBoostClassifier, {})
+experiment_7 = CVExperiment(GradientBoostingClassifier, {})
+experiment_8 = CVExperiment(GaussianNB, {})
+experiment_9 = CVExperiment(LinearDiscriminantAnalysis, {})
+experiment_10 = CVExperiment(QuadraticDiscriminantAnalysis, {})
+experiment_11 = CVExperiment(MLPClassifier, {})
 # Of course, SKLearn has many more algorithms than those shown here, but I think you get the idea
 
-# Notice that in all the above experiments, we gave `CrossValidationExperiment` `model_init_params={}`.
+# Notice that in all the above experiments, we gave `CVExperiment` `model_init_params={}`.
 # Passing an empty dict tells it to use the default hyperparameters for the `model_initializer`, which it'll figure out on its own.
 
 #################### 2. Hyperparameter Optimization ####################

@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
@@ -22,7 +22,7 @@ env = Environment(
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:
 #################### 1. Perform Experiments ####################
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=XGBClassifier,
     model_init_params=dict(objective="reg:linear", max_depth=3, n_estimators=100, subsample=0.5),
     model_extra_params=dict(

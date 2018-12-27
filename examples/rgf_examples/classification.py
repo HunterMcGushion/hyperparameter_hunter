@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import make_classification
@@ -22,7 +22,7 @@ env = Environment(
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:
 #################### 1. Perform Experiments ####################
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=RGFClassifier,
     model_init_params=dict(max_leaf=1000, algorithm="RGF", min_samples_leaf=10),
 )

@@ -34,6 +34,8 @@ result file-recording classes
 by use in `BaseOptimizationProtocol.set_experiment_guidelines`
 
 ### Changes
+* Shortened name of `CrossValidationExperiment` to `CVExperiment`. `CrossValidationExperiment` will still
+be available as a deprecated copy of `CVExperiment` until v2.3.0, but `CVExperiment` is preferred
 * Update sorting of GlobalLeaderboard entries to take into account only the target metric column
 and the "experiment_#" columns
     * This produces more predictable orders that don't rely on UUIDs/hashes and preserve historicity

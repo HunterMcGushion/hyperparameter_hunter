@@ -12,7 +12,7 @@ Environment
 Experiment Execution
 ====================
 
-.. autoclass:: hyperparameter_hunter.experiments.CrossValidationExperiment
+.. autoclass:: hyperparameter_hunter.experiments.CVExperiment
    :noindex:
    :members: __init__
 

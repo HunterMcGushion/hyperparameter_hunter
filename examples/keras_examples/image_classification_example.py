@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 import pandas as pd
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
 from keras.models import Sequential
@@ -39,7 +39,7 @@ def _execute():
         cross_validation_params=dict(n_splits=3, shuffle=True, random_state=True),
     )
 
-    experiment = CrossValidationExperiment(
+    experiment = CVExperiment(
         model_initializer=KerasClassifier,
         model_init_params=build_fn,
         model_extra_params=dict(batch_size=32, epochs=3, verbose=0, shuffle=True),

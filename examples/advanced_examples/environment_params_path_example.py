@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
@@ -34,9 +34,7 @@ def _execute():
         env.cross_validation_params
     )  # This is the value we provided above, rather than our `environment_params_path` default
 
-    experiment = CrossValidationExperiment(
-        model_initializer=KNeighborsClassifier, model_init_params={}
-    )
+    experiment = CVExperiment(model_initializer=KNeighborsClassifier, model_init_params={})
 
     # We can see in the console that we're definitely evaluating both 'roc_auc_score', and 'f1_score', and we're doing 3 runs
     # We only did 5-fold cross-validation, as expected because we override our default value

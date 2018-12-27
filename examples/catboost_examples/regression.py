@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import DummySearch, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import make_regression
@@ -35,7 +35,7 @@ env = Environment(
 
 # You could also easily add `CatBoostRegressor.fit`'s `early_stopping_rounds` argument to `model_extra_params["fit"]`
 # ... to use early stopping, but doing so here with only `iterations=100` doesn't make much sense.
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=CatBoostRegressor,
     model_init_params=dict(
         iterations=100,

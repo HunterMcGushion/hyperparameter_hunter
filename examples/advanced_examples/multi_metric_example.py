@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
@@ -46,7 +46,7 @@ env = Environment(
 # Now, any Experiments we execute will record all four of these metrics!
 
 #################### 3. Perform Experiments ####################
-experiment_0 = CrossValidationExperiment(
+experiment_0 = CVExperiment(
     model_initializer=LGBMClassifier,
     model_init_params=dict(
         boosting_type="gbdt", max_depth=-1, min_child_samples=5, subsample=0.5, verbose=-1

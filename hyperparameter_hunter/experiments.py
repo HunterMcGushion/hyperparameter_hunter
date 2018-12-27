@@ -1,7 +1,6 @@
 """This module contains the classes used for constructing and conducting an Experiment (most
-notably, :class:`CrossValidationExperiment`). Any class contained herein whose name starts with
-'Base' should not be used directly. :class:`CrossValidationExperiment` is the preferred means of
-conducting one-off experimentation
+notably, :class:`CVExperiment`). Any class contained herein whose name starts with "Base" should not
+be used directly. :class:`CVExperiment` is the preferred means of conducting one-off experimentation
 
 Related
 -------
@@ -618,7 +617,7 @@ class BaseCVExperiment(BaseExperiment):
 ##################################################
 # Core CV Experiment Classes:
 ##################################################
-class CrossValidationExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
+class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
         self,
         # model=None,
@@ -670,6 +669,16 @@ class CrossValidationExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         self.folds = cross_validation_type(**self.cross_validation_params)
 
 
+@Deprecated(
+    v_deprecate="2.0.1",
+    v_remove="2.3.0",
+    v_current=__version__,
+    details="Renamed to `CVExperiment`",
+)
+class CrossValidationExperiment(CVExperiment):
+    pass
+
+
 ##################################################
 # Other Experiment Classes:
 ##################################################
@@ -677,7 +686,7 @@ class CrossValidationExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     v_deprecate="2.0.0",
     v_remove="2.1.0",
     v_current=__version__,
-    details="Superseded by :class:`CrossValidationExperiment`, which is always preferred",
+    details="Superseded by :class:`CVExperiment`, which is always preferred",
 )
 class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
@@ -722,7 +731,7 @@ class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     v_deprecate="2.0.0",
     v_remove="2.1.0",
     v_current=__version__,
-    details="Superseded by :class:`CrossValidationExperiment`, which is always preferred",
+    details="Superseded by :class:`CVExperiment`, which is always preferred",
 )
 class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(

@@ -49,7 +49,7 @@ Set up an Environment to organize Experiments and Optimization results.
 Any Experiments or Optimization rounds we perform will use our active Environment.
 
 ```python
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
@@ -86,7 +86,7 @@ def build_fn(input_shape):  # `input_shape` calculated for you
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=KerasClassifier,
     model_init_params=build_fn,  # We interpret your build_fn to save hyperparameters in a useful, readable format
     model_extra_params=dict(
@@ -103,7 +103,7 @@ experiment = CrossValidationExperiment(
 <summary>SKLearn</summary>
 
 ```python
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=LinearSVC,  # (Or any of the dozens of other SK-Learn algorithms)
     model_init_params=dict(penalty='l1', C=0.9)  # Default values used and recorded for kwargs not given
 )
@@ -114,7 +114,7 @@ experiment = CrossValidationExperiment(
 <summary>XGBoost</summary>
 
 ```python
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=XGBClassifier,
     model_init_params=dict(objective='reg:linear', max_depth=3, n_estimators=100, subsample=0.5)
 )
@@ -125,7 +125,7 @@ experiment = CrossValidationExperiment(
 <summary>LightGBM</summary>
 
 ```python
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=LGBMClassifier,
     model_init_params=dict(boosting_type='gbdt', num_leaves=31, max_depth=-1, min_child_samples=5, subsample=0.5)
 )
@@ -136,7 +136,7 @@ experiment = CrossValidationExperiment(
 <summary>CatBoost</summary>
 
 ```python
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=CatboostClassifier,
     model_init_params=dict(iterations=500, learning_rate=0.01, depth=7, allow_writing_files=False),
     model_extra_params=dict(fit=dict(verbose=True))  # Send kwargs to `fit` and other extra methods
@@ -148,7 +148,7 @@ experiment = CrossValidationExperiment(
 <summary>RGF</summary>
 
 ```python
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=RGFClassifier,
     model_init_params=dict(max_leaf=1000, algorithm='RGF', min_samples_leaf=10)
 )
@@ -347,7 +347,7 @@ I Still Don't Get It
 That's ok. Don't feel bad. It's a bit weird to wrap your head around. Here's an example that illustrates how everything is related:
 
 ```python
-from hyperparameter_hunter import Environment, CrossValidationExperiment, BayesianOptimization, Integer
+from hyperparameter_hunter import Environment, CVExperiment, BayesianOptimization, Integer
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from xgboost import XGBClassifier
 
@@ -362,7 +362,7 @@ env = Environment(
 
 # Now, conduct an `Experiment`
 # This tells HyperparameterHunter to use the settings in the active `Environment` to train a model with these hyperparameters
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=XGBClassifier,
     model_init_params=dict(
         objective='reg:linear',
@@ -427,7 +427,7 @@ These are some things that might "getcha"
 
 ### General:
 - **Can't provide initial search points to `OptimizationProtocol`?**
-   - This is intentional. If you want your optimization rounds to start with specific search points (that you haven't recorded yet), simply perform a `CrossValidationExperiment` before initializing your `OptimizationProtocol`
+   - This is intentional. If you want your optimization rounds to start with specific search points (that you haven't recorded yet), simply perform a `CVExperiment` before initializing your `OptimizationProtocol`
    - Assuming the two have the same guideline hyperparameters and the `Experiment` fits within the search space defined by your `OptimizationProtocol`, the optimizer will locate and read in the results of the `Experiment`
    - Keep in mind, you'll probably want to remove the `Experiment` after you've done it once, as the results have been saved. Leaving it there will just execute the same `Experiment` over and over again
 - **After changing things in my "HyperparameterHunterAssets" directory, everything stopped working**

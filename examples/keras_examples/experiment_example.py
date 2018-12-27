@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 import os.path
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
@@ -31,7 +31,7 @@ def execute():
         cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
 
-    experiment = CrossValidationExperiment(
+    experiment = CVExperiment(
         model_initializer=KerasClassifier,
         model_init_params=build_fn,
         model_extra_params=dict(

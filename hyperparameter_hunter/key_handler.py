@@ -331,8 +331,8 @@ class HyperparameterKeyMaker(KeyMaker):
     def __init__(self, parameters, cross_experiment_key, **kwargs):
         """A KeyMaker class dedicated to creating hyperparameter keys, which determine when
         experiments were executed using identical hyperparameters. Two separate instances of
-        :class:`experiments.CrossValidationExperiment` should produce identical
-        `hyperparameter_key` s if their hyperparameters are the same (or close enough)
+        :class:`experiments.CVExperiment` should produce identical `hyperparameter_key` s if their
+        hyperparameters are the same (or close enough)
 
         Parameters
         ----------

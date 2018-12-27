@@ -1,4 +1,10 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment, BayesianOptimization, Categorical, Integer
+from hyperparameter_hunter import (
+    Environment,
+    CVExperiment,
+    BayesianOptimization,
+    Categorical,
+    Integer,
+)
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from xgboost import XGBClassifier
 
@@ -9,21 +15,17 @@ def execute():
 
     # Start by creating an `Environment` - This is where you define how Experiments (and optimization) will be conducted
     env = Environment(
-        train_dataset=get_breast_cancer_data(target='target'),
-        root_results_path='HyperparameterHunterAssets',
-        metrics_map=['roc_auc_score'],
-        cross_validation_type='StratifiedKFold',
+        train_dataset=get_breast_cancer_data(target="target"),
+        root_results_path="HyperparameterHunterAssets",
+        metrics_map=["roc_auc_score"],
+        cross_validation_type="StratifiedKFold",
         cross_validation_params=dict(n_splits=10, shuffle=True, random_state=32),
     )
 
     # Now, conduct an `Experiment`
     # This tells HyperparameterHunter to use the settings in the active `Environment` to train a model with these hyperparameters
-    experiment = CrossValidationExperiment(
-        model_initializer=XGBClassifier,
-        model_init_params=dict(
-            objective='reg:linear',
-            max_depth=3
-        )
+    experiment = CVExperiment(
+        model_initializer=XGBClassifier, model_init_params=dict(objective="reg:linear", max_depth=3)
     )
 
     # That's it. No annoying boilerplate code to fit models and record results
@@ -37,9 +39,11 @@ def execute():
     optimizer.set_experiment_guidelines(
         model_initializer=XGBClassifier,
         model_init_params=dict(
-            objective='reg:linear',  # We're setting this as a constant guideline - Not one to optimize
-            max_depth=Integer(2, 10)  # Instead of using an int like the `experiment` above, we provide a space to search
-        )
+            objective="reg:linear",  # We're setting this as a constant guideline - Not one to optimize
+            max_depth=Integer(
+                2, 10
+            ),  # Instead of using an int like the `experiment` above, we provide a space to search
+        ),
     )
     # Notice that our range for `max_depth` includes the `max_depth=3` value we used in our `experiment` earlier
 
@@ -68,5 +72,5 @@ def execute():
     # Or that max_depth=12 is outside of max_depth=Integer(2, 10)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     execute()

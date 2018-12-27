@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter import ExtraTreesOptimization, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_boston
@@ -23,7 +23,7 @@ env = Environment(
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:
 #################### 1. Perform Experiments ####################
-experiment = CrossValidationExperiment(
+experiment = CVExperiment(
     model_initializer=LGBMRegressor,
     model_init_params=dict(boosting_type="gbdt", num_leaves=31, min_child_samples=5, subsample=0.5),
 )

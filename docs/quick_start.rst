@@ -7,7 +7,7 @@ Set Up an Environment
 
 .. code-block:: python
 
-    from hyperparameter_hunter import Environment, CrossValidationExperiment
+    from hyperparameter_hunter import Environment, CVExperiment
     import pandas as pd
     from sklearn.datasets import load_breast_cancer
     from sklearn.model_selection import StratifiedKFold
@@ -30,7 +30,7 @@ Individual Experimentation
 
 .. code-block:: python
 
-    experiment = CrossValidationExperiment(
+    experiment = CVExperiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(objective="reg:linear", max_depth=3, subsample=0.5)
     )

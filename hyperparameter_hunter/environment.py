@@ -317,7 +317,7 @@ class Environment:
         identifying information for each data sample, and should otherwise have no relation to the
         actual data. Additionally, the `feature_selector` kwarg of the descendants of
         :class:`hyperparameter_hunter.experiments.BaseExperiment` (like
-        :class:`hyperparameter_hunter.experiments.CrossValidationExperiment`) is used to filter out
+        :class:`hyperparameter_hunter.experiments.CVExperiment`) is used to filter out
         columns of the given datasets prior to fitting. See its documentation for more information,
         but it can effectively be used to remove any columns from the datasets
 
@@ -628,18 +628,18 @@ class Environment:
     # def initialized_model(self):
     #     """Sentinel for use with meta-estimators, such as those in SKLearn's `multioutput` module
     #
-    #     When declaring `model_init_params` for the meta-estimator during `CrossValidationExperiment`
+    #     When declaring `model_init_params` for the meta-estimator during `CVExperiment`
     #     or optimization protocol setup, provide this property as input to the meta-estimator's
     #     `estimator`/`base_estimator` parameter.
     #
     #     This property is actually a placeholder for the initialized model created by whatever model
     #     is at the index following the current index. For example, assuming a properly initialized
     #     `Environment`, to use a Support Vector Regression in a multi-regression problem...
-    #     >>> from hyperparameter_hunter import CrossValidationExperiment
+    #     >>> from hyperparameter_hunter import CVExperiment
     #     >>> from sklearn.multioutput import MultiOutputRegressor
     #     >>> from sklearn.svm import SVR
     #     >>> env = Environment(...)
-    #     >>> experiment = CrossValidationExperiment(
+    #     >>> experiment = CVExperiment(
     #     ...     model_initializer=(MultiOutputRegressor, SVR),
     #     ...     model_init_params=(  # Dict of parameters for each `model_initializer`
     #     ...         dict(estimator=env.initialized_model),  # References model following current model (`SVR` at index 1)

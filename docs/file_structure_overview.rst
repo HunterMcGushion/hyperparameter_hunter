@@ -8,7 +8,7 @@ HyperparameterHunterAssets/
 * Contains one file (**'Heartbeat.log'**), and four subdirectories (**'Experiments/'**, **'KeyAttributeLookup/'**,
   **'Leaderboards/'**, and **'TestedKeys/'**).
 * **'Heartbeat.log'** is the log file for the current/most recently executed ``Experiment``. It will look very much like the
-  printed output of ``CrossValidationExperiment``, with some additional debug messages thrown in. When the ``Experiment`` is
+  printed output of ``CVExperiment``, with some additional debug messages thrown in. When the ``Experiment`` is
   completed, a copy of this file is saved as the ``Experiment``'s own Heartbeat file, which will be discussed below.
 
 /**Experiments/**

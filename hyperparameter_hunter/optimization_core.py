@@ -30,7 +30,7 @@ from hyperparameter_hunter.exceptions import (
     EnvironmentInvalidError,
     RepeatedExperimentError,
 )
-from hyperparameter_hunter.experiments import CrossValidationExperiment
+from hyperparameter_hunter.experiments import CVExperiment
 from hyperparameter_hunter.library_helpers.keras_helper import reinitialize_callbacks
 from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
     keras_prep_workflow,
@@ -198,9 +198,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         notes=None,
         do_raise_repeated=True,
     ):
-        """Provide the arguments necessary to instantiate
-        :class:`experiments.CrossValidationExperiment`. This method has the same signature as
-        :meth:`experiments.BaseExperiment.__init__` except where noted
+        """Provide arguments necessary to instantiate :class:`experiments.CVExperiment`. This method
+        has the same signature as :meth:`experiments.BaseExperiment.__init__` except where noted
 
         Parameters
         ----------
@@ -240,7 +239,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         :meth:`BaseOptimizationProtocol._execute_experiment` sets it to False in order to check for
         duplicated keys before running the whole Experiment. This is the most notable difference
         between calling :meth:`set_experiment_guidelines` and instantiating
-        :class:`experiments.CrossValidationExperiment`"""
+        :class:`experiments.CVExperiment`"""
         self.model_initializer = model_initializer
 
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
@@ -383,17 +382,16 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             iteration += 1
 
     def _execute_experiment(self):
-        """Instantiate and run a :class:`experiments.CrossValidationExperiment` after checking for
-        duplicated keys
+        """Instantiate and run a :class:`experiments.CVExperiment` after checking for duplicate keys
 
         Notes
         -----
         As described in the Notes of :meth:`BaseOptimizationProtocol.set_experiment_guidelines`, the
-        `auto_start` kwarg of :meth:`experiments.CrossValidationExperiment.__init__` is set to False
-        in order to check for duplicated keys"""
+        `auto_start` kwarg of :meth:`experiments.CVExperiment.__init__` is set to False in order to
+        check for duplicated keys"""
         self._update_current_hyperparameters()
 
-        self.current_experiment = CrossValidationExperiment(
+        self.current_experiment = CVExperiment(
             # model=None,  # TODO: May need to pass `model` from `set_experiment_guidelines`
             model_initializer=self.model_initializer,
             model_init_params=self.current_init_params,

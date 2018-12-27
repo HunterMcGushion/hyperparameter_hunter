@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CrossValidationExperiment, BayesianOptimization
+from hyperparameter_hunter import Environment, CVExperiment, BayesianOptimization
 from hyperparameter_hunter import Real, Integer, Categorical
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 import os.path
@@ -50,7 +50,7 @@ def _execute():
     )
 
     #################### Experimentation ####################
-    experiment = CrossValidationExperiment(
+    experiment = CVExperiment(
         model_initializer=KerasClassifier,
         model_init_params=dict(build_fn=_build_fn_experiment),
         model_extra_params=dict(
