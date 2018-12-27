@@ -367,8 +367,14 @@ class TestedKeyRecorder(BaseRecorder):
 # Leaderboard
 ##################################################
 class LeaderboardEntryRecorder(BaseRecorder):
+    # Below is "tested_keys", instead of "leaderboards" because global "leaderboards" should only be
+    # ... blacklisted if "tested_keys" is blacklisted, since the two help constitute a sort of bare
+    # ... minimum to achieve full library functionality. Furthermore, "leaderboards" is an invalid
+    # ... blacklist value - "tested_keys" must be used, instead
     result_path_key = "tested_keys"
     required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
+    # Despite not being allowed in the blacklist, the "leaderboards" and "global_leaderboard" keys
+    # ... of `result_paths` are still referenced herein
 
     def format_result(self):
         """Read existing global leaderboard, add current entry, then sort the updated leaderboard"""
