@@ -239,7 +239,10 @@ class BaseExperiment(ScoringMixIn):
         self._initial_preprocessing()
         self.execute()
 
-        recorders = RecorderList(file_blacklist=G.Env.file_blacklist)
+        #################### Save Experiment Results ####################
+        recorders = RecorderList(
+            file_blacklist=G.Env.file_blacklist, extra_recorders=G.Env.experiment_recorders
+        )
         recorders.format_result()
         G.log(f"Saving results for Experiment: '{self.experiment_id}'")
         recorders.save_result()

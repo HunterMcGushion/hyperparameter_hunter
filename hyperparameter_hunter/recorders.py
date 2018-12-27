@@ -12,7 +12,7 @@ Related
 from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs
+from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs, read_json
 
 ##################################################
 # Import Miscellaneous Assets
@@ -22,6 +22,7 @@ from collections import OrderedDict
 from platform import node
 import shutil
 from sys import exc_info
+from yaml import dump
 
 
 class BaseRecorder(metaclass=ABCMeta):
@@ -108,14 +109,23 @@ class BaseRecorder(metaclass=ABCMeta):
 
 
 class RecorderList(object):
-    def __init__(self, file_blacklist=None):
+    def __init__(self, file_blacklist=None, extra_recorders=None):
         """Collection of :class:`BaseRecorder` subclasses to facilitate executing group methods
 
         Parameters
         ----------
         file_blacklist: List, or None, default=None
             If list, used to reject any elements of :attr:`RecorderList.recorders` whose
-            :attr:`BaseRecorder.result_path_key` is in file_blacklist"""
+            :attr:`BaseRecorder.result_path_key` is in file_blacklist
+        extra_recorders: List, None, default=None
+            If not None, may be a list whose values are tuples of
+            (<:class:`recorders.BaseRecorder` descendant>, <str result_path>). The result_path str
+            should be a path relative to `root_results_path`, specifying the directory/file in which
+            the product of the custom recorder will be saved. The contents of `extra_recorders` are
+            appended to the list of default `recorders` and used to create/update result files for
+            an Experiment. The contents of `extra_recorders` are blacklisted in the same way as
+            normal `recorders`. That is, if `file_blacklist` contains the `result_path_key` of a
+            recorder in `extra_recorders`, that recorder is blacklisted"""
         # WARNING: Take care if modifying the order/contents of :attr:`recorders`. See :meth:`save_result` documentation for info
         self.recorders = [
             TestedKeyRecorder,
@@ -128,6 +138,15 @@ class RecorderList(object):
             HeartbeatRecorder,
         ]
 
+        #################### Add `extra_recorders` ####################
+        if extra_recorders:
+            for recorder in extra_recorders:
+                try:
+                    self.recorders.append(recorder[0])
+                except IndexError:
+                    self.recorders.append(recorder)
+
+        #################### Filter Out Blacklisted Recorders ####################
         if file_blacklist is not None:
             if file_blacklist == "ALL":
                 self.recorders = []
@@ -367,8 +386,14 @@ class TestedKeyRecorder(BaseRecorder):
 # Leaderboard
 ##################################################
 class LeaderboardEntryRecorder(BaseRecorder):
+    # Below is "tested_keys", instead of "leaderboards" because global "leaderboards" should only be
+    # ... blacklisted if "tested_keys" is blacklisted, since the two help constitute a sort of bare
+    # ... minimum to achieve full library functionality. Furthermore, "leaderboards" is an invalid
+    # ... blacklist value - "tested_keys" must be used, instead
     result_path_key = "tested_keys"
     required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
+    # Despite not being allowed in the blacklist, the "leaderboards" and "global_leaderboard" keys
+    # ... of `result_paths` are still referenced herein
 
     def format_result(self):
         """Read existing global leaderboard, add current entry, then sort the updated leaderboard"""
@@ -389,8 +414,11 @@ class LeaderboardEntryRecorder(BaseRecorder):
             self.result.save(path=self.result_paths["global_leaderboard"])
 
 
-class UnsortedIDLeaderboardEntryRecorder(BaseRecorder):
-    result_path_key = "tested_keys"
+##################################################
+# Extra Recorders
+##################################################
+class UnsortedIDLeaderboardRecorder(BaseRecorder):
+    result_path_key = "unsorted_id_leaderboard"
     required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
 
     def format_result(self):
@@ -410,6 +438,21 @@ class UnsortedIDLeaderboardEntryRecorder(BaseRecorder):
         except FileNotFoundError:
             make_dirs(self.result_paths["leaderboards"], exist_ok=False)
             self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
+
+
+class YAMLDescriptionRecorder(BaseRecorder):
+    result_path_key = "yaml_description"
+    required_attributes = ["result_paths", "experiment_id"]
+
+    def format_result(self):
+        pass
+
+    def save_result(self):
+        self.result = read_json(f"{self.result_paths['description']}/{self.experiment_id}.json")
+
+        make_dirs(self.result_path, exist_ok=True)
+        with open(f"{self.result_path}/{self.experiment_id}.yml", "w+") as f:
+            dump(self.result, f, default_flow_style=False, width=200)
 
 
 if __name__ == "__main__":

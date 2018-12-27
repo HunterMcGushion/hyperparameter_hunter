@@ -2,12 +2,41 @@
 ## [Unreleased]
 
 ### Features
+* Add `experiment_recorders` kwarg to `Environment` that allows for providing custom Experiment 
+result file-recording classes
+    * The only syntax changes for this new feature occur in `Environment` initialization:
+    
+    ```python
+  from hyperparameter_hunter import Environment
+  from hyperparameter_hunter.recorders import YAMLDescriptionRecorder
+
+  env = Environment(
+      train_dataset=None,  # Placeholder value
+      root_results_path="HyperparameterHunterAssets",
+      # ... Standard `Environment` kwargs ...
+      experiment_recorders=[
+          (YAMLDescriptionRecorder, "Experiments/YAMLDescriptions"),
+      ],
+  )
+
+  # ... Normal Experiment/Optimization execution
+    ```
+    
+    * Each tuple in the `experiment_recorders` list is expected to contain the following:
+        1. a new custom recorder class that descends from `recorders.BaseRecorder`, followed by
+        2. a string path that is relative to the `Environment.root_results_path` kwarg and specifies 
+        the location at which new result files should be saved 
+    
+    * A dedicated example for this feature has been added in "examples/advanced_examples/recorder_example.py"
 
 ### Bug-Fixes
 * Fix bug when comparing identical dataset sentinels used in a `CrossValidationExperiment`, followed 
 by use in `BaseOptimizationProtocol.set_experiment_guidelines`
 
 ### Changes
+* Update sorting of GlobalLeaderboard entries to take into account only the target metric column
+and the "experiment_#" columns
+    * This produces more predictable orders that don't rely on UUIDs/hashes and preserve historicity
 
 ### Breaking Changes
 * Hyperparameter keys are not compatible with those created using previous versions due to updated

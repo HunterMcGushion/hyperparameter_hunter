@@ -100,6 +100,7 @@ class Environment:
         to_csv_params=None,
         do_full_save=None,
         experiment_callbacks=None,
+        experiment_recorders=None,
     ):
         """Class to organize the parameters that allow Experiments to be fairly compared
 
@@ -296,6 +297,14 @@ class Environment:
             :class:`.experiment_core.ExperimentMeta` at `__call__` time, making
             `experiment_callbacks` new base classes of the Experiment. See
             :func:`.callbacks.bases.lambda_callback` for more information
+        experiment_recorders: List, None, default=None
+            If not None, may be a list whose values are tuples of
+            (<:class:`recorders.BaseRecorder` descendant>, <str result_path>). The result_path str
+            should be a path relative to `root_results_path` that specifies the directory/file in
+            which the product of the custom recorder should be saved. The contents of
+            `experiment_recorders` will be provided to `recorders.RecorderList` upon completion of
+            an Experiment, and, if the subclassing documentation in `recorders` is followed
+            properly, will create or update a result file for the just-executed Experiment
 
         Notes
         -----
@@ -363,6 +372,7 @@ class Environment:
         self.to_csv_params = to_csv_params or {}
         self.do_full_save = do_full_save
         self.experiment_callbacks = experiment_callbacks or []
+        self.experiment_recorders = experiment_recorders or []
 
         self.result_paths = {
             "root": self.root_results_path,
@@ -520,13 +530,23 @@ class Environment:
         if self.test_dataset is None:
             self.file_blacklist.append("predictions_test")
 
+        # Add given `experiment_recorders` to `result_paths`
+        for recorder in self.experiment_recorders:
+            try:
+                recorder, result_path = recorder
+            except IndexError:
+                raise IndexError(f"Expected `recorder` to be tuple of (class, str), not {recorder}")
+
+            self.result_paths[recorder.result_path_key] = result_path
+
         # Set full filepath for result files relative to `root_results_path`, or to None (blacklist)
         for k in self.result_paths.keys():
             if k == "root":
                 continue
             elif k not in self.file_blacklist:
+                # If `k` not in `RESULT_FILE_SUB_DIR_PATHS`, then added via `experiment_recorders`
                 self.result_paths[k] = os.path.join(
-                    self.root_results_path, RESULT_FILE_SUB_DIR_PATHS[k]
+                    self.root_results_path, RESULT_FILE_SUB_DIR_PATHS.get(k, self.result_paths[k])
                 )
             else:
                 self.result_paths[k] = None
