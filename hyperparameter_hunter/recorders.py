@@ -109,14 +109,23 @@ class BaseRecorder(metaclass=ABCMeta):
 
 
 class RecorderList(object):
-    def __init__(self, file_blacklist=None):
+    def __init__(self, file_blacklist=None, extra_recorders=None):
         """Collection of :class:`BaseRecorder` subclasses to facilitate executing group methods
 
         Parameters
         ----------
         file_blacklist: List, or None, default=None
             If list, used to reject any elements of :attr:`RecorderList.recorders` whose
-            :attr:`BaseRecorder.result_path_key` is in file_blacklist"""
+            :attr:`BaseRecorder.result_path_key` is in file_blacklist
+        extra_recorders: List, None, default=None
+            If not None, may be a list whose values are tuples of
+            (<:class:`recorders.BaseRecorder` descendant>, <str result_path>). The result_path str
+            should be a path relative to `root_results_path`, specifying the directory/file in which
+            the product of the custom recorder will be saved. The contents of `extra_recorders` are
+            appended to the list of default `recorders` and used to create/update result files for
+            an Experiment. The contents of `extra_recorders` are blacklisted in the same way as
+            normal `recorders`. That is, if `file_blacklist` contains the `result_path_key` of a
+            recorder in `extra_recorders`, that recorder is blacklisted"""
         # WARNING: Take care if modifying the order/contents of :attr:`recorders`. See :meth:`save_result` documentation for info
         self.recorders = [
             TestedKeyRecorder,
@@ -129,6 +138,15 @@ class RecorderList(object):
             HeartbeatRecorder,
         ]
 
+        #################### Add `extra_recorders` ####################
+        if extra_recorders:
+            for recorder in extra_recorders:
+                try:
+                    self.recorders.append(recorder[0])
+                except IndexError:
+                    self.recorders.append(recorder)
+
+        #################### Filter Out Blacklisted Recorders ####################
         if file_blacklist is not None:
             if file_blacklist == "ALL":
                 self.recorders = []
