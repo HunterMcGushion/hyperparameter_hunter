@@ -12,7 +12,7 @@ Related
 from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs
+from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs, read_json
 
 ##################################################
 # Import Miscellaneous Assets
@@ -22,6 +22,7 @@ from collections import OrderedDict
 from platform import node
 import shutil
 from sys import exc_info
+from yaml import dump
 
 
 class BaseRecorder(metaclass=ABCMeta):
@@ -395,8 +396,11 @@ class LeaderboardEntryRecorder(BaseRecorder):
             self.result.save(path=self.result_paths["global_leaderboard"])
 
 
-class UnsortedIDLeaderboardEntryRecorder(BaseRecorder):
-    result_path_key = "tested_keys"
+##################################################
+# Extra Recorders
+##################################################
+class UnsortedIDLeaderboardRecorder(BaseRecorder):
+    result_path_key = "unsorted_id_leaderboard"
     required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
 
     def format_result(self):
@@ -416,6 +420,21 @@ class UnsortedIDLeaderboardEntryRecorder(BaseRecorder):
         except FileNotFoundError:
             make_dirs(self.result_paths["leaderboards"], exist_ok=False)
             self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
+
+
+class YAMLDescriptionRecorder(BaseRecorder):
+    result_path_key = "yaml_description"
+    required_attributes = ["result_paths", "experiment_id"]
+
+    def format_result(self):
+        pass
+
+    def save_result(self):
+        self.result = read_json(f"{self.result_paths['description']}/{self.experiment_id}.json")
+
+        make_dirs(self.result_path, exist_ok=True)
+        with open(f"{self.result_path}/{self.experiment_id}.yml", "w+") as f:
+            dump(self.result, f, default_flow_style=False, width=200)
 
 
 if __name__ == "__main__":
