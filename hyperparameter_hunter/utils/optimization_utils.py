@@ -309,6 +309,8 @@ def get_ids_by(
         A list of experiment_id strings"""
     try:
         leaderboard = pd.read_csv(leaderboard_path, index_col=None)
+        # TODO: Above should be `leaderboards.Leaderboard.from_path(leaderboard_path)`, instead
+        # TODO: Keep current enclosing try/except
     except FileNotFoundError:
         return []
 
@@ -320,6 +322,8 @@ def get_ids_by(
         leaderboard = leaderboard.loc[leaderboard["hyperparameter_key"] == hyperparameter_key]
 
     if drop_duplicates is True:
+        # TODO: `drop_duplicates`' `keep` kwarg may be helpful if lb rows are sorted chronologically
+        # TODO: ... https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.drop_duplicates.html
         leaderboard.drop_duplicates(
             subset=["algorithm_name", "cross_experiment_key", "hyperparameter_key"], inplace=True
         )
