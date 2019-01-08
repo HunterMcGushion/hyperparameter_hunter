@@ -60,8 +60,10 @@ setup(
     },
     include_package_data=True,
     zip_safe=False,
-    test_suite="nose.collector",
-    tests_require=["nose"],
+    # test_suite="nose.collector",
+    # tests_require=["nose"],
+    # test_suite="pytest.collector",
+    tests_require=["pytest"],
     classifiers=(
         "Intended Audience :: Developers",
         "Intended Audience :: Education",

@@ -12,7 +12,8 @@ before_script:
   - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --ignore=E266 --statistics
 script:
   # - "make test"
-  - python setup.py nosetests
+  # - python setup.py nosetests  # FLAG: ORIGINAL
+  - pytest --cov=hyperparameter_hunter tests/
 
 #matrix:
 #  include:
