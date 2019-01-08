@@ -63,7 +63,7 @@ setup(
     # test_suite="nose.collector",
     # tests_require=["nose"],
     # test_suite="pytest.collector",
-    tests_require=["pytest"],
+    tests_require=["pytest", "pytest-cov"],
     classifiers=(
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
