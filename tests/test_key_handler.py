@@ -244,25 +244,23 @@ def test_make_hash_sha256_function(obj, expected, kwargs):
 #     metafunc.parametrize(arg_names, arg_values, ids=id_list, scope="class")
 # NOTE: ABOVE WORKS FOR SEPARATED SCENARIOS
 
-# NOTE: PREFERRED IMPLEMENTATION
-def pytest_generate_tests(metafunc):
-    arg_names, arg_values, id_list = None, [], []
-
-    if not metafunc.cls:
-        return
-
-    for id_prefix, scenarios in metafunc.cls.scenarios.items():
-        for i, scenario in enumerate(scenarios):
-            id_list.append("{}[{}]".format(id_prefix, i))
-
-            items = scenario.items()
-            arg_names = [_[0] for _ in items]
-            arg_values.append(([_[1] for _ in items]))
-
-    metafunc.parametrize(arg_names, arg_values, ids=id_list, scope="class")
-
-
-# NOTE: PREFERRED IMPLEMENTATION
+# FLAG: PREFERRED IMPLEMENTATION
+# def pytest_generate_tests(metafunc):
+#     arg_names, arg_values, id_list = None, [], []
+#
+#     if not metafunc.cls:
+#         return
+#
+#     for id_prefix, scenarios in metafunc.cls.scenarios.items():
+#         for i, scenario in enumerate(scenarios):
+#             id_list.append("{}[{}]".format(id_prefix, i))
+#
+#             items = scenario.items()
+#             arg_names = [_[0] for _ in items]
+#             arg_values.append(([_[1] for _ in items]))
+#
+#     metafunc.parametrize(arg_names, arg_values, ids=id_list, scope="class")
+# FLAG: PREFERRED IMPLEMENTATION
 
 # scenarios_string = [
 #     dict(obj="", expected="b0nNvYDhuV1eZCfhUB_CF3kNruhwVfpbTnEGQoi93t4=", kwargs={}),
