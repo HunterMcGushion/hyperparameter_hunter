@@ -56,7 +56,8 @@ setup(
     extras_require={
         "dev": ["pre-commit"],
         "docs": ["numpydoc", "hyperparameter-hunter", "keras"],
-        "travis": ["nose", "black", "hyperparameter-hunter", "keras", "tensorflow"],
+        # "travis": ["nose", "black", "hyperparameter-hunter", "keras", "tensorflow"],  # FLAG: ORIGINAL
+        "travis": ["pytest", "pytest-cov", "black", "hyperparameter-hunter", "keras", "tensorflow"],
     },
     include_package_data=True,
     zip_safe=False,
