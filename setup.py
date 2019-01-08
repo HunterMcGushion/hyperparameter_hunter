@@ -57,14 +57,21 @@ setup(
         "dev": ["pre-commit"],
         "docs": ["numpydoc", "hyperparameter-hunter", "keras"],
         # "travis": ["nose", "black", "hyperparameter-hunter", "keras", "tensorflow"],  # FLAG: ORIGINAL
-        "travis": ["pytest", "pytest-cov", "black", "hyperparameter-hunter", "keras", "tensorflow"],
+        "travis": [
+            "pytest>=4.0",
+            "pytest-cov",
+            "black",
+            "hyperparameter-hunter",
+            "keras",
+            "tensorflow",
+        ],
     },
     include_package_data=True,
     zip_safe=False,
     # test_suite="nose.collector",
     # tests_require=["nose"],
     # test_suite="pytest.collector",
-    tests_require=["pytest", "pytest-cov"],
+    tests_require=["pytest>=4.0", "pytest-cov"],
     classifiers=(
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
