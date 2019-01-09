@@ -48,6 +48,7 @@ def is_iterable(obj):
     True
     >>> is_iterable(object())
     False
+
     .. _iterable: https://docs.python.org/2/glossary.html#term-iterable
     """
     try:
@@ -90,6 +91,7 @@ def split(src, sep=None, maxsplit=None):
     but for all iterables. Returns a list of lists.
     >>> split(['hi', 'hello', None, None, 'sup', None, 'soap', None])
     [['hi', 'hello'], ['sup'], ['soap']]
+
     See :func:`split_iter` docs for more info.
     """
     return list(split_iter(src, sep, maxsplit))
@@ -106,6 +108,7 @@ def split_iter(src, sep=None, maxsplit=None):
     never appear in the output.
     >>> list(split_iter(['hi', 'hello', None, None, 'sup', None, 'soap', None]))
     [['hi', 'hello'], ['sup'], ['soap']]
+
     Note that ``split_iter`` is based on :func:`str.split`, so if
     *sep* is ``None``, ``split()`` **groups** separators. If empty lists
     are desired between two contiguous ``None`` values, simply use
@@ -114,10 +117,12 @@ def split_iter(src, sep=None, maxsplit=None):
     [['hi', 'hello'], ['sup']]
     >>> list(split_iter(['hi', 'hello', None, None, 'sup', None], sep=[None]))
     [['hi', 'hello'], [], ['sup'], []]
+
     Using a callable separator:
     >>> falsy_sep = lambda x: not x
     >>> list(split_iter(['hi', 'hello', None, '', 'sup', False], falsy_sep))
     [['hi', 'hello'], [], ['sup'], []]
+
     See :func:`split` for a list-returning version.
     """
     if not is_iterable(src):
@@ -170,6 +175,7 @@ def chunked(src, size, count=None, **kw):
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, None, None]]
     >>> chunked(range(10), 3, count=2)
     [[0, 1, 2], [3, 4, 5]]
+
     See :func:`chunked_iter` for more info.
     """
     chunk_iter = chunked_iter(src, size, **kw)
@@ -188,6 +194,7 @@ def chunked_iter(src, size, **kw):
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     >>> list(chunked_iter(range(10), 3, fill=None))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, None, None]]
+
     Note that ``fill=None`` in fact uses ``None`` as the fill value.
     """
     # TODO: add count kwarg?
@@ -228,6 +235,7 @@ def pairwise(src):
     [(0, 1), (1, 2), (2, 3), (3, 4)]
     >>> pairwise([])
     []
+
     The number of pairs is always one less than the number of elements
     in the iterable passed in, except on empty inputs, which returns
     an empty list.
@@ -242,6 +250,7 @@ def pairwise_iter(src):
     [(0, 1), (1, 2), (2, 3), (3, 4)]
     >>> list(pairwise_iter([]))
     []
+
     The number of pairs is always one less than the number of elements
     in the iterable passed in, or zero, when *src* is empty.
     """
@@ -261,6 +270,7 @@ def windowed_iter(src, size):
     window over iterable *src*.
     >>> list(windowed_iter(range(7), 3))
     [(0, 1, 2), (1, 2, 3), (2, 3, 4), (3, 4, 5), (4, 5, 6)]
+
     If the iterable is too short to make a window of length *size*,
     then no window tuples are returned.
     >>> list(windowed_iter(range(3), 5))
@@ -282,6 +292,7 @@ def xfrange(stop, start=None, step=1.0):
     list.
     >>> tuple(xfrange(1, 3, step=0.75))
     (1.0, 1.75, 2.5)
+
     See :func:`frange` for more details.
     """
     if not step:
@@ -356,6 +367,7 @@ def backoff_iter(start, stop, count=None, factor=2.0, jitter=False):
     [1.0, 2.0, 4.0, 8.0, 10.0, 10.0, 10.0, 10.0]
     >>> list(backoff_iter(0.25, 100.0, factor=10))
     [0.25, 2.5, 25.0, 100.0]
+
     A simplified usage example:
     .. code-block:: python
       for timeout in backoff_iter(0.25, 5.0):
@@ -433,12 +445,15 @@ def bucketize(src, key=None, value_transform=None, key_filter=None):
     >>> is_odd = lambda x: x % 2 == 1
     >>> bucketize(range(5), is_odd)
     {False: [0, 2, 4], True: [1, 3]}
+
     Value lists are not deduplicated:
     >>> bucketize([None, None, None, 'hello'])
     {False: [None, None, None], True: ['hello']}
+
     Bucketize into more than 3 groups
     >>> bucketize(range(10), lambda x: x % 3)
     {0: [0, 3, 6, 9], 1: [1, 4, 7], 2: [2, 5, 8]}
+
     ``bucketize`` has a couple of advanced options useful in certain
     cases.  *value_transform* can be used to modify values as they are
     added to buckets, and *key_filter* will allow excluding certain
@@ -447,6 +462,7 @@ def bucketize(src, key=None, value_transform=None, key_filter=None):
     {False: [0], True: [1, 4, 9, 16]}
     >>> bucketize(range(10), key=lambda x: x % 3, key_filter=lambda k: k % 3 != 1)
     {0: [0, 3, 6, 9], 2: [2, 5, 8]}
+
     Note in some of these examples there were at most two keys, ``True`` and
     ``False``, and each key present has a list with at least one
     item. See :func:`partition` for a version specialized for binary
@@ -478,6 +494,7 @@ def partition(src, key=None):
     >>> nonempty, empty = partition(['', '', 'hi', '', 'bye'])
     >>> nonempty
     ['hi', 'bye']
+
     *key* defaults to :class:`bool`, but can be carefully overridden to
     use any function that returns either ``True`` or ``False``.
     >>> import string
@@ -497,6 +514,7 @@ def unique(src, key=None):
     >>> ones_n_zeros = '11010110001010010101010'
     >>> ''.join(unique(ones_n_zeros))
     '10'
+
     See :func:`unique_iter` docs for more details.
     """
     return list(unique_iter(src, key))
@@ -508,6 +526,7 @@ def unique_iter(src, key=None):
     >>> repetitious = [1, 2, 3] * 10
     >>> list(unique_iter(repetitious))
     [1, 2, 3]
+
     By default, *key* is the object itself, but *key* can either be a
     callable or, for convenience, a string name of the attribute on
     which to uniqueify objects, falling back on identity when the
@@ -557,6 +576,7 @@ def one(src, default=None, key=None):
     True
     >>> one((10, 20, 30, 42), key=lambda i: i > 40)
     42
+
     See `Martín Gaitán's original repo`_ for further use cases.
     .. _Martín Gaitán's original repo: https://github.com/mgaitan/one
     .. _XOR: https://en.wikipedia.org/wiki/Exclusive_or
@@ -578,11 +598,13 @@ def first(iterable, default=None, key=None):
     >>> m = first(re.match(regex, 'abc') for regex in ['b.*', 'a(.*)'])
     >>> m.group(1)
     'bc'
+
     The optional *key* argument specifies a one-argument predicate function
     like that used for *filter()*.  The *key* argument, if supplied, should be
     in keyword form. For example, finding the first even number in an iterable:
     >>> first([1, 1, 3, 4, 5], key=lambda x: x % 2 == 0)
     4
+
     Contributed by Hynek Schlawack, author of `the original standalone module`_.
     .. _the original standalone module: https://github.com/hynek/first
     """
@@ -678,6 +700,7 @@ def remap(root, visit=default_visit, enter=default_enter, exit=default_exit, **k
     ...            'Babylon 5': 6, 'Dr. Who': None}
     >>> pprint(remap(reviews, lambda p, k, v: v is not None))
     {'Babylon 5': 6, 'Star Trek': {'DS9': 8.5, 'TNG': 10}}
+
     Notice how both Nones have been removed despite the nesting in the
     dictionary. Not bad for a one-liner, and that's just the beginning.
     See `this remap cookbook`_ for more delicious recipes.
@@ -838,6 +861,7 @@ def get_path(root, path, default=_UNSET):
     >>> root = {'a': {'b': {'c': [[1], [2], [3]]}}}
     >>> get_path(root, ('a', 'b', 'c', 2, 0))
     3
+
     The path format is intentionally consistent with that of
     :func:`remap`.
     One of get_path's chief aims is improved error messaging. EAFP is
@@ -897,6 +921,7 @@ def research(root, query=lambda p, k, v: True, reraise=False):
     >>> res = research(root, query=lambda p, k, v: isinstance(v, int))
     >>> print(sorted(res))
     [(('a', 'b'), 1), (('a', 'c', 0), 2), (('a', 'c', 2), 3)]
+
     Note how *query* follows the same, familiar ``path, key, value``
     signature as the ``visit`` and ``enter`` functions on
     :func:`remap`, and returns a :class:`bool`.
