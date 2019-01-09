@@ -46,7 +46,26 @@ def model_selector(model_initializer):
 
     Returns
     -------
-    :class:`Model`, or one of its children"""
+    :class:`Model`, or one of its children
+
+    Examples
+    --------
+    >>> from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+    >>> model_selector(KerasClassifier) == KerasModel
+    True
+    >>> model_selector(KerasRegressor) == KerasModel
+    True
+    >>> from xgboost import XGBClassifier, XGBRegressor
+    >>> model_selector(XGBClassifier) == XGBoostModel
+    True
+    >>> model_selector(XGBRegressor) == XGBoostModel
+    True
+    >>> from sklearn.svm import SVC
+    >>> model_selector(SVC) == Model
+    True
+    >>> model_selector(None) == Model
+    True
+    """
     try:
         if model_initializer.__name__ in ("KerasClassifier", "KerasRegressor"):
             return KerasModel
