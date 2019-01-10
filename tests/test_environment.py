@@ -7,14 +7,30 @@ from hyperparameter_hunter.environment import Environment
 # Import Miscellaneous Assets
 ##################################################
 import numpy as np
+from os import makedirs
 import pandas as pd
 import pytest
+from shutil import rmtree
 
 ##################################################
 # Import Learning Assets
 ##################################################
 from sklearn.datasets import load_breast_cancer
 from sklearn.metrics import accuracy_score
+
+
+##################################################
+# Fixtures
+##################################################
+# noinspection PyUnusedLocal
+@pytest.fixture(scope="module", autouse=True)
+def hh_assets(request):
+    """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
+    of the tests contained in this module, before it and its contents are deleted"""
+    temp_assets_path = "hyperparameter_hunter/HyperparameterHunterAssets"
+    makedirs(temp_assets_path)
+    yield
+    rmtree(temp_assets_path)
 
 
 ##################################################
