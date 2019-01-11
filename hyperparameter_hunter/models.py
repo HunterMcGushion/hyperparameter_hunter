@@ -32,7 +32,6 @@ import warnings
 ##################################################
 import sklearn.utils as sklearn_utils
 
-warnings.filterwarnings("ignore")
 load_model = lambda _: _
 
 
