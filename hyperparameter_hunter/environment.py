@@ -388,6 +388,7 @@ class Environment:
             "key_attribute_lookup": None,
             "leaderboards": None,
             "global_leaderboard": None,
+            "current_heartbeat": None,
         }
         self.current_task = None
         self.cross_experiment_key = None
@@ -619,7 +620,7 @@ class Environment:
     def initialize_reporting(self):
         """Initialize reporting for the Environment and Experiments conducted during its lifetime"""
         reporting_params = self.reporting_handler_params
-        reporting_params["heartbeat_path"] = "{}/Heartbeat.log".format(self.root_results_path)
+        reporting_params["heartbeat_path"] = self.result_paths["current_heartbeat"]
         reporting_handler = ReportingHandler(**reporting_params)
 
         #################### Make Unified Logging Globally Available ####################
@@ -782,7 +783,13 @@ def validate_file_blacklist(blacklist):
     concerned, the experiment never took place.
 
     'tested_keys' (continued): If this string is included in the blacklist, then the contents of the
-    "KeyAttributeLookup" directory will also be excluded from the list of files to update"""
+    "KeyAttributeLookup" directory will also be excluded from the list of files to update
+
+    'current_heartbeat': The general heartbeat file that should be stored at
+    'HyperparameterHunterAssets/Heartbeat.log'. If this value is blacklisted, then 'heartbeat' is
+    also added to `blacklist` automatically out of necessity. This is done because the heartbeat
+    file for the current experiment cannot be created as a copy of the general heartbeat file if the
+    general heartbeat file is never created in the first place"""
     valid_values = [
         # 'checkpoint',
         "description",
@@ -793,6 +800,7 @@ def validate_file_blacklist(blacklist):
         "predictions_test",
         "script_backup",
         "tested_keys",
+        "current_heartbeat",
     ]
     if blacklist == "ALL":
         G.warn('WARNING: Received `blacklist`="ALL". Nothing will be saved')
@@ -811,5 +819,9 @@ def validate_file_blacklist(blacklist):
             raise ValueError(f"Invalid blacklist value: {a_file}.\nExpected one of: {valid_values}")
         if a_file in ["description", "tested_keys"]:
             G.warn(f"Including {a_file!r} in blacklist will severely impede library functionality")
+
+    # Blacklist experiment-specific heartbeat if general (current) heartbeat is blacklisted
+    if ("current_heartbeat" in blacklist) and ("heartbeat" not in blacklist):
+        blacklist.append("heartbeat")
 
     return blacklist
