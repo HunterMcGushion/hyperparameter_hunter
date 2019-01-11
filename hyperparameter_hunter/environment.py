@@ -439,6 +439,9 @@ class Environment:
         #################### file_blacklist ####################
         self.file_blacklist = validate_file_blacklist(self.file_blacklist)
 
+        if self.root_results_path is None:
+            self.file_blacklist = "ALL"
+
         #################### Train/Test Datasets ####################
         if isinstance(self.train_dataset, str):
             self.train_dataset = pd.read_csv(self.train_dataset)
