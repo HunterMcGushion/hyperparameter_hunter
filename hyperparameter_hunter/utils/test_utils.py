@@ -221,8 +221,8 @@ def format_suites(test_suites, group_format, reindex=True):
     >>> from hyperparameter_hunter.utils.test_utils import format_suites
     >>> suites = {'a': [[None], [None]], 'b': [[None], [None]]}
     >>> print(format_suites(suites, 'suites_{}_', reindex=True)[1])
-    ... print(format_suites(suites, 'suites_{}_', reindex=False)[1])
     ['suites_a_00', 'suites_a_01', 'suites_b_00', 'suites_b_01']
+    >>> print(format_suites(suites, 'suites_{}_', reindex=False)[1])
     ['suites_a_00', 'suites_a_01', 'suites_b_02', 'suites_b_03']
 
     Notes
