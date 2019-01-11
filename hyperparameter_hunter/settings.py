@@ -40,6 +40,7 @@ RESULT_FILE_SUB_DIR_PATHS = {
     "leaderboards": "{}".format(ASSETS_LEADERBOARDS_DIRNAME),
     "global_leaderboard": "{}/GlobalLeaderboard.csv".format(ASSETS_LEADERBOARDS_DIRNAME),
     #################### Other ####################
+    "current_heartbeat": "Heartbeat.log",
     # 'analytics': '{}'.format(),
     # 'ensembles': '{}'.format(),
     # 'optimization_rounds': '{}'.format(),

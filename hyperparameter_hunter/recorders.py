@@ -279,8 +279,7 @@ class HeartbeatRecorder(BaseRecorder):
     def _copy_heartbeat(self):
         """Helper method to copy the global Heartbeat log to a file named for the Experiment"""
         shutil.copyfile(
-            f"{G.Env.result_paths['root']}/Heartbeat.log",
-            f"{self.result_path}/{self.experiment_id}.log",
+            G.Env.result_paths["current_heartbeat"], f"{self.result_path}/{self.experiment_id}.log"
         )
 
 

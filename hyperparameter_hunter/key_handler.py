@@ -141,9 +141,6 @@ class KeyMaker(metaclass=ABCMeta):
         """Locate complex types in :attr:`parameters`, create hashes for them, add lookup entries
         linking their original values to their hashes, then update their values in
         :attr:`parameters` to their hashes to facilitate Description saving"""
-        if self.tested_keys_dir is None:  # Key-making blacklisted
-            return
-
         dataframe_hashes = {}
 
         def enter(path, key, value):
@@ -186,11 +183,12 @@ class KeyMaker(metaclass=ABCMeta):
                 if isinstance(value, pd.DataFrame):
                     dataframe_hashes.setdefault(hashed_value, []).append(key)
 
-                try:
-                    self.add_complex_type_lookup_entry(path, key, value, hashed_value)
-                except (FileNotFoundError, OSError):
-                    make_dirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
-                    self.add_complex_type_lookup_entry(path, key, value, hashed_value)
+                if self.tested_keys_dir is not None:  # Key-making not blacklisted
+                    try:
+                        self.add_complex_type_lookup_entry(path, key, value, hashed_value)
+                    except (FileNotFoundError, OSError):
+                        make_dirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
+                        self.add_complex_type_lookup_entry(path, key, value, hashed_value)
 
                 return (key, hashed_value)
             return (key, value)
