@@ -27,7 +27,14 @@ def finder_selector(module_name):
 
     Returns
     -------
-    :class:`ResultFinder`, or one of its descendants"""
+    :class:`ResultFinder`, or one of its descendants
+
+    Examples
+    --------
+    >>> assert finder_selector("Keras") == KerasResultFinder
+    >>> assert finder_selector("xgboost") == ResultFinder
+    >>> assert finder_selector("lightgbm") == ResultFinder
+    """
     if module_name.lower() == "keras":
         return KerasResultFinder
     else:
