@@ -27,8 +27,12 @@ from sklearn.metrics import accuracy_score
 def hh_assets(request):
     """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
     of the tests contained in this module, before it and its contents are deleted"""
-    temp_assets_path = "hyperparameter_hunter/HyperparameterHunterAssets"
-    makedirs(temp_assets_path)
+    temp_assets_path = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+    try:
+        makedirs(temp_assets_path)
+    except FileExistsError:  # Can happen if tests stopped before deleting directory - Must empty it
+        rmtree(temp_assets_path)
+        makedirs(temp_assets_path)
     yield
     rmtree(temp_assets_path)
 
@@ -59,7 +63,7 @@ repeated_cv_params = dict(n_splits=5, n_repeats=2, random_state=32)
 default_env_params = dict(
     train_dataset=train_dataset,
     environment_params_path=None,
-    root_results_path="hyperparameter_hunter/HyperparameterHunterAssets",
+    root_results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
     holdout_dataset=get_holdout_set,
     test_dataset=train_dataset.copy(),
     target_column="diagnosis",
