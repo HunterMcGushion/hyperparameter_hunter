@@ -188,13 +188,15 @@ def format_metrics_map(metrics_map):
     >>> format_metrics_map({"roc_auc_score": None, "f1_score": None})  # doctest: +ELLIPSIS
     {'roc_auc_score': Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), 'f1_score': Metric(f1_score, <function f1_score at 0x...>, max)}
     """
-    if isinstance(metrics_map, dict):
+    if metrics_map and isinstance(metrics_map, dict):
         if all(isinstance(_, Metric) for _ in metrics_map.values()):
             return metrics_map
 
         metrics_map = [
             (k,) + (v if isinstance(v, (tuple, Metric)) else (v,)) for k, v in metrics_map.items()
         ]
+    elif not (metrics_map and isinstance(metrics_map, list)):
+        raise TypeError(f"`metrics_map` must be a non-empty list or dict. Received: {metrics_map}")
 
     metrics_map_dict = {}
 

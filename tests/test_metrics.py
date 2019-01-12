@@ -23,7 +23,7 @@ class EmptyClass(object):
 
 _metrics_map = dict(roc_auc_score=roc_auc_score)
 _in_fold, _oof, _holdout = "all", "all", "all"
-empty_class, empty_func, empty_tuple = EmptyClass(), lambda _: _, tuple()
+empty_class, empty_func = EmptyClass(), lambda _: _
 
 
 def args_ids_for(scenarios):
@@ -64,25 +64,24 @@ scenarios_valid_metrics_lists = [
         ["roc_auc_score"],
     ),
     (["f1_score", "accuracy_score", "roc_auc_score"], ["f1_score"], _oof, _holdout),
-    #################### Below cases result in no metrics being calculated at all ####################
-    (dict(), None, None, None),
-    ([], None, None, None),
 ]
 scenarios_type_error = dict(
     metrics_map=[
-        # ("foo", _in_fold, _oof, _holdout),  # TODO: ORIGINAL: Raises AttributeError (`f`) instead of TypeError
+        ("foo", _in_fold, _oof, _holdout),
         (1, _in_fold, _oof, _holdout),
         (None, _in_fold, _oof, _holdout),
         # (['f1_score', 'accuracy_score', 'roc_auc_score'], _in_fold, _oof, _holdout),  # This correctly fails
         (empty_class, _in_fold, _oof, _holdout),
         (empty_func, _in_fold, _oof, _holdout),
-        # (empty_tuple, _in_fold, _oof, _holdout),  # TODO: ORIGINAL: Might be valid now - No metrics
+        (tuple(), _in_fold, _oof, _holdout),
+        (list(), _in_fold, _oof, _holdout),
+        (dict(), _in_fold, _oof, _holdout),
     ],
     metrics_map_key=[
         ({1: roc_auc_score}, _in_fold, _oof, _holdout),
         ({empty_class: roc_auc_score}, _in_fold, _oof, _holdout),
         ({empty_func: roc_auc_score}, _in_fold, _oof, _holdout),
-        # ({empty_tuple: roc_auc_score}, _in_fold, _oof, _holdout),  # TODO: ORIGINAL: Raises nothing, but probably should
+        # ({tuple(): roc_auc_score}, _in_fold, _oof, _holdout),  # TODO: ORIGINAL: Raises nothing, but probably should
     ],
     metrics_map_value=[
         ({"roc_auc_score": 1}, _in_fold, _oof, _holdout),
@@ -107,7 +106,7 @@ scenarios_type_error = dict(
         (_metrics_map, _in_fold, [1.2], _holdout),
         (_metrics_map, _in_fold, _oof, [empty_func]),
         (_metrics_map, [empty_class], _oof, _holdout),
-        (_metrics_map, [empty_tuple], _oof, _holdout),
+        (_metrics_map, [tuple()], _oof, _holdout),
         (_metrics_map, [["roc_auc"]], _oof, _holdout),
         (_metrics_map, [dict(a=1, b=2)], 1, 1),
         (_metrics_map, [None], _oof, _holdout),
@@ -124,9 +123,6 @@ scenarios_key_error = [
     (_metrics_map, _in_fold, ["foo"], _holdout),
     (_metrics_map, _in_fold, _oof, ["foo"]),
     (_metrics_map, ["roc_auc", "foo"], _oof, _holdout),
-    (dict(), ["roc_auc"], _oof, _holdout),
-    (dict(), _in_fold, ["roc_auc"], _holdout),
-    ([], _in_fold, _oof, ["roc_auc"]),
 ]
 
 
