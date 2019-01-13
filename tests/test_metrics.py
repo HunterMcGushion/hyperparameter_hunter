@@ -81,14 +81,13 @@ scenarios_type_error = dict(
         ({1: roc_auc_score}, _in_fold, _oof, _holdout),
         ({empty_class: roc_auc_score}, _in_fold, _oof, _holdout),
         ({empty_func: roc_auc_score}, _in_fold, _oof, _holdout),
-        # ({tuple(): roc_auc_score}, _in_fold, _oof, _holdout),  # TODO: ORIGINAL: Raises nothing, but probably should
+        ({tuple(): roc_auc_score}, _in_fold, _oof, _holdout),
     ],
     metrics_map_value=[
         ({"roc_auc_score": 1}, _in_fold, _oof, _holdout),
         ({"roc_auc_score": 1.2}, _in_fold, _oof, _holdout),
         ({"roc_auc_score": ["a", "b"]}, _in_fold, _oof, _holdout),
         ({"roc_auc_score": dict(a=1, b=2)}, _in_fold, _oof, _holdout),
-        # ({"roc_auc_score": ("a", "b")}, _in_fold, _oof, _holdout),  # TODO: ORIGINAL: Raises AttributeError (`a`) instead of TypeError
     ],
     metrics_lists=[
         (_metrics_map, "foo", _oof, _holdout),
@@ -117,6 +116,7 @@ scenarios_attribute_error = [
     (dict(foo=None), _in_fold, _oof, _holdout),
     (["foo"], _in_fold, _oof, _holdout),
     (["roc_auc", "foo"], _in_fold, _oof, _holdout),
+    ({"roc_auc_score": ("a", "b")}, _in_fold, _oof, _holdout),
 ]
 scenarios_key_error = [
     (_metrics_map, ["foo"], _oof, _holdout),

@@ -209,6 +209,9 @@ def format_metrics_map(metrics_map):
         else:
             metrics_map_dict[value.name] = value
 
+    if not all(metrics_map_dict):
+        raise TypeError(f"`metrics_map` keys must all be truthy. Received: {metrics_map_dict}")
+
     return metrics_map_dict
 
 
