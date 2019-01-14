@@ -271,17 +271,14 @@ class KeyMaker(metaclass=ABCMeta):
     @abstractmethod
     def key_type(self) -> str:
         """Str in ["hyperparameter", "cross_experiment"], denoting the key type being processed"""
-        raise NotImplementedError()
 
     @abstractmethod
     def does_key_exist(self) -> bool:
         """Check if key hash exists among saved keys in the contents of :attr:`tested_keys_dir`"""
-        raise NotImplementedError()
 
     @abstractmethod
     def save_key(self):
         """Save the key hash and the parameters used to make it to :attr:`tested_keys_dir`"""
-        raise NotImplementedError()
 
 
 class CrossExperimentKeyMaker(KeyMaker):
