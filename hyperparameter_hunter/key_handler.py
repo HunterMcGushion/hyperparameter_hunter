@@ -96,8 +96,8 @@ class KeyMaker(metaclass=ABCMeta):
         self.key = None
         self.exists = False
 
-        self.lookup_dir = G.Env.result_paths["key_attribute_lookup"]
-        self.tested_keys_dir = G.Env.result_paths["tested_keys"]
+        self.lookup_dir = None
+        self.tested_keys_dir = None
 
         self.validate_environment()
         self.handle_complex_types()
@@ -128,6 +128,9 @@ class KeyMaker(metaclass=ABCMeta):
         if not all([hasattr(G.Env, _) for _ in ["result_paths", "cross_experiment_key"]]):
             raise EnvironmentInvalidError("")
         try:
+            self.lookup_dir = G.Env.result_paths["key_attribute_lookup"]
+            self.tested_keys_dir = G.Env.result_paths["tested_keys"]
+
             # Ensure :attr:`tested_keys_dir` exists before calling :meth:`does_key_exist`, so "None" paths won't be checked
             if os.path.exists(self.tested_keys_dir) is False:
                 # TypeError may also be raised if :func:`os.path.exists` receives invalid input
