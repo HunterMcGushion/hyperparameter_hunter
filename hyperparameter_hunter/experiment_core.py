@@ -159,7 +159,43 @@ def base_callback_class_sorter(auxiliary_bases, parent_class_order=None):
     ------
     ValueError
         If `auxiliary_bases` contains a class that is not a descendant of any of the classes in
-        `parent_class_order`"""
+        `parent_class_order`
+
+    Examples
+    --------
+    >>> in_0 = [AggregatorEvaluations, AggregatorTimes, EvaluatorOOF, EvaluatorHoldout, LoggerFitStatus, PredictorOOF, PredictorHoldout, PredictorTest]
+    >>> out_0 = [PredictorHoldout, PredictorOOF, PredictorTest, EvaluatorHoldout, EvaluatorOOF, AggregatorEvaluations, AggregatorTimes, LoggerFitStatus]
+    >>> assert base_callback_class_sorter(in_0) == out_0
+    >>> in_1 = [AggregatorEvaluations, AggregatorTimes, EvaluatorOOF, EvaluatorHoldout, LoggerFitStatus, PredictorOOF, PredictorHoldout, PredictorTest]
+    >>> out_1 = [PredictorHoldout, PredictorOOF, PredictorTest, EvaluatorHoldout, EvaluatorOOF, AggregatorEvaluations, AggregatorTimes, LoggerFitStatus]
+    >>> assert base_callback_class_sorter(in_1) == out_1
+    >>> in_2 = [PredictorOOF, PredictorHoldout, AggregatorTimes, PredictorTest, AggregatorEvaluations, EvaluatorOOF, EvaluatorHoldout, LoggerFitStatus]
+    >>> out_2 = [PredictorHoldout, PredictorOOF, PredictorTest, EvaluatorHoldout, EvaluatorOOF, AggregatorEvaluations, AggregatorTimes, LoggerFitStatus]
+    >>> assert base_callback_class_sorter(in_2) == out_2
+    >>> in_3 = [PredictorTest, EvaluatorHoldout, LoggerFitStatus, AggregatorTimes, PredictorHoldout, PredictorOOF, AggregatorEvaluations, EvaluatorOOF]
+    >>> out_3 = [PredictorHoldout, PredictorOOF, PredictorTest, EvaluatorHoldout, EvaluatorOOF, AggregatorEvaluations, AggregatorTimes, LoggerFitStatus]
+    >>> assert base_callback_class_sorter(in_3) == out_3
+    >>> in_4 = [LoggerFitStatus, EvaluatorOOF, PredictorTest, EvaluatorHoldout, AggregatorTimes, AggregatorEvaluations, PredictorHoldout, PredictorOOF]
+    >>> out_4 = [PredictorHoldout, PredictorOOF, PredictorTest, EvaluatorHoldout, EvaluatorOOF, AggregatorEvaluations, AggregatorTimes, LoggerFitStatus]
+    >>> assert base_callback_class_sorter(in_4) == out_4
+    >>> in_5 = [AggregatorEvaluations, PredictorTest, PredictorOOF, EvaluatorOOF, EvaluatorHoldout]
+    >>> out_5 = [PredictorOOF, PredictorTest, EvaluatorHoldout, EvaluatorOOF, AggregatorEvaluations]
+    >>> assert base_callback_class_sorter(in_5) == out_5
+    >>> in_6 = [EvaluatorOOF, PredictorOOF, EvaluatorHoldout, AggregatorEvaluations, PredictorTest]
+    >>> out_6 = [PredictorOOF, PredictorTest, EvaluatorHoldout, EvaluatorOOF, AggregatorEvaluations]
+    >>> assert base_callback_class_sorter(in_6) == out_6
+    >>> in_7 = [PredictorTest, EvaluatorHoldout, PredictorOOF]
+    >>> out_7 = [PredictorOOF, PredictorTest, EvaluatorHoldout]
+    >>> assert base_callback_class_sorter(in_7) == out_7
+    >>> in_8 = [PredictorTest, PredictorOOF, EvaluatorHoldout]
+    >>> out_8 = [PredictorOOF, PredictorTest, EvaluatorHoldout]
+    >>> assert base_callback_class_sorter(in_8) == out_8
+
+    >>> base_callback_class_sorter([type("Foo", (object,), {}), PredictorTest, EvaluatorHoldout, PredictorOOF])
+    Traceback (most recent call last):
+        File "experiment_core.py", line ?, in base_callback_class_sorter
+    ValueError: Base class not descendant of acceptable parent class: [<class 'hyperparameter_hunter.experiment_core.Foo'>]
+    """
     if parent_class_order is None:
         parent_class_order = [
             BasePredictorCallback,
