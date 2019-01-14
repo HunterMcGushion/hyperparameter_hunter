@@ -26,7 +26,8 @@ lint:
 	black --check hyperparameter_hunter setup.py
 
 test:
-	nosetests
+	sh ./scripts/test.sh
+# nosetests
 
 clean:
 	sh ./scripts/clean.sh
