@@ -2,6 +2,10 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import key_handler
+from hyperparameter_hunter import settings
+from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
+from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
+
 
 ##################################################
 # Import Miscellaneous Assets
@@ -208,6 +212,22 @@ def test_make_hash_sha256_partial(obj, expected):
 @pytest.mark.parametrize(["obj", "expected", "kwargs"], **args_ids_for(scenarios_function))
 def test_make_hash_sha256_function(obj, expected, kwargs):
     assert key_handler.make_hash_sha256(obj, **kwargs) == expected
+
+
+##################################################
+# KeyMaker Scenarios
+##################################################
+def test_inactive_environment(monkeypatch):
+    monkeypatch.setattr(settings.G, "Env", None)
+    with pytest.raises(EnvironmentInactiveError):
+        CrossExperimentKeyMaker(dict(a="foo", b="bar"))
+
+
+@pytest.mark.parametrize("missing_attr", ["result_paths", "cross_experiment_key"])
+def test_invalid_environment(monkeypatch, env_fixture_0, missing_attr):
+    monkeypatch.delattr(settings.G.Env, missing_attr)
+    with pytest.raises(EnvironmentInvalidError):
+        CrossExperimentKeyMaker(dict(a="foo", b="bar"))
 
 
 # def pytest_generate_tests(metafunc):
