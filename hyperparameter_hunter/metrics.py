@@ -417,10 +417,7 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
     elif len(target_metric) == 1:
         if target_metric[0] in ok_datasets:
             # Just a dataset was provided - Need metric name
-            try:
-                first_metric_key = list(metrics_map.keys())[0]
-            except AttributeError:
-                first_metric_key = metrics_map[0].name
+            first_metric_key = list(metrics_map.keys())[0]
             target_metric = target_metric + (first_metric_key,)
             # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
         else:
