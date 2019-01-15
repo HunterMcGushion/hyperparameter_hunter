@@ -1,7 +1,8 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import metrics
+from hyperparameter_hunter.metrics import ScoringMixIn, Metric, format_metrics_map
+from hyperparameter_hunter.metrics import get_formatted_target_metric, get_clean_prediction
 
 ##################################################
 # Import Miscellaneous Assets
@@ -128,27 +129,56 @@ scenarios_key_error = [
 
 @pytest.mark.parametrize(["metrics_map"], **args_ids_for(scenarios_valid_metrics_map))
 def test_valid_scoring_mix_in_initialization_metrics_map(metrics_map):
-    metrics.ScoringMixIn(metrics_map=metrics_map, in_fold=_in_fold, oof=_oof, holdout=_holdout)
+    ScoringMixIn(metrics_map=metrics_map, in_fold=_in_fold, oof=_oof, holdout=_holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **args_ids_for(scenarios_valid_metrics_lists))
 def test_valid_scoring_mix_in_initialization_metrics_lists(metrics_map, in_fold, oof, holdout):
-    metrics.ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+    ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **keyed_args_ids_for(scenarios_type_error))
 def test_type_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, holdout):
     with pytest.raises(TypeError):
-        metrics.ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+        ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **args_ids_for(scenarios_attribute_error))
 def test_attribute_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, holdout):
     with pytest.raises(AttributeError):
-        metrics.ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+        ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **args_ids_for(scenarios_key_error))
 def test_key_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, holdout):
     with pytest.raises(KeyError):
-        metrics.ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+        ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+
+
+##################################################
+# get_formatted_target_metric Scenarios
+##################################################
+@pytest.mark.parametrize(
+    "target_metric",
+    argvalues=[
+        [],
+        {},
+        lambda _: True,
+        type("Foo", tuple(), {}),
+        type("Foo", tuple(), {})(),
+        1,
+        3.14,
+    ],
+)
+def test_get_formatted_target_metric_type_error(target_metric):
+    with pytest.raises(TypeError):
+        get_formatted_target_metric(target_metric, format_metrics_map(["roc_auc_score"]))
+
+
+@pytest.mark.parametrize(
+    "target_metric",
+    argvalues=[("oof", "roc_auc_score", "foo"), ("foo", "roc_auc_score"), ("holdout", "foo")],
+)
+def test_get_formatted_target_metric_value_error(target_metric):
+    with pytest.raises(ValueError):
+        get_formatted_target_metric(target_metric, format_metrics_map(["roc_auc_score"]))
