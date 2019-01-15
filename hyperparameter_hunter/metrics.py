@@ -248,18 +248,14 @@ class ScoringMixIn(object):
         For each kwarg in [`in_fold`, `oof`, `holdout`], the following must be true: if the value
         of the kwarg is a list, its contents must be a subset of `metrics_map`"""
         self.metrics_map = format_metrics_map(metrics_map)
+        self.do_score = do_score
 
         #################### ScoringMixIn-Only Mangled Attributes ####################
         self.__in_fold = in_fold if in_fold else []
         self.__oof = oof if oof else []
         self.__holdout = holdout if holdout else []
 
-        self.do_score = do_score
-
-        #################### Validate Parameters ####################
         self._validate_metrics_list_parameters()
-        self._set_default_metrics_parameters()
-
         self.last_evaluation_results = dict(in_fold=None, oof=None, holdout=None)
 
     def _validate_metrics_list_parameters(self):
@@ -275,13 +271,6 @@ class ScoringMixIn(object):
                         raise TypeError(f"{_d_type} values must be of type str. Received {_id}")
                     if _id not in self.metrics_map.keys():
                         raise KeyError(f"{_d_type} values must be in metrics_map. '{_id}' is not")
-
-    def _set_default_metrics_parameters(self):
-        """Set default parameters if metrics_map is empty (which implies metrics lists are also
-        empty)"""
-        if len(self.metrics_map.keys()) == 0:
-            self.metrics_map = dict(roc_auc=Metric("roc_auc", sk_metrics.roc_auc_score))
-            self.in_fold_metrics = ["roc_auc"]
 
     def evaluate(self, data_type, target, prediction, return_list=False):
         """Apply metric(s) to the given data to calculate the value of the `prediction`
