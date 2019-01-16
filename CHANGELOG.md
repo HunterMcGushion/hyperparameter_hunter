@@ -1,6 +1,12 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+<a name="2.1.1"></a>
+## [2.1.1] (2019-01-15)
+
+### Bug-Fixes
+* Fix bug caused by yaml import when not using `recorders.YAMLDescriptionRecorder`
+
 <a name="2.1.0"></a>
 ## [2.1.0] (2019-01-15)
 
@@ -383,7 +389,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.1.0...v2.0.0
