@@ -1,6 +1,9 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+<a name="2.1.0"></a>
+## [2.1.0] (2019-01-15)
+
 ### Features
 * Add `experiment_recorders` kwarg to `Environment` that allows for providing custom Experiment 
 result file-recording classes
@@ -28,10 +31,19 @@ result file-recording classes
         the location at which new result files should be saved 
     
     * A dedicated example for this feature has been added in "examples/advanced_examples/recorder_example.py"
+* Update `Environment` verbosity settings by converting the `verbose` parameter from a boolean to an 
+integer from 0-4 (inclusive). Enables greater control of logging frequency and level of detail. See 
+the `environment.Environment` documentation for details on what is logged at each level
+* Allow blacklisting the general heartbeat file by providing "current_heartbeat" as a value in 
+`Environment.file_blacklist`. Doing this will also blacklist Experiment heartbeat files automatically
 
 ### Bug-Fixes
-* Fix bug when comparing identical dataset sentinels used in a `CrossValidationExperiment`, followed 
+* Fix bug when comparing identical dataset sentinels used in a `CVExperiment`, followed 
 by use in `BaseOptimizationProtocol.set_experiment_guidelines`
+* Fix bug causing HyperparameterHunter warning messages to not be displayed
+* Fix bug where the incorrect best experiment would be printed in the hyperparameter optimization 
+summary when using a minimizing `target_metric`
+* Fix bug where providing `Environment` with `root_results_path=None` would break key-making
 
 ### Changes
 * Shortened name of `CrossValidationExperiment` to `CVExperiment`. `CrossValidationExperiment` will still
@@ -371,7 +383,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v1.0.2...v1.1.0
