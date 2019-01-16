@@ -13,7 +13,7 @@ import pytest
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, hamming_loss, r2_score, f1_score
 
 
 ##################################################
@@ -21,6 +21,10 @@ from sklearn.metrics import roc_auc_score
 ##################################################
 class EmptyClass(object):
     pass
+
+
+def my_r2_score(foo, bar):
+    return r2_score(foo, bar)
 
 
 _metrics_map = dict(roc_auc_score=roc_auc_score)
@@ -40,6 +44,68 @@ def keyed_args_ids_for(scenarios):
         scenario_ids.extend([f"{group_key}[{_}]" for _ in range(len(scenario_group))])
 
     return dict(argvalues=arg_values, ids=scenario_ids)
+
+
+##################################################
+# Metric Scenarios
+##################################################
+
+
+@pytest.fixture(scope="session")
+def metric_init_params_lookup():
+    """Lookup dictionary for `Metric` initialization parameters used in test scenarios. Keys
+    correspond to those in `metric_init_final_attributes_lookup`"""
+    return dict(
+        m_0=("roc_auc_score",),
+        m_1=("roc_auc_score", roc_auc_score),
+        m_2=("my_f1_score", "f1_score"),
+        m_3=("hamming_loss", hamming_loss),
+        m_4=("r2_score", r2_score, "min"),
+        m_5=("my_r2_score", my_r2_score),
+    )
+
+
+@pytest.fixture(scope="session")
+def metric_init_final_attributes_lookup():
+    """Lookup dictionary for the expected values of `Metric` attributes after an instance has been
+    initialized with the value of the corresponding key in `metric_init_params_lookup`. The `Metric`
+    attributes whose values are verified are as follows: `name`, `metric_function`, `direction`"""
+    return dict(
+        m_0=("roc_auc_score", roc_auc_score, "max"),
+        m_1=("roc_auc_score", roc_auc_score, "max"),
+        m_2=("my_f1_score", f1_score, "max"),
+        m_3=("hamming_loss", hamming_loss, "min"),
+        m_4=("r2_score", r2_score, "min"),
+        m_5=("my_r2_score", my_r2_score, "max"),
+    )
+
+
+@pytest.fixture(scope="function", params=["m_0", "m_1", "m_2", "m_3", "m_4", "m_5"])
+def metric_instance(metric_init_params_lookup, metric_init_final_attributes_lookup, request):
+    """Instance of `metrics.Metric` initialized with the corresponding values in
+    `metric_init_params_lookup`"""
+    metric = Metric(*metric_init_params_lookup[request.param])
+
+    #################### Ensure Attributes Properly Initialized ####################
+    (_name, _metric_function, _direction) = metric_init_final_attributes_lookup[request.param]
+    assert metric.metric_function == _metric_function
+    assert metric.direction == _direction
+    assert str(metric) == "Metric({}, {}, {})".format(_name, _metric_function.__name__, _direction)
+
+    return metric
+
+
+def test_metric_initialization_helpers(metric_instance):
+    assert hasattr(metric_instance, "name")
+    assert hasattr(metric_instance, "metric_function")
+    assert hasattr(metric_instance, "direction")
+    # TODO: Add test to verify `Metric.__call__` calls `Metric.metric_function` with expected inputs
+
+
+@pytest.mark.parametrize("direction", ["foo", "MAX", "bar"])
+def test_metric_initialization_invalid_direction(direction):
+    with pytest.raises(ValueError, match="`direction` must be 'infer', 'max', or 'min', not .*"):
+        Metric("some_metric", roc_auc_score, direction)
 
 
 ##################################################
