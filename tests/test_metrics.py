@@ -7,6 +7,7 @@ from hyperparameter_hunter.metrics import get_formatted_target_metric, get_clean
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+import pandas as pd
 import pytest
 
 ##################################################
@@ -160,15 +161,7 @@ def test_key_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, hold
 ##################################################
 @pytest.mark.parametrize(
     "target_metric",
-    argvalues=[
-        [],
-        {},
-        lambda _: True,
-        type("Foo", tuple(), {}),
-        type("Foo", tuple(), {})(),
-        1,
-        3.14,
-    ],
+    argvalues=[[], {}, lambda: True, type("Foo", tuple(), {}), type("Foo", tuple(), {})(), 1, 3.14],
 )
 def test_get_formatted_target_metric_type_error(target_metric):
     with pytest.raises(TypeError):
@@ -182,3 +175,21 @@ def test_get_formatted_target_metric_type_error(target_metric):
 def test_get_formatted_target_metric_value_error(target_metric):
     with pytest.raises(ValueError):
         get_formatted_target_metric(target_metric, format_metrics_map(["roc_auc_score"]))
+
+
+##################################################
+# get_clean_prediction Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["target", "prediction", "expected"],
+    argvalues=[
+        ([1, 0, 1, 0], [1, 0, 1, 0], [1, 0, 1, 0]),
+        ([[3.1, 2.2], [4.1, 0.9]], [[3.2, 2.3], [3.9, 0.8]], [[3.2, 2.3], [3.9, 0.8]]),
+        ([1, 0, 1, 0], [0.9, 0.1, 0.8, 0.2], [1.0, 0.0, 1.0, 0.0]),
+        ([1, 0, 1, 0], [2.3, -1.2, 1.9, 0.01], [1.0, 0.0, 1.0, 0.0]),
+    ],
+)
+def test_get_clean_prediction(target, prediction, expected):
+    assert pd.DataFrame(
+        get_clean_prediction(pd.DataFrame(target), pd.DataFrame(prediction))
+    ).equals(pd.DataFrame(expected))
