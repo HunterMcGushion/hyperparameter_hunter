@@ -22,7 +22,6 @@ from collections import OrderedDict
 from platform import node
 import shutil
 from sys import exc_info
-from yaml import dump
 
 
 class BaseRecorder(metaclass=ABCMeta):
@@ -447,6 +446,8 @@ class YAMLDescriptionRecorder(BaseRecorder):
         pass
 
     def save_result(self):
+        from yaml import dump
+
         self.result = read_json(f"{self.result_paths['description']}/{self.experiment_id}.json")
 
         make_dirs(self.result_path, exist_ok=True)
