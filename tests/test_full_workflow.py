@@ -12,6 +12,7 @@ from hyperparameter_hunter.utils.learning_utils import (
     get_toy_classification_data,
     get_breast_cancer_data,
 )
+from hyperparameter_hunter.utils.test_utils import has_experiment_result_file
 
 ##################################################
 # Import Miscellaneous Assets
@@ -41,37 +42,6 @@ from xgboost import XGBClassifier
 ##################################################
 assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 # assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
-
-
-##################################################
-# Helper Functions
-##################################################
-def has_experiment_result_file(results_dir, experiment_id, result_type=None):
-    experiment_id = experiment_id if isinstance(experiment_id, str) else experiment_id.experiment_id
-
-    if not result_type:
-        result_type = ["Descriptions", "Heartbeats", "PredictionsOOF", "ScriptBackups"]
-    if isinstance(result_type, str):
-        result_type = [result_type]
-
-    for subdir in result_type:
-        if subdir == "Descriptions":
-            suffix = ".json"
-        elif subdir == "Heartbeats":
-            suffix = ".log"
-        elif subdir == "ScriptBackups":
-            suffix = ".py"
-        elif subdir.startswith("Predictions"):
-            suffix = ".csv"
-        else:
-            raise ValueError(f"Cannot resolve suffix for subdir `result_type`: {subdir}")
-
-        experiments_dir = Path(results_dir) / "HyperparameterHunterAssets" / "Experiments"
-        # experiments_dir = Path(results_dir) / "Experiments"
-        if not (experiments_dir / subdir / f"{experiment_id}{suffix}").exists():
-            return False
-
-    return True
 
 
 ##################################################
