@@ -8,7 +8,9 @@ from hyperparameter_hunter.utils.learning_utils import get_toy_classification_da
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from os import makedirs
 import pytest
+from shutil import rmtree
 
 
 # noinspection PyUnusedLocal
@@ -16,6 +18,21 @@ import pytest
 def new_G(request):
     settings.G.reset_attributes()
     yield
+
+
+# noinspection PyUnusedLocal
+@pytest.fixture(scope="module", autouse=True)
+def hh_assets(request):
+    """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
+    of the tests contained in each module, before it and its contents are deleted"""
+    temp_assets_path = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+    try:
+        makedirs(temp_assets_path)
+    except FileExistsError:  # Can happen if tests stopped before deleting directory - Must empty it
+        rmtree(temp_assets_path)
+        makedirs(temp_assets_path)
+    yield
+    rmtree(temp_assets_path)
 
 
 @pytest.fixture(scope="function")

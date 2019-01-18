@@ -20,24 +20,6 @@ from sklearn.metrics import accuracy_score
 
 
 ##################################################
-# Fixtures
-##################################################
-# noinspection PyUnusedLocal
-@pytest.fixture(scope="module", autouse=True)
-def hh_assets(request):
-    """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
-    of the tests contained in this module, before it and its contents are deleted"""
-    temp_assets_path = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
-    try:
-        makedirs(temp_assets_path)
-    except FileExistsError:  # Can happen if tests stopped before deleting directory - Must empty it
-        rmtree(temp_assets_path)
-        makedirs(temp_assets_path)
-    yield
-    rmtree(temp_assets_path)
-
-
-##################################################
 # Dummy Objects for Testing
 ##################################################
 def get_breast_cancer_data():
