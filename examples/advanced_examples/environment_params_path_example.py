@@ -1,6 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
-from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 
 
