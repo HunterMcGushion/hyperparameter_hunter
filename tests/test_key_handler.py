@@ -11,8 +11,10 @@ from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
 # Import Miscellaneous Assets
 ##################################################
 from functools import partial
+from os import makedirs
 import pandas as pd
 import pytest
+from shutil import rmtree
 
 
 ##################################################
@@ -72,6 +74,24 @@ params_5 = dict(ignore_module=True, ignore_name=True, ignore_source_lines=True) 
 
 def args_ids_for(scenarios):
     return dict(argvalues=scenarios, ids=[f"{_}" for _ in range(len(scenarios))])
+
+
+##################################################
+# Fixtures
+##################################################
+# noinspection PyUnusedLocal
+@pytest.fixture(scope="module", autouse=True)
+def hh_assets(request):
+    """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
+    of the tests contained in this module, before it and its contents are deleted"""
+    temp_assets_path = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+    try:
+        makedirs(temp_assets_path)
+    except FileExistsError:  # Can happen if tests stopped before deleting directory - Must empty it
+        rmtree(temp_assets_path)
+        makedirs(temp_assets_path)
+    yield
+    rmtree(temp_assets_path)
 
 
 ##################################################
