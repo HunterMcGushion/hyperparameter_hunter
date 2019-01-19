@@ -1,9 +1,8 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical, DummySearch
-from hyperparameter_hunter import BayesianOptimization, GradientBoostedRegressionTreeOptimization
-from hyperparameter_hunter import ExtraTreesOptimization, RandomForestOptimization, lambda_callback
+from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
+from hyperparameter_hunter import BayesianOptimization, ExtraTreesOptimization, lambda_callback
 from hyperparameter_hunter.callbacks.recipes import confusion_matrix_oof, confusion_matrix_holdout
 from hyperparameter_hunter.recorders import YAMLDescriptionRecorder, UnsortedIDLeaderboardRecorder
 
@@ -17,8 +16,6 @@ from hyperparameter_hunter.utils.test_utils import has_experiment_result_file
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-import pandas as pd
-from pathlib import Path
 import pytest
 
 ##################################################
@@ -214,7 +211,7 @@ def opt_svc_0(request):
 #################### DecisionTreeClassifier Optimization Protocols ####################
 @pytest.fixture(scope="function", autouse=False)
 def opt_dtc_0():
-    optimizer = BayesianOptimization(iterations=5, random_state=1337)
+    optimizer = ExtraTreesOptimization(iterations=2, random_state=1337)
     optimizer.set_experiment_guidelines(
         model_initializer=DecisionTreeClassifier,
         model_init_params=dict(
