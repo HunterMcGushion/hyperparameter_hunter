@@ -11,10 +11,8 @@ from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
 # Import Miscellaneous Assets
 ##################################################
 from functools import partial
-from os import makedirs
 import pandas as pd
 import pytest
-from shutil import rmtree
 
 
 ##################################################
