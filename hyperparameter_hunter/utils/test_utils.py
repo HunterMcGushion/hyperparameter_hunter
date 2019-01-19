@@ -29,11 +29,10 @@ def has_experiment_result_file(results_dir, experiment_id, result_type=None):
         Result file types for which to check. Valid values include any subdirectory name that can be
         included in "HyperparameterHunterAssets/Experiments" by default: ["Descriptions",
         "Heartbeats", "PredictionsOOF", "PredictionsHoldout", "PredictionsTest", "ScriptBackups"].
-        If string, should be one of the aforementioned strings. If list, should be a subset of the
-        aforementioned list of valid values. Else, default is ["Descriptions", "Heartbeats",
-        "PredictionsOOF", "ScriptBackups"]. The returned boolean signifies whether ALL of the
-        `result_type` files were found, not whether ANY of them were found
-
+        If string, should be one of the aforementioned strings, or "ALL" to use all of the results.
+        If list, should be a subset of the aforementioned list of valid values. Else, default is
+        ["Descriptions", "Heartbeats", "PredictionsOOF", "ScriptBackups"]. The returned boolean
+        signifies whether ALL of the `result_type` files were found, not whether ANY of were found
 
     Returns
     -------
@@ -45,6 +44,15 @@ def has_experiment_result_file(results_dir, experiment_id, result_type=None):
     #################### Format `result_type` ####################
     if not result_type:
         result_type = ["Descriptions", "Heartbeats", "PredictionsOOF", "ScriptBackups"]
+    elif result_type == "ALL":
+        result_type = [
+            "Descriptions",
+            "Heartbeats",
+            "PredictionsOOF",
+            "PredictionsHoldout",
+            "PredictionsTest",
+            "ScriptBackups",
+        ]
     if isinstance(result_type, str):
         result_type = [result_type]
 
