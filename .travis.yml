@@ -13,7 +13,8 @@ before_script:
 script:
   # - "make test"
   # - python setup.py nosetests  # FLAG: ORIGINAL
-  - pytest --cov=hyperparameter_hunter tests/
+  # - pytest --cov=hyperparameter_hunter tests/
+  - make test
 
 #matrix:
 #  include:
