@@ -24,11 +24,10 @@ import pytest
 ##################################################
 # Import Learning Assets
 ##################################################
-from lightgbm import LGBMClassifier
-
 from sklearn.metrics import f1_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 
 from xgboost import XGBClassifier
 
@@ -188,38 +187,28 @@ def exp_knc_0():
     return CVExperiment(model_initializer=KNeighborsClassifier, model_init_params={})
 
 
-#################### LGBMClassifier Experiments ####################
+#################### SVC Experiments ####################
 @pytest.fixture(scope="function", autouse=False)
-def exp_lgb_0():
+def exp_svc_0():
     return CVExperiment(
-        model_initializer=LGBMClassifier,
-        model_init_params=dict(
-            boosting_type="gbdt",
-            num_leaves=5,
-            max_depth=5,
-            min_child_samples=1,
-            subsample=0.5,
-            verbose=-1,
-        ),
+        model_initializer=SVC, model_init_params=dict(C=1.0, kernel="linear", max_iter=100)
     )
 
 
 ##################################################
 # Optimization Protocol Fixtures
 ##################################################
-#################### LGBMClassifier Optimization Protocols ####################
+#################### SVC Optimization Protocols ####################
 @pytest.fixture(scope="function", autouse=False, params=[None, "f1_micro", "f1", "f1_macro"])
-def opt_lgb_0(request):
+def opt_svc_0(request):
     optimizer = BayesianOptimization(target_metric=request.param, iterations=2, random_state=32)
     optimizer.set_experiment_guidelines(
-        model_initializer=LGBMClassifier,
+        model_initializer=SVC,
         model_init_params=dict(
-            boosting_type=Categorical(["gbdt", "dart"]),
-            num_leaves=Integer(2, 8),
-            max_depth=5,
-            min_child_samples=1,
-            subsample=Real(0.4, 0.7),
-            verbose=-1,
+            C=Real(0.9, 1.1),
+            kernel=Categorical(["linear", "poly", "rbf"]),
+            max_iter=Integer(50, 125),
+            tol=1e-3,
         ),
     )
     optimizer.go()
@@ -296,10 +285,10 @@ def test_lambda_callback(env_3, exp_xgb_2):
 
 
 #################### multi_metric_example ####################
-def test_multi_metric(env_4, exp_lgb_0, opt_lgb_0):
-    assert len(opt_lgb_0.similar_experiments) > 0
+def test_multi_metric(env_4, exp_svc_0, opt_svc_0):
+    assert len(opt_svc_0.similar_experiments) > 0
 
-    for similar_experiment in opt_lgb_0.similar_experiments:
+    for similar_experiment in opt_svc_0.similar_experiments:
         assert has_experiment_result_file(
             assets_dir, similar_experiment[2], ["Descriptions", "Heartbeats", "PredictionsOOF"]
         )
