@@ -1,8 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
-from hyperparameter_hunter import BayesianOptimization
+from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical, DummySearch
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 
 ##################################################
@@ -30,6 +29,9 @@ assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 # assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
 
 
+##################################################
+# Environment Fixtures
+##################################################
 @pytest.fixture(scope="function", autouse=False)
 def env_0():
     return Environment(
@@ -41,7 +43,9 @@ def env_0():
     )
 
 
-#################### Keras Optimization Protocols ####################
+##################################################
+# Optimization Protocol Fixtures
+##################################################
 def _build_fn_optimization(input_shape):
     model = Sequential(
         [
@@ -63,7 +67,7 @@ def _build_fn_optimization(input_shape):
 
 @pytest.fixture(scope="function", autouse=False)
 def opt_keras_0():
-    optimizer = BayesianOptimization(iterations=3)
+    optimizer = DummySearch(iterations=2)
     optimizer.set_experiment_guidelines(
         model_initializer=KerasClassifier,
         model_init_params=dict(build_fn=_build_fn_optimization),
@@ -80,5 +84,5 @@ def opt_keras_0():
 ##################################################
 # Test Scenarios
 ##################################################
-def test_keras_optimization(env_0, opt_keras_0):
+def test_classification_optimization(env_0, opt_keras_0):
     ...
