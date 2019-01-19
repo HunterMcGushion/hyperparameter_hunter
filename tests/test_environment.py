@@ -7,10 +7,8 @@ from hyperparameter_hunter.environment import Environment
 # Import Miscellaneous Assets
 ##################################################
 import numpy as np
-from os import makedirs
 import pandas as pd
 import pytest
-from shutil import rmtree
 
 ##################################################
 # Import Learning Assets
