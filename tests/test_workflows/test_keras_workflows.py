@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical, DummySearch
+from hyperparameter_hunter import Environment, Real, Integer, Categorical, DummySearch
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 
 ##################################################
