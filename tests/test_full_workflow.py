@@ -24,12 +24,12 @@ import pytest
 ##################################################
 # Import Learning Assets
 ##################################################
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import f1_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-
-from xgboost import XGBClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 ##################################################
 # Global Settings
@@ -161,38 +161,27 @@ def env_5(request):
 ##################################################
 # Experiment Fixtures
 ##################################################
-#################### XGBoost Experiments ####################
+#################### GradientBoostingClassifier Experiments ####################
 @pytest.fixture(scope="function", autouse=False)
-def exp_xgb_0():
-    return CVExperiment(model_initializer=XGBClassifier, model_init_params=dict(subsample=0.01))
-
-
-@pytest.fixture(scope="function", autouse=False)
-def exp_xgb_1():
-    return CVExperiment(model_initializer=XGBClassifier, model_init_params=dict(subsample=0.5))
+def exp_gbc_0():
+    return CVExperiment(GradientBoostingClassifier, dict(subsample=0.01))
 
 
 @pytest.fixture(scope="function", autouse=False)
-def exp_xgb_2():
-    return CVExperiment(
-        model_initializer=XGBClassifier,
-        model_init_params={},
-        model_extra_params=dict(fit=dict(verbose=False)),
-    )
+def exp_gbc_1():
+    return CVExperiment(GradientBoostingClassifier, dict(subsample=0.5))
 
 
 #################### KNeighborsClassifier Experiments ####################
 @pytest.fixture(scope="function", autouse=False)
 def exp_knc_0():
-    return CVExperiment(model_initializer=KNeighborsClassifier, model_init_params={})
+    return CVExperiment(KNeighborsClassifier, {})
 
 
 #################### SVC Experiments ####################
 @pytest.fixture(scope="function", autouse=False)
 def exp_svc_0():
-    return CVExperiment(
-        model_initializer=SVC, model_init_params=dict(C=1.0, kernel="linear", max_iter=100)
-    )
+    return CVExperiment(SVC, dict(C=1.0, kernel="linear", max_iter=100))
 
 
 ##################################################
@@ -222,18 +211,17 @@ def opt_svc_0(request):
     # assert lb.columns[0] == f"oof_{request.param}"
 
 
-#################### XGBClassifier Optimization Protocols ####################
+#################### DecisionTreeClassifier Optimization Protocols ####################
 @pytest.fixture(scope="function", autouse=False)
-def opt_xgb_0():
+def opt_dtc_0():
     optimizer = BayesianOptimization(iterations=5, random_state=1337)
     optimizer.set_experiment_guidelines(
-        model_initializer=XGBClassifier,
+        model_initializer=DecisionTreeClassifier,
         model_init_params=dict(
-            objective="reg:linear",
-            max_depth=Integer(2, 20),
-            learning_rate=Real(0.0001, 0.5),
-            subsample=0.5,
-            booster=Categorical(["gbtree", "dart"]),
+            criterion="gini",
+            min_samples_split=Integer(2, 5),
+            splitter=Categorical(["best", "random"]),
+            min_weight_fraction_leaf=Real(0.0, 0.1),
         ),
     )
     optimizer.go()
@@ -241,13 +229,13 @@ def opt_xgb_0():
 
 
 ##################################################
-# Test Scenarios (Advanced)
+# Test Scenarios
 ##################################################
 #################### do_full_save_example ####################
-def test_do_full_save(env_0, exp_xgb_0, exp_xgb_1):
-    assert has_experiment_result_file(assets_dir, exp_xgb_0, ["Descriptions", "ScriptBackups"])
-    assert not has_experiment_result_file(assets_dir, exp_xgb_0, ["PredictionsOOF"])
-    assert has_experiment_result_file(assets_dir, exp_xgb_1)
+def test_do_full_save(env_0, exp_gbc_0, exp_gbc_1):
+    assert has_experiment_result_file(assets_dir, exp_gbc_0, ["Descriptions", "ScriptBackups"])
+    assert not has_experiment_result_file(assets_dir, exp_gbc_0, ["PredictionsOOF"])
+    assert has_experiment_result_file(assets_dir, exp_gbc_1)
 
 
 #################### environment_params_path_example ####################
@@ -264,24 +252,13 @@ def test_environment_params_path(env_1, exp_knc_0):
 
 
 #################### holdout_test_datasets_example ####################
-def test_holdout_test_datasets(env_2, exp_xgb_1):
-    assert has_experiment_result_file(
-        assets_dir,
-        exp_xgb_1,
-        [
-            "Descriptions",
-            "Heartbeats",
-            "PredictionsOOF",
-            "PredictionsHoldout",
-            "PredictionsTest",
-            "ScriptBackups",
-        ],
-    )
+def test_holdout_test_datasets(env_2, exp_gbc_1):
+    assert has_experiment_result_file(assets_dir, exp_gbc_1, "ALL")
 
 
 #################### lambda_callback_example ####################
-def test_lambda_callback(env_3, exp_xgb_2):
-    assert has_experiment_result_file(assets_dir, exp_xgb_2)
+def test_recorder(env_3, opt_dtc_0):
+    ...  # TODO: Assert that custom result files have been recorded
 
 
 #################### multi_metric_example ####################
@@ -295,5 +272,5 @@ def test_multi_metric(env_4, exp_svc_0, opt_svc_0):
 
 
 #################### recorder_example ####################
-def test_recorder(env_5, opt_xgb_0):
-    ...  # TODO: Assert that custom result files have been recorded
+def test_lambda_callback(env_5, exp_gbc_1):
+    assert has_experiment_result_file(assets_dir, exp_gbc_1)
