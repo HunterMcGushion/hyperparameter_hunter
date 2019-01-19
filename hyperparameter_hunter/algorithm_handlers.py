@@ -23,11 +23,10 @@ def identify_algorithm(model_initializer):
 
     Examples
     --------
-    >>> from xgboost import XGBClassifier
     >>> from sklearn.cluster import DBSCAN, SpectralClustering
     >>> from functools import partial
-    >>> identify_algorithm(XGBClassifier)
-    ('XGBClassifier', 'xgboost')
+    >>> identify_algorithm(DBSCAN)
+    ('DBSCAN', 'sklearn')
     >>> identify_algorithm(DBSCAN())
     ('DBSCAN', 'sklearn')
     >>> identify_algorithm(partial(SpectralClustering))

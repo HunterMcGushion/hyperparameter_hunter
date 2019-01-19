@@ -54,11 +54,6 @@ def model_selector(model_initializer):
     True
     >>> model_selector(KerasRegressor) == KerasModel
     True
-    >>> from xgboost import XGBClassifier, XGBRegressor
-    >>> model_selector(XGBClassifier) == XGBoostModel
-    True
-    >>> model_selector(XGBRegressor) == XGBoostModel
-    True
     >>> from sklearn.svm import SVC
     >>> model_selector(SVC) == Model
     True
