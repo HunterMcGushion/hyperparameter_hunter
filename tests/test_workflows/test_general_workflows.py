@@ -225,6 +225,9 @@ def opt_dtc_0():
     yield optimizer
 
 
+# TODO: 1-18-19 - Add test scenarios below that use `sentinels`
+
+
 ##################################################
 # Test Scenarios
 ##################################################
