@@ -192,20 +192,20 @@ def lambda_callback(
     >>> from hyperparameter_hunter.environment import Environment
     >>> def printer_helper(_rep, _fold, _run, last_evaluation_results):
     ...     print(f"{_rep}.{_fold}.{_run}   {last_evaluation_results}")
-    >>> env = Environment(
-    ...     train_dataset="i am a dataset",
-    ...     root_results_path="path/to/HyperparameterHunterAssets",
-    ...     metrics_map=["roc_auc_score"],
-    ...     experiment_callbacks=[
-    ...         lambda_callback(
-    ...             on_experiment_end=printer_helper,
-    ...             on_repetition_end=printer_helper,
-    ...             on_fold_end=printer_helper,
-    ...             on_run_end=printer_helper,
-    ...         )
-    ...     ]
+    >>> my_lambda_callback = lambda_callback(
+    ...     on_experiment_end=printer_helper,
+    ...     on_repetition_end=printer_helper,
+    ...     on_fold_end=printer_helper,
+    ...     on_run_end=printer_helper,
     ... )
-    >>> # ... Now execute an Experiment, or an Optimization Protocol...
+    ... # env = Environment(
+    ... #     train_dataset="i am a dataset",
+    ... #     root_results_path="path/to/HyperparameterHunterAssets",
+    ... #     metrics_map=["roc_auc_score"],
+    ... #     experiment_callbacks=[my_lambda_callback]
+    ... # )
+    ... # ... Now execute an Experiment, or an Optimization Protocol...
+
     See :mod:`hyperparameter_hunter.examples.lambda_callback_example` for more information"""
 
     methods = [

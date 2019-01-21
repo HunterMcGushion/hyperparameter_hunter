@@ -177,6 +177,8 @@ def format_metrics_map(metrics_map):
     {'roc_auc_score': Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), 'f1_score': Metric(f1_score, <function f1_score at 0x...>, max)}
     >>> format_metrics_map([Metric("log_loss"), Metric("r2_score", direction="min")])  # doctest: +ELLIPSIS
     {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'r2_score': Metric(r2_score, <function r2_score at 0x...>, min)}
+    >>> format_metrics_map({"log_loss": Metric("log_loss"), "r2_score": Metric("r2_score", direction="min")})  # doctest: +ELLIPSIS
+    {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'r2_score': Metric(r2_score, <function r2_score at 0x...>, min)}
     >>> format_metrics_map([("log_loss", None), ("my_r2_score", "r2_score", "min")])  # doctest: +ELLIPSIS
     {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'my_r2_score': Metric(my_r2_score, <function r2_score at 0x...>, min)}
     >>> format_metrics_map({"roc_auc": sk_metrics.roc_auc_score, "f1": sk_metrics.f1_score})  # doctest: +ELLIPSIS
@@ -188,13 +190,15 @@ def format_metrics_map(metrics_map):
     >>> format_metrics_map({"roc_auc_score": None, "f1_score": None})  # doctest: +ELLIPSIS
     {'roc_auc_score': Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), 'f1_score': Metric(f1_score, <function f1_score at 0x...>, max)}
     """
-    if isinstance(metrics_map, dict):
+    if metrics_map and isinstance(metrics_map, dict):
         if all(isinstance(_, Metric) for _ in metrics_map.values()):
             return metrics_map
 
         metrics_map = [
             (k,) + (v if isinstance(v, (tuple, Metric)) else (v,)) for k, v in metrics_map.items()
         ]
+    elif not (metrics_map and isinstance(metrics_map, list)):
+        raise TypeError(f"`metrics_map` must be a non-empty list or dict. Received: {metrics_map}")
 
     metrics_map_dict = {}
 
@@ -206,6 +210,9 @@ def format_metrics_map(metrics_map):
             metrics_map_dict[value[0]] = Metric(*value)
         else:
             metrics_map_dict[value.name] = value
+
+    if not all(metrics_map_dict):
+        raise TypeError(f"`metrics_map` keys must all be truthy. Received: {metrics_map_dict}")
 
     return metrics_map_dict
 
@@ -241,18 +248,14 @@ class ScoringMixIn(object):
         For each kwarg in [`in_fold`, `oof`, `holdout`], the following must be true: if the value
         of the kwarg is a list, its contents must be a subset of `metrics_map`"""
         self.metrics_map = format_metrics_map(metrics_map)
+        self.do_score = do_score
 
         #################### ScoringMixIn-Only Mangled Attributes ####################
         self.__in_fold = in_fold if in_fold else []
         self.__oof = oof if oof else []
         self.__holdout = holdout if holdout else []
 
-        self.do_score = do_score
-
-        #################### Validate Parameters ####################
         self._validate_metrics_list_parameters()
-        self._set_default_metrics_parameters()
-
         self.last_evaluation_results = dict(in_fold=None, oof=None, holdout=None)
 
     def _validate_metrics_list_parameters(self):
@@ -268,13 +271,6 @@ class ScoringMixIn(object):
                         raise TypeError(f"{_d_type} values must be of type str. Received {_id}")
                     if _id not in self.metrics_map.keys():
                         raise KeyError(f"{_d_type} values must be in metrics_map. '{_id}' is not")
-
-    def _set_default_metrics_parameters(self):
-        """Set default parameters if metrics_map is empty (which implies metrics lists are also
-        empty)"""
-        if len(self.metrics_map.keys()) == 0:
-            self.metrics_map = dict(roc_auc=Metric("roc_auc", sk_metrics.roc_auc_score))
-            self.in_fold_metrics = ["roc_auc"]
 
     def evaluate(self, data_type, target, prediction, return_list=False):
         """Apply metric(s) to the given data to calculate the value of the `prediction`
@@ -421,10 +417,7 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
     elif len(target_metric) == 1:
         if target_metric[0] in ok_datasets:
             # Just a dataset was provided - Need metric name
-            try:
-                first_metric_key = list(metrics_map.keys())[0]
-            except AttributeError:
-                first_metric_key = metrics_map[0].name
+            first_metric_key = list(metrics_map.keys())[0]
             target_metric = target_metric + (first_metric_key,)
             # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
         else:
