@@ -92,7 +92,6 @@ class Sentinel(metaclass=ABCMeta):
         -------
         sentinel: Str
             A string identifying the sentinel"""
-        raise NotImplementedError
 
     @abstractmethod
     def retrieve_by_sentinel(self) -> object:
@@ -102,12 +101,10 @@ class Sentinel(metaclass=ABCMeta):
         -------
         object
             The object for which the sentinel was being used as a placeholder"""
-        raise NotImplementedError
 
     @abstractmethod
     def _validate_parameters(self):
         """Ensure input parameters are valid and properly formatted"""
-        raise NotImplementedError
 
 
 ##################################################
