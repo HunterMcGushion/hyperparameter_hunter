@@ -3,8 +3,8 @@
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
 from hyperparameter_hunter import RandomForestOptimization
+from hyperparameter_hunter.result_reader import has_experiment_result_file
 from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data
-from hyperparameter_hunter.utils.test_utils import has_experiment_result_file
 
 ##################################################
 # Import Miscellaneous Assets

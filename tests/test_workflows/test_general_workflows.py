@@ -5,13 +5,11 @@ from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Cate
 from hyperparameter_hunter import BayesianOptimization, ExtraTreesOptimization, lambda_callback
 from hyperparameter_hunter.callbacks.recipes import confusion_matrix_oof, confusion_matrix_holdout
 from hyperparameter_hunter.recorders import YAMLDescriptionRecorder, UnsortedIDLeaderboardRecorder
-
-# FLAG: Testing will require `yaml` for above
+from hyperparameter_hunter.result_reader import has_experiment_result_file
 from hyperparameter_hunter.utils.learning_utils import (
     get_toy_classification_data,
     get_breast_cancer_data,
 )
-from hyperparameter_hunter.utils.test_utils import has_experiment_result_file
 
 ##################################################
 # Import Miscellaneous Assets
