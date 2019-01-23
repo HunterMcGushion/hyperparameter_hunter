@@ -39,7 +39,7 @@ def env_0():
         root_results_path=assets_dir,
         metrics_map=["roc_auc_score"],
         cross_validation_type="StratifiedKFold",
-        cross_validation_params=dict(n_splits=3, shuffle=True, random_state=32),
+        cross_validation_params=dict(n_splits=2, shuffle=True, random_state=32),
     )
 
 
@@ -50,7 +50,7 @@ def _build_fn_optimization(input_shape):
     model = Sequential(
         [
             Dense(
-                Integer(50, 150),
+                Integer(50, 100),
                 kernel_initializer="uniform",
                 input_shape=input_shape,
                 activation="relu",
@@ -67,14 +67,14 @@ def _build_fn_optimization(input_shape):
 
 @pytest.fixture(scope="function", autouse=False)
 def opt_keras_0():
-    optimizer = DummySearch(iterations=2)
+    optimizer = DummySearch(iterations=1)
     optimizer.set_experiment_guidelines(
         model_initializer=KerasClassifier,
         model_init_params=dict(build_fn=_build_fn_optimization),
         model_extra_params=dict(
             callbacks=[ReduceLROnPlateau(patience=Integer(5, 10))],
             batch_size=Categorical([32, 64], transform="onehot"),
-            epochs=10,
+            epochs=5,
             verbose=0,
         ),
     )
