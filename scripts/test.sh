@@ -23,4 +23,5 @@ pytest \
     --disable-pytest-warnings \
     --cov-report html \
     --cov-report term \
-    tests/
+    tests/ \
+    --durations=10
