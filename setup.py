@@ -63,6 +63,8 @@ setup(
             "hyperparameter-hunter",
             "keras",
             "tensorflow",
+            "xgboost",
+            "coveralls",
         ],
     },
     include_package_data=True,
