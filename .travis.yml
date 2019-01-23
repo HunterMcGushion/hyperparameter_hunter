@@ -12,9 +12,5 @@ before_script:
   - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --ignore=E266 --statistics
 script:
   - make test
-
-#matrix:
-#  include:
-#  - python: "3.6"
-#    script:
-#      - make lint
+after_success:
+  - coveralls
