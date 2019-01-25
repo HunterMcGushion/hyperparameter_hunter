@@ -27,10 +27,15 @@ lint:
 
 test:
 	sh ./scripts/test.sh
-# nosetests
+
+test_nonsmoking:
+	sh ./scripts/test_nonsmoking.sh
 
 clean:
 	sh ./scripts/clean.sh
 
 distclean: clean
 	rm -rf env
+
+docstr_coverage:
+	sh ./scripts/docstr_coverage.sh
