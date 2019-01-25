@@ -25,4 +25,4 @@ pytest \
     --cov-report term \
     tests/ \
     --durations=10 \
-    --ignore tests/test_workflows
+    --ignore tests/smoke_tests
