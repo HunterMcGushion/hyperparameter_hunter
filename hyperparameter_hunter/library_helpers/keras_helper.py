@@ -96,6 +96,39 @@ def reinitialize_callbacks(callbacks):
     return callbacks
 
 
+sentinel_default_value = object()
+
+
+def get_keras_attr(model, attr, max_depth=3, default=sentinel_default_value):
+    """Retrieve specific Keras model attributes safely across different versions of Keras
+
+    Parameters
+    ----------
+    model: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
+        A compiled instance of a Keras model, made using the Keras `wrappers.scikit_learn` module
+    attr: String
+        Name of the attribute to retrieve from `model`
+    max_depth: Integer, default=3
+        Maximum number of times to check the "model" attribute of `model` for the target `attr` if
+        `attr` itself is not in `model` before returning `default` or raising AttributeError
+    default: Object, default=object()
+        If given, `default` will be returned once `max_depth` attempts have been made to find `attr`
+        in `model`. If not given and total attempts exceed `max_depth`, AttributeError is raised
+
+    Returns
+    -------
+    Object
+        Value of `attr` for `model` (or a nested `model` if necessary), or None"""
+    try:
+        return getattr(model, attr)
+    except AttributeError:  # Keras<2.2.0 has these attributes deeper in `model`
+        if max_depth > 0 and hasattr(model, "model"):
+            return get_keras_attr(model.model, attr, max_depth=max_depth - 1, default=default)
+        elif default is not sentinel_default_value:
+            return default
+        raise
+
+
 def parameterize_compiled_keras_model(model):
     """Traverse a compiled Keras model to gather critical information about the layers used to
     construct its architecture, and the parameters used to compile it
@@ -103,7 +136,11 @@ def parameterize_compiled_keras_model(model):
     Parameters
     ----------
     model: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
-        A compiled instance of a Keras model, made using the Keras `wrappers.scikit_learn` module
+        A compiled instance of a Keras model, made using the Keras `wrappers.scikit_learn` module.
+        This must be a completely valid Keras model, which means that it often must be the result
+        of :func:`library_helpers.keras_optimization_helper.initialize_dummy_model`. Using the
+        resulting dummy model ensures the model will pass Keras checks that would otherwise reject
+        instances of `space.Space` descendants used to provide hyperparameter choices
 
     Returns
     -------
@@ -115,44 +152,27 @@ def parameterize_compiled_keras_model(model):
         The parameters used on the call to :meth:`model.compile`. If a value for a certain parameter
         was not explicitly provided, its default value will be included in `compile_params`"""
     # NOTE: Tested optimizer and loss with both callable and string inputs - Converted to callables automatically
-
-    # TODO: MIGHT NEED TO CHECK KERAS VERSION...
-    # TODO: If the "TEST" lines below don't work for older Keras versions, add check here to set `model = model.model`...
-    # TODO: ... For newer Keras versions, but leave it alone for older versions
-
     ##################################################
     # Model Compile Parameters
     ##################################################
     compile_params = dict()
-    # compile_params['optimizer'] = model.optimizer.__class__.__name__  # -> 'Adam'  # FLAG: ORIGINAL
-    compile_params["optimizer"] = model.model.optimizer.__class__.__name__.lower()  # FLAG: TEST
-    # compile_params['optimizer_params'] = model.optimizer.get_config()  # -> {**kwargs}  # FLAG: ORIGINAL
-    compile_params["optimizer_params"] = model.model.optimizer.get_config()  # FLAG: TEST
 
-    # compile_params['metrics'] = model.metrics  # -> ['accuracy']  # FLAG: ORIGINAL
-    compile_params["metrics"] = model.model.metrics  # FLAG: TEST
-    # compile_params['metrics_names'] = model.metrics_names  # -> ['loss', 'acc']  # FLAG: ORIGINAL
-    compile_params["metrics_names"] = model.model.metrics_names  # FLAG: TEST
+    compile_params["optimizer"] = get_keras_attr(model, "optimizer").__class__.__name__.lower()
+    compile_params["optimizer_params"] = get_keras_attr(model, "optimizer").get_config()
 
-    compile_params["loss_functions"] = model.model.loss_functions
+    compile_params["metrics"] = get_keras_attr(model, "metrics")
+    compile_params["metrics_names"] = get_keras_attr(model, "metrics_names")
+
+    compile_params["loss_functions"] = get_keras_attr(model, "loss_functions")
     compile_params["loss_function_names"] = [_.__name__ for _ in compile_params["loss_functions"]]
 
     # FLAG: BELOW PARAMETERS SHOULD ONLY BE DISPLAYED IF EXPLICITLY GIVEN (probably have to be in key by default, though):
-    # compile_params['loss_weights'] = model.loss_weights  # -> None, [], or {}  # FLAG: ORIGINAL
-    compile_params["loss_weights"] = model.model.loss_weights  # FLAG: TEST
-    # compile_params['sample_weight_mode'] = model.sample_weight_mode  # -> None, or ''  # FLAG: ORIGINAL
-    compile_params["sample_weight_mode"] = model.model.sample_weight_mode  # FLAG: TEST
-    # compile_params['weighted_metrics'] = model.weighted_metrics  # -> None, or []  # FLAG: ORIGINAL
-    compile_params["weighted_metrics"] = model.model.weighted_metrics  # FLAG: TEST
+    compile_params["loss_weights"] = get_keras_attr(model, "loss_weights")
+    compile_params["sample_weight_mode"] = get_keras_attr(model, "sample_weight_mode")
+    compile_params["weighted_metrics"] = get_keras_attr(model, "weighted_metrics")
 
-    try:
-        # compile_params['target_tensors'] = model.target_tensors  # FLAG: ORIGINAL
-        compile_params["target_tensors"] = model.model.target_tensors  # FLAG: TEST
-    except AttributeError:
-        compile_params["target_tensors"] = None
-
-    # noinspection PyProtectedMember
-    compile_params["compile_kwargs"] = model.model._function_kwargs  # -> {}
+    compile_params["target_tensors"] = get_keras_attr(model, "target_tensors", default=None)
+    compile_params["compile_kwargs"] = get_keras_attr(model, "_function_kwargs")
 
     ##################################################
     # Model Architecture
@@ -165,8 +185,7 @@ def parameterize_compiled_keras_model(model):
     ]
     layers = []
 
-    # for layer in model.layers:  # FLAG: ORIGINAL
-    for layer in model.model.layers:  # FLAG: TEST
+    for layer in get_keras_attr(model, "layers"):
         layer_obj = dict(class_name=layer.__class__.__name__)
 
         for hh_attr in hh_attributes:
@@ -183,8 +202,7 @@ def parameterize_compiled_keras_model(model):
             + "\nIf you plan on tuning loss functions at all, please ensure custom functions are not given the same names as any"
             + " of Keras's loss functions. Otherwise, naming conflicts may occur and make results very confusing."
         )
-    # if model.optimizer.__module__ != 'keras.optimizers':  # FLAG: ORIGINAL
-    if model.model.optimizer.__module__ != "keras.optimizers":  # FLAG: TEST
+    if get_keras_attr(model, "optimizer").__module__ != "keras.optimizers":
         G.warn(
             "Custom optimizers will not be hashed and saved, meaning they are identified only by their names."
             + "\nIf you plan on tuning optimizers at all, please ensure custom optimizers are not given the same names as any"

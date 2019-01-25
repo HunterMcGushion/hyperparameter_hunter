@@ -191,15 +191,4 @@ dummy_1_compile_params = {
     ids=["dummy_model_0", "dummy_model_1"],
 )
 def test_parameterize_compiled_keras_model(model, layers, compile_params):
-    if get_distribution("keras").version < "2.2.0":
-        layers.insert(
-            0,
-            {
-                "class_name": "InputLayer",
-                "__hh_default_args": None,
-                "__hh_default_kwargs": None,
-                "__hh_used_args": None,
-                "__hh_used_kwargs": None,
-            },
-        )
     assert parameterize_compiled_keras_model(model()) == (layers, compile_params)
