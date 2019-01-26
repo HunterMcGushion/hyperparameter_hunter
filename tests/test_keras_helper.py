@@ -1,6 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.library_helpers.keras_helper import get_keras_attr
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
 
 ##################################################
@@ -185,6 +186,7 @@ dummy_1_compile_params = {
 @pytest.mark.parametrize(
     ["model", "layers", "compile_params"],
     [
+        # TODO: Might need to wrap dummy build_fns in `KerasClassifier/Regressor` - That is what actually happens
         (dummy_0_build_fn, dummy_0_layers, dummy_0_compile_params),
         (dummy_1_build_fn, dummy_1_layers, dummy_1_compile_params),
     ],
@@ -192,3 +194,65 @@ dummy_1_compile_params = {
 )
 def test_parameterize_compiled_keras_model(model, layers, compile_params):
     assert parameterize_compiled_keras_model(model()) == (layers, compile_params)
+
+
+##################################################
+# Mock Model Class
+##################################################
+class MockModel:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+def mock_0():
+    return MockModel(a="0.a", b="0.b", c="0.c")
+
+
+def mock_1():
+    return MockModel(b="1.b", d="1.d")
+
+
+def mock_2():
+    return MockModel(c="2.c", e="2.e")
+
+
+def mock_3():
+    return MockModel(f="3.f")
+
+
+def mock_4():
+    return MockModel()
+
+
+##################################################
+# `get_keras_attr` Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["models", "expected", "get_keras_attr_kwargs"],
+    [
+        ([mock_0, mock_1, mock_2], dict(a="0.a", b="0.b", c="0.c", d="1.d", e="2.e"), {}),
+        ([mock_2, mock_1, mock_0], dict(a="0.a", b="1.b", c="2.c", d="1.d", e="2.e"), {}),
+        ([mock_2, mock_1, mock_0], dict(b="1.b", c="2.c", d="1.d", e="2.e"), dict(max_depth=2)),
+        ([mock_0, mock_4, mock_4], dict(a="0.a", b="0.b", c="0.c"), {}),
+        ([mock_4, mock_4, mock_4, mock_0], dict(), {}),
+        ([mock_4], dict(a="foo", b="foo", c="foo", d="foo", e="foo", f="foo"), dict(default="foo")),
+        ([mock_3, mock_4, mock_2], dict(c="2.c", e="2.e", f="3.f"), {}),
+    ],
+)
+def test_get_keras_attr(models, expected, get_keras_attr_kwargs):
+    #################### Build Mock Nested Model ####################
+    nested_model = None
+    for model in models[::-1]:
+        model = model()
+        if nested_model:
+            setattr(model, "model", nested_model)
+        nested_model = model
+
+    #################### Check Expected Attributes ####################
+    for attr in list("abcdef"):
+        if attr in expected:
+            assert get_keras_attr(nested_model, attr, **get_keras_attr_kwargs) == expected[attr]
+        else:
+            with pytest.raises(AttributeError):
+                get_keras_attr(nested_model, attr, **get_keras_attr_kwargs)

@@ -120,10 +120,11 @@ def get_keras_attr(model, attr, max_depth=3, default=sentinel_default_value):
     Object
         Value of `attr` for `model` (or a nested `model` if necessary), or None"""
     try:
+        max_depth -= 1
         return getattr(model, attr)
     except AttributeError:  # Keras<2.2.0 has these attributes deeper in `model`
         if max_depth > 0 and hasattr(model, "model"):
-            return get_keras_attr(model.model, attr, max_depth=max_depth - 1, default=default)
+            return get_keras_attr(model.model, attr, max_depth=max_depth, default=default)
         elif default is not sentinel_default_value:
             return default
         raise
