@@ -21,7 +21,7 @@ pytest \
     --doctest-modules hyperparameter_hunter \
     --cov=hyperparameter_hunter \
     --disable-pytest-warnings \
-    --cov-report html \
+    --cov-report html:./htmlcov_nonsmoking \
     --cov-report term \
     tests/ \
     --durations=10 \

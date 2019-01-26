@@ -23,7 +23,7 @@ dist/
 *.egg-info/
 
 # Unit Tests/Coverage
-htmlcov/
+htmlcov*/
 .tox/
 .coverage
 .coverage.*
