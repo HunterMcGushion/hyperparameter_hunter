@@ -52,8 +52,8 @@ simple_mlp_layers = [
         "class_name": "Dense",
         "__hh_default_args": ["units"],
         "__hh_default_kwargs": default_dense,
-        "__hh_used_args": [1],
-        "__hh_used_kwargs": dict(kernel_initializer="uniform", activation="sigmoid"),
+        "__hh_used_args": [],
+        "__hh_used_kwargs": dict(units=1, kernel_initializer="uniform", activation="sigmoid"),
     },
 ]
 
