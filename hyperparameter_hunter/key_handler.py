@@ -544,7 +544,11 @@ def hash_callable(
 
     #################### Get Identifying Data ####################
     module = None if ignore_module else obj.__module__
-    name = None if ignore_name else obj.__name__
+    try:
+        name = None if ignore_name else obj.__name__
+    except AttributeError:
+        obj = obj.__class__
+        name = obj.__name__
 
     #################### Format Source Code Lines ####################
     if not ignore_source_lines:
