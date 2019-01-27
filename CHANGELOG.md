@@ -1,6 +1,9 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Bug-Fixes
+* Fix bug causing cross-validation to break occasionally if `n_splits=2`
+
 <a name="2.1.1"></a>
 ## [2.1.1] (2019-01-15)
 

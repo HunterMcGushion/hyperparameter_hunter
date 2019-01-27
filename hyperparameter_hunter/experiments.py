@@ -537,15 +537,14 @@ class BaseCVExperiment(BaseExperiment):
         splits, 4) Evaluate final predictions, 5) Format final predictions to prepare for saving"""
         self.on_experiment_start()
 
-        cv_indices = self.folds.split(self.train_input_data, self.train_target_data.iloc[:, 0])
-        new_shape = (
-            self.cross_validation_params.get("n_repeats", 1),
-            self.cross_validation_params["n_splits"],
-            2,
+        reshaped_indices = get_cv_indices(
+            self.folds,
+            self.cross_validation_params,
+            self.train_input_data,
+            self.train_target_data.iloc[:, 0],
         )
-        reshaped_indices = np.reshape(np.array(list(cv_indices)), new_shape)
 
-        for self._rep, rep_indices in enumerate(reshaped_indices.tolist()):
+        for self._rep, rep_indices in enumerate(reshaped_indices):
             self.on_repetition_start()
 
             for self._fold, (self.train_index, self.validation_index) in enumerate(rep_indices):
@@ -669,6 +668,36 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         self.folds = cross_validation_type(**self.cross_validation_params)
 
 
+##################################################
+# Experiment Helpers
+##################################################
+def get_cv_indices(folds, cv_params, input_data, target_data):
+    """Produce iterables of cross validation indices in the shape of (n_repeats, n_folds)
+
+    Parameters
+    ----------
+    folds: Instance of `cv_type`
+        Cross validation folds object, whose :meth:`split` receives `input_data` and `target_data`
+    cv_params: Dict
+        Parameters given to instantiate `folds`. Must contain `n_splits`. May contain `n_repeats`
+    input_data: pandas.DataFrame
+        Input data to be split by `folds`, to which yielded indices will correspond
+    target_data: pandas.DataFrame
+        Target data to be split by `folds`, to which yielded indices will correspond
+
+    Yields
+    ------
+    Generator
+        Cross validation indices in shape of (<n_repeats or 1>, <n_splits>)"""
+    indices = folds.split(input_data, target_data)
+
+    for rep in range(cv_params.get("n_repeats", 1)):
+        yield (next(indices) for _ in range(cv_params["n_splits"]))
+
+
+##################################################
+# Other Experiment Classes:
+##################################################
 @Deprecated(
     v_deprecate="2.0.1",
     v_remove="2.3.0",
@@ -679,9 +708,6 @@ class CrossValidationExperiment(CVExperiment):
     pass
 
 
-##################################################
-# Other Experiment Classes:
-##################################################
 @Deprecated(
     v_deprecate="2.0.0",
     v_remove="2.1.0",
