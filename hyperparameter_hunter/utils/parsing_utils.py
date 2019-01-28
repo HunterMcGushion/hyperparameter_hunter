@@ -45,7 +45,7 @@ def stringify_model_builder(build_fn):
 
 
 def build_temp_model_file(build_fn_str, source_script):
-    """Construct a string containing extracted imports from both `build_fn_str`
+    """Construct a string containing extracted imports from both `build_fn_str` and `source_script`
 
     Parameters
     ----------
