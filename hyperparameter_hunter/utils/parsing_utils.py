@@ -113,7 +113,6 @@ def write_python(source_str, filepath="temp_modified.py"):
     try:
         with open(filepath, "w") as f:
             f.write(source_str)
-            f.close()
     except FileNotFoundError:
         make_dirs(os.path.split(filepath)[0])
         write_python(source_str, filepath=filepath)
