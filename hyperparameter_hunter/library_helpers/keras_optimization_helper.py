@@ -20,7 +20,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.settings import G, TEMP_MODULES_DOT_PATH, TEMP_MODULES_DIR_PATH
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
 from hyperparameter_hunter.space import Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
@@ -36,6 +36,8 @@ from hyperparameter_hunter.utils.parsing_utils import (
 ##################################################
 from collections import OrderedDict
 from copy import deepcopy
+from datetime import datetime
+from importlib.util import spec_from_file_location, module_from_spec
 import os
 import re
 import sys
@@ -93,21 +95,25 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
         The parameters used on the `compile` call for the dummy model. If a parameter is accepted
         by the `compile` method, but is not explicitly given, its default value is included in
         `dummy_compile_params`"""
+    #################### Set Temporary Model-Builder Module Location ####################
+    temp_module_name = f"__temp_model_builder_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')}"
+    temp_module_dot_path = f"{TEMP_MODULES_DOT_PATH}.{temp_module_name}"
+    temp_module_filepath = f"{TEMP_MODULES_DIR_PATH}/{temp_module_name}.py"
+
     #################### Prepare Model-Builder String ####################
-    temp_module = "__temp_model_builder"
     reusable_build_fn, expected_params = rewrite_model_builder(stringify_model_builder(build_fn))
     temp_module_str = build_temp_model_file(reusable_build_fn, source_script)
 
     #################### Save and Import Temporary Model Builder ####################
-    write_python(temp_module_str, "{}/{}.py".format(os.path.split(__file__)[0], temp_module))
+    write_python(temp_module_str, temp_module_filepath)
 
-    if temp_module in sys.modules:
-        del sys.modules[temp_module]
+    if temp_module_name in sys.modules:
+        del sys.modules[temp_module_name]
 
-    try:
-        from .__temp_model_builder import build_fn as temp_build_fn
-    except:
-        raise
+    temp_module_spec = spec_from_file_location(temp_module_dot_path, temp_module_filepath)
+    temp_module = module_from_spec(temp_module_spec)
+    temp_module_spec.loader.exec_module(temp_module)
+    temp_build_fn = temp_module.build_fn
 
     #################### Translate Hyperparameter Names to Universal Paths ####################
     wrapper_params = dict(params={k: eval(v) for k, v in expected_params.items()}, **extra_params)
