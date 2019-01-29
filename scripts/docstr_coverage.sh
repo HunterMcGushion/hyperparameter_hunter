@@ -21,4 +21,4 @@ docstr-coverage \
     hyperparameter_hunter \
     --skipmagic \
     --skipclassdef \
-    --exclude ".*__init__.py|.*boltons_utils.py|.*__temp_model_builder.py"
+    --exclude ".*__init__.py|.*boltons_utils.py|.*__temp_files"
