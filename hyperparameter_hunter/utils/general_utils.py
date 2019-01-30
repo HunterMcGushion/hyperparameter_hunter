@@ -23,6 +23,9 @@ from textwrap import dedent
 from warnings import warn, simplefilter
 
 
+##################################################
+# Iteration Utilities
+##################################################
 def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     """Return an updated dictionary that mirrors `default_vals`, except where the key in `new_vals`
     matches the path in `default_vals`, in which case the `new_vals` value is used
@@ -49,8 +52,8 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     {'a': 1, 'b': 'foo'}
     >>> deep_restricted_update({'a': 1, 'b': {'b1': 2, 'b2': 3}}, {('b', 'b1'): 'foo', ('c', 'c1'): 'bar'})
     {'a': 1, 'b': {'b1': 'foo', 'b2': 3}}"""
-    iter_attrs = iter_attrs or [lambda *_args: False]
-    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
+    if not default_vals:
+        return default_vals
 
     def _visit(path, key, value):
         """If (`path` + `key`) is a key in `new_vals`, return its value. Else, default return"""
@@ -58,6 +61,28 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
             if path + (key,) == _current_key:
                 return (key, _current_val)
         return (key, value)
+
+    return remap(default_vals, visit=_visit, enter=extra_enter_attrs(iter_attrs))
+
+
+def extra_enter_attrs(iter_attrs):
+    """Build an `enter` function intended for use with `boltons_utils.remap` that enables entrance
+    into non-standard objects defined by `iter_attrs` and iteration over their attributes as dicts
+
+    Parameters
+    ----------
+    iter_attrs: Callable, list of callables, or None
+        If callable, must evaluate to True or False when given three inputs: (path, key, value).
+        Callable should return True if the current value should be entered by `remap`. If callable
+        returns False, `default_enter` will be called. If `iter_attrs` is a list of callables, the
+        value will be entered if any evaluates to True. If None, `default_enter` will be called
+
+    Returns
+    -------
+    _enter: Callable
+        Function to enter non-standard objects according to `iter_attrs` (via `remap`)"""
+    iter_attrs = iter_attrs or [lambda *_args: False]
+    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
 
     def _enter(path, key, value):
         """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
@@ -67,9 +92,12 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
         return default_enter(path, key, value)
 
-    return remap(default_vals, visit=_visit, enter=_enter) if default_vals else default_vals
+    return _enter
 
 
+##################################################
+# Miscellaneous Utilities
+##################################################
 def now_time():
     return datetime.now().time().strftime("%H:%M:%S")
 

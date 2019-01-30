@@ -20,6 +20,7 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap, default_enter
 from hyperparameter_hunter.utils.file_utils import read_json
+from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 
 ##################################################
 # Import Miscellaneous Assets
@@ -500,8 +501,6 @@ def get_choice_dimensions(params, iter_attrs=None):
         location of the hyperparameter given a choice, and `choices[<index>][1]` is the space
         choice instance for that hyperparameter"""
     choices = []
-    iter_attrs = iter_attrs or [lambda *_args: False]
-    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
 
     def _visit(path, key, value):
         """If `value` is a descendant of :class:`space.Dimension`, collect inputs, and return True.
@@ -511,15 +510,7 @@ def get_choice_dimensions(params, iter_attrs=None):
             return True
         return False
 
-    def _enter(path, key, value):
-        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
-        attributes. Else, `default_enter`"""
-        if any([_(path, key, value) for _ in iter_attrs]):
-            included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
-            return dict(), [(_, getattr(value, _)) for _ in included_attrs]
-        return default_enter(path, key, value)
-
-    _ = remap(params, visit=_visit, enter=_enter)
+    _ = remap(params, visit=_visit, enter=extra_enter_attrs(iter_attrs))
     return choices
 
 
