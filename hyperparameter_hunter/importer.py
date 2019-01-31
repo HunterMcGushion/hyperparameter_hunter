@@ -10,7 +10,7 @@ Related
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.tracers import ArgumentTracer
+from hyperparameter_hunter.tracers import ArgumentTracer, LocationTracer
 
 ##################################################
 # Import Miscellaneous Assets
@@ -75,6 +75,48 @@ def hook_keras_layer():
         # Determine version number at which this becomes untrue (Minimum Keras version requirement)
 
     G.import_hooks.append("keras_layer")
+
+
+##################################################
+# Keras Initializer Interception
+##################################################
+class KerasVarianceScalingLoader(SourceFileLoader):
+    def exec_module(self, module):
+        super().exec_module(module)
+        module.VarianceScaling = LocationTracer(
+            module.VarianceScaling.__name__,
+            module.VarianceScaling.__bases__,
+            module.VarianceScaling.__dict__,
+        )
+
+        return module
+
+
+def hook_keras_variance_scaling():
+    if "keras" in sys.modules:
+        _name = "hyperparameter_hunter.importer.hook_keras_variance_scaling"
+        raise ImportError(f"Call {_name} before importing Keras/other hyperparameter_hunter assets")
+
+    sys.meta_path.insert(0, Interceptor("keras.initializers", KerasVarianceScalingLoader))
+    G.import_hooks.append("keras_variance_scaling")
+
+
+class KerasInitializerLoader(SourceFileLoader):
+    def exec_module(self, module):
+        super().exec_module(module)
+        module.Initializer = ArgumentTracer(
+            module.Initializer.__name__, module.Initializer.__bases__, module.Initializer.__dict__
+        )
+        return module
+
+
+def hook_keras_initializer():
+    if "keras" in sys.modules:
+        _name = "hyperparameter_hunter.importer.hook_keras_initializer"
+        raise ImportError(f"Call {_name} before importing Keras/other hyperparameter_hunter assets")
+
+    sys.meta_path.insert(0, Interceptor("keras.initializers", KerasInitializerLoader))
+    G.import_hooks.append("keras_initializer")
 
 
 ##################################################
