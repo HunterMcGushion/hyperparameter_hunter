@@ -21,8 +21,9 @@ from hyperparameter_hunter.space import Real, Integer, Categorical
 # Import Miscellaneous Assets
 ##################################################
 # noinspection PyProtectedMember
-from inspect import signature, _empty
+from inspect import signature, _empty, currentframe, getframeinfo
 from functools import wraps
+from os.path import abspath
 
 
 class ArgumentTracer(type):
@@ -64,6 +65,32 @@ class ArgumentTracer(type):
 
         setattr(instance, "__hh_used_args", args)
         setattr(instance, "__hh_used_kwargs", kwargs)
+
+        return instance
+
+
+class LocationTracer(ArgumentTracer):
+    """Metaclass to trace the origin of the call to initialize the descending class"""
+
+    @classmethod
+    def __prepare__(mcs, name, bases, **kwargs):
+        namespace = dict(__hh_previous_frame=None)
+        return namespace
+
+    def __new__(mcs, name, bases, namespace, **kwargs):
+        class_obj = super().__new__(mcs, name, bases, dict(namespace))
+        return class_obj
+
+    def __call__(cls, *args, **kwargs):
+        previous_frame_info = getframeinfo(currentframe().f_back)
+        # FLAG: This has `filename` and `function` attributes
+        # FLAG: Calling `he_normal` function, gave `function="he_normal"` here and `filename` correctly pointed to `keras.initializers`
+
+        # TODO: Fetch default args/kwargs for the VarianceScaling class function?
+
+        instance = super().__call__(*args, **kwargs)
+
+        setattr(instance, "__hh_previous_frame", previous_frame_info)
 
         return instance
 
