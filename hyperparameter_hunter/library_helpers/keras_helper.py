@@ -12,6 +12,9 @@ from inspect import signature, _empty
 from types import MethodType
 
 
+##################################################
+# Keras Callback Helpers
+##################################################
 def keras_callback_to_key(callback):
     """Convert a `Keras` callback instance to a string that identifies it, along with the parameters
      used to create it
@@ -52,17 +55,10 @@ def keras_callback_to_dict(callback):
     -------
     callback_dict: Dict
         A dict identifying and describing `callback`"""
-    signature_args = sorted(signature(callback.__class__).parameters.items())
-    callback_dict = dict(class_name=callback.__class__.__name__)
-
-    for arg_name, arg_val in signature_args:
-        if arg_name not in ["verbose"]:
-            try:
-                temp_val = getattr(callback, arg_name)
-                callback_dict[arg_name] = temp_val if temp_val is not _empty else None
-            except AttributeError:
-                callback_dict[arg_name] = arg_val.default if arg_val.default is not _empty else None
-
+    callback_dict = dict(
+        class_name=callback.__class__.__name__,
+        **parameters_by_signature(callback, lambda arg_name, arg_val: arg_name not in ["verbose"]),
+    )
     return callback_dict
 
 
@@ -86,6 +82,9 @@ def reinitialize_callbacks(callbacks):
             if not isinstance(current_callback, dict):
                 continue
 
+            # Find `callback_initializer` by checking attributes of callback (`current_callback.values()`)
+            # At the first attribute that is a method, fetch the class to which it is bound
+            # This will be the class used to initialize the callback. Kinda sneaky
             callback_initializer = next(
                 _ for _ in current_callback.values() if isinstance(_, MethodType)
             ).__self__.__class__
@@ -96,6 +95,45 @@ def reinitialize_callbacks(callbacks):
     return callbacks
 
 
+##################################################
+# Helpers
+##################################################
+def parameters_by_signature(instance, signature_filter=None):
+    """Get a dict of the parameters used to create an instance of a class. This is only suited for
+    classes whose attributes are named according to their input parameters
+
+    Parameters
+    ----------
+    instance: Class instance
+        Instance of a class that has attributes named for the class's input parameters
+    signature_filter: Callable, or None, default=None
+        If not None, should be callable that expects as input (<arg_name>, <arg_val>), which are
+        signature parameter names, and values, respectively. The callable should return a boolean:
+        True if the pair should be added to `params`, or False if it should be ignored. If
+        `signature_filter` is None, all signature parameters will be added to `params`
+
+    Returns
+    -------
+    params: Dict
+        Mapping of input parameters in class's `__init__` signature to instance attribute values"""
+    signature_filter = signature_filter or (lambda _name, _val: True)
+    params = dict()
+    signature_args = sorted(signature(instance.__class__).parameters.items())
+
+    for arg_name, arg_val in signature_args:
+        if signature_filter(arg_name, arg_val):
+            try:
+                temp_val = getattr(instance, arg_name)
+                params[arg_name] = temp_val if temp_val is not _empty else None
+            except AttributeError:
+                params[arg_name] = arg_val.default if arg_val.default is not _empty else None
+
+    return params
+
+
+##################################################
+# Keras Model Parametrization
+##################################################
 sentinel_default_value = object()
 
 
