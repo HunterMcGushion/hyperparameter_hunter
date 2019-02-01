@@ -89,7 +89,8 @@ def extra_enter_attrs(iter_attrs):
         """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
         attributes. Else, `default_enter`"""
         if any([_(path, key, value) for _ in iter_attrs]):
-            included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
+            included_attrs = [_ for _ in dir(value) if not _.endswith("__")]
+            # Skips "dunder" methods, but keeps "__hh" attributes
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
         return default_enter(path, key, value)
 
