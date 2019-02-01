@@ -2,7 +2,10 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.library_helpers.keras_helper import get_keras_attr
+from hyperparameter_hunter.library_helpers.keras_helper import keras_initializer_to_dict
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
+from hyperparameter_hunter.library_helpers.keras_helper import parameters_by_signature
+from hyperparameter_hunter.space import Integer
 
 ##################################################
 # Import Miscellaneous Assets
@@ -18,10 +21,12 @@ except Exception:
 ##################################################
 # Import Learning Assets
 ##################################################
-from keras.optimizers import Adam, RMSprop
+from keras import initializers
+from keras import callbacks
 from keras.layers import Dense, Dropout, Embedding, Flatten, SpatialDropout1D
 from keras.losses import binary_crossentropy, mean_absolute_error
 from keras.models import Sequential
+from keras.optimizers import Adam, RMSprop
 
 ##################################################
 # Parametrization Helper Dicts
@@ -256,3 +261,113 @@ def test_get_keras_attr(models, expected, get_keras_attr_kwargs):
         else:
             with pytest.raises(AttributeError):
                 get_keras_attr(nested_model, attr, **get_keras_attr_kwargs)
+
+
+##################################################
+# `parameters_by_signature` Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["instance", "signature_filter", "params"],
+    [
+        (
+            callbacks.ReduceLROnPlateau(patience=Integer(5, 10)),
+            lambda arg_name, arg_val: arg_name not in ["verbose"],
+            dict(
+                monitor="val_loss",
+                factor=0.1,
+                patience=Integer(5, 10),
+                mode="auto",
+                min_delta=1e-4,
+                cooldown=0,
+                min_lr=0,
+                kwargs=None,
+            ),
+        ),
+        (
+            callbacks.ReduceLROnPlateau(patience=Integer(5, 10)),
+            None,
+            dict(
+                monitor="val_loss",
+                factor=0.1,
+                patience=Integer(5, 10),
+                verbose=0,
+                mode="auto",
+                min_delta=1e-4,
+                cooldown=0,
+                min_lr=0,
+                kwargs=None,
+            ),
+        ),
+        (
+            callbacks.EarlyStopping(patience=5, min_delta=0.5),
+            lambda arg_name, arg_val: arg_name not in ["verbose"],
+            dict(
+                monitor="val_loss",
+                min_delta=-0.5,
+                patience=5,
+                mode="auto",
+                baseline=None,
+                restore_best_weights=False,
+            ),
+        ),
+    ],
+)
+def test_parameters_by_signature(instance, signature_filter, params):
+    assert parameters_by_signature(instance, signature_filter) == params
+
+
+##################################################
+# `keras_initializer_to_dict` Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["initializer", "initializer_dict"],
+    [
+        #################### Normal Initializers ####################
+        (initializers.zeros(), dict(class_name="zeros")),
+        (initializers.Zeros(), dict(class_name="zeros")),
+        (initializers.ones(), dict(class_name="ones")),
+        (initializers.Ones(), dict(class_name="ones")),
+        (initializers.constant(), dict(class_name="constant", value=0)),
+        (initializers.Constant(5), dict(class_name="constant", value=5)),
+        (
+            initializers.RandomNormal(0.1),
+            dict(class_name="random_normal", mean=0.1, stddev=0.05, seed=None),
+        ),
+        (
+            initializers.random_normal(mean=0.2, stddev=0.003, seed=42),
+            dict(class_name="random_normal", mean=0.2, stddev=0.003, seed=42),
+        ),
+        (
+            initializers.RandomUniform(maxval=0.1),
+            dict(class_name="random_uniform", minval=-0.05, maxval=0.1, seed=None),
+        ),
+        (
+            initializers.random_uniform(minval=-0.2, seed=42),
+            dict(class_name="random_uniform", minval=-0.2, maxval=0.05, seed=42),
+        ),
+        (
+            initializers.TruncatedNormal(0.1),
+            dict(class_name="truncated_normal", mean=0.1, stddev=0.05, seed=None),
+        ),
+        (
+            initializers.truncated_normal(mean=0.2, stddev=0.003, seed=42),
+            dict(class_name="truncated_normal", mean=0.2, stddev=0.003, seed=42),
+        ),
+        (initializers.Orthogonal(1.1), dict(class_name="orthogonal", gain=1.1, seed=None)),
+        (
+            initializers.orthogonal(gain=1.2, seed=42),
+            dict(class_name="orthogonal", gain=1.2, seed=42),
+        ),
+        (initializers.Identity(1.1), dict(class_name="identity", gain=1.1)),
+        (initializers.identity(), dict(class_name="identity", gain=1.0)),
+        #################### VarianceScaling ####################
+        (initializers.glorot_normal(), dict(class_name="glorot_normal", seed=None)),
+        (initializers.glorot_uniform(42), dict(class_name="glorot_uniform", seed=42)),
+        (initializers.he_normal(), dict(class_name="he_normal", seed=None)),
+        (initializers.he_uniform(42), dict(class_name="he_uniform", seed=42)),
+        (initializers.lecun_normal(), dict(class_name="lecun_normal", seed=None)),
+        (initializers.lecun_uniform(42), dict(class_name="lecun_uniform", seed=42)),
+    ],
+)
+def test_keras_initializer_to_dict(initializer, initializer_dict):
+    assert keras_initializer_to_dict(initializer) == initializer_dict
