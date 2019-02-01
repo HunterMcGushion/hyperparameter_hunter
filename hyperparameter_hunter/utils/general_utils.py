@@ -18,6 +18,7 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
+import re
 import string
 from textwrap import dedent
 from warnings import warn, simplefilter
@@ -98,6 +99,40 @@ def extra_enter_attrs(iter_attrs):
 ##################################################
 # Miscellaneous Utilities
 ##################################################
+def to_snake_case(s):
+    """Convert a string to snake-case format
+
+    Parameters
+    ----------
+    s: String
+        String to convert to snake-case
+
+    Returns
+    -------
+    String
+        Snake-case formatted string
+
+    Notes
+    -----
+    Adapted from https://gist.github.com/jaytaylor/3660565
+
+    Examples
+    --------
+    >>> to_snake_case("snakesOnAPlane") == "snakes_on_a_plane"
+    True
+    >>> to_snake_case("SnakesOnAPlane") == "snakes_on_a_plane"
+    True
+    >>> to_snake_case("snakes_on_a_plane") == "snakes_on_a_plane"
+    True
+    >>> to_snake_case("IPhoneHysteria") == "i_phone_hysteria"
+    True
+    >>> to_snake_case("iPhoneHysteria") == "i_phone_hysteria"
+    True
+    """
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", s)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
 def now_time():
     return datetime.now().time().strftime("%H:%M:%S")
 
