@@ -3,6 +3,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.utils.general_utils import to_snake_case
 
 ##################################################
 # Import Miscellaneous Assets
@@ -93,6 +94,26 @@ def reinitialize_callbacks(callbacks):
                 **{_: current_callback.get(_, None) for _ in callback_parameters}
             )
     return callbacks
+
+
+##################################################
+# Keras Initializer Helpers
+##################################################
+def keras_initializer_to_dict(initializer):
+    try:
+        #################### Descendants of `VarianceScaling` ####################
+        previous_frame = getattr(initializer, "__hh_previous_frame")
+    except AttributeError:
+        #################### Non-Descendants of `VarianceScaling` ####################
+        class_name = initializer.__class__.__name__
+        initializer_params = parameters_by_signature(initializer)
+    else:
+        #################### Descendants of `VarianceScaling` (Continued) ####################
+        class_name = previous_frame.function
+        # TODO: This is very bad, but it'll do for now. FIX IT LATER
+        initializer_params = dict(seed=getattr(initializer, "__hh_used_kwargs").get("seed", None))
+
+    return dict(class_name=to_snake_case(class_name), **initializer_params)
 
 
 ##################################################
