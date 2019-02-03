@@ -440,10 +440,10 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
     ----------
     d: Dict
         Dict whose keys will be filtered according to `keep` and `drop`
-    keep: List, or None, default=`d.keys()`
-        Keys of `d` to retain in the returned subdict
-    drop: List, or None, default=[]
-        Keys of `d` to remove from the returned subdict
+    keep: List, or callable, default=`d.keys()`
+        Keys of `d` to retain in the returned subdict. If callable, return boolean given key
+    drop: List, or callable, default=[]
+        Keys of `d` to remove from the returned subdict. If callable, return boolean given key
     key: Callable, or None, default=None
         Transformation to apply to the keys included in the returned subdictionary
     value: Callable, or None, default=None
@@ -467,6 +467,16 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
     {'A': 1}
     >>> subdict({"a": 1, "b": 2, "c": 3}, keep=["a", "c"], value=lambda _: _ * 10)
     {'a': 10, 'c': 30}
+    >>> subdict({("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3}, drop=lambda _: _[0] == "foo")
+    {('bar', 'c'): 3}
+    >>> subdict({("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3}, keep=lambda _: _[0] == "foo")
+    {('foo', 'a'): 1, ('foo', 'b'): 2}
+    >>> subdict(
+    ...     {("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3},
+    ...     keep=lambda _: _[0] == "foo",
+    ...     key=lambda _: _[1],
+    ... )
+    {'a': 1, 'b': 2}
     """
     keep = keep or d.keys()
     drop = drop or []
@@ -477,6 +487,11 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
         raise TypeError("Expected callable `key` function")
     if not callable(value):
         raise TypeError("Expected callable `value` function")
+
+    if callable(keep):
+        keep = [_ for _ in d.keys() if keep(_)]
+    if callable(drop):
+        drop = [_ for _ in d.keys() if drop(_)]
 
     keys = set(keep) - set(drop)
     return dict([(key(k), value(v)) for k, v in d.items() if k in keys])
