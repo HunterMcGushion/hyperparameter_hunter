@@ -323,50 +323,71 @@ def test_parameters_by_signature(instance, signature_filter, params):
     ["initializer", "initializer_dict"],
     [
         #################### Normal Initializers ####################
-        (initializers.zeros(), dict(class_name="zeros")),
-        (initializers.Zeros(), dict(class_name="zeros")),
-        (initializers.ones(), dict(class_name="ones")),
-        (initializers.Ones(), dict(class_name="ones")),
-        (initializers.constant(), dict(class_name="constant", value=0)),
-        (initializers.Constant(5), dict(class_name="constant", value=5)),
-        (
+        pytest.param(initializers.zeros(), dict(class_name="zeros"), id="zero_0"),
+        pytest.param(initializers.Zeros(), dict(class_name="zeros"), id="zero_1"),
+        pytest.param(initializers.ones(), dict(class_name="ones"), id="one_0"),
+        pytest.param(initializers.Ones(), dict(class_name="ones"), id="one_1"),
+        pytest.param(initializers.constant(), dict(class_name="constant", value=0), id="c_0"),
+        pytest.param(initializers.Constant(5), dict(class_name="constant", value=5), id="c_1"),
+        pytest.param(
             initializers.RandomNormal(0.1),
             dict(class_name="random_normal", mean=0.1, stddev=0.05, seed=None),
+            id="rn_0",
         ),
-        (
+        pytest.param(
             initializers.random_normal(mean=0.2, stddev=0.003, seed=42),
             dict(class_name="random_normal", mean=0.2, stddev=0.003, seed=42),
+            id="rn_1",
         ),
-        (
+        pytest.param(
             initializers.RandomUniform(maxval=0.1),
             dict(class_name="random_uniform", minval=-0.05, maxval=0.1, seed=None),
+            id="ru_0",
         ),
-        (
+        pytest.param(
             initializers.random_uniform(minval=-0.2, seed=42),
             dict(class_name="random_uniform", minval=-0.2, maxval=0.05, seed=42),
+            id="ru_1",
         ),
-        (
+        pytest.param(
             initializers.TruncatedNormal(0.1),
             dict(class_name="truncated_normal", mean=0.1, stddev=0.05, seed=None),
+            id="tn_0",
         ),
-        (
+        pytest.param(
             initializers.truncated_normal(mean=0.2, stddev=0.003, seed=42),
             dict(class_name="truncated_normal", mean=0.2, stddev=0.003, seed=42),
+            id="tn_1",
         ),
-        (initializers.Orthogonal(1.1), dict(class_name="orthogonal", gain=1.1, seed=None)),
-        (
+        pytest.param(
+            initializers.Orthogonal(1.1),
+            dict(class_name="orthogonal", gain=1.1, seed=None),
+            id="o_0",
+        ),
+        pytest.param(
             initializers.orthogonal(gain=1.2, seed=42),
             dict(class_name="orthogonal", gain=1.2, seed=42),
+            id="o_1",
         ),
-        (initializers.Identity(1.1), dict(class_name="identity", gain=1.1)),
-        (initializers.identity(), dict(class_name="identity", gain=1.0)),
+        pytest.param(initializers.Identity(1.1), dict(class_name="identity", gain=1.1), id="i_0"),
+        pytest.param(initializers.identity(), dict(class_name="identity", gain=1.0), id="i_1"),
         #################### VarianceScaling ####################
-        (initializers.glorot_normal(), dict(class_name="glorot_normal", seed=None)),
-        (initializers.glorot_uniform(42), dict(class_name="glorot_uniform", seed=42)),
-        (initializers.he_normal(), dict(class_name="he_normal", seed=None)),
-        (initializers.he_uniform(42), dict(class_name="he_uniform", seed=42)),
-        (initializers.lecun_normal(), dict(class_name="lecun_normal", seed=None)),
-        (initializers.lecun_uniform(42), dict(class_name="lecun_uniform", seed=42)),
+        pytest.param(
+            initializers.glorot_normal(), dict(class_name="glorot_normal", seed=None), id="gn_0"
+        ),
+        pytest.param(
+            initializers.glorot_uniform(42), dict(class_name="glorot_uniform", seed=42), id="gu_0"
+        ),
+        pytest.param(initializers.he_normal(), dict(class_name="he_normal", seed=None), id="hn_0"),
+        pytest.param(
+            initializers.he_uniform(42), dict(class_name="he_uniform", seed=42), id="hu_0"
+        ),
+        pytest.param(
+            initializers.lecun_normal(), dict(class_name="lecun_normal", seed=None), id="ln_0"
+        ),
+        pytest.param(
+            initializers.lecun_uniform(42), dict(class_name="lecun_uniform", seed=42), id="lu_0"
+        ),
     ],
 )
 def test_keras_initializer_to_dict(initializer, initializer_dict):
