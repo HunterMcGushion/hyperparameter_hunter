@@ -428,5 +428,59 @@ class Alias:
         return wrapped
 
 
+##################################################
+# Boltons Utilities
+##################################################
+# Below utilities adapted from the `boltons` library: https://github.com/mahmoud/boltons
+# Thank you to the creator and contributors of `boltons` for their excellent work
+def subdict(d, keep=None, drop=None, key=None, value=None):
+    """Compute the "subdictionary" of a dict, `d`
+
+    Parameters
+    ----------
+    d: Dict
+        Dict whose keys will be filtered according to `keep` and `drop`
+    keep: List, or None, default=`d.keys()`
+        Keys of `d` to retain in the returned subdict
+    drop: List, or None, default=[]
+        Keys of `d` to remove from the returned subdict
+    key: Callable, or None, default=None
+        Transformation to apply to the keys included in the returned subdictionary
+    value: Callable, or None, default=None
+        Transformation to apply to the values included in the returned subdictionary
+
+    Returns
+    -------
+    Dict
+        New dict with any keys in `drop` removed and any keys in `keep` still present, provided they
+        were in `d`. Calling `subdict` with neither `keep` nor `drop` is equivalent to `dict(d)`
+
+    Examples
+    --------
+    >>> subdict({"a": 1, "b": 2})
+    {'a': 1, 'b': 2}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"])
+    {'a': 1}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, keep=["a", "c"])
+    {'a': 1, 'c': 3}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"], key=lambda _: _.upper())
+    {'A': 1}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, keep=["a", "c"], value=lambda _: _ * 10)
+    {'a': 10, 'c': 30}
+    """
+    keep = keep or d.keys()
+    drop = drop or []
+    key = key or (lambda _: _)
+    value = value or (lambda _: _)
+
+    if not callable(key):
+        raise TypeError("Expected callable `key` function")
+    if not callable(value):
+        raise TypeError("Expected callable `value` function")
+
+    keys = set(keep) - set(drop)
+    return dict([(key(k), value(v)) for k, v in d.items() if k in keys])
+
+
 if __name__ == "__main__":
     pass
