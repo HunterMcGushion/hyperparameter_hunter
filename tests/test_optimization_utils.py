@@ -2,9 +2,10 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.utils.optimization_utils import (
+    does_fit_in_space,
+    filter_by_space,
     get_choice_dimensions,
     get_ids_by,
-    filter_by_space,
 )
 from hyperparameter_hunter.space import Real, Integer, Categorical, Space
 
@@ -116,3 +117,11 @@ def test_filter_by_space(space_fixture, scored_hyperparameters, expected):
 
 
 # TODO: Add more tests dealing with Keras-specific issues like layers, callbacks and initializers
+##################################################
+# `does_fit_in_space` Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["params", "does_fit"], [(sh_0[0], True), (sh_1[0], False), ([sh_0[0], sh_0[0]], False)]
+)
+def test_does_fit_in_space(space_fixture, params, does_fit):
+    assert does_fit_in_space(params, space_fixture) is does_fit
