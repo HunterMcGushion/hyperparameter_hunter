@@ -286,9 +286,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         #################### Remap Extra Objects ####################
         if self.module_name == "keras":
+            from keras.initializers import Initializer as KerasInitializer
             from keras.callbacks import Callback as KerasCB
 
-            self.extra_iter_attrs.append(lambda _path, _key, _value: isinstance(_value, KerasCB))
+            self.init_iter_attrs.append(lambda _p, _k, _v: isinstance(_v, KerasInitializer))
+            self.extra_iter_attrs.append(lambda _p, _k, _v: isinstance(_v, KerasCB))
 
         #################### Collect Choice Dimensions ####################
         init_dim_choices = get_choice_dimensions(self.model_init_params, self.init_iter_attrs)
@@ -448,6 +450,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         extra_params = {
             _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "model_extra_params"
         }
+        # TODO: Replace above two with `general_utils.subdict` call that modifies key to a slice
+
+        # FLAG: At this point, `dummy_layers` shows "kernel_initializer" as `orthogonal` instance with "__hh" attrs
+        # FLAG: HOWEVER, the `orthogonal` instance does have `gain` set to the correct dummy value, ...
+        # FLAG: ... so it might be ok, as long as experiment matching can still work with that
 
         self.current_init_params = deep_restricted_update(
             self.model_init_params, init_params, iter_attrs=self.init_iter_attrs
@@ -460,6 +467,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             self.current_extra_params["callbacks"] = reinitialize_callbacks(
                 self.current_extra_params["callbacks"]
             )
+
+        # No need to reinitialize Keras `initializers` - Their values are passed to `build_fn` via extra `params`
 
     ##################################################
     # Abstract Methods:
