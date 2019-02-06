@@ -18,7 +18,7 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
-from hyperparameter_hunter.utils.boltons_utils import get_path, remap, default_enter
+from hyperparameter_hunter.utils.boltons_utils import get_path, remap
 from hyperparameter_hunter.utils.file_utils import read_json
 from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 
