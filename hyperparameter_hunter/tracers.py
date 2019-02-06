@@ -23,7 +23,6 @@ from hyperparameter_hunter.space import Real, Integer, Categorical
 # noinspection PyProtectedMember
 from inspect import signature, _empty, currentframe, getframeinfo
 from functools import wraps
-from os.path import abspath
 
 
 class ArgumentTracer(type):
