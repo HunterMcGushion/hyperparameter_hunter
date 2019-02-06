@@ -8,6 +8,7 @@ env3/
 
 # Repository Demo Assets
 *HyperparameterHunterAssets/
+__temp_files/
 __temp_model_builder.py
 foo_checkpoint
 MNIST_data/

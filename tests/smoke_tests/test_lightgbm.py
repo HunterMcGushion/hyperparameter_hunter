@@ -60,6 +60,7 @@ def exp_lgb_0():
         model_init_params=dict(
             boosting_type="gbdt",
             num_leaves=5,
+            n_estimators=10,
             max_depth=5,
             min_child_samples=1,
             subsample=0.5,
@@ -79,6 +80,7 @@ def opt_lgb_0(request):
         model_init_params=dict(
             boosting_type=Categorical(["gbdt", "dart"]),
             num_leaves=Integer(2, 8),
+            n_estimators=10,
             max_depth=5,
             min_child_samples=1,
             subsample=Real(0.4, 0.7),

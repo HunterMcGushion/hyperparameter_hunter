@@ -10,7 +10,7 @@ Related
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.tracers import ArgumentTracer
+from hyperparameter_hunter.tracers import ArgumentTracer, LocationTracer
 
 ##################################################
 # Import Miscellaneous Assets
@@ -75,6 +75,51 @@ def hook_keras_layer():
         # Determine version number at which this becomes untrue (Minimum Keras version requirement)
 
     G.import_hooks.append("keras_layer")
+
+
+##################################################
+# Keras Initializer Interception
+##################################################
+class KerasMultiInitializerLoader(SourceFileLoader):
+    def exec_module(self, module):
+        super().exec_module(module)
+
+        #################### Trace `Initializer` Descendants/Aliases ####################
+        requirements = [
+            lambda _: isinstance(_, type),
+            lambda _: issubclass(_, module.Initializer),
+            lambda _: not issubclass(_, module.VarianceScaling),
+            lambda _: not ((_ is module.Initializer) or (_ is module.VarianceScaling)),
+        ]
+
+        child_classes = {k: v for k, v in vars(module).items() if all(_(v) for _ in requirements)}
+        # Need keys and values to handle class aliases (like `Zeros` = `zeros` = `zero`)
+        # Otherwise, we just trace `Zeros` 3x, which may not sound like a problem, but it is
+        for child_class_name, child_class in child_classes.items():
+            setattr(
+                module,
+                child_class_name,
+                ArgumentTracer(child_class_name, child_class.__bases__, child_class.__dict__),
+            )
+
+        #################### Trace `VarianceScaling` ####################
+        module.VarianceScaling = LocationTracer(
+            module.VarianceScaling.__name__,
+            module.VarianceScaling.__bases__,
+            module.VarianceScaling.__dict__,
+        )
+
+        return module
+
+
+def hook_keras_initializers():
+    if "keras" in sys.modules:
+        _name = "hyperparameter_hunter.importer.hook_keras_initializers"
+        raise ImportError(f"Call {_name} before importing Keras/other hyperparameter_hunter assets")
+
+    sys.meta_path.insert(0, Interceptor("keras.initializers", KerasMultiInitializerLoader))
+    G.import_hooks.append("keras_initializer")
+    G.import_hooks.append("keras_variance_scaling")
 
 
 ##################################################

@@ -18,11 +18,16 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
+import re
 import string
 from textwrap import dedent
 from warnings import warn, simplefilter
+from inspect import Traceback
 
 
+##################################################
+# Iteration Utilities
+##################################################
 def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     """Return an updated dictionary that mirrors `default_vals`, except where the key in `new_vals`
     matches the path in `default_vals`, in which case the `new_vals` value is used
@@ -49,8 +54,8 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     {'a': 1, 'b': 'foo'}
     >>> deep_restricted_update({'a': 1, 'b': {'b1': 2, 'b2': 3}}, {('b', 'b1'): 'foo', ('c', 'c1'): 'bar'})
     {'a': 1, 'b': {'b1': 'foo', 'b2': 3}}"""
-    iter_attrs = iter_attrs or [lambda *_args: False]
-    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
+    if not default_vals:
+        return default_vals
 
     def _visit(path, key, value):
         """If (`path` + `key`) is a key in `new_vals`, return its value. Else, default return"""
@@ -59,15 +64,80 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
                 return (key, _current_val)
         return (key, value)
 
+    return remap(default_vals, visit=_visit, enter=extra_enter_attrs(iter_attrs))
+
+
+def extra_enter_attrs(iter_attrs):
+    """Build an `enter` function intended for use with `boltons_utils.remap` that enables entrance
+    into non-standard objects defined by `iter_attrs` and iteration over their attributes as dicts
+
+    Parameters
+    ----------
+    iter_attrs: Callable, list of callables, or None
+        If callable, must evaluate to True or False when given three inputs: (path, key, value).
+        Callable should return True if the current value should be entered by `remap`. If callable
+        returns False, `default_enter` will be called. If `iter_attrs` is a list of callables, the
+        value will be entered if any evaluates to True. If None, `default_enter` will be called
+
+    Returns
+    -------
+    _enter: Callable
+        Function to enter non-standard objects according to `iter_attrs` (via `remap`)"""
+    iter_attrs = iter_attrs or [lambda *_args: False]
+    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
+
     def _enter(path, key, value):
         """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
         attributes. Else, `default_enter`"""
         if any([_(path, key, value) for _ in iter_attrs]):
-            included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
+            included_attrs = [_ for _ in dir(value) if not _.endswith("__")]
+            # Skips "dunder" methods, but keeps "__hh" attributes
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
+        # TODO: Find better way to avoid entering "__hh_previous_frame" to avoid Traceback added by `tracers.LocationTracer`
+        if isinstance(value, Traceback):
+            return dict(), []
+        # TODO: Find better way to avoid entering "__hh_previous_frame" to avoid Traceback added by `tracers.LocationTracer`
+
         return default_enter(path, key, value)
 
-    return remap(default_vals, visit=_visit, enter=_enter) if default_vals else default_vals
+    return _enter
+
+
+##################################################
+# Miscellaneous Utilities
+##################################################
+def to_snake_case(s):
+    """Convert a string to snake-case format
+
+    Parameters
+    ----------
+    s: String
+        String to convert to snake-case
+
+    Returns
+    -------
+    String
+        Snake-case formatted string
+
+    Notes
+    -----
+    Adapted from https://gist.github.com/jaytaylor/3660565
+
+    Examples
+    --------
+    >>> to_snake_case("snakesOnAPlane") == "snakes_on_a_plane"
+    True
+    >>> to_snake_case("SnakesOnAPlane") == "snakes_on_a_plane"
+    True
+    >>> to_snake_case("snakes_on_a_plane") == "snakes_on_a_plane"
+    True
+    >>> to_snake_case("IPhoneHysteria") == "i_phone_hysteria"
+    True
+    >>> to_snake_case("iPhoneHysteria") == "i_phone_hysteria"
+    True
+    """
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", s)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 def now_time():
@@ -362,6 +432,75 @@ class Alias:
             return obj(*args, **kwargs)
 
         return wrapped
+
+
+##################################################
+# Boltons Utilities
+##################################################
+# Below utilities adapted from the `boltons` library: https://github.com/mahmoud/boltons
+# Thank you to the creator and contributors of `boltons` for their excellent work
+def subdict(d, keep=None, drop=None, key=None, value=None):
+    """Compute the "subdictionary" of a dict, `d`
+
+    Parameters
+    ----------
+    d: Dict
+        Dict whose keys will be filtered according to `keep` and `drop`
+    keep: List, or callable, default=`d.keys()`
+        Keys of `d` to retain in the returned subdict. If callable, return boolean given key
+    drop: List, or callable, default=[]
+        Keys of `d` to remove from the returned subdict. If callable, return boolean given key
+    key: Callable, or None, default=None
+        Transformation to apply to the keys included in the returned subdictionary
+    value: Callable, or None, default=None
+        Transformation to apply to the values included in the returned subdictionary
+
+    Returns
+    -------
+    Dict
+        New dict with any keys in `drop` removed and any keys in `keep` still present, provided they
+        were in `d`. Calling `subdict` with neither `keep` nor `drop` is equivalent to `dict(d)`
+
+    Examples
+    --------
+    >>> subdict({"a": 1, "b": 2})
+    {'a': 1, 'b': 2}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"])
+    {'a': 1}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, keep=["a", "c"])
+    {'a': 1, 'c': 3}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"], key=lambda _: _.upper())
+    {'A': 1}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, keep=["a", "c"], value=lambda _: _ * 10)
+    {'a': 10, 'c': 30}
+    >>> subdict({("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3}, drop=lambda _: _[0] == "foo")
+    {('bar', 'c'): 3}
+    >>> subdict({("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3}, keep=lambda _: _[0] == "foo")
+    {('foo', 'a'): 1, ('foo', 'b'): 2}
+    >>> subdict(
+    ...     {("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3},
+    ...     keep=lambda _: _[0] == "foo",
+    ...     key=lambda _: _[1],
+    ... )
+    {'a': 1, 'b': 2}
+    """
+    keep = keep or d.keys()
+    drop = drop or []
+    key = key or (lambda _: _)
+    value = value or (lambda _: _)
+
+    if not callable(key):
+        raise TypeError("Expected callable `key` function")
+    if not callable(value):
+        raise TypeError("Expected callable `value` function")
+
+    if callable(keep):
+        keep = [_ for _ in d.keys() if keep(_)]
+    if callable(drop):
+        drop = [_ for _ in d.keys() if drop(_)]
+
+    keys = set(keep) - set(drop)
+    return dict([(key(k), value(v)) for k, v in d.items() if k in keys])
 
 
 if __name__ == "__main__":

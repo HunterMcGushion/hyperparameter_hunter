@@ -12,9 +12,13 @@ Related
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+import os.path
 import warnings
 
 
+##################################################
+# Result File Paths
+##################################################
 ASSETS_DIRNAME = "HyperparameterHunterAssets"
 
 ASSETS_EXPERIMENTS_DIRNAME = "Experiments"
@@ -46,7 +50,17 @@ RESULT_FILE_SUB_DIR_PATHS = {
     # 'optimization_rounds': '{}'.format(),
 }
 
+##################################################
+# Temporary File Paths
+##################################################
+TEMP_MODULES_DIR_NAME = "__temp_files"
+TEMP_MODULES_DOT_PATH = f"hyperparameter_hunter.library_helpers.{TEMP_MODULES_DIR_NAME}"
+TEMP_MODULES_DIR_PATH = f"{os.path.split(__file__)[0]}/library_helpers/{TEMP_MODULES_DIR_NAME}"
 
+
+##################################################
+# Global Settings
+##################################################
 class G(object):
     """This class defines global attributes that are set upon instantiation of
     :class:`environment.Environment`. All attributes contained herein are class variables (not
@@ -64,15 +78,17 @@ class G(object):
         :class:`environment.Environment` has not yet been instantiated. If not None, any attributes
         or methods of the instantiated Env may be called
     log_: print
-        ... # TODO: ...
+        ...
     debug_: print
-        ... # TODO: ...
+        ...
     warn_: print
-        ... # TODO: ...
+        ...
     import_hooks: List
-        ... # TODO: ...
+        ...
     sentinel_registry: List
-        ... # TODO: ...
+        ...
+    mirror_registry: List
+        ...
     """
 
     Env = None

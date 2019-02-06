@@ -45,7 +45,7 @@ def stringify_model_builder(build_fn):
 
 
 def build_temp_model_file(build_fn_str, source_script):
-    """Construct a string containing extracted imports from both `build_fn_str`
+    """Construct a string containing extracted imports from both `build_fn_str` and `source_script`
 
     Parameters
     ----------
@@ -113,7 +113,6 @@ def write_python(source_str, filepath="temp_modified.py"):
     try:
         with open(filepath, "w") as f:
             f.write(source_str)
-            f.close()
     except FileNotFoundError:
         make_dirs(os.path.split(filepath)[0])
         write_python(source_str, filepath=filepath)

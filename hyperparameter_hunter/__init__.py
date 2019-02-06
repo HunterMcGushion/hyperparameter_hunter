@@ -2,10 +2,11 @@
 # Execute Import Interceptors
 ##################################################
 from pkg_resources import DistributionNotFound
-from .importer import hook_keras_layer
+from .importer import hook_keras_layer, hook_keras_initializers
 
 try:
     hook_keras_layer()
+    hook_keras_initializers()
 except DistributionNotFound:
     pass
 except Exception:

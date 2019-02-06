@@ -1,7 +1,10 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_dict
+from hyperparameter_hunter.library_helpers.keras_helper import (
+    keras_callback_to_dict,
+    keras_initializer_to_dict,
+)
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.boltons_utils import remap, get_path
 from hyperparameter_hunter.utils.optimization_utils import (
@@ -268,12 +271,15 @@ class KerasResultFinder(ResultFinder):
         )
 
         from keras.callbacks import Callback as BaseKerasCallback
+        from keras.initializers import Initializer as BaseKerasInitializer
 
         # noinspection PyUnusedLocal
         def _visit(path, key, value):
             """If `value` is `BaseKerasCallback`, return dict representation. Else default_visit"""
             if isinstance(value, BaseKerasCallback):
                 return (key, keras_callback_to_dict(value))
+            if isinstance(value, BaseKerasInitializer):
+                return (key, keras_initializer_to_dict(value))
             return (key, value)
 
         self.model_params = remap(self.model_params, visit=_visit)

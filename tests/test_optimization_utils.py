@@ -1,8 +1,13 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.utils.optimization_utils import get_ids_by, get_choice_dimensions
-from hyperparameter_hunter.space import Real, Integer, Categorical
+from hyperparameter_hunter.utils.optimization_utils import (
+    does_fit_in_space,
+    filter_by_space,
+    get_choice_dimensions,
+    get_ids_by,
+)
+from hyperparameter_hunter.space import Real, Integer, Categorical, Space
 
 ##################################################
 # Import Miscellaneous Assets
@@ -61,3 +66,62 @@ scenarios_get_choice_dimensions = [
 @pytest.mark.parametrize(["params", "expected"], **args_ids_for(scenarios_get_choice_dimensions))
 def test_get_choice_dimensions(params, expected):
     assert get_choice_dimensions(params) == expected
+
+
+##################################################
+# `filter_by_space` Scenarios
+##################################################
+@pytest.fixture(scope="function")
+def space_fixture():
+    dimensions = [Real(0.1, 0.9), Categorical(["foo", "bar", "baz"]), Integer(12, 18)]
+    locations = [
+        ("model_init_params", "a"),
+        ("model_init_params", "b", "c"),
+        ("model_extra_params", "e"),
+    ]
+
+    for i in range(len(dimensions)):
+        setattr(dimensions[i], "location", locations[i])
+
+    return Space(dimensions)
+
+
+#################### Sample `scored_hyperparameters` Tuples ####################
+sh_0 = (
+    dict(
+        model_init_params=dict(a=0.4, b=dict(c="bar", d=9)),
+        model_extra_params=dict(e=16, f="hello"),
+    ),
+    "score_0",
+)
+sh_1 = (
+    dict(
+        model_init_params=dict(a=3.14159, b=dict(c="bar", d=9)),
+        model_extra_params=dict(e=16, f="hello"),
+    ),
+    "score_1",
+)
+
+
+@pytest.mark.parametrize(
+    ["scored_hyperparameters", "expected"],
+    [
+        ([sh_0], [sh_0]),
+        ([sh_0, sh_1], [sh_0]),
+        ([sh_0, sh_1, sh_0], [sh_0, sh_0]),
+        ([sh_1, sh_1], []),
+    ],
+)
+def test_filter_by_space(space_fixture, scored_hyperparameters, expected):
+    assert filter_by_space(scored_hyperparameters, space_fixture) == expected
+
+
+# TODO: Add more tests dealing with Keras-specific issues like layers, callbacks and initializers
+##################################################
+# `does_fit_in_space` Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["params", "does_fit"], [(sh_0[0], True), (sh_1[0], False), ([sh_0[0], sh_0[0]], False)]
+)
+def test_does_fit_in_space(space_fixture, params, does_fit):
+    assert does_fit_in_space(params, space_fixture) is does_fit

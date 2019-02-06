@@ -18,8 +18,9 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
-from hyperparameter_hunter.utils.boltons_utils import get_path, remap, default_enter
+from hyperparameter_hunter.utils.boltons_utils import get_path, remap
 from hyperparameter_hunter.utils.file_utils import read_json
+from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 
 ##################################################
 # Import Miscellaneous Assets
@@ -385,11 +386,28 @@ def filter_by_space(hyperparameters_and_scores, space):
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters fit within `space`"""
-    hyperparameters_and_scores = filter(
-        lambda _: dimension_subset(_[0], space.names()) in space, hyperparameters_and_scores
-    )
+    return [_ for _ in hyperparameters_and_scores if does_fit_in_space(_[0], space)]
 
-    return list(hyperparameters_and_scores)
+
+def does_fit_in_space(root, space):
+    """Determine if the subset of `root` identified by `space` fits within dimensions of `space`
+
+    Parameters
+    ----------
+    root: Object
+        Iterable, whose values at the locations specified in `space` will be checked. For each
+        dimension in `space`, the dimension's `location`/`name` is looked up in `root`, and the
+        value is tested to see if it falls within the dimension's range of allowed values
+    space: `space.Space`
+        Instance of :class:`space.Space` that defines dimension choices for select hyperparameters.
+        Each dimension in `space` should have an appropriate `name` (or `location`, if necessary)
+        attribute to match `root`
+
+    Returns
+    -------
+    Boolean
+        True if `root` subset (at `space` locations) fits in `space` dimensions. Else, False"""
+    return dimension_subset(root, space.names()) in space
 
 
 def filter_by_guidelines(
@@ -452,15 +470,13 @@ def filter_by_guidelines(
         **kwargs,
     )
 
-    # noinspection PyUnusedLocal
     def _visit(path, key, value):
         """Return False if element in space dimensions, or in dimensions being ignored. Else, return
         True. If `value` is of type tuple or set, it will be converted to a list in order to
         simplify comparisons to the JSON-formatted `hyperparameters_and_scores`"""
         if path and path[0] == "model_extra_params" and value == {}:
-            # This removes any empty dicts in ("model_extra_params")
-            # This is done to simplify comparisons between experiments with no `model_extra_params`,
-            # ... and those with, for example, `model_extra_params=dict(fit=dict(verbose=True))`
+            # Remove empty dicts in ("model_extra_params"). Simplify comparison between experiments
+            # with no `model_extra_params` and, for example, `dict(fit=dict(verbose=True))`
             return False
 
         for dimension in dimensions + dimensions_to_ignore:
@@ -500,8 +516,6 @@ def get_choice_dimensions(params, iter_attrs=None):
         location of the hyperparameter given a choice, and `choices[<index>][1]` is the space
         choice instance for that hyperparameter"""
     choices = []
-    iter_attrs = iter_attrs or [lambda *_args: False]
-    iter_attrs = [iter_attrs] if not isinstance(iter_attrs, list) else iter_attrs
 
     def _visit(path, key, value):
         """If `value` is a descendant of :class:`space.Dimension`, collect inputs, and return True.
@@ -511,15 +525,7 @@ def get_choice_dimensions(params, iter_attrs=None):
             return True
         return False
 
-    def _enter(path, key, value):
-        """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
-        attributes. Else, `default_enter`"""
-        if any([_(path, key, value) for _ in iter_attrs]):
-            included_attrs = [_ for _ in dir(value) if not _.startswith("__")]
-            return dict(), [(_, getattr(value, _)) for _ in included_attrs]
-        return default_enter(path, key, value)
-
-    _ = remap(params, visit=_visit, enter=_enter)
+    _ = remap(params, visit=_visit, enter=extra_enter_attrs(iter_attrs))
     return choices
 
 

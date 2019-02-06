@@ -39,7 +39,7 @@ from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
 from hyperparameter_hunter.metrics import get_formatted_target_metric
 from hyperparameter_hunter.reporting import OptimizationReporter
 from hyperparameter_hunter.result_reader import finder_selector
-from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.settings import G, TEMP_MODULES_DIR_PATH
 from hyperparameter_hunter.space import Space, dimension_subset
 from hyperparameter_hunter.utils.boltons_utils import get_path
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update
@@ -51,6 +51,7 @@ from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from inspect import currentframe, getframeinfo
+from os import walk, remove, rmdir
 from os.path import abspath
 
 ##################################################
@@ -285,9 +286,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         #################### Remap Extra Objects ####################
         if self.module_name == "keras":
+            from keras.initializers import Initializer as KerasInitializer
             from keras.callbacks import Callback as KerasCB
 
-            self.extra_iter_attrs.append(lambda _path, _key, _value: isinstance(_value, KerasCB))
+            self.init_iter_attrs.append(lambda _p, _k, _v: isinstance(_v, KerasInitializer))
+            self.extra_iter_attrs.append(lambda _p, _k, _v: isinstance(_v, KerasCB))
 
         #################### Collect Choice Dimensions ####################
         init_dim_choices = get_choice_dimensions(self.model_init_params, self.init_iter_attrs)
@@ -332,6 +335,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         loop_end_time = datetime.now()
         G.log_(f"Optimization loop completed in {loop_end_time - loop_start_time}")
         G.log_(f'Best score was {self.best_score} from Experiment "{self.best_experiment}"')
+        self._clean_up_optimization()
 
     ##################################################
     # Helper Methods:
@@ -417,6 +421,19 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.successful_iterations += 1
         self._clean_up_experiment()
 
+    @staticmethod
+    def _clean_up_optimization():
+        """Perform any cleanup necessary after completion of the optimization loop. Most notably,
+        this handles removal of temporary model files created for Keras optimization"""
+        for (root, dirs, files) in walk(TEMP_MODULES_DIR_PATH, topdown=False):
+            for file in files:
+                if file.startswith("__temp_"):
+                    remove(f"{root}/{file}")
+            try:
+                rmdir(root)
+            except OSError:
+                G.warn_(f"Unidentified file found in temporary directory: {root}")
+
     def _clean_up_experiment(self):
         """Perform any cleanup necessary after completion of an Experiment"""
         if self.module_name == "keras":
@@ -433,6 +450,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         extra_params = {
             _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "model_extra_params"
         }
+        # TODO: Replace above two with `general_utils.subdict` call that modifies key to a slice
+
+        # FLAG: At this point, `dummy_layers` shows "kernel_initializer" as `orthogonal` instance with "__hh" attrs
+        # FLAG: HOWEVER, the `orthogonal` instance does have `gain` set to the correct dummy value, ...
+        # FLAG: ... so it might be ok, as long as experiment matching can still work with that
 
         self.current_init_params = deep_restricted_update(
             self.model_init_params, init_params, iter_attrs=self.init_iter_attrs
@@ -445,6 +467,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             self.current_extra_params["callbacks"] = reinitialize_callbacks(
                 self.current_extra_params["callbacks"]
             )
+
+        # No need to reinitialize Keras `initializers` - Their values are passed to `build_fn` via extra `params`
 
     ##################################################
     # Abstract Methods:

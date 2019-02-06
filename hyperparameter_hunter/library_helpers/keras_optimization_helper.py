@@ -20,7 +20,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.settings import G, TEMP_MODULES_DOT_PATH, TEMP_MODULES_DIR_PATH
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
 from hyperparameter_hunter.space import Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
@@ -36,6 +36,8 @@ from hyperparameter_hunter.utils.parsing_utils import (
 ##################################################
 from collections import OrderedDict
 from copy import deepcopy
+from datetime import datetime
+from importlib.util import spec_from_file_location, module_from_spec
 import os
 import re
 import sys
@@ -48,10 +50,12 @@ try:
     stderr = sys.stderr
     sys.stderr = open(os.devnull, "w")
     from keras.callbacks import Callback as base_keras_callback
+    from keras.initializers import Initializer as BaseKerasInitializer
 
     sys.stderr = stderr
 except ModuleNotFoundError:
     base_keras_callback = type("PlaceholderBaseKerasCallback", (), {})
+    BaseKerasInitializer = type("PlaceholderBaseKerasInitializer", (), {})
 
 
 def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script):
@@ -93,24 +97,30 @@ def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script
         The parameters used on the `compile` call for the dummy model. If a parameter is accepted
         by the `compile` method, but is not explicitly given, its default value is included in
         `dummy_compile_params`"""
+    #################### Set Temporary Model-Builder Module Location ####################
+    temp_module_name = f"__temp_model_builder_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')}"
+    temp_module_dot_path = f"{TEMP_MODULES_DOT_PATH}.{temp_module_name}"
+    temp_module_filepath = f"{TEMP_MODULES_DIR_PATH}/{temp_module_name}.py"
+
     #################### Prepare Model-Builder String ####################
-    temp_module = "__temp_model_builder"
     reusable_build_fn, expected_params = rewrite_model_builder(stringify_model_builder(build_fn))
     temp_module_str = build_temp_model_file(reusable_build_fn, source_script)
 
     #################### Save and Import Temporary Model Builder ####################
-    write_python(temp_module_str, "{}/{}.py".format(os.path.split(__file__)[0], temp_module))
+    write_python(temp_module_str, temp_module_filepath)
 
-    if temp_module in sys.modules:
-        del sys.modules[temp_module]
+    if temp_module_name in sys.modules:
+        del sys.modules[temp_module_name]
 
-    try:
-        from .__temp_model_builder import build_fn as temp_build_fn
-    except:
-        raise
+    temp_module_spec = spec_from_file_location(temp_module_dot_path, temp_module_filepath)
+    temp_module = module_from_spec(temp_module_spec)
+    temp_module_spec.loader.exec_module(temp_module)
+    temp_build_fn = temp_module.build_fn
 
     #################### Translate Hyperparameter Names to Universal Paths ####################
     wrapper_params = dict(params={k: eval(v) for k, v in expected_params.items()}, **extra_params)
+    # TODO: Intercept space choices that use callables (like `Categorical([glorot_normal(), orthogonal()])`)
+    # TODO: Can't deal with them yet, due to imports unavailable in this context. Raise exception
     wrapper_params, dummified_params = check_dummy_params(wrapper_params)
 
     if ("optimizer_params" in dummified_params) and ("optimizer" in dummified_params):
@@ -214,6 +224,8 @@ def merge_compile_params(compile_params, dummified_params):
         (k[1:] if k[0] == "params" else k): v for k, v in dummified_params.copy().items()
     }
 
+    # TODO: Replace above with `general_utils.subdict` call that modifies key to a slice
+
     def _visit(path, key, value):
         """If (`path` + `key`) in `_dummified_params`, return its value instead. Else, default"""
         location = path + (key,)
@@ -300,6 +312,7 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
             its copy in `dimensions`"""
             if isinstance(value, (Real, Integer, Categorical)):
                 for i in range(len(dimensions)):
+                    #################### Add `location` Attribute ####################
                     if dimensions[i].id == value.id:
                         setattr(dimensions[i], "location", (param_type + path + (key,)))
                         setattr(value, "location", (param_type + path + (key,)))
@@ -307,6 +320,7 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
 
         return _visit
 
+    #################### Enter Keras Callbacks ####################
     def _enter(path, key, value):
         """If `value` is in `keras.callbacks`, enter as a dict, iterating over non-magic attributes.
         Else, `default_enter`"""
@@ -314,14 +328,35 @@ def link_choice_ids(layers, compile_params, extra_params, dimensions):
             return dict(), [(_, getattr(value, _)) for _ in dir(value) if not _.startswith("__")]
         return default_enter(path, key, value)
 
+    #################### Enter Keras Initializer ####################
+    def layer_enter(path, key, value):
+        """If Keras `Initializer`, enter as dict, iterating over non-magic attributes"""
+        if isinstance(value, BaseKerasInitializer):
+            return (
+                dict(),
+                [
+                    (_, getattr(value, _))
+                    for _ in dir(value)
+                    if _ != "__hh_previous_frame" and not _.endswith("__")
+                ],
+            )
+        return default_enter(path, key, value)
+
+    # TODO: Merge "__hh" attrs above into a single dict of attributes for initializers
+    # TODO: Entering layer initializers like above will break matching when using default values
+    # TODO: Currently, path is set to use "__hh_used_kwargs", which won't match if the default value is used
+
     # noinspection PyUnusedLocal
-    _new_layers = remap(layers.copy(), visit=visit_as(("model_init_params", "layers")))
+    _new_layers = remap(
+        layers.copy(), visit=visit_as(("model_init_params", "layers")), enter=layer_enter
+    )
     # noinspection PyUnusedLocal
     _new_compile_params = remap(
         compile_params.copy(), visit=visit_as(("model_init_params", "compile_params"))
     )
     # noinspection PyUnusedLocal
     _extra_params = {k: v for k, v in extra_params.items() if k != "params"}
+    # TODO: Replace above with `general_utils.subdict`
     _new_extra_params = remap(_extra_params, visit=visit_as("model_extra_params"), enter=_enter)
 
     # `extra_params` has locations for `layers`, `compile_params`, `extra_params` - Of form expected by `build_fn` (less choices)
@@ -433,7 +468,10 @@ def find_space_fragments(string):
     start_indexes: List
         The indexes at which each hyperparameter choice declaration string was found in `string` -
         in order of appearance"""
-    unclipped_choices, start_indexes = zip(*iter_fragments(string, is_match=is_space_match))
+    try:
+        unclipped_choices, start_indexes = zip(*iter_fragments(string, is_match=is_space_match))
+    except ValueError:
+        return [], [], []
     clipped_choices = []
     names = []
 

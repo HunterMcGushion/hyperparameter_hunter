@@ -1,6 +1,10 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Bug-Fixes
+* Fix bug causing cross-validation to break occasionally if `n_splits=2`
+* Fix bug causing optimization to break if only optimizing `model_extra_params` (not `build_fn`) in Keras
+
 <a name="2.1.1"></a>
 ## [2.1.1] (2019-01-15)
 
