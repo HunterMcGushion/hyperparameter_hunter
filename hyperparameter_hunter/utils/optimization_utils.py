@@ -453,15 +453,13 @@ def filter_by_guidelines(
         **kwargs,
     )
 
-    # noinspection PyUnusedLocal
     def _visit(path, key, value):
         """Return False if element in space dimensions, or in dimensions being ignored. Else, return
         True. If `value` is of type tuple or set, it will be converted to a list in order to
         simplify comparisons to the JSON-formatted `hyperparameters_and_scores`"""
         if path and path[0] == "model_extra_params" and value == {}:
-            # This removes any empty dicts in ("model_extra_params")
-            # This is done to simplify comparisons between experiments with no `model_extra_params`,
-            # ... and those with, for example, `model_extra_params=dict(fit=dict(verbose=True))`
+            # Remove empty dicts in ("model_extra_params"). Simplify comparison between experiments
+            # with no `model_extra_params` and, for example, `dict(fit=dict(verbose=True))`
             return False
 
         for dimension in dimensions + dimensions_to_ignore:
