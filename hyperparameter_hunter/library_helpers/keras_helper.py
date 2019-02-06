@@ -142,7 +142,7 @@ def get_concise_params_dict(params, split_args=False):
             # Find the kwarg key that probably should have been used
             target_kwarg = list(params[D_KWARGS])[i - len(params[D_ARGS])]
             if target_kwarg in params[U_KWARGS]:
-                raise SyntaxError(f"Misplaced argument (i={i}/{target}): {params[U_ARGS][i]}")
+                raise SyntaxError(f"Misplaced argument (i={i}/{target_kwarg}): {params[U_ARGS][i]}")
             else:
                 params[U_KWARGS][target_kwarg] = params[U_ARGS][i]  # Move arg to kwargs
         params[U_ARGS] = params[U_ARGS][: len(params[D_ARGS])]  # Remove arg (now in kwargs)
