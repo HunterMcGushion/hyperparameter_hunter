@@ -4,12 +4,12 @@ This section lists libraries that have been tested with HyperparameterHunter and
 
 Tested and Compatible
 ---------------------
-* `CatBoost <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lib_catboost_example.py>`__
-* `Keras <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lib_keras_example.py>`__
-* `LightGBM <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lib_lightgbm_example.py>`__
-* `Scikit-Learn <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lib_sklearn_example.py>`__
-* `XGBoost <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/simple_experiment_example.py>`__
-* `rgf_python <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lib_rgf_example.py>`__
+* `CatBoost <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/catboost_examples>`__
+* `Keras <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/keras_examples>`__
+* `LightGBM <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/lightgbm_examples>`__
+* `Scikit-Learn <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/sklearn_examples>`__
+* `XGBoost <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/xgboost_examples>`__
+* `rgf_python <https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/rgf_examples>`__
 
 Support On the Way
 ------------------
