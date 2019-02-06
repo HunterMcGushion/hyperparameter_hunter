@@ -112,7 +112,13 @@ def keras_initializer_to_dict(initializer):
     except AttributeError:
         #################### Non-Descendants of `VarianceScaling` ####################
         class_name = initializer.__class__.__name__
-        initializer_params = parameters_by_signature(initializer)
+
+        try:
+            initializer_params = dict(map(lambda _: (_, getattr(initializer, _)), HH_ARG_ATTRS))
+            if all(not _ for _ in initializer_params.values()):
+                initializer_params = dict()
+        except AttributeError:
+            initializer_params = parameters_by_signature(initializer)
     else:
         #################### Descendants of `VarianceScaling` (Continued) ####################
         class_name = previous_frame.function
