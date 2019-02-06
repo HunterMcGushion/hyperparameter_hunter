@@ -22,6 +22,7 @@ import re
 import string
 from textwrap import dedent
 from warnings import warn, simplefilter
+from inspect import Traceback
 
 
 ##################################################
@@ -92,6 +93,11 @@ def extra_enter_attrs(iter_attrs):
             included_attrs = [_ for _ in dir(value) if not _.endswith("__")]
             # Skips "dunder" methods, but keeps "__hh" attributes
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
+        # TODO: Find better way to avoid entering "__hh_previous_frame" to avoid Traceback added by `tracers.LocationTracer`
+        if isinstance(value, Traceback):
+            return dict(), []
+        # TODO: Find better way to avoid entering "__hh_previous_frame" to avoid Traceback added by `tracers.LocationTracer`
+
         return default_enter(path, key, value)
 
     return _enter
