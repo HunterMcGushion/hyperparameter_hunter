@@ -20,6 +20,7 @@ Related
 from hyperparameter_hunter.exceptions import EnvironmentInvalidError, EnvironmentInactiveError
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,
+    keras_initializer_to_dict,
     parameterize_compiled_keras_model,
 )
 from hyperparameter_hunter.library_helpers.keras_optimization_helper import initialize_dummy_model
@@ -52,6 +53,7 @@ import sys
 ##################################################
 try:
     from keras.callbacks import Callback as BaseKerasCallback
+    from keras.initializers import Initializer as BaseKerasInitializer
 except ModuleNotFoundError:
 
     class BaseKerasCallback:
@@ -61,6 +63,9 @@ except ModuleNotFoundError:
         class, or an attribute just like me! That means that if anyone checks to see if something is an instance of yours truly, 
         hopefully it won't be! :) Nice to meet you! &*%#))(%#(*&@*HIOV0(#*W*Q()UFIJW_Q)_#R*(*(T{_E_QWO_))T+VMS"W)|GO{>A?C<A/woe0
         """
+
+    class BaseKerasInitializer:
+        ...
 
 
 ##################################################
@@ -174,6 +179,8 @@ class KeyMaker(metaclass=ABCMeta):
             `value`"""
             if isinstance(value, BaseKerasCallback):
                 return (key, keras_callback_to_dict(value))
+            if isinstance(value, BaseKerasInitializer):
+                return (key, keras_initializer_to_dict(value))
             if isinstance(value, Sentinel):
                 return (key, value.sentinel)
             elif callable(value) or isinstance(value, pd.DataFrame):
