@@ -1,6 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.library_helpers.keras_helper import get_concise_params_dict
 from hyperparameter_hunter.library_helpers.keras_helper import get_keras_attr
 from hyperparameter_hunter.library_helpers.keras_helper import keras_initializer_to_dict
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
@@ -391,4 +392,35 @@ def test_parameters_by_signature(instance, signature_filter, params):
     ],
 )
 def test_keras_initializer_to_dict(initializer, initializer_dict):
-    assert keras_initializer_to_dict(initializer) == initializer_dict
+    assert get_concise_params_dict(keras_initializer_to_dict(initializer)) == initializer_dict
+
+
+##################################################
+# `get_concise_params_dict` Scenarios
+##################################################
+hh_arg_attrs = ["__hh_default_args", "__hh_default_kwargs", "__hh_used_args", "__hh_used_kwargs"]
+empty_hh_args = [[], {}, [], {}]
+_arg_dict = lambda _: dict(zip(hh_arg_attrs, _))
+
+
+@pytest.mark.parametrize(
+    ["params", "expected_params"],
+    [
+        (dict(), dict()),
+        (_arg_dict(empty_hh_args), dict()),
+        (dict(name="foo"), dict(name="foo")),
+        (dict(name="foo", **_arg_dict(empty_hh_args)), dict(name="foo")),
+        (dict(name="foo", **_arg_dict([["a"], {}, [1], {}])), dict(name="foo", a=1)),
+        (dict(name="foo", **_arg_dict([["a"], {}, [], dict(a=1)])), dict(name="foo", a=1)),
+        (_arg_dict([["a"], dict(b=2, c=3), [1], dict(c=42)]), dict(a=1, b=2, c=42)),
+        (_arg_dict([["a"], dict(b=2, c=3), [42], dict()]), dict(a=42, b=2, c=3)),
+        (dict(x="F", **_arg_dict([[], dict(b=2, c=3), [], dict()])), dict(x="F", b=2, c=3)),
+    ],
+)
+def test_get_concise_params_dict(params, expected_params):
+    assert get_concise_params_dict(params) == expected_params
+
+
+def test_get_concise_params_dict_index_error():
+    with pytest.raises(IndexError):
+        get_concise_params_dict(_arg_dict([["a"], {}, [], {}]))
