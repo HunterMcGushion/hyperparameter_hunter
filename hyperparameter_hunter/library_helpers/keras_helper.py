@@ -12,6 +12,12 @@ from hyperparameter_hunter.utils.general_utils import to_snake_case
 from inspect import signature, _empty
 from types import MethodType
 
+##################################################
+# Global Variables
+##################################################
+HH_ARG_ATTRS = ["__hh_default_args", "__hh_default_kwargs", "__hh_used_args", "__hh_used_kwargs"]
+(D_ARGS, D_KWARGS, U_ARGS, U_KWARGS) = HH_ARG_ATTRS
+
 
 ##################################################
 # Keras Callback Helpers
@@ -237,18 +243,12 @@ def parameterize_compiled_keras_model(model):
     ##################################################
     # Model Architecture
     ##################################################
-    hh_attributes = [
-        "__hh_default_args",
-        "__hh_default_kwargs",
-        "__hh_used_args",
-        "__hh_used_kwargs",
-    ]
     layers = []
 
     for layer in get_keras_attr(model, "layers"):
         layer_obj = dict(class_name=layer.__class__.__name__)
 
-        for hh_attr in hh_attributes:
+        for hh_attr in HH_ARG_ATTRS:
             layer_obj[hh_attr] = getattr(layer, hh_attr, None)
 
         layers.append(layer_obj)
