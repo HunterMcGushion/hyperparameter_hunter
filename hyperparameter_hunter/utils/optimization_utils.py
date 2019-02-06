@@ -386,11 +386,28 @@ def filter_by_space(hyperparameters_and_scores, space):
     -------
     hyperparameters_and_scores: List of tuples
         Filtered to include only those whose hyperparameters fit within `space`"""
-    hyperparameters_and_scores = filter(
-        lambda _: dimension_subset(_[0], space.names()) in space, hyperparameters_and_scores
-    )
+    return [_ for _ in hyperparameters_and_scores if does_fit_in_space(_[0], space)]
 
-    return list(hyperparameters_and_scores)
+
+def does_fit_in_space(root, space):
+    """Determine if the subset of `root` identified by `space` fits within dimensions of `space`
+
+    Parameters
+    ----------
+    root: Object
+        Iterable, whose values at the locations specified in `space` will be checked. For each
+        dimension in `space`, the dimension's `location`/`name` is looked up in `root`, and the
+        value is tested to see if it falls within the dimension's range of allowed values
+    space: `space.Space`
+        Instance of :class:`space.Space` that defines dimension choices for select hyperparameters.
+        Each dimension in `space` should have an appropriate `name` (or `location`, if necessary)
+        attribute to match `root`
+
+    Returns
+    -------
+    Boolean
+        True if `root` subset (at `space` locations) fits in `space` dimensions. Else, False"""
+    return dimension_subset(root, space.names()) in space
 
 
 def filter_by_guidelines(
