@@ -3,7 +3,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.general_utils import to_snake_case
+from hyperparameter_hunter.utils.general_utils import to_snake_case, subdict
 
 ##################################################
 # Import Miscellaneous Assets
@@ -131,6 +131,47 @@ def keras_initializer_to_dict(initializer):
 ##################################################
 # Helpers
 ##################################################
+def get_concise_params_dict(params, split_args=False):
+    # TODO: Add docstring
+    new_params = subdict(params, drop=HH_ARG_ATTRS)
+    arg_vals = {}
+
+    #################### Resolve Kwargs Used as Args ####################
+    if len(params.get(U_ARGS, [])) > len(params.get(D_ARGS, [])):
+        for i in range(len(params[D_ARGS]), len(params[U_ARGS])):
+            # Find the kwarg key that probably should have been used
+            target_kwarg = list(params[D_KWARGS])[i - len(params[D_ARGS])]
+            if target_kwarg in params[U_KWARGS]:
+                raise SyntaxError(f"Misplaced argument (i={i}/{target}): {params[U_ARGS][i]}")
+            else:
+                params[U_KWARGS][target_kwarg] = params[U_ARGS][i]  # Move arg to kwargs
+        params[U_ARGS] = params[U_ARGS][: len(params[D_ARGS])]  # Remove arg (now in kwargs)
+
+    #################### Gather Args ####################
+    for i, expected_arg in enumerate(params.get(D_ARGS, [])):
+        try:
+            arg_vals[expected_arg] = params[U_ARGS][i]
+        except IndexError:
+            if expected_arg in params[U_KWARGS]:
+                arg_vals[expected_arg] = params[U_KWARGS][expected_arg]
+            else:
+                raise
+
+    #################### Gather Kwargs ####################
+    # Merge default and used kwargs with constraints: only include if k in default, and give priority to used values
+    # This means that args used as kwargs won't make it through because they have no default values, and
+    # nonsensical kwargs won't make it through because the defaults are the point of reference
+    kwarg_vals = {k: params[U_KWARGS].get(k, v) for k, v in params.get(D_KWARGS, {}).items()}
+
+    #################### Consolidate ####################
+    if split_args:
+        new_params = dict(**new_params, **dict(arg_vals=arg_vals, kwarg_vals=kwarg_vals))
+    else:
+        new_params = {**new_params, **arg_vals, **kwarg_vals}
+
+    return new_params
+
+
 def parameters_by_signature(instance, signature_filter=None):
     """Get a dict of the parameters used to create an instance of a class. This is only suited for
     classes whose attributes are named according to their input parameters
