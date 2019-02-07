@@ -60,7 +60,7 @@ default_env_params = dict(
     cross_validation_type="StratifiedKFold",
     verbose=True,
     file_blacklist=None,
-    reporting_handler_params=dict(add_frame=False),
+    reporting_params=dict(add_frame=False),
     cross_validation_params=repeated_cv_params,
 )
 

@@ -20,7 +20,7 @@ import inspect
 class LoggerFitStatus(BaseLoggerCallback):
     float_format = "{:.5f}"
     log_separator = "  |  "
-    # FLAG: Add means of updating float_format to "G.Env.reporting_handler_params['float_format']"
+    # FLAG: Add means of updating float_format to "G.Env.reporting_params['float_format']"
 
     def __init__(self):
         """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""

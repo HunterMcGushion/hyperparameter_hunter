@@ -28,6 +28,7 @@ from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DI
 from hyperparameter_hunter.reporting import ReportingHandler
 from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
 from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
+from hyperparameter_hunter.utils.general_utils import Alias
 from hyperparameter_hunter.utils.result_utils import format_predictions, default_do_full_save
 
 ##################################################
@@ -63,17 +64,14 @@ class Environment:
         cross_validation_params=dict(),
         verbose=3,
         file_blacklist=None,
-        reporting_handler_params=dict(
-            # reporting_type='logging',
-            heartbeat_path=None,
-            float_format="{:.5f}",
-            console_params=None,
-            heartbeat_params=None,
+        reporting_params=dict(
+            heartbeat_path=None, float_format="{:.5f}", console_params=None, heartbeat_params=None
         ),
         to_csv_params=dict(),
         do_full_save=default_do_full_save,
     )
 
+    @Alias("reporting_params", ["reporting_handler_params"])
     def __init__(
         self,
         train_dataset,  # TODO: Allow providing separate (train_input, train_target) dfs
@@ -96,7 +94,7 @@ class Environment:
         cross_validation_params=None,
         verbose=None,
         file_blacklist=None,
-        reporting_handler_params=None,
+        reporting_params=None,
         to_csv_params=None,
         do_full_save=None,
         experiment_callbacks=None,
@@ -270,7 +268,7 @@ class Environment:
             as if "script_backup" had been added to `file_blacklist`. This means that backup files
             will not be created for Jupyter notebooks (or any other non-".py" files). For info on
             acceptable values, see :func:`validate_file_blacklist`
-        reporting_handler_params: Dict, default=dict()
+        reporting_params: Dict, default=dict()
             Parameters passed to initialize :class:`.reporting.ReportingHandler`
         to_csv_params: Dict, default=dict()
             Parameters passed to the calls to :meth:`pandas.frame.DataFrame.to_csv` in
@@ -305,6 +303,9 @@ class Environment:
             `experiment_recorders` will be provided to `recorders.RecorderList` upon completion of
             an Experiment, and, if the subclassing documentation in `recorders` is followed
             properly, will create or update a result file for the just-executed Experiment
+
+        reporting_handler_params: ...
+            * Alias for `reporting_params` *
 
         Notes
         -----
@@ -368,7 +369,7 @@ class Environment:
         #################### Ancillary Environment Settings ####################
         self.verbose = verbose
         self.file_blacklist = file_blacklist
-        self.reporting_handler_params = reporting_handler_params or {}
+        self.reporting_params = reporting_params or {}
         self.to_csv_params = to_csv_params or {}
         self.do_full_save = do_full_save
         self.experiment_callbacks = experiment_callbacks or []
@@ -619,7 +620,7 @@ class Environment:
 
     def initialize_reporting(self):
         """Initialize reporting for the Environment and Experiments conducted during its lifetime"""
-        reporting_params = self.reporting_handler_params
+        reporting_params = self.reporting_params
         reporting_params["heartbeat_path"] = self.result_paths["current_heartbeat"]
         reporting_handler = ReportingHandler(**reporting_params)
 

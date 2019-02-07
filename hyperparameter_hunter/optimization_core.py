@@ -565,11 +565,10 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.similar_experiments = experiment_finder.similar_experiments
 
     def _update_verbosity(self):
-        """Update the contents of :attr:`environment.Environment.reporting_handler_params` if
-        required by :attr:`verbose`"""
+        """Update :attr:`environment.Environment.reporting_params` if required by :attr:`verbose`"""
         #################### Mute non-critical console logging for Experiments ####################
         if self.verbose in [0, 1]:
-            G.Env.reporting_handler_params.setdefault("console_params", {})["level"] = "CRITICAL"
+            G.Env.reporting_params.setdefault("console_params", {})["level"] = "CRITICAL"
 
         #################### Blacklist 'script_backup' ####################
         G.Env.result_paths["script_backup"] = None

@@ -183,7 +183,6 @@ class ReportingHandler(object):
         -------
         file_handler: `logging.FileHandler` instance
             The instantiated handler for the heartbeat file"""
-        # fmt = '<%(asctime)s> %(levelname)-8s - %(lineno)4d %(module)20s .%(funcName)10s - %(message)s'
         if self.heartbeat_path is None:
             raise FileExistsError
 
@@ -239,7 +238,7 @@ class ReportingHandler(object):
                 frame_source = format_frame_source(previous_frame)
             finally:
                 del previous_frame
-            content = frame_source + " - " + content
+            content = f"{frame_source} - {content}"
 
         content = add_time_to_content(content, add_time=add_time)
 
@@ -268,7 +267,7 @@ class ReportingHandler(object):
                 frame_source = format_frame_source(previous_frame)
             finally:
                 del previous_frame
-            content = frame_source + " - " + content
+            content = f"{frame_source} - {content}"
 
         content = add_time_to_content(content, add_time=add_time)
         logging.debug(content)
@@ -289,32 +288,9 @@ class ReportingHandler(object):
                 frame_source = format_frame_source(previous_frame)
             finally:
                 del previous_frame
-            content = frame_source + " - " + content
+            content = f"{frame_source} - {content}"
 
         logging.warning(content)
-
-    ##################################################
-    # Standard Logging Methods:
-    ##################################################
-    # def _standard_log(self, content, add_time=False, **kwargs):
-    #     content = add_time_to_content(content, add_time=add_time)
-    #     print(content)
-    #
-    #     if self.heartbeat_path is not None:
-    #         self.heartbeat(content)
-
-    # def _standard_debug(self, content, add_time=False, **kwargs):
-    #     content = add_time_to_content(content, add_time=add_time)
-    #     print(content)
-    #
-    #     if self.heartbeat_path is not None:
-    #         self.heartbeat(content)
-
-    # def _standard_warn(self, content, **kwargs):
-    #     warnings.warn(content)
-    #
-    #     if self.heartbeat_path is not None:
-    #         self.heartbeat(content)
 
 
 class _Color:
@@ -541,7 +517,6 @@ class OptimizationReporter:
         # TODO: Finish this
         if not self.verbose:
             return
-        pass
 
 
 def format_frame_source(previous_frame, **kwargs):
@@ -682,31 +657,6 @@ def format_fold_run(fold=None, run=None, mode="concise"):  # TODO: Add repetitio
         raise ValueError('Received invalid mode value: "{}". Expected mode string'.format(mode))
 
     return content
-
-
-# def format_evaluation(results, separator='   ', float_format='{:.5f}'):
-#     if isinstance(results, list):
-#         raise TypeError('Sorry, I can\'t deal with results of type list. Please send me an OrderedDict, instead')
-#
-#     content = []
-#
-#     for data_type, values in results.items():
-#         if values is None: continue
-#
-#         data_type = 'OOF' if data_type == 'oof' else data_type
-#         data_type = 'Holdout' if data_type == 'holdout' else data_type
-#         data_type = 'In-Fold' if data_type == 'in_fold' else data_type
-#
-#         for metric_id, metric_value in values.items():
-#             try:
-#                 formatted_value = float_format.format(metric_value)
-#             except ValueError:
-#                 formatted_value = '{}'.format(metric_value)
-#
-#             content.append('{} {}: {}'.format(data_type, metric_id, formatted_value))
-#
-#     content = separator.join(content)
-#     return content
 
 
 def format_evaluation(results, separator="  |  ", float_format="{:.5f}"):
