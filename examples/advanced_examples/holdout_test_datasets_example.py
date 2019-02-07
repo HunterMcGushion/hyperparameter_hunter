@@ -16,7 +16,7 @@ def get_holdout_set(train, target_column):
 def execute():
     env = Environment(
         train_dataset=get_toy_classification_data(),
-        root_results_path="HyperparameterHunterAssets",
+        results_path="HyperparameterHunterAssets",
         # Both `holdout_dataset`, and `train_dataset` can be any of the following: pandas.DataFrame, filepath, or None
         # If a filepath is provided, it will be passed to :meth:`pandas.read_csv`.
         # In addition to the above types, `holdout_dataset` can also be provided as a callable (see above :func:`get_holdout_set`)

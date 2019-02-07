@@ -43,7 +43,7 @@ repeated_cv_params = dict(n_splits=5, n_repeats=2, random_state=32)
 default_env_params = dict(
     train_dataset=train_dataset,
     environment_params_path=None,
-    root_results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
+    results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
     holdout_dataset=get_holdout_set,
     test_dataset=train_dataset.copy(),
     target_column="diagnosis",

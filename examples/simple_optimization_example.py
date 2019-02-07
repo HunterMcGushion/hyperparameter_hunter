@@ -7,7 +7,7 @@ from xgboost import XGBClassifier
 def _execute():
     env = Environment(
         train_dataset=get_breast_cancer_data(),
-        root_results_path="HyperparameterHunterAssets",
+        results_path="HyperparameterHunterAssets",
         target_column="diagnosis",
         metrics_map=["roc_auc_score"],
         cross_validation_type=StratifiedKFold,

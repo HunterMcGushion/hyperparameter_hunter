@@ -8,7 +8,7 @@ def _execute():
     # In this file, we can define a bunch of default Environment parameters that we don't want to always explicitly provide
 
     # It works really well for things that won't be changing often, like the following:
-    # - `root_results_path`, which we probably never want to change, so all our results go to one place;
+    # - `results_path`, which we probably never want to change, so all our results go to one place;
     # - `target_column`, which will probably be a constant for your data
     # - `metrics_map`, if you're not using any fancy metrics, and you already know what you want
     # - `file_blacklist`, if you're angry at me for adding that one result file that's always useless
@@ -22,7 +22,7 @@ def _execute():
         ),  # Here we decide to override our default values
     )
 
-    print(env.root_results_path)
+    print(env.results_path)
     print(env.target_column)
     print(env.metrics_map)
     print(env.cross_validation_type)

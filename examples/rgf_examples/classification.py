@@ -13,7 +13,7 @@ train_df["y"] = y
 #################### Set Up Environment ####################
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="y",
     metrics_map=["hamming_loss"],
     cross_validation_type=RepeatedStratifiedKFold,

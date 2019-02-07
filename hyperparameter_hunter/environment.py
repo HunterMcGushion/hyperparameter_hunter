@@ -49,7 +49,7 @@ from sklearn.model_selection import _split as sk_cv
 class Environment:
     DEFAULT_PARAMS = dict(
         environment_params_path=None,
-        root_results_path=None,
+        results_path=None,
         target_column="target",
         id_column=None,
         do_predict_proba=False,
@@ -72,12 +72,13 @@ class Environment:
     )
 
     @Alias("reporting_params", ["reporting_handler_params"])
+    @Alias("results_path", ["root_results_path"])
     def __init__(
         self,
         train_dataset,  # TODO: Allow providing separate (train_input, train_target) dfs
         environment_params_path=None,
         *,
-        root_results_path=None,
+        results_path=None,
         metrics_map=None,
         holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dfs
         test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dfs
@@ -114,7 +115,7 @@ class Environment:
             If not None and is valid .json filepath containing an object (dict), the file's contents
             are treated as the default values for all keys that match any of the below kwargs used
             to initialize :class:`Environment`
-        root_results_path: String path, or None, default=None
+        results_path: String path, or None, default=None
             If valid directory path and the results directory has not yet been created, it will be
             created here. If this does not end with <ASSETS_DIRNAME>, it will be appended. If
             <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
@@ -298,7 +299,7 @@ class Environment:
         experiment_recorders: List, None, default=None
             If not None, may be a list whose values are tuples of
             (<:class:`recorders.BaseRecorder` descendant>, <str result_path>). The result_path str
-            should be a path relative to `root_results_path` that specifies the directory/file in
+            should be a path relative to `results_path` that specifies the directory/file in
             which the product of the custom recorder should be saved. The contents of
             `experiment_recorders` will be provided to `recorders.RecorderList` upon completion of
             an Experiment, and, if the subclassing documentation in `recorders` is followed
@@ -306,6 +307,8 @@ class Environment:
 
         reporting_handler_params: ...
             * Alias for `reporting_params` *
+        root_results_path: ...
+            * Alias for `results_path` *
 
         Notes
         -----
@@ -344,7 +347,7 @@ class Environment:
         """
         G.Env = self
         self.environment_params_path = environment_params_path
-        self.root_results_path = root_results_path
+        self.results_path = results_path
 
         #################### Attributes Used by Experiments ####################
         self.train_dataset = train_dataset
@@ -376,7 +379,7 @@ class Environment:
         self.experiment_recorders = experiment_recorders or []
 
         self.result_paths = {
-            "root": self.root_results_path,
+            "root": self.results_path,
             "checkpoint": None,
             "description": None,
             "heartbeat": None,
@@ -422,17 +425,17 @@ class Environment:
 
     def validate_parameters(self):
         """Ensure the provided parameters are valid and properly formatted"""
-        #################### root_results_path ####################
-        if self.root_results_path is None:
-            G.warn("Received root_results_path=None. Results will not be stored at all.")
-        elif isinstance(self.root_results_path, str):
-            if not self.root_results_path.endswith(ASSETS_DIRNAME):
-                self.root_results_path = os.path.join(self.root_results_path, ASSETS_DIRNAME)
-                self.result_paths["root"] = self.root_results_path
-            if not os.path.exists(self.root_results_path):
-                make_dirs(self.root_results_path, exist_ok=True)
+        #################### results_path ####################
+        if self.results_path is None:
+            G.warn("Received results_path=None. Results will not be stored at all.")
+        elif isinstance(self.results_path, str):
+            if not self.results_path.endswith(ASSETS_DIRNAME):
+                self.results_path = os.path.join(self.results_path, ASSETS_DIRNAME)
+                self.result_paths["root"] = self.results_path
+            if not os.path.exists(self.results_path):
+                make_dirs(self.results_path, exist_ok=True)
         else:
-            raise TypeError(f"root_results_path must be None or str, not {self.root_results_path}")
+            raise TypeError(f"results_path must be None or str, not {self.results_path}")
 
         #################### target_column ####################
         if isinstance(self.target_column, str):
@@ -441,7 +444,7 @@ class Environment:
         #################### file_blacklist ####################
         self.file_blacklist = validate_file_blacklist(self.file_blacklist)
 
-        if self.root_results_path is None:
+        if self.results_path is None:
             self.file_blacklist = "ALL"
 
         #################### Train/Test Datasets ####################
@@ -526,7 +529,7 @@ class Environment:
 
     def format_result_paths(self):
         """Remove paths contained in file_blacklist, and format others to prepare for saving results"""
-        if self.file_blacklist == "ALL" or self.root_results_path is None:
+        if self.file_blacklist == "ALL" or self.results_path is None:
             return
 
         # Blacklist the prediction files for any datasets that were not given
@@ -544,14 +547,14 @@ class Environment:
 
             self.result_paths[recorder.result_path_key] = result_path
 
-        # Set full filepath for result files relative to `root_results_path`, or to None (blacklist)
+        # Set full filepath for result files relative to `results_path`, or to None (blacklist)
         for k in self.result_paths.keys():
             if k == "root":
                 continue
             elif k not in self.file_blacklist:
                 # If `k` not in `RESULT_FILE_SUB_DIR_PATHS`, then added via `experiment_recorders`
                 self.result_paths[k] = os.path.join(
-                    self.root_results_path, RESULT_FILE_SUB_DIR_PATHS.get(k, self.result_paths[k])
+                    self.results_path, RESULT_FILE_SUB_DIR_PATHS.get(k, self.result_paths[k])
                 )
             else:
                 self.result_paths[k] = None

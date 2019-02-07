@@ -130,7 +130,7 @@ def env_0():
     `experiment_callbacks` consisting of the `lambda_callback` result of :func:`sentinel_checker`"""
     return Environment(
         train_dataset=get_breast_cancer_data(target="target"),
-        root_results_path=assets_dir,
+        results_path=assets_dir,
         holdout_dataset=get_breast_cancer_data(target="target"),
         metrics_map=["roc_auc_score"],
         cross_validation_type="StratifiedKFold",

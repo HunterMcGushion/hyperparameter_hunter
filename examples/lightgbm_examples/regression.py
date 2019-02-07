@@ -14,7 +14,7 @@ train_df["median_value"] = data.target
 #################### Set Up Environment ####################
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="median_value",
     metrics_map=dict(r2=r2_score),
     cross_validation_type=RepeatedKFold,

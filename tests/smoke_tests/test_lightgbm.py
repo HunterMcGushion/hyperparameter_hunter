@@ -36,7 +36,7 @@ assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 def env_0():
     return Environment(
         train_dataset=get_breast_cancer_data(target="diagnosis"),
-        root_results_path=assets_dir,
+        results_path=assets_dir,
         target_column="diagnosis",
         metrics_map=dict(
             roc_auc="roc_auc_score",

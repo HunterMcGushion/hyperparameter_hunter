@@ -1,5 +1,5 @@
 {
-  "root_results_path": "HyperparameterHunterAssets",
+  "results_path": "HyperparameterHunterAssets",
   "target_column": "diagnosis",
   "metrics_map": [
     "roc_auc_score",

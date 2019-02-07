@@ -30,7 +30,7 @@ def printer_callback():
 def execute():
     env = Environment(
         train_dataset=get_toy_classification_data(),
-        root_results_path="HyperparameterHunterAssets",
+        results_path="HyperparameterHunterAssets",
         metrics_map=["roc_auc_score"],
         cross_validation_type=RepeatedStratifiedKFold,
         cross_validation_params=dict(n_splits=5, n_repeats=2, random_state=32),

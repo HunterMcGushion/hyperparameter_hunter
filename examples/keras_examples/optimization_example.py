@@ -43,7 +43,7 @@ def _execute():
     #################### Environment ####################
     env = Environment(
         train_dataset=get_breast_cancer_data(target="target"),
-        root_results_path="HyperparameterHunterAssets",
+        results_path="HyperparameterHunterAssets",
         metrics_map=["roc_auc_score"],
         cross_validation_type="StratifiedKFold",
         cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),

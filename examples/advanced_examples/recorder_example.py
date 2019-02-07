@@ -17,7 +17,7 @@ train_df["diagnosis"] = data.target
 # We'll set aside our `Environment` arguments, so we can easily reuse them later
 env_kwargs = dict(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="diagnosis",
     metrics_map=["roc_auc_score"],
     cross_validation_type=StratifiedKFold,
@@ -62,7 +62,7 @@ env_1 = Environment(
     ],
     # `experiment_recorders` (if given) should be a list containing one tuple for each recorder
     # The first value in the tuple is our new class that descends from `recorders.BaseRecorder`
-    # The second value is a str path relative to the `Environment`'s `root_results_path` that
+    # The second value is a str path relative to the `Environment`'s `results_path` that
     # ... tells our recorder where it should save the new result file
 )
 
@@ -83,7 +83,7 @@ do_optimization()
 
 # Additionally, there are two useful `BaseRecorder` attributes you should use:
 # 1) `result_path`: Str directory in which our result should be saved - Concatenation of
-# ... `Environment.root_results_path` and the second value given in the `experiment_recorders` tuple
+# ... `Environment.results_path` and the second value given in the `experiment_recorders` tuple
 # 2) `result`: (Optional) object we can set in `format_result` and use in `save_result`
 class YAMLDescriptionRecorder(BaseRecorder):
     # This recorder class is just going to read the Experiment's default JSON description, then
@@ -122,7 +122,7 @@ class YAMLDescriptionRecorder(BaseRecorder):
 #################### Set Up Third Environment ####################
 # Now we can create a new `Environment` and add `YAMLDescriptionRecorder` to `experiment_recorders`
 # Take special note of the dirpath that is the second value of our new tuple - This is appended to
-# ... our `Environment.root_results_path` to create the special `result_path` attribute we used in
+# ... our `Environment.results_path` to create the special `result_path` attribute we used in
 # ... our `YAMLDescriptionRecorder`'s `save_result` method
 env_2 = Environment(
     **env_kwargs,

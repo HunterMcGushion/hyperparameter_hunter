@@ -16,7 +16,7 @@ def execute():
     # Start by creating an `Environment` - This is where you define how Experiments (and optimization) will be conducted
     env = Environment(
         train_dataset=get_breast_cancer_data(target="target"),
-        root_results_path="HyperparameterHunterAssets",
+        results_path="HyperparameterHunterAssets",
         metrics_map=["roc_auc_score"],
         cross_validation_type="StratifiedKFold",
         cross_validation_params=dict(n_splits=10, shuffle=True, random_state=32),
@@ -29,7 +29,7 @@ def execute():
     )
 
     # That's it. No annoying boilerplate code to fit models and record results
-    # Now, the `Environment`'s `root_results_path` directory will contain new files describing the Experiment just conducted
+    # Now, the `Environment`'s `results_path` directory will contain new files describing the Experiment just conducted
 
     # Time for the fun part. We'll set up some hyperparameter optimization by first defining the `OptimizationProtocol` we want
     optimizer = BayesianOptimization(verbose=1)
