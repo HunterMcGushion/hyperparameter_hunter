@@ -34,6 +34,7 @@ from hyperparameter_hunter.utils.result_utils import format_predictions, default
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from contextlib import suppress
 from inspect import signature, isclass
 import numpy as np
 import os.path
@@ -619,6 +620,15 @@ class Environment:
             cross_experiment_params=self.cross_experiment_params,
             to_csv_params=self.to_csv_params,
         )
+
+        #################### Revert Aliases for Compatibility ####################
+        # If any aliases were used during call to `Environment.__init__`, replace the default names
+        # in `parameters` with the alias used. This ensures compatibility with Environment keys
+        # made in earlier versions
+        with suppress(AttributeError):
+            for (param, alias) in getattr(self.__init__.__wrapped__, "__hh_aliases_used").items():
+                parameters[alias] = parameters.pop(param)
+
         self.cross_experiment_key = CrossExperimentKeyMaker(parameters)
 
     def initialize_reporting(self):
