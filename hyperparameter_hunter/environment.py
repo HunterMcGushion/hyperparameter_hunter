@@ -62,7 +62,7 @@ class Environment:
         global_random_seed=32,
         random_seeds=None,
         random_seed_bounds=[0, 100_000],
-        cross_validation_params=dict(),
+        cv_params=dict(),
         verbose=3,
         file_blacklist=None,
         reporting_params=dict(
@@ -72,6 +72,7 @@ class Environment:
         do_full_save=default_do_full_save,
     )
 
+    @Alias("cv_params", ["cross_validation_params"])
     @Alias("reporting_params", ["reporting_handler_params"])
     @Alias("results_path", ["root_results_path"])
     def __init__(
@@ -93,7 +94,7 @@ class Environment:
         global_random_seed=None,
         random_seeds=None,
         random_seed_bounds=None,
-        cross_validation_params=None,
+        cv_params=None,
         verbose=None,
         file_blacklist=None,
         reporting_params=None,
@@ -215,7 +216,7 @@ class Environment:
             see the following tested `sklearn` classes for proper implementations:
             [`KFold`, `StratifiedKFold`, `RepeatedKFold`, `RepeatedStratifiedKFold`]. The arguments
             provided to :meth:`cross_validation_type.__init__` will be
-            :attr:`Environment.cross_validation_params`, which should include the following:
+            :attr:`Environment.cv_params`, which should include the following:
             ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
             :meth:`cross_validation_type.split` will receive the following arguments:
             [:attr:`BaseExperiment.train_input_data`, :attr:`BaseExperiment.train_target_data`]
@@ -228,17 +229,16 @@ class Environment:
             provide it here
         random_seeds: None, or List, default=None
             If None, `random_seeds` of the appropriate shape will be created automatically. Else,
-            must be a list of ints of shape (`cross_validation_params['n_repeats']`,
-            `cross_validation_params['n_splits']`, `runs`). If `cross_validation_params` does not
-            have the key `n_repeats` (because standard cross-validation is being used), the value
-            will default to 1. See :meth:`.experiments.BaseExperiment._random_seed_initializer` for
-            more info on the expected shape
+            must be a list of ints of shape (`cv_params['n_repeats']`, `cv_params['n_splits']`,
+            `runs`). If `cv_params` does not have the key `n_repeats` (because standard
+            cross-validation is being used), the value will default to 1. See
+            :meth:`.experiments.BaseExperiment._random_seed_initializer` for info on expected shape
         random_seed_bounds: List, default=[0, 100000]
             A list containing two integers: the lower and upper bounds, respectively, for generating
             an Experiment's random seeds in
             :meth:`.experiments.BaseExperiment._random_seed_initializer`. Generally, leave this
             kwarg alone
-        cross_validation_params: dict, or None, default=dict()
+        cv_params: dict, or None, default=dict()
             Dict of parameters provided upon initialization of cross_validation_type. Keys may be
             any args accepted by :meth:`cross_validation_type.__init__`. Number of fold splits must
             be provided here via "n_splits", and number of repeats (if applicable according to
@@ -306,6 +306,8 @@ class Environment:
             an Experiment, and, if the subclassing documentation in `recorders` is followed
             properly, will create or update a result file for the just-executed Experiment
 
+        cross_validation_params: ...
+            * Alias for `cv_params` *
         reporting_handler_params: ...
             * Alias for `reporting_params` *
         root_results_path: ...
@@ -368,7 +370,7 @@ class Environment:
         self.global_random_seed = global_random_seed
         self.random_seeds = random_seeds
         self.random_seed_bounds = random_seed_bounds
-        self.cross_validation_params = cross_validation_params
+        self.cv_params = cv_params
 
         #################### Ancillary Environment Settings ####################
         self.verbose = verbose
@@ -609,7 +611,7 @@ class Environment:
         """Generate a key to describe the current Environment's cross-experiment parameters"""
         parameters = dict(
             metrics_params=self.metrics_params,
-            cross_validation_params=self.cross_validation_params,
+            cv_params=self.cv_params,
             target_column=self.target_column,
             id_column=self.id_column,
             do_predict_proba=self.do_predict_proba,

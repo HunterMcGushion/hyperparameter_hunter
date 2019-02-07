@@ -17,7 +17,7 @@ def _execute():
     env = Environment(
         train_dataset=get_breast_cancer_data(),  # If your dataset is a str path, you can even add it to environment_params
         environment_params_path="./environment_params.json",  # Use this file for parameters not explicitly given
-        cross_validation_params=dict(
+        cv_params=dict(
             n_splits=5, shuffle=True, random_state=32
         ),  # Here we decide to override our default values
     )
@@ -30,7 +30,7 @@ def _execute():
     print(env.file_blacklist)  # This includes some other values too, but you can ignore them
     # All of the above are from `environment_params_path`
     print(
-        env.cross_validation_params
+        env.cv_params
     )  # This is the value we provided above, rather than our `environment_params_path` default
 
     experiment = CVExperiment(model_initializer=KNeighborsClassifier, model_init_params={})

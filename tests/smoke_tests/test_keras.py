@@ -40,7 +40,7 @@ def env_0():
         results_path=assets_dir,
         metrics_map=["mean_absolute_error"],
         cross_validation_type="KFold",
-        cross_validation_params=dict(n_splits=2, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=2, shuffle=True, random_state=32),
     )
 
 
@@ -50,7 +50,7 @@ def initialization_matching_env():
         results_path=assets_dir,
         metrics_map=["roc_auc_score"],
         cross_validation_type="KFold",
-        cross_validation_params=dict(n_splits=2, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=2, shuffle=True, random_state=32),
     )
 
 

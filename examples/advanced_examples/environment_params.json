@@ -6,7 +6,7 @@
     "f1_score"
   ],
   "cross_validation_type": "StratifiedKFold",
-  "cross_validation_params": {
+  "cv_params": {
     "n_splits": 10,
     "shuffle": true,
     "random_state": 117

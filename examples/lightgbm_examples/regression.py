@@ -18,7 +18,7 @@ env = Environment(
     target_column="median_value",
     metrics_map=dict(r2=r2_score),
     cross_validation_type=RepeatedKFold,
-    cross_validation_params=dict(n_repeats=2, n_splits=5, random_state=42),
+    cv_params=dict(n_repeats=2, n_splits=5, random_state=42),
 )
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:

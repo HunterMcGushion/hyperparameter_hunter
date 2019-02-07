@@ -18,7 +18,7 @@ def execute():
         results_path="HyperparameterHunterAssets",
         metrics_map=["roc_auc_score"],
         cross_validation_type=RepeatedStratifiedKFold,
-        cross_validation_params=dict(n_splits=3, n_repeats=2, random_state=32),
+        cv_params=dict(n_splits=3, n_repeats=2, random_state=32),
         do_full_save=do_full_save,
     )
 

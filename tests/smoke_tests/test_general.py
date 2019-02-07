@@ -46,7 +46,7 @@ def env_0():
         results_path=assets_dir,
         metrics_map=["roc_auc_score"],
         cross_validation_type=RepeatedStratifiedKFold,
-        cross_validation_params=dict(n_splits=3, n_repeats=2, random_state=32),
+        cv_params=dict(n_splits=3, n_repeats=2, random_state=32),
         do_full_save=do_full_save,
     )
 
@@ -57,7 +57,7 @@ def env_1():
         train_dataset=get_breast_cancer_data(),
         environment_params_path="examples/advanced_examples/environment_params.json",
         results_path=assets_dir,
-        cross_validation_params=dict(n_splits=3, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
     )
 
 
@@ -74,7 +74,7 @@ def env_2():
         test_dataset=get_toy_classification_data(),
         metrics_map=["roc_auc_score"],
         cross_validation_type=StratifiedKFold,
-        cross_validation_params=dict(n_splits=3, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
     )
 
 
@@ -101,7 +101,7 @@ def env_3():
         metrics_map=["roc_auc_score"],
         holdout_dataset=get_toy_classification_data(),
         cross_validation_type=RepeatedStratifiedKFold,
-        cross_validation_params=dict(n_splits=3, n_repeats=2, random_state=32),
+        cv_params=dict(n_splits=3, n_repeats=2, random_state=32),
         runs=2,
         experiment_callbacks=[
             printer_callback(),
@@ -124,7 +124,7 @@ def env_4():
             f1_macro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="macro"),
         ),
         cross_validation_type="KFold",
-        cross_validation_params=dict(n_splits=2, shuffle=True, random_state=42),
+        cv_params=dict(n_splits=2, shuffle=True, random_state=42),
         verbose=1,
     )
 
@@ -148,7 +148,7 @@ def env_5(request):
         target_column="diagnosis",
         metrics_map=["roc_auc_score"],
         cross_validation_type=StratifiedKFold,
-        cross_validation_params=dict(n_splits=3, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
         experiment_recorders=request.param,
     )
 

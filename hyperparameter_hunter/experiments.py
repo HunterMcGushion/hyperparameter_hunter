@@ -178,7 +178,7 @@ class BaseExperiment(ScoringMixIn):
         self.prediction_formatter = G.Env.prediction_formatter
         self.metrics_params = G.Env.metrics_params
         self.experiment_params = G.Env.cross_experiment_params
-        self.cross_validation_params = G.Env.cross_validation_params
+        self.cv_params = G.Env.cv_params
         self.result_paths = G.Env.result_paths
         self.cross_experiment_key = G.Env.cross_experiment_key
 
@@ -422,8 +422,8 @@ class BaseExperiment(ScoringMixIn):
             self.experiment_params["random_seeds"] = np.random.randint(
                 *self.experiment_params["random_seed_bounds"],
                 size=(
-                    self.cross_validation_params.get("n_repeats", 1),
-                    self.cross_validation_params["n_splits"],
+                    self.cv_params.get("n_repeats", 1),
+                    self.cv_params["n_splits"],
                     self.experiment_params["runs"],
                 ),
             ).tolist()
@@ -538,10 +538,7 @@ class BaseCVExperiment(BaseExperiment):
         self.on_experiment_start()
 
         reshaped_indices = get_cv_indices(
-            self.folds,
-            self.cross_validation_params,
-            self.train_input_data,
-            self.train_target_data.iloc[:, 0],
+            self.folds, self.cv_params, self.train_input_data, self.train_target_data.iloc[:, 0]
         )
 
         for self._rep, rep_indices in enumerate(reshaped_indices):
@@ -653,7 +650,7 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Set :attr:`folds` per cross_validation_type and :attr:`cross_validation_params`"""
+        """Set :attr:`folds` per `cross_validation_type` and :attr:`cv_params`"""
         cross_validation_type = self.experiment_params["cross_validation_type"]  # Allow failure
         if not isclass(cross_validation_type):
             raise TypeError(f"Expected a cross-validation class, not {type(cross_validation_type)}")
@@ -665,7 +662,7 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         except AttributeError:
             raise AttributeError("`cross_validation_type` must be class with :meth:`split`")
 
-        self.folds = cross_validation_type(**self.cross_validation_params)
+        self.folds = cross_validation_type(**self.cv_params)
 
 
 ##################################################
@@ -743,14 +740,14 @@ class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Initialize :attr:`folds` per cross_validation_type and :attr:`cross_validation_params`"""
+        """Initialize :attr:`folds` per cross_validation_type and :attr:`cv_params`"""
         cross_validation_type = self.experiment_params.get(
             "cross_validation_type", "repeatedkfold"
         ).lower()
         if cross_validation_type in ("stratifiedkfold", "repeatedstratifiedkfold"):
-            self.folds = RepeatedStratifiedKFold(**self.cross_validation_params)
+            self.folds = RepeatedStratifiedKFold(**self.cv_params)
         else:
-            self.folds = RepeatedKFold(**self.cross_validation_params)
+            self.folds = RepeatedKFold(**self.cv_params)
 
 
 @Deprecated(
@@ -788,12 +785,12 @@ class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Initialize :attr:`folds` per cross_validation_type and :attr:`cross_validation_params`"""
+        """Initialize :attr:`folds` per cross_validation_type and :attr:`cv_params`"""
         cross_validation_type = self.experiment_params.get("cross_validation_type", "kfold").lower()
         if cross_validation_type == "stratifiedkfold":
-            self.folds = StratifiedKFold(**self.cross_validation_params)
+            self.folds = StratifiedKFold(**self.cv_params)
         else:
-            self.folds = KFold(**self.cross_validation_params)
+            self.folds = KFold(**self.cv_params)
 
 
 # class NoValidationExperiment(BaseExperiment):

@@ -22,7 +22,7 @@ env = Environment(
     target_column="diagnosis",
     metrics_map=["roc_auc_score"],
     cross_validation_type="StratifiedKFold",
-    cross_validation_params=dict(n_splits=5, random_state=32),
+    cv_params=dict(n_splits=5, random_state=32),
     verbose=1,
 )
 

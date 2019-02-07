@@ -39,7 +39,7 @@ env = Environment(
         f1_macro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="macro"),
     ),
     cross_validation_type="KFold",
-    cross_validation_params=dict(n_splits=10, shuffle=True, random_state=42),
+    cv_params=dict(n_splits=10, shuffle=True, random_state=42),
     verbose=1,
 )
 

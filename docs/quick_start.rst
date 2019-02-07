@@ -22,7 +22,7 @@ Set Up an Environment
 	    results_path="path/to/results/directory",
 	    metrics_map=["roc_auc_score"],
 	    cross_validation_type=StratifiedKFold,
-	    cross_validation_params=dict(n_splits=5, shuffle=2, random_state=32)
+	    cv_params=dict(n_splits=5, shuffle=2, random_state=32)
     )
 
 Individual Experimentation

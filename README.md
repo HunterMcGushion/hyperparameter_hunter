@@ -64,7 +64,7 @@ env = Environment(
     results_path='path/to/results/directory',  # Where your result files will go
     metrics_map=['roc_auc_score'],  # Callables, or strings referring to `sklearn.metrics`
     cross_validation_type=StratifiedKFold,  # Class, or string in `sklearn.model_selection`
-    cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32)
+    cv_params=dict(n_splits=5, shuffle=True, random_state=32)
 )
 ```
 
@@ -358,7 +358,7 @@ env = Environment(
     results_path='HyperparameterHunterAssets',
     metrics_map=['roc_auc_score'],
     cross_validation_type='StratifiedKFold',
-    cross_validation_params=dict(n_splits=10, shuffle=True, random_state=32),
+    cv_params=dict(n_splits=10, shuffle=True, random_state=32),
 )
 
 # Now, conduct an `Experiment`

@@ -19,7 +19,7 @@ env = Environment(
     target_column="y",
     metrics_map=dict(f1=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro")),
     cross_validation_type="StratifiedKFold",
-    cross_validation_params=dict(n_splits=5, random_state=32),
+    cv_params=dict(n_splits=5, random_state=32),
 )
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:

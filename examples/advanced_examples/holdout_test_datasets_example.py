@@ -27,7 +27,7 @@ def execute():
         # See the documentation in :class:`environment.Environment` and :class:`metrics.ScoringMixIn` for more information
         metrics_map=["roc_auc_score"],
         cross_validation_type=StratifiedKFold,
-        cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
 
     experiment = CVExperiment(

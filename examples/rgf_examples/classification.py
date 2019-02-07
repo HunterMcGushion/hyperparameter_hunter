@@ -17,7 +17,7 @@ env = Environment(
     target_column="y",
     metrics_map=["hamming_loss"],
     cross_validation_type=RepeatedStratifiedKFold,
-    cross_validation_params=dict(n_repeats=2, n_splits=10, random_state=1337),
+    cv_params=dict(n_repeats=2, n_splits=10, random_state=1337),
 )
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:

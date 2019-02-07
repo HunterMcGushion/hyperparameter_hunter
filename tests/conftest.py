@@ -42,7 +42,7 @@ def env_fixture_0():
         results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
         metrics_map=["roc_auc_score"],
         cross_validation_type="StratifiedKFold",
-        cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
 
 
@@ -53,5 +53,5 @@ def env_fixture_1():
         results_path=None,
         metrics_map=["roc_auc_score"],
         cross_validation_type="StratifiedKFold",
-        cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
+        cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )

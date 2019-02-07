@@ -16,7 +16,7 @@ env = Environment(
     target_column="progression",
     metrics_map=["mean_absolute_error"],
     cross_validation_type="KFold",
-    cross_validation_params=dict(n_splits=12, shuffle=True, random_state=32),
+    cv_params=dict(n_splits=12, shuffle=True, random_state=32),
     runs=2,
 )
 
