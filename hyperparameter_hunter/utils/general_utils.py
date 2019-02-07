@@ -429,9 +429,34 @@ class Alias:
                 kwargs.setdefault(self.primary_name, kwargs[alias])  # Only set if no `primary_name`
                 del kwargs[alias]  # Remove `aliases`, leaving only `primary_name`
 
+                # Record aliases used in `obj.__wrapped__.__hh_aliases_used`
+                set_default_attr(obj, "__hh_aliases_used", {})[self.primary_name] = alias
             return obj(*args, **kwargs)
 
         return wrapped
+
+
+def set_default_attr(obj, name, value):
+    """Set the `name` attribute of `obj` to `value` if the attribute does not already exist
+
+    Parameters
+    ----------
+    obj: Object
+        Object whose `name` attribute will be returned (after setting it to `value`, if necessary)
+    name: String
+        Name of the attribute to set to `value`, or to return
+    value: Object
+        Default value to give to `obj.name` if the attribute does not already exist
+
+    Returns
+    -------
+    Object
+        `obj.name` if it exists. Else, `value`"""
+    try:
+        return getattr(obj, name)
+    except AttributeError:
+        setattr(obj, name, value)
+    return value
 
 
 ##################################################
