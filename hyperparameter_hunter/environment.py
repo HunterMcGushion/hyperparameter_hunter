@@ -460,17 +460,22 @@ class Environment:
         if isinstance(self.test_dataset, str):
             self.test_dataset = pd.read_csv(self.test_dataset)
 
-        #################### metrics_params/metrics_map ####################
-        if (self.metrics_map is not None) and ("metrics_map" in self.metrics_params.keys()):
+        #################### metrics_params/metrics ####################
+        if (self.metrics is not None) and ("metrics" in self.metrics_params.keys()):
             raise ValueError(
-                "`metrics_map` may be provided as a kwarg, or as a `metrics_params` key, but NOT BOTH. Received: "
-                + f"\n `metrics_map`={self.metrics_map}\n `metrics_params`={self.metrics_params}"
+                "`metrics` may be provided as a kwarg, or as a `metrics_params` key, but NOT BOTH. Received: "
+                + f"\n `metrics`={self.metrics}\n `metrics_params`={self.metrics_params}"
             )
         else:
-            if self.metrics_map is None:
-                self.metrics_map = self.metrics_params["metrics_map"]
-            self.metrics_map = format_metrics_map(self.metrics_map)
-            self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
+            _metrics_alias = "metrics"
+            if self.metrics is None:
+                try:
+                    self.metrics = self.metrics_params["metrics"]
+                except KeyError:
+                    self.metrics = self.metrics_params["metrics_map"]
+                    _metrics_alias = "metrics_map"
+            self.metrics = format_metrics(self.metrics)
+            self.metrics_params = {**{_metrics_alias: self.metrics}, **self.metrics_params}
 
         #################### cv_type ####################
         if isinstance(self.cv_type, str):
