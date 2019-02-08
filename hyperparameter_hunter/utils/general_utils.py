@@ -18,11 +18,12 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
+from inspect import Traceback
 import re
 import string
 from textwrap import dedent
 from warnings import warn, simplefilter
-from inspect import Traceback
+import wrapt
 
 
 ##################################################
@@ -418,22 +419,36 @@ class Alias:
         aliases: List, string
             One or multiple string aliases for `primary_name`. If `primary_name` is not used on
             call, its value will be set to that of a random alias in `aliases`. Before calling the
-            decorated callable, all `aliases` are removed from its kwargs"""
+            decorated callable, all `aliases` are removed from its kwargs
+
+        Examples
+        --------
+        >>> class Foo():
+        ...     @Alias("a", ["a2"])
+        ...     def __init__(self, a, b=None):
+        ...         print(a, b)
+        >>> @Alias("a", ["a2"])
+        ... @Alias("b", ["b2"])
+        ... def bar(a, b=None):
+        ...    print(a, b)
+        >>> foo = Foo(a2="x", b="y")
+        x y
+        >>> bar(a2="x", b2="y")
+        x y"""
         self.primary_name = primary_name
         self.aliases = aliases if isinstance(aliases, list) else [aliases]
 
-    def __call__(self, obj):
-        @wraps(obj)
-        def wrapped(*args, **kwargs):
-            for alias in set(self.aliases).intersection(kwargs):
-                kwargs.setdefault(self.primary_name, kwargs[alias])  # Only set if no `primary_name`
-                del kwargs[alias]  # Remove `aliases`, leaving only `primary_name`
-
-                # Record aliases used in `obj.__wrapped__.__hh_aliases_used`
-                set_default_attr(obj, "__hh_aliases_used", {})[self.primary_name] = alias
-            return obj(*args, **kwargs)
-
-        return wrapped
+    @wrapt.decorator
+    def __call__(self, wrapped, instance, args, kwargs):
+        for alias in set(self.aliases).intersection(kwargs):
+            # Only set if no `primary_name` already. Remove `aliases`, leaving only `primary_name`
+            kwargs.setdefault(self.primary_name, kwargs.pop(alias))
+            # Record aliases used in `instance.__hh_aliases_used` or `wrapped.__hh_aliases_used`
+            if instance:
+                set_default_attr(instance, "__hh_aliases_used", {})[self.primary_name] = alias
+            else:
+                set_default_attr(wrapped, "__hh_aliases_used", {})[self.primary_name] = alias
+        return wrapped(*args, **kwargs)
 
 
 def set_default_attr(obj, name, value):
