@@ -25,7 +25,7 @@ def _execute():
     print(env.results_path)
     print(env.target_column)
     print(env.metrics_map)
-    print(env.cross_validation_type)
+    print(env.cv_type)
     print(env.runs)
     print(env.file_blacklist)  # This includes some other values too, but you can ignore them
     # All of the above are from `environment_params_path`

@@ -38,7 +38,7 @@ def _execute():
         results_path="HyperparameterHunterAssets",
         metrics_map=["roc_auc_score"],
         target_column=[f"target_{_}" for _ in range(10)],
-        cross_validation_type="StratifiedKFold",
+        cv_type="StratifiedKFold",
         cv_params=dict(n_splits=10, shuffle=True, random_state=True),
     )
 

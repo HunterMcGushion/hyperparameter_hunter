@@ -17,7 +17,7 @@ env = Environment(
     results_path="HyperparameterHunterAssets",
     target_column="median_value",
     metrics_map=dict(r2=r2_score),
-    cross_validation_type=RepeatedKFold,
+    cv_type=RepeatedKFold,
     cv_params=dict(n_repeats=2, n_splits=5, random_state=42),
 )
 

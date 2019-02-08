@@ -650,19 +650,19 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Set :attr:`folds` per `cross_validation_type` and :attr:`cv_params`"""
-        cross_validation_type = self.experiment_params["cross_validation_type"]  # Allow failure
-        if not isclass(cross_validation_type):
-            raise TypeError(f"Expected a cross-validation class, not {type(cross_validation_type)}")
+        """Set :attr:`folds` per `cv_type` and :attr:`cv_params`"""
+        cv_type = self.experiment_params["cv_type"]  # Allow failure
+        if not isclass(cv_type):
+            raise TypeError(f"Expected a cross-validation class, not {type(cv_type)}")
 
         try:
-            _split_method = getattr(cross_validation_type, "split")
+            _split_method = getattr(cv_type, "split")
             if not callable(_split_method):
-                raise TypeError("`cross_validation_type` must implement a callable :meth:`split`")
+                raise TypeError("`cv_type` must implement a callable :meth:`split`")
         except AttributeError:
-            raise AttributeError("`cross_validation_type` must be class with :meth:`split`")
+            raise AttributeError("`cv_type` must be class with :meth:`split`")
 
-        self.folds = cross_validation_type(**self.cv_params)
+        self.folds = cv_type(**self.cv_params)
 
 
 ##################################################
@@ -740,11 +740,9 @@ class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Initialize :attr:`folds` per cross_validation_type and :attr:`cv_params`"""
-        cross_validation_type = self.experiment_params.get(
-            "cross_validation_type", "repeatedkfold"
-        ).lower()
-        if cross_validation_type in ("stratifiedkfold", "repeatedstratifiedkfold"):
+        """Initialize :attr:`folds` per cv_type and :attr:`cv_params`"""
+        cv_type = self.experiment_params.get("cv_type", "repeatedkfold").lower()
+        if cv_type in ("stratifiedkfold", "repeatedstratifiedkfold"):
             self.folds = RepeatedStratifiedKFold(**self.cv_params)
         else:
             self.folds = RepeatedKFold(**self.cv_params)
@@ -785,9 +783,9 @@ class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Initialize :attr:`folds` per cross_validation_type and :attr:`cv_params`"""
-        cross_validation_type = self.experiment_params.get("cross_validation_type", "kfold").lower()
-        if cross_validation_type == "stratifiedkfold":
+        """Initialize :attr:`folds` per cv_type and :attr:`cv_params`"""
+        cv_type = self.experiment_params.get("cv_type", "kfold").lower()
+        if cv_type == "stratifiedkfold":
             self.folds = StratifiedKFold(**self.cv_params)
         else:
             self.folds = KFold(**self.cv_params)

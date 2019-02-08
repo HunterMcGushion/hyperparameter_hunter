@@ -5,7 +5,7 @@
     "roc_auc_score",
     "f1_score"
   ],
-  "cross_validation_type": "StratifiedKFold",
+  "cv_type": "StratifiedKFold",
   "cv_params": {
     "n_splits": 10,
     "shuffle": true,

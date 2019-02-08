@@ -20,7 +20,7 @@ env_kwargs = dict(
     results_path="HyperparameterHunterAssets",
     target_column="diagnosis",
     metrics_map=["roc_auc_score"],
-    cross_validation_type=StratifiedKFold,
+    cv_type=StratifiedKFold,
     cv_params=dict(n_splits=10, shuffle=True, random_state=32),
 )
 

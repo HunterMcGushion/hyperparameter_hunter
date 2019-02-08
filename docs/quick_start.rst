@@ -21,7 +21,7 @@ Set Up an Environment
 	    train_dataset=df,
 	    results_path="path/to/results/directory",
 	    metrics_map=["roc_auc_score"],
-	    cross_validation_type=StratifiedKFold,
+	    cv_type=StratifiedKFold,
 	    cv_params=dict(n_splits=5, shuffle=2, random_state=32)
     )
 

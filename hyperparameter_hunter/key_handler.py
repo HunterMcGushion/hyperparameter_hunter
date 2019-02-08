@@ -227,7 +227,7 @@ class KeyMaker(metaclass=ABCMeta):
             The value of the parameter `key`
         hashed_value: Str
             The hash produced for `value`"""
-        shelve_params = ["model_initializer", "cross_validation_type"]
+        shelve_params = ["model_initializer", "cv_type"]
         lookup_path = partial(os.path.join, self.lookup_dir, *path)
 
         if isclass(value) or (key in shelve_params):

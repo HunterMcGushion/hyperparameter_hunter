@@ -39,7 +39,7 @@ def env_0():
         train_dataset=get_diabetes_data(target="target"),
         results_path=assets_dir,
         metrics_map=["mean_absolute_error"],
-        cross_validation_type="KFold",
+        cv_type="KFold",
         cv_params=dict(n_splits=2, shuffle=True, random_state=32),
     )
 
@@ -49,7 +49,7 @@ def initialization_matching_env():
         train_dataset=get_breast_cancer_data(target="target"),
         results_path=assets_dir,
         metrics_map=["roc_auc_score"],
-        cross_validation_type="KFold",
+        cv_type="KFold",
         cv_params=dict(n_splits=2, shuffle=True, random_state=32),
     )
 

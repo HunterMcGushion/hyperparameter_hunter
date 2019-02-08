@@ -15,7 +15,7 @@ env = Environment(
     train_dataset=train_df,
     results_path="HyperparameterHunterAssets",
     metrics_map=dict(evs=explained_variance_score),
-    cross_validation_type="KFold",
+    cv_type="KFold",
     cv_params=dict(n_splits=3, shuffle=True, random_state=1337),
     runs=2,
 )

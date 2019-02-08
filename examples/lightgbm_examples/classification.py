@@ -18,7 +18,7 @@ env = Environment(
     results_path="HyperparameterHunterAssets",
     target_column="y",
     metrics_map=dict(f1=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro")),
-    cross_validation_type="StratifiedKFold",
+    cv_type="StratifiedKFold",
     cv_params=dict(n_splits=5, random_state=32),
 )
 

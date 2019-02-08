@@ -35,7 +35,7 @@ def _execute():
         train_dataset=prep_data(),
         results_path="HyperparameterHunterAssets",
         metrics_map=["roc_auc_score"],
-        cross_validation_type="StratifiedKFold",
+        cv_type="StratifiedKFold",
         cv_params=dict(n_splits=3, shuffle=True, random_state=True),
     )
 

@@ -133,7 +133,7 @@ def env_0():
         results_path=assets_dir,
         holdout_dataset=get_breast_cancer_data(target="target"),
         metrics_map=["roc_auc_score"],
-        cross_validation_type="StratifiedKFold",
+        cv_type="StratifiedKFold",
         cv_params=dict(n_splits=2, shuffle=True, random_state=32),
         experiment_callbacks=[
             sentinel_checker(StratifiedKFold(n_splits=2, shuffle=True, random_state=32))
@@ -189,7 +189,7 @@ def test_sentinels_optimization(env_0):
     ["sentinel_parameters", "error_match"],
     [
         [["foo", "bar"], "Received invalid `dataset_type`: 'foo'"],
-        [["train_input", "bar"], "`cross_validation_type`.*"],
+        [["train_input", "bar"], "`cv_type`.*"],
         [["train_input", "bar", "CV"], "`global_random_seed`.*"],
     ],
 )

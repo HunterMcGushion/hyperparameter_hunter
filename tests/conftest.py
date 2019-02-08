@@ -41,7 +41,7 @@ def env_fixture_0():
         train_dataset=get_toy_classification_data(),
         results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
         metrics_map=["roc_auc_score"],
-        cross_validation_type="StratifiedKFold",
+        cv_type="StratifiedKFold",
         cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
 
@@ -52,6 +52,6 @@ def env_fixture_1():
         train_dataset=get_toy_classification_data(),
         results_path=None,
         metrics_map=["roc_auc_score"],
-        cross_validation_type="StratifiedKFold",
+        cv_type="StratifiedKFold",
         cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )

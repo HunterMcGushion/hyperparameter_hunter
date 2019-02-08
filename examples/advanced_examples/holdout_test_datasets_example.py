@@ -26,7 +26,7 @@ def execute():
         # However, you can provide the additional `metrics_params` kwarg to specify which metrics are calculated for each dataset
         # See the documentation in :class:`environment.Environment` and :class:`metrics.ScoringMixIn` for more information
         metrics_map=["roc_auc_score"],
-        cross_validation_type=StratifiedKFold,
+        cv_type=StratifiedKFold,
         cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
 

@@ -55,8 +55,9 @@ class Environment:
         do_predict_proba=False,
         prediction_formatter=format_predictions,
         metrics_map=None,
+        # metrics=None,
         metrics_params=dict(),
-        cross_validation_type="KFold",
+        cv_type="KFold",
         runs=1,
         global_random_seed=32,
         random_seeds=None,
@@ -71,7 +72,9 @@ class Environment:
         do_full_save=default_do_full_save,
     )
 
+    @Alias("cv_type", ["cross_validation_type"])
     @Alias("cv_params", ["cross_validation_params"])
+    # @Alias("metrics", ["metrics_map"])
     @Alias("reporting_params", ["reporting_handler_params"])
     @Alias("results_path", ["root_results_path"])
     def __init__(
@@ -81,6 +84,7 @@ class Environment:
         *,
         results_path=None,
         metrics_map=None,
+        # metrics=None,
         holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dfs
         test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dfs
         target_column=None,
@@ -88,7 +92,7 @@ class Environment:
         do_predict_proba=None,
         prediction_formatter=None,
         metrics_params=None,
-        cross_validation_type=None,
+        cv_type=None,
         runs=None,
         global_random_seed=None,
         random_seeds=None,
@@ -206,7 +210,7 @@ class Environment:
             `metrics_map` must be provided either 1) as an input kwarg to
             :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
             but not both. An Exception will be raised if both are given, or if neither is given
-        cross_validation_type: Class or str, default='KFold'
+        cv_type: Class or str, default='KFold'
             The class to define cross-validation splits. If str, it must be an attribute of
             `sklearn.model_selection._split`, and it must be a cross-validation class that inherits
             one of the following `sklearn` classes: `BaseCrossValidator`, or `_RepeatedSplits`.
@@ -214,10 +218,9 @@ class Environment:
             must implement the following methods: [`__init__`, `split`]. If using a custom class,
             see the following tested `sklearn` classes for proper implementations:
             [`KFold`, `StratifiedKFold`, `RepeatedKFold`, `RepeatedStratifiedKFold`]. The arguments
-            provided to :meth:`cross_validation_type.__init__` will be
-            :attr:`Environment.cv_params`, which should include the following:
-            ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
-            :meth:`cross_validation_type.split` will receive the following arguments:
+            provided to :meth:`cv_type.__init__` will be :attr:`Environment.cv_params`, which should
+            include the following: ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
+            :meth:`cv_type.split` will receive the following arguments:
             [:attr:`BaseExperiment.train_input_data`, :attr:`BaseExperiment.train_target_data`]
         runs: Int, default=1
             The number of times to fit a model within each fold to perform multiple-run-averaging
@@ -238,10 +241,9 @@ class Environment:
             :meth:`.experiments.BaseExperiment._random_seed_initializer`. Generally, leave this
             kwarg alone
         cv_params: dict, or None, default=dict()
-            Dict of parameters provided upon initialization of cross_validation_type. Keys may be
-            any args accepted by :meth:`cross_validation_type.__init__`. Number of fold splits must
-            be provided here via "n_splits", and number of repeats (if applicable according to
-            `cross_validation_type`) must be provided via "n_repeats"
+            Parameters provided upon initialization of cv_type. Keys may be any args accepted by
+            :meth:`cv_type.__init__`. Number of fold splits must be provided via "n_splits", and
+            number of repeats (if applicable for `cv_type`) must be provided via "n_repeats"
         verbose: Int, boolean, default=3
             Verbosity of printing for any experiments performed while this Environment is active
 
@@ -305,6 +307,8 @@ class Environment:
             an Experiment, and, if the subclassing documentation in `recorders` is followed
             properly, will create or update a result file for the just-executed Experiment
 
+        cross_validation_type: ...
+            * Alias for `cv_type` *
         cross_validation_params: ...
             * Alias for `cv_params` *
         reporting_handler_params: ...
@@ -361,10 +365,11 @@ class Environment:
         self.do_predict_proba = do_predict_proba
         self.prediction_formatter = prediction_formatter
         self.metrics_map = metrics_map
+        # self.metrics_map = metrics
         self.metrics_params = metrics_params
 
         self.cross_experiment_params = dict()
-        self.cross_validation_type = cross_validation_type
+        self.cv_type = cv_type
         self.runs = runs
         self.global_random_seed = global_random_seed
         self.random_seeds = random_seeds
@@ -467,21 +472,19 @@ class Environment:
             self.metrics_map = format_metrics_map(self.metrics_map)
             self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
 
-        #################### cross_validation_type ####################
-        if isinstance(self.cross_validation_type, str):
+        #################### cv_type ####################
+        if isinstance(self.cv_type, str):
             try:
-                self.cross_validation_type = sk_cv.__getattribute__(self.cross_validation_type)
+                self.cv_type = sk_cv.__getattribute__(self.cv_type)
             except AttributeError:
-                raise AttributeError(
-                    f"'{self.cross_validation_type}' not in `sklearn.model_selection._split`"
-                )
+                raise AttributeError(f"'{self.cv_type}' not in `sklearn.model_selection._split`")
 
         #################### to_csv_params ####################
         self.to_csv_params = {k: v for k, v in self.to_csv_params.items() if k != "path_or_buf"}
 
         #################### cross_experiment_params ####################
         self.cross_experiment_params = dict(
-            cross_validation_type=self.cross_validation_type,
+            cv_type=self.cv_type,
             runs=self.runs,
             global_random_seed=self.global_random_seed,
             random_seeds=self.random_seeds,
