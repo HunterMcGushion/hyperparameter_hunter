@@ -97,15 +97,13 @@ def test_environment_init_cv_params(_cv_params, expected):
     assert env == expected
 
 
-@pytest.mark.parametrize(["metrics_map", "expected"], **args_ids_for(scenarios_metrics_map))
-def test_environment_init_metrics_map(metrics_map, expected):
+@pytest.mark.parametrize(["metrics", "expected"], **args_ids_for(scenarios_metrics_map))
+def test_environment_init_metrics(metrics, expected):
     env = Environment(
         **dict(
             default_env_params,
             **dict(
-                metrics_params=dict(
-                    metrics_map=metrics_map, in_fold="all", oof="all", holdout="all"
-                )
+                metrics_params=dict(metrics_map=metrics, in_fold="all", oof="all", holdout="all")
             ),
         )
     )

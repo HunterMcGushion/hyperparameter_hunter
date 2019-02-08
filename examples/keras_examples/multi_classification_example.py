@@ -36,7 +36,7 @@ def _execute():
     env = Environment(
         train_dataset=prep_data(),
         results_path="HyperparameterHunterAssets",
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         target_column=[f"target_{_}" for _ in range(10)],
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=10, shuffle=True, random_state=True),

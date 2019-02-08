@@ -10,7 +10,7 @@ def _execute():
     # It works really well for things that won't be changing often, like the following:
     # - `results_path`, which we probably never want to change, so all our results go to one place;
     # - `target_column`, which will probably be a constant for your data
-    # - `metrics_map`, if you're not using any fancy metrics, and you already know what you want
+    # - `metrics`, if you're not using any fancy metrics, and you already know what you want
     # - `file_blacklist`, if you're angry at me for adding that one result file that's always useless
     # Other parameters, whose default values you may want to change
 
@@ -24,7 +24,7 @@ def _execute():
 
     print(env.results_path)
     print(env.target_column)
-    print(env.metrics_map)
+    print(env.metrics)
     print(env.cv_type)
     print(env.runs)
     print(env.file_blacklist)  # This includes some other values too, but you can ignore them

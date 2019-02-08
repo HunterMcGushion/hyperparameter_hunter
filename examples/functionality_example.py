@@ -17,7 +17,7 @@ def execute():
     env = Environment(
         train_dataset=get_breast_cancer_data(target="target"),
         results_path="HyperparameterHunterAssets",
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=10, shuffle=True, random_state=32),
     )

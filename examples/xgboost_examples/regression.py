@@ -14,7 +14,7 @@ env = Environment(
     train_dataset=train_df,
     results_path="HyperparameterHunterAssets",
     target_column="progression",
-    metrics_map=["mean_absolute_error"],
+    metrics=["mean_absolute_error"],
     cv_type="KFold",
     cv_params=dict(n_splits=12, shuffle=True, random_state=32),
     runs=2,

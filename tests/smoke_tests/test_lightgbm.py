@@ -38,7 +38,7 @@ def env_0():
         train_dataset=get_breast_cancer_data(target="diagnosis"),
         results_path=assets_dir,
         target_column="diagnosis",
-        metrics_map=dict(
+        metrics=dict(
             roc_auc="roc_auc_score",
             f1=f1_score,
             f1_micro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro"),

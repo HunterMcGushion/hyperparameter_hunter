@@ -132,7 +132,7 @@ def env_0():
         train_dataset=get_breast_cancer_data(target="target"),
         results_path=assets_dir,
         holdout_dataset=get_breast_cancer_data(target="target"),
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=2, shuffle=True, random_state=32),
         experiment_callbacks=[

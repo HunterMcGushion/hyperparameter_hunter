@@ -22,10 +22,10 @@ def execute():
         # In addition to the above types, `holdout_dataset` can also be provided as a callable (see above :func:`get_holdout_set`)
         holdout_dataset=get_holdout_set,
         test_dataset=get_toy_classification_data(),
-        # By default, `holdout_dataset` will be scored with the provided metrics_map, just like OOF predictions
+        # By default, `holdout_dataset` will be scored with the provided metrics, just like OOF predictions
         # However, you can provide the additional `metrics_params` kwarg to specify which metrics are calculated for each dataset
         # See the documentation in :class:`environment.Environment` and :class:`metrics.ScoringMixIn` for more information
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         cv_type=StratifiedKFold,
         cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )

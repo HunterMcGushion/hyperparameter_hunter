@@ -201,7 +201,7 @@ def lambda_callback(
     ... # env = Environment(
     ... #     train_dataset="i am a dataset",
     ... #     results_path="path/to/HyperparameterHunterAssets",
-    ... #     metrics_map=["roc_auc_score"],
+    ... #     metrics=["roc_auc_score"],
     ... #     experiment_callbacks=[my_lambda_callback]
     ... # )
     ... # ... Now execute an Experiment, or an Optimization Protocol...

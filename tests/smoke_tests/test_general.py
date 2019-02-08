@@ -44,7 +44,7 @@ def env_0():
     return Environment(
         train_dataset=get_toy_classification_data(),
         results_path=assets_dir,
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         cv_type=RepeatedStratifiedKFold,
         cv_params=dict(n_splits=3, n_repeats=2, random_state=32),
         do_full_save=do_full_save,
@@ -72,7 +72,7 @@ def env_2():
         results_path=assets_dir,
         holdout_dataset=get_holdout_set,
         test_dataset=get_toy_classification_data(),
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         cv_type=StratifiedKFold,
         cv_params=dict(n_splits=3, shuffle=True, random_state=32),
     )
@@ -98,7 +98,7 @@ def env_3():
     return Environment(
         train_dataset=get_toy_classification_data(),
         results_path=assets_dir,
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         holdout_dataset=get_toy_classification_data(),
         cv_type=RepeatedStratifiedKFold,
         cv_params=dict(n_splits=3, n_repeats=2, random_state=32),
@@ -117,7 +117,7 @@ def env_4():
         train_dataset=get_breast_cancer_data(target="diagnosis"),
         results_path=assets_dir,
         target_column="diagnosis",
-        metrics_map=dict(
+        metrics=dict(
             roc_auc="roc_auc_score",
             f1=f1_score,
             f1_micro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro"),
@@ -146,7 +146,7 @@ def env_5(request):
         train_dataset=get_breast_cancer_data(),
         results_path=assets_dir,
         target_column="diagnosis",
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         cv_type=StratifiedKFold,
         cv_params=dict(n_splits=3, shuffle=True, random_state=32),
         experiment_recorders=request.param,

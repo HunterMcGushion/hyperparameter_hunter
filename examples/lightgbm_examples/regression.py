@@ -16,7 +16,7 @@ env = Environment(
     train_dataset=train_df,
     results_path="HyperparameterHunterAssets",
     target_column="median_value",
-    metrics_map=dict(r2=r2_score),
+    metrics=dict(r2=r2_score),
     cv_type=RepeatedKFold,
     cv_params=dict(n_repeats=2, n_splits=5, random_state=42),
 )

@@ -131,7 +131,7 @@ class BaseExperiment(ScoringMixIn):
             :meth:`BaseExperiment.preparation_workflow`, followed by
             :meth:`BaseExperiment.experiment_workflow`, effectively completing all essential tasks
             without requiring additional method calls
-        target_metric: Tuple, str, default=('oof', <:attr:`environment.Environment.metrics_map`[0]>)
+        target_metric: Tuple, str, default=('oof', <:attr:`environment.Environment.metrics`[0]>)
             A path denoting the metric to be used to compare completed Experiments or to use for
             certain early stopping procedures in some model classes. The first value should be one
             of ['oof', 'holdout', 'in_fold']. The second value should be the name of a metric being
@@ -190,7 +190,7 @@ class BaseExperiment(ScoringMixIn):
         self.test_input_data = None
 
         self.model = None
-        self.metrics_map = None  # Set by :class:`metrics.ScoringMixIn`
+        self.metrics = None  # Set by :class:`metrics.ScoringMixIn`
         self.stat_aggregates = dict()
         self.result_description = None
 
@@ -320,7 +320,7 @@ class BaseExperiment(ScoringMixIn):
     def _validate_parameters(self):
         """Ensure provided input parameters are properly formatted"""
         #################### target_metric ####################
-        self.target_metric = get_formatted_target_metric(self.target_metric, self.metrics_map)
+        self.target_metric = get_formatted_target_metric(self.target_metric, self.metrics)
 
         #################### feature_selector ####################
         self.feature_selector = self.feature_selector or self.train_dataset.columns.values
@@ -604,7 +604,7 @@ class BaseCVExperiment(BaseExperiment):
             validation_target=self.fold_validation_target,
             do_predict_proba=self.do_predict_proba,
             target_metric=self.target_metric,
-            metrics_map=self.metrics_map,
+            metrics=self.metrics,
         )
         self.model.fit()
         self.on_run_end()

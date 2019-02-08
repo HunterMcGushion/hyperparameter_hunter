@@ -94,7 +94,7 @@ experiments would be created by the same file.
     * They are created whenever ``Environment``\s or ``Experiment``\s are provided arguments too complex to neatly display in the
       ``Experiment``'s **'Descriptions/'** entry file.
     * Some other complex attributes you may come across that are given **'KeyAttributeLookup/'** entries include: custom metrics
-      provided via ``Environment``'s ``metrics_map`` and ``metrics_params`` kwargs, and Keras Neural Network ``callbacks`` and
+      provided via ``Environment``'s ``metrics`` and ``metrics_params`` kwargs, and Keras Neural Network ``callbacks`` and
       ``build_fn``\s.
 
 /**Leaderboards/**

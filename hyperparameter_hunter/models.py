@@ -83,7 +83,7 @@ class Model(object):
         validation_target=None,
         do_predict_proba=False,
         target_metric=None,
-        metrics_map=None,
+        metrics=None,
     ):
         """Handles initialization, fitting, and prediction for provided algorithms. Consider
         documentation for children of :class:`Model` to be identical to that of :class:`Model`,
@@ -136,7 +136,7 @@ class Model(object):
         target_metric: Tuple
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`
-        metrics_map: Dict
+        metrics: Dict
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`"""
         self.model_initializer = model_initializer
@@ -149,7 +149,7 @@ class Model(object):
         self.validation_target = validation_target
         self.do_predict_proba = do_predict_proba
         self.target_metric = target_metric
-        self.metrics_map = metrics_map
+        self.metrics = metrics
 
         self.model = None
         self.epochs_elapsed = None
@@ -230,7 +230,7 @@ class XGBoostModel(Model):
         validation_target=None,
         do_predict_proba=False,
         target_metric=None,
-        metrics_map=None,
+        metrics=None,
     ):
         """A special Model class for handling XGBoost algorithms. Consider documentation to be
         identical to that of :class:`Model`, except where noted
@@ -254,7 +254,7 @@ class XGBoostModel(Model):
         target_metric: Tuple
             Used to determine the 'eval_metric' argument to :meth:`xgboost.sklearn.XGBModel.fit`.
             See the documentation for :attr:`XGBoostModel.extra_params` for more information
-        metrics_map: See :class:`Model`"""
+        metrics: See :class:`Model`"""
         if model_initializer.__name__ not in ("XGBClassifier", "XGBRegressor"):
             raise ValueError(f"Invalid `model_initializer`: {model_initializer}")
 
@@ -268,7 +268,7 @@ class XGBoostModel(Model):
             validation_target=validation_target,
             do_predict_proba=do_predict_proba,
             target_metric=target_metric,
-            metrics_map=metrics_map,
+            metrics=metrics,
         )
 
     # def fit(self):
@@ -287,7 +287,7 @@ class XGBoostModel(Model):
     #     if 'eval_metric' not in fit_kwargs:
     #         target_metric_name = self.target_metric[-1]
     #         # TODO: Add Sentinel to handle wrapping of xgboost `eval_metric` if used
-    #         fit_kwargs['eval_metric'] = wrap_xgboost_metric(self.metrics_map[target_metric_name], target_metric_name)
+    #         fit_kwargs['eval_metric'] = wrap_xgboost_metric(self.metrics[target_metric_name], target_metric_name)
     #         # eval_metric scores may be higher than reported scores depending on predict/predict_proba
     #
     #     self.model.fit(self.train_input, self.train_target, **fit_kwargs)
@@ -305,7 +305,7 @@ class KerasModel(Model):
         validation_target=None,
         do_predict_proba=False,
         target_metric=None,
-        metrics_map=None,
+        metrics=None,
     ):
         """A special Model class for handling Keras neural networks. Consider documentation to be
         identical to that of :class:`Model`, except where noted
@@ -355,7 +355,7 @@ class KerasModel(Model):
         target_metric: Tuple
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`
-        metrics_map: Dict
+        metrics: Dict
             Used by some child classes (like :class:`XGBoostModel`) to provide validation data to
             :meth:`model.fit`"""
         if model_initializer.__name__ not in ("KerasClassifier", "KerasRegressor"):
@@ -373,7 +373,7 @@ class KerasModel(Model):
             validation_target=validation_target,
             do_predict_proba=do_predict_proba,
             target_metric=target_metric,
-            metrics_map=metrics_map,
+            metrics=metrics,
         )
 
         global load_model

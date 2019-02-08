@@ -15,7 +15,7 @@ env = Environment(
     train_dataset=train_df,
     results_path="HyperparameterHunterAssets",
     target_column="progression",
-    metrics_map=dict(msle=(mean_squared_log_error, "min")),
+    metrics=dict(msle=(mean_squared_log_error, "min")),
     cv_type="KFold",
     cv_params=dict(n_splits=10, random_state=42),
     runs=3,

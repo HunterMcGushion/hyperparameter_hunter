@@ -22,7 +22,7 @@ Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module l
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.metrics import format_metrics_map
+from hyperparameter_hunter.metrics import format_metrics
 from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
@@ -54,8 +54,7 @@ class Environment:
         id_column=None,
         do_predict_proba=False,
         prediction_formatter=format_predictions,
-        metrics_map=None,
-        # metrics=None,
+        metrics=None,
         metrics_params=dict(),
         cv_type="KFold",
         runs=1,
@@ -74,7 +73,7 @@ class Environment:
 
     @Alias("cv_type", ["cross_validation_type"])
     @Alias("cv_params", ["cross_validation_params"])
-    # @Alias("metrics", ["metrics_map"])
+    @Alias("metrics", ["metrics_map"])
     @Alias("reporting_params", ["reporting_handler_params"])
     @Alias("results_path", ["root_results_path"])
     def __init__(
@@ -83,8 +82,7 @@ class Environment:
         environment_params_path=None,
         *,
         results_path=None,
-        metrics_map=None,
-        # metrics=None,
+        metrics=None,
         holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dfs
         test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dfs
         target_column=None,
@@ -125,7 +123,7 @@ class Environment:
             created here. If this does not end with <ASSETS_DIRNAME>, it will be appended. If
             <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
             None or invalid, results will not be stored
-        metrics_map: Dict, List, or None, default=None
+        metrics: Dict, List, or None, default=None
             Iterable describing the metrics to be recorded, along with a means to compute the value of
             each metric. Should be of one of the two following forms:
 
@@ -207,8 +205,8 @@ class Environment:
             id column, and target_column to identify the column in which to place raw_predictions
         metrics_params: Dict, or None, default=dict()
             Dictionary of extra parameters to provide to :meth:`.metrics.ScoringMixIn.__init__`.
-            `metrics_map` must be provided either 1) as an input kwarg to
-            :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
+            `metrics` must be provided either 1) as an input kwarg to
+            :meth:`Environment.__init__` (see `metrics`), or 2) as a key in `metrics_params`,
             but not both. An Exception will be raised if both are given, or if neither is given
         cv_type: Class or str, default='KFold'
             The class to define cross-validation splits. If str, it must be an attribute of
@@ -311,6 +309,8 @@ class Environment:
             * Alias for `cv_type` *
         cross_validation_params: ...
             * Alias for `cv_params` *
+        metrics_map: ...
+            * Alias for `metrics` *
         reporting_handler_params: ...
             * Alias for `reporting_params` *
         root_results_path: ...
@@ -364,8 +364,7 @@ class Environment:
         self.id_column = id_column
         self.do_predict_proba = do_predict_proba
         self.prediction_formatter = prediction_formatter
-        self.metrics_map = metrics_map
-        # self.metrics_map = metrics
+        self.metrics = metrics
         self.metrics_params = metrics_params
 
         self.cross_experiment_params = dict()

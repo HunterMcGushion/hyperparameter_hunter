@@ -105,7 +105,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         Parameters
         ----------
-        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics_map`>)
+        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics`>)
             A path denoting the metric to be used to compare completed Experiments within the
             Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
             The second value should be the name of a metric being recorded according to the values
@@ -126,7 +126,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`. Note:
             Unless provided explicitly, the key "do_maximize" will be added by default to
             `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
-            in `G.Env.metrics_map`. In nearly all cases, the "do_maximize" key should be ignored,
+            in `G.Env.metrics`. In nearly all cases, the "do_maximize" key should be ignored,
             as there are very few reasons to explicitly include it
 
         Notes
@@ -182,7 +182,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         self.logger = None
         self._preparation_workflow()
-        self.do_maximize = G.Env.metrics_map[self.target_metric[-1]].direction == "max"
+        self.do_maximize = G.Env.metrics[self.target_metric[-1]].direction == "max"
 
     ##################################################
     # Core Methods:
@@ -518,7 +518,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     def _validate_parameters(self):
         """Ensure provided input parameters are properly formatted"""
         self.target_metric = get_formatted_target_metric(
-            self.target_metric, G.Env.metrics_map, default_dataset="oof"
+            self.target_metric, G.Env.metrics, default_dataset="oof"
         )
 
     def _validate_guidelines(self):
@@ -600,7 +600,7 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
 
         Parameters
         ----------
-        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics_map`>)
+        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics`>)
             A path denoting the metric to be used to compare completed Experiments within the
             Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
             The second value should be the name of a metric being recorded according to the values

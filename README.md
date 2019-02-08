@@ -62,7 +62,7 @@ df['target'] = data.target
 env = Environment(
     train_dataset=df,  # Add holdout/test dataframes, too
     results_path='path/to/results/directory',  # Where your result files will go
-    metrics_map=['roc_auc_score'],  # Callables, or strings referring to `sklearn.metrics`
+    metrics=['roc_auc_score'],  # Callables, or strings referring to `sklearn.metrics`
     cv_type=StratifiedKFold,  # Class, or string in `sklearn.model_selection`
     cv_params=dict(n_splits=5, shuffle=True, random_state=32)
 )
@@ -356,7 +356,7 @@ from xgboost import XGBClassifier
 env = Environment(
     train_dataset=get_breast_cancer_data(target='target'),
     results_path='HyperparameterHunterAssets',
-    metrics_map=['roc_auc_score'],
+    metrics=['roc_auc_score'],
     cv_type='StratifiedKFold',
     cv_params=dict(n_splits=10, shuffle=True, random_state=32),
 )

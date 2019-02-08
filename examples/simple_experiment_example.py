@@ -7,7 +7,7 @@ def execute():
     env = Environment(
         train_dataset=get_toy_classification_data(),
         results_path="HyperparameterHunterAssets",
-        metrics_map=["roc_auc_score"],
+        metrics=["roc_auc_score"],
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )

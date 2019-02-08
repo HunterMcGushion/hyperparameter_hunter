@@ -15,7 +15,7 @@ env = Environment(
     train_dataset=train_df,
     results_path="HyperparameterHunterAssets",
     target_column="y",
-    metrics_map=["hamming_loss"],
+    metrics=["hamming_loss"],
     cv_type=RepeatedStratifiedKFold,
     cv_params=dict(n_repeats=2, n_splits=10, random_state=1337),
 )
