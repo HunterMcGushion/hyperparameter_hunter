@@ -52,6 +52,7 @@ setup(
         "scikit-optimize",
         "scipy",
         "simplejson",
+        "wrapt",
     ],
     extras_require={
         "dev": ["pre-commit"],
@@ -65,6 +66,7 @@ setup(
             "tensorflow",
             "xgboost",
             "coveralls",
+            "codecov",
         ],
     },
     include_package_data=True,
