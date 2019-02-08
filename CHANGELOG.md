@@ -5,6 +5,23 @@
 * Fix bug causing cross-validation to break occasionally if `n_splits=2`
 * Fix bug causing optimization to break if only optimizing `model_extra_params` (not `build_fn`) in Keras
 
+### Changes
+* Shortened the preferred names of some `Environment` parameters:
+    * `cross_validation_type` -> `cv_type`
+    * `cross_validation_params` -> `cv_params`
+    * `metrics_map` -> `metrics`
+    * `reporting_handler_params` -> `reporting_params`
+    * `root_results_path` -> `results_path`
+* The original parameter names can still be used as aliases. See note in "Breaking Changes" section
+
+### Breaking Changes
+* To ensure compatibility with `Environment` keys created in earlier versions of HyperparameterHunter,
+continue using the original names for the parameters mentioned above
+    * Using the new (preferred) names will produce different `Environment` keys, which will cause 
+    `Experiment`s to not be identified as valid learning material for optimization even though they 
+    used the same parameter values, just with different names
+
+
 <a name="2.1.1"></a>
 ## [2.1.1] (2019-01-15)
 
