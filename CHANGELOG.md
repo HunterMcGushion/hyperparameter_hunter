@@ -1,6 +1,18 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Features
+* Enhanced support for Keras `initializers`
+    * In addition to providing strings to the various "...initializer" parameters of Keras layers 
+    (like `Dense`'s `kernel_initializer`), you can now use the callables in `keras.initializers`, too
+    * This means that all of the following will work in Keras `build_fn`s:
+        * `Dense(10, kernel_initializer="orthogonal")` (original string-form)
+        * `Dense(10, kernel_initializer=orthogonal)` (after `from keras.initializers import orthogonal`)
+        * `Dense(10, kernel_initializer=orthogonal(gain=0.5))` 
+    * You can even optimize callable initializers and their parameters:
+        * `Dense(10, kernel_initializer=orthogonal(gain=Real(0.3, 0.7)))`
+        * `Dense(10, kernel_initializer=Categorical(["orthogonal", "lecun_normal"))`
+
 ### Bug-Fixes
 * Fix bug causing cross-validation to break occasionally if `n_splits=2`
 * Fix bug causing optimization to break if only optimizing `model_extra_params` (not `build_fn`) in Keras
