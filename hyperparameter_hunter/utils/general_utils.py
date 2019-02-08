@@ -389,7 +389,7 @@ class Deprecated(object):
             simplefilter("default", UnsupportedWarning)
 
 
-def split_version(s):
+def split_version(s: str):
     """Split a version string into a tuple of integers to facilitate comparison
 
     Parameters
@@ -451,7 +451,18 @@ def set_default_attr(obj, name, value):
     Returns
     -------
     Object
-        `obj.name` if it exists. Else, `value`"""
+        `obj.name` if it exists. Else, `value`
+
+    Examples
+    --------
+    >>> foo = type("Foo", tuple(), {"my_attr": 32})
+    >>> set_default_attr(foo, "my_attr", 99)
+    32
+    >>> set_default_attr(foo, "other_attr", 9000)
+    9000
+    >>> assert foo.my_attr == 32
+    >>> assert foo.other_attr == 9000
+    """
     try:
         return getattr(obj, name)
     except AttributeError:
@@ -502,13 +513,16 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
     {('bar', 'c'): 3}
     >>> subdict({("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3}, keep=lambda _: _[0] == "foo")
     {('foo', 'a'): 1, ('foo', 'b'): 2}
-    >>> subdict(
-    ...     {("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3},
-    ...     keep=lambda _: _[0] == "foo",
-    ...     key=lambda _: _[1],
-    ... )
+    >>> subdict({(6, "a"): 1, (6, "b"): 2, (7, "c"): 3}, lambda _: _[0] == 6, key=lambda _: _[1])
     {'a': 1, 'b': 2}
-    """
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"], key="foo")
+    Traceback (most recent call last):
+        File "general_utils.py", line ?, in subdict
+    TypeError: Expected callable `key` function
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"], value="foo")
+    Traceback (most recent call last):
+        File "general_utils.py", line ?, in subdict
+    TypeError: Expected callable `value` function"""
     keep = keep or d.keys()
     drop = drop or []
     key = key or (lambda _: _)
