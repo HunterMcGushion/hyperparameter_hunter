@@ -34,7 +34,6 @@ from hyperparameter_hunter.utils.result_utils import format_predictions, default
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from contextlib import suppress
 from inspect import signature, isclass
 import numpy as np
 import os.path
@@ -619,7 +618,7 @@ class Environment:
             train_dataset=self.train_dataset,
             test_dataset=self.test_dataset,
             holdout_dataset=self.holdout_dataset,
-            cross_experiment_params=self.cross_experiment_params,
+            cross_experiment_params=self.cross_experiment_params.copy(),
             to_csv_params=self.to_csv_params,
         )
 
@@ -627,9 +626,13 @@ class Environment:
         # If any aliases were used during call to `Environment.__init__`, replace the default names
         # in `parameters` with the alias used. This ensures compatibility with Environment keys
         # made in earlier versions
-        with suppress(AttributeError):
-            for (param, alias) in getattr(self.__init__.__wrapped__, "__hh_aliases_used").items():
+        for (param, alias) in getattr(self, "__hh_aliases_used", {}).items():
+            try:
                 parameters[alias] = parameters.pop(param)
+            except KeyError:
+                parameters["cross_experiment_params"][alias] = parameters[
+                    "cross_experiment_params"
+                ].pop(param)
 
         self.cross_experiment_key = CrossExperimentKeyMaker(parameters)
 
@@ -754,7 +757,9 @@ class Environment:
         params = self.cross_experiment_key.parameters
         return dict(
             dataset_hash=params["train_dataset"],
-            cross_validation_type=params["cross_experiment_params"]["cross_validation_type"],
+            cv_type=params["cross_experiment_params"].get(
+                "cv_type", params["cross_experiment_params"].get("cross_validation_type", None)
+            ),
             global_random_seed=params["cross_experiment_params"]["global_random_seed"],
             random_seeds=params["cross_experiment_params"]["random_seeds"],
         )
