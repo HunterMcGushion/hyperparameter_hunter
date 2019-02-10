@@ -27,6 +27,7 @@ from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
 from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
+from hyperparameter_hunter.utils.boltons_utils import remap
 from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
 from hyperparameter_hunter.utils.general_utils import Alias
 from hyperparameter_hunter.utils.result_utils import format_predictions, default_do_full_save
@@ -633,14 +634,18 @@ class Environment:
         # If any aliases were used during call to `Environment.__init__`, replace the default names
         # in `parameters` with the alias used. This ensures compatibility with Environment keys
         # made in earlier versions
-        for (param, alias) in getattr(self, "__hh_aliases_used", {}).items():
-            try:
-                parameters[alias] = parameters.pop(param)
-            except KeyError:
-                parameters["cross_experiment_params"][alias] = parameters[
-                    "cross_experiment_params"
-                ].pop(param)
+        aliases_used = getattr(self, "__hh_aliases_used", {})
 
+        # noinspection PyUnusedLocal
+        def _visit(path, key, value):
+            if key in aliases_used:
+                key = aliases_used.pop(key)
+            return (key, value)
+
+        if aliases_used:
+            parameters = remap(parameters, visit=_visit)
+
+        #################### Make `cross_experiment_key` ####################
         self.cross_experiment_key = CrossExperimentKeyMaker(parameters)
 
     def initialize_reporting(self):
