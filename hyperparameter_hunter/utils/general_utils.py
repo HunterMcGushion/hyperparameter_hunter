@@ -464,9 +464,13 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
     d: Dict
         Dict whose keys will be filtered according to `keep` and `drop`
     keep: List, or callable, default=`d.keys()`
-        Keys of `d` to retain in the returned subdict. If callable, return boolean given key
+        Keys to retain in the returned subdict. If callable, return boolean given key input. `keep`
+        may contain keys not in `d` without raising errors. `keep` may be better described as the
+        keys allowed to be in the returned dict, whether or not they are in `d`. This means that if
+        `keep` consists solely of a key not in `d`, an empty dict will be returned
     drop: List, or callable, default=[]
-        Keys of `d` to remove from the returned subdict. If callable, return boolean given key
+        Keys to remove from the returned subdict. If callable, return boolean given key input.
+        `drop` may contain keys not in `d`, which will simply be ignored
     key: Callable, or None, default=None
         Transformation to apply to the keys included in the returned subdictionary
     value: Callable, or None, default=None
@@ -496,6 +500,12 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
     {('foo', 'a'): 1, ('foo', 'b'): 2}
     >>> subdict({(6, "a"): 1, (6, "b"): 2, (7, "c"): 3}, lambda _: _[0] == 6, key=lambda _: _[1])
     {'a': 1, 'b': 2}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["d"])
+    {'a': 1, 'b': 2, 'c': 3}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, keep=["d"])
+    {}
+    >>> subdict({"a": 1, "b": 2, "c": 3}, keep=["b", "d"])
+    {'b': 2}
     >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"], key="foo")
     Traceback (most recent call last):
         File "general_utils.py", line ?, in subdict
