@@ -577,19 +577,12 @@ class Environment:
         ]
         user_defaults = {}
 
-        if (not isinstance(self.environment_params_path, str)) and (
-            self.environment_params_path is not None
-        ):
-            raise TypeError(f"Non-str `environment_params_path`: {self.environment_params_path}")
-
         try:
             user_defaults = read_json(self.environment_params_path)
-        except TypeError:
+        except (TypeError, OSError):
+            # If `environment_params_path=None`, no error raised - `user_defaults` continues as {}
             if self.environment_params_path is not None:
                 raise
-            # If `environment_params_path=None`, no error raised - `user_defaults` continues as {}
-        except FileNotFoundError:
-            raise
 
         if not isinstance(user_defaults, dict):
             raise TypeError("environment_params_path must have dict, not {}".format(user_defaults))
@@ -598,12 +591,7 @@ class Environment:
         for k, v in user_defaults.items():
             if k not in allowed_parameter_keys:
                 G.warn(
-                    "\n\t".join(
-                        [
-                            "Invalid key ({}) in user-defined default Environment parameter file at '{}'. If expected to do something,",
-                            "it really won't, so it should be removed or fixed. The following are valid default keys: {}",
-                        ]
-                    ).format(k, self.environment_params_path, allowed_parameter_keys)
+                    f"Invalid key ({k}) in user Environment parameters: {self.environment_params_path}"
                 )
             elif getattr(self, k) is None:
                 setattr(self, k, v)
