@@ -22,12 +22,14 @@ Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module l
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.metrics import format_metrics_map
+from hyperparameter_hunter.metrics import format_metrics
 from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
 from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
+from hyperparameter_hunter.utils.boltons_utils import remap
 from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
+from hyperparameter_hunter.utils.general_utils import Alias
 from hyperparameter_hunter.utils.result_utils import format_predictions, default_do_full_save
 
 ##################################################
@@ -48,39 +50,40 @@ from sklearn.model_selection import _split as sk_cv
 class Environment:
     DEFAULT_PARAMS = dict(
         environment_params_path=None,
-        root_results_path=None,
+        results_path=None,
         target_column="target",
         id_column=None,
         do_predict_proba=False,
         prediction_formatter=format_predictions,
-        metrics_map=None,
+        metrics=None,
         metrics_params=dict(),
-        cross_validation_type="KFold",
+        cv_type="KFold",
         runs=1,
         global_random_seed=32,
         random_seeds=None,
         random_seed_bounds=[0, 100_000],
-        cross_validation_params=dict(),
+        cv_params=dict(),
         verbose=3,
         file_blacklist=None,
-        reporting_handler_params=dict(
-            # reporting_type='logging',
-            heartbeat_path=None,
-            float_format="{:.5f}",
-            console_params=None,
-            heartbeat_params=None,
+        reporting_params=dict(
+            heartbeat_path=None, float_format="{:.5f}", console_params=None, heartbeat_params=None
         ),
         to_csv_params=dict(),
         do_full_save=default_do_full_save,
     )
 
+    @Alias("cv_type", ["cross_validation_type"])
+    @Alias("cv_params", ["cross_validation_params"])
+    @Alias("metrics", ["metrics_map"])
+    @Alias("reporting_params", ["reporting_handler_params"])
+    @Alias("results_path", ["root_results_path"])
     def __init__(
         self,
         train_dataset,  # TODO: Allow providing separate (train_input, train_target) dfs
         environment_params_path=None,
         *,
-        root_results_path=None,
-        metrics_map=None,
+        results_path=None,
+        metrics=None,
         holdout_dataset=None,  # TODO: Allow providing separate (holdout_input, holdout_target) dfs
         test_dataset=None,  # TODO: Allow providing separate (test_input, test_target) dfs
         target_column=None,
@@ -88,15 +91,15 @@ class Environment:
         do_predict_proba=None,
         prediction_formatter=None,
         metrics_params=None,
-        cross_validation_type=None,
+        cv_type=None,
         runs=None,
         global_random_seed=None,
         random_seeds=None,
         random_seed_bounds=None,
-        cross_validation_params=None,
+        cv_params=None,
         verbose=None,
         file_blacklist=None,
-        reporting_handler_params=None,
+        reporting_params=None,
         to_csv_params=None,
         do_full_save=None,
         experiment_callbacks=None,
@@ -116,12 +119,12 @@ class Environment:
             If not None and is valid .json filepath containing an object (dict), the file's contents
             are treated as the default values for all keys that match any of the below kwargs used
             to initialize :class:`Environment`
-        root_results_path: String path, or None, default=None
+        results_path: String path, or None, default=None
             If valid directory path and the results directory has not yet been created, it will be
             created here. If this does not end with <ASSETS_DIRNAME>, it will be appended. If
             <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
             None or invalid, results will not be stored
-        metrics_map: Dict, List, or None, default=None
+        metrics: Dict, List, or None, default=None
             Iterable describing the metrics to be recorded, along with a means to compute the value of
             each metric. Should be of one of the two following forms:
 
@@ -203,10 +206,10 @@ class Environment:
             id column, and target_column to identify the column in which to place raw_predictions
         metrics_params: Dict, or None, default=dict()
             Dictionary of extra parameters to provide to :meth:`.metrics.ScoringMixIn.__init__`.
-            `metrics_map` must be provided either 1) as an input kwarg to
-            :meth:`Environment.__init__` (see `metrics_map`), or 2) as a key in `metrics_params`,
+            `metrics` must be provided either 1) as an input kwarg to
+            :meth:`Environment.__init__` (see `metrics`), or 2) as a key in `metrics_params`,
             but not both. An Exception will be raised if both are given, or if neither is given
-        cross_validation_type: Class or str, default='KFold'
+        cv_type: Class or str, default='KFold'
             The class to define cross-validation splits. If str, it must be an attribute of
             `sklearn.model_selection._split`, and it must be a cross-validation class that inherits
             one of the following `sklearn` classes: `BaseCrossValidator`, or `_RepeatedSplits`.
@@ -214,10 +217,9 @@ class Environment:
             must implement the following methods: [`__init__`, `split`]. If using a custom class,
             see the following tested `sklearn` classes for proper implementations:
             [`KFold`, `StratifiedKFold`, `RepeatedKFold`, `RepeatedStratifiedKFold`]. The arguments
-            provided to :meth:`cross_validation_type.__init__` will be
-            :attr:`Environment.cross_validation_params`, which should include the following:
-            ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
-            :meth:`cross_validation_type.split` will receive the following arguments:
+            provided to :meth:`cv_type.__init__` will be :attr:`Environment.cv_params`, which should
+            include the following: ['n_splits' <int>, 'n_repeats' <int> (if applicable)].
+            :meth:`cv_type.split` will receive the following arguments:
             [:attr:`BaseExperiment.train_input_data`, :attr:`BaseExperiment.train_target_data`]
         runs: Int, default=1
             The number of times to fit a model within each fold to perform multiple-run-averaging
@@ -228,21 +230,19 @@ class Environment:
             provide it here
         random_seeds: None, or List, default=None
             If None, `random_seeds` of the appropriate shape will be created automatically. Else,
-            must be a list of ints of shape (`cross_validation_params['n_repeats']`,
-            `cross_validation_params['n_splits']`, `runs`). If `cross_validation_params` does not
-            have the key `n_repeats` (because standard cross-validation is being used), the value
-            will default to 1. See :meth:`.experiments.BaseExperiment._random_seed_initializer` for
-            more info on the expected shape
+            must be a list of ints of shape (`cv_params['n_repeats']`, `cv_params['n_splits']`,
+            `runs`). If `cv_params` does not have the key `n_repeats` (because standard
+            cross-validation is being used), the value will default to 1. See
+            :meth:`.experiments.BaseExperiment._random_seed_initializer` for info on expected shape
         random_seed_bounds: List, default=[0, 100000]
             A list containing two integers: the lower and upper bounds, respectively, for generating
             an Experiment's random seeds in
             :meth:`.experiments.BaseExperiment._random_seed_initializer`. Generally, leave this
             kwarg alone
-        cross_validation_params: dict, or None, default=dict()
-            Dict of parameters provided upon initialization of cross_validation_type. Keys may be
-            any args accepted by :meth:`cross_validation_type.__init__`. Number of fold splits must
-            be provided here via "n_splits", and number of repeats (if applicable according to
-            `cross_validation_type`) must be provided via "n_repeats"
+        cv_params: dict, or None, default=dict()
+            Parameters provided upon initialization of cv_type. Keys may be any args accepted by
+            :meth:`cv_type.__init__`. Number of fold splits must be provided via "n_splits", and
+            number of repeats (if applicable for `cv_type`) must be provided via "n_repeats"
         verbose: Int, boolean, default=3
             Verbosity of printing for any experiments performed while this Environment is active
 
@@ -270,7 +270,7 @@ class Environment:
             as if "script_backup" had been added to `file_blacklist`. This means that backup files
             will not be created for Jupyter notebooks (or any other non-".py" files). For info on
             acceptable values, see :func:`validate_file_blacklist`
-        reporting_handler_params: Dict, default=dict()
+        reporting_params: Dict, default=dict()
             Parameters passed to initialize :class:`.reporting.ReportingHandler`
         to_csv_params: Dict, default=dict()
             Parameters passed to the calls to :meth:`pandas.frame.DataFrame.to_csv` in
@@ -300,11 +300,22 @@ class Environment:
         experiment_recorders: List, None, default=None
             If not None, may be a list whose values are tuples of
             (<:class:`recorders.BaseRecorder` descendant>, <str result_path>). The result_path str
-            should be a path relative to `root_results_path` that specifies the directory/file in
+            should be a path relative to `results_path` that specifies the directory/file in
             which the product of the custom recorder should be saved. The contents of
             `experiment_recorders` will be provided to `recorders.RecorderList` upon completion of
             an Experiment, and, if the subclassing documentation in `recorders` is followed
             properly, will create or update a result file for the just-executed Experiment
+
+        cross_validation_type: ...
+            * Alias for `cv_type` *
+        cross_validation_params: ...
+            * Alias for `cv_params` *
+        metrics_map: ...
+            * Alias for `metrics` *
+        reporting_handler_params: ...
+            * Alias for `reporting_params` *
+        root_results_path: ...
+            * Alias for `results_path` *
 
         Notes
         -----
@@ -343,7 +354,7 @@ class Environment:
         """
         G.Env = self
         self.environment_params_path = environment_params_path
-        self.root_results_path = root_results_path
+        self.results_path = results_path
 
         #################### Attributes Used by Experiments ####################
         self.train_dataset = train_dataset
@@ -354,28 +365,28 @@ class Environment:
         self.id_column = id_column
         self.do_predict_proba = do_predict_proba
         self.prediction_formatter = prediction_formatter
-        self.metrics_map = metrics_map
+        self.metrics = metrics
         self.metrics_params = metrics_params
 
         self.cross_experiment_params = dict()
-        self.cross_validation_type = cross_validation_type
+        self.cv_type = cv_type
         self.runs = runs
         self.global_random_seed = global_random_seed
         self.random_seeds = random_seeds
         self.random_seed_bounds = random_seed_bounds
-        self.cross_validation_params = cross_validation_params
+        self.cv_params = cv_params
 
         #################### Ancillary Environment Settings ####################
         self.verbose = verbose
         self.file_blacklist = file_blacklist
-        self.reporting_handler_params = reporting_handler_params or {}
+        self.reporting_params = reporting_params or {}
         self.to_csv_params = to_csv_params or {}
         self.do_full_save = do_full_save
         self.experiment_callbacks = experiment_callbacks or []
         self.experiment_recorders = experiment_recorders or []
 
         self.result_paths = {
-            "root": self.root_results_path,
+            "root": self.results_path,
             "checkpoint": None,
             "description": None,
             "heartbeat": None,
@@ -421,17 +432,17 @@ class Environment:
 
     def validate_parameters(self):
         """Ensure the provided parameters are valid and properly formatted"""
-        #################### root_results_path ####################
-        if self.root_results_path is None:
-            G.warn("Received root_results_path=None. Results will not be stored at all.")
-        elif isinstance(self.root_results_path, str):
-            if not self.root_results_path.endswith(ASSETS_DIRNAME):
-                self.root_results_path = os.path.join(self.root_results_path, ASSETS_DIRNAME)
-                self.result_paths["root"] = self.root_results_path
-            if not os.path.exists(self.root_results_path):
-                make_dirs(self.root_results_path, exist_ok=True)
+        #################### results_path ####################
+        if self.results_path is None:
+            G.warn("Received results_path=None. Results will not be stored at all.")
+        elif isinstance(self.results_path, str):
+            if not self.results_path.endswith(ASSETS_DIRNAME):
+                self.results_path = os.path.join(self.results_path, ASSETS_DIRNAME)
+                self.result_paths["root"] = self.results_path
+            if not os.path.exists(self.results_path):
+                make_dirs(self.results_path, exist_ok=True)
         else:
-            raise TypeError(f"root_results_path must be None or str, not {self.root_results_path}")
+            raise TypeError(f"results_path must be None or str, not {self.results_path}")
 
         #################### target_column ####################
         if isinstance(self.target_column, str):
@@ -440,7 +451,7 @@ class Environment:
         #################### file_blacklist ####################
         self.file_blacklist = validate_file_blacklist(self.file_blacklist)
 
-        if self.root_results_path is None:
+        if self.results_path is None:
             self.file_blacklist = "ALL"
 
         #################### Train/Test Datasets ####################
@@ -449,33 +460,36 @@ class Environment:
         if isinstance(self.test_dataset, str):
             self.test_dataset = pd.read_csv(self.test_dataset)
 
-        #################### metrics_params/metrics_map ####################
-        if (self.metrics_map is not None) and ("metrics_map" in self.metrics_params.keys()):
+        #################### metrics_params/metrics ####################
+        if (self.metrics is not None) and ("metrics" in self.metrics_params.keys()):
             raise ValueError(
-                "`metrics_map` may be provided as a kwarg, or as a `metrics_params` key, but NOT BOTH. Received: "
-                + f"\n `metrics_map`={self.metrics_map}\n `metrics_params`={self.metrics_params}"
+                "`metrics` may be provided as a kwarg, or as a `metrics_params` key, but NOT BOTH. Received: "
+                + f"\n `metrics`={self.metrics}\n `metrics_params`={self.metrics_params}"
             )
         else:
-            if self.metrics_map is None:
-                self.metrics_map = self.metrics_params["metrics_map"]
-            self.metrics_map = format_metrics_map(self.metrics_map)
-            self.metrics_params = {**dict(metrics_map=self.metrics_map), **self.metrics_params}
+            _metrics_alias = "metrics"
+            if self.metrics is None:
+                try:
+                    self.metrics = self.metrics_params["metrics"]
+                except KeyError:
+                    self.metrics = self.metrics_params["metrics_map"]
+                    _metrics_alias = "metrics_map"
+            self.metrics = format_metrics(self.metrics)
+            self.metrics_params = {**{_metrics_alias: self.metrics}, **self.metrics_params}
 
-        #################### cross_validation_type ####################
-        if isinstance(self.cross_validation_type, str):
+        #################### cv_type ####################
+        if isinstance(self.cv_type, str):
             try:
-                self.cross_validation_type = sk_cv.__getattribute__(self.cross_validation_type)
+                self.cv_type = sk_cv.__getattribute__(self.cv_type)
             except AttributeError:
-                raise AttributeError(
-                    f"'{self.cross_validation_type}' not in `sklearn.model_selection._split`"
-                )
+                raise AttributeError(f"'{self.cv_type}' not in `sklearn.model_selection._split`")
 
         #################### to_csv_params ####################
         self.to_csv_params = {k: v for k, v in self.to_csv_params.items() if k != "path_or_buf"}
 
         #################### cross_experiment_params ####################
         self.cross_experiment_params = dict(
-            cross_validation_type=self.cross_validation_type,
+            cv_type=self.cv_type,
             runs=self.runs,
             global_random_seed=self.global_random_seed,
             random_seeds=self.random_seeds,
@@ -525,7 +539,7 @@ class Environment:
 
     def format_result_paths(self):
         """Remove paths contained in file_blacklist, and format others to prepare for saving results"""
-        if self.file_blacklist == "ALL" or self.root_results_path is None:
+        if self.file_blacklist == "ALL" or self.results_path is None:
             return
 
         # Blacklist the prediction files for any datasets that were not given
@@ -543,14 +557,14 @@ class Environment:
 
             self.result_paths[recorder.result_path_key] = result_path
 
-        # Set full filepath for result files relative to `root_results_path`, or to None (blacklist)
+        # Set full filepath for result files relative to `results_path`, or to None (blacklist)
         for k in self.result_paths.keys():
             if k == "root":
                 continue
             elif k not in self.file_blacklist:
                 # If `k` not in `RESULT_FILE_SUB_DIR_PATHS`, then added via `experiment_recorders`
                 self.result_paths[k] = os.path.join(
-                    self.root_results_path, RESULT_FILE_SUB_DIR_PATHS.get(k, self.result_paths[k])
+                    self.results_path, RESULT_FILE_SUB_DIR_PATHS.get(k, self.result_paths[k])
                 )
             else:
                 self.result_paths[k] = None
@@ -604,7 +618,7 @@ class Environment:
         """Generate a key to describe the current Environment's cross-experiment parameters"""
         parameters = dict(
             metrics_params=self.metrics_params,
-            cross_validation_params=self.cross_validation_params,
+            cv_params=self.cv_params,
             target_column=self.target_column,
             id_column=self.id_column,
             do_predict_proba=self.do_predict_proba,
@@ -612,14 +626,31 @@ class Environment:
             train_dataset=self.train_dataset,
             test_dataset=self.test_dataset,
             holdout_dataset=self.holdout_dataset,
-            cross_experiment_params=self.cross_experiment_params,
+            cross_experiment_params=self.cross_experiment_params.copy(),
             to_csv_params=self.to_csv_params,
         )
+
+        #################### Revert Aliases for Compatibility ####################
+        # If any aliases were used during call to `Environment.__init__`, replace the default names
+        # in `parameters` with the alias used. This ensures compatibility with Environment keys
+        # made in earlier versions
+        aliases_used = getattr(self, "__hh_aliases_used", {})
+
+        # noinspection PyUnusedLocal
+        def _visit(path, key, value):
+            if key in aliases_used:
+                key = aliases_used.pop(key)
+            return (key, value)
+
+        if aliases_used:
+            parameters = remap(parameters, visit=_visit)
+
+        #################### Make `cross_experiment_key` ####################
         self.cross_experiment_key = CrossExperimentKeyMaker(parameters)
 
     def initialize_reporting(self):
         """Initialize reporting for the Environment and Experiments conducted during its lifetime"""
-        reporting_params = self.reporting_handler_params
+        reporting_params = self.reporting_params
         reporting_params["heartbeat_path"] = self.result_paths["current_heartbeat"]
         reporting_handler = ReportingHandler(**reporting_params)
 
@@ -738,7 +769,9 @@ class Environment:
         params = self.cross_experiment_key.parameters
         return dict(
             dataset_hash=params["train_dataset"],
-            cross_validation_type=params["cross_experiment_params"]["cross_validation_type"],
+            cv_type=params["cross_experiment_params"].get(
+                "cv_type", params["cross_experiment_params"].get("cross_validation_type", None)
+            ),
             global_random_seed=params["cross_experiment_params"]["global_random_seed"],
             random_seeds=params["cross_experiment_params"]["random_seeds"],
         )

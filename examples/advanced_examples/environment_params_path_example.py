@@ -8,29 +8,29 @@ def _execute():
     # In this file, we can define a bunch of default Environment parameters that we don't want to always explicitly provide
 
     # It works really well for things that won't be changing often, like the following:
-    # - `root_results_path`, which we probably never want to change, so all our results go to one place;
+    # - `results_path`, which we probably never want to change, so all our results go to one place;
     # - `target_column`, which will probably be a constant for your data
-    # - `metrics_map`, if you're not using any fancy metrics, and you already know what you want
+    # - `metrics`, if you're not using any fancy metrics, and you already know what you want
     # - `file_blacklist`, if you're angry at me for adding that one result file that's always useless
     # Other parameters, whose default values you may want to change
 
     env = Environment(
         train_dataset=get_breast_cancer_data(),  # If your dataset is a str path, you can even add it to environment_params
         environment_params_path="./environment_params.json",  # Use this file for parameters not explicitly given
-        cross_validation_params=dict(
+        cv_params=dict(
             n_splits=5, shuffle=True, random_state=32
         ),  # Here we decide to override our default values
     )
 
-    print(env.root_results_path)
+    print(env.results_path)
     print(env.target_column)
-    print(env.metrics_map)
-    print(env.cross_validation_type)
+    print(env.metrics)
+    print(env.cv_type)
     print(env.runs)
     print(env.file_blacklist)  # This includes some other values too, but you can ignore them
     # All of the above are from `environment_params_path`
     print(
-        env.cross_validation_params
+        env.cv_params
     )  # This is the value we provided above, rather than our `environment_params_path` default
 
     experiment = CVExperiment(model_initializer=KNeighborsClassifier, model_init_params={})

@@ -43,7 +43,7 @@ repeated_cv_params = dict(n_splits=5, n_repeats=2, random_state=32)
 default_env_params = dict(
     train_dataset=train_dataset,
     environment_params_path=None,
-    root_results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
+    results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
     holdout_dataset=get_holdout_set,
     test_dataset=train_dataset.copy(),
     target_column="diagnosis",
@@ -60,7 +60,7 @@ default_env_params = dict(
     cross_validation_type="StratifiedKFold",
     verbose=True,
     file_blacklist=None,
-    reporting_handler_params=dict(add_frame=False),
+    reporting_params=dict(add_frame=False),
     cross_validation_params=repeated_cv_params,
 )
 
@@ -97,15 +97,13 @@ def test_environment_init_cv_params(_cv_params, expected):
     assert env == expected
 
 
-@pytest.mark.parametrize(["metrics_map", "expected"], **args_ids_for(scenarios_metrics_map))
-def test_environment_init_metrics_map(metrics_map, expected):
+@pytest.mark.parametrize(["metrics", "expected"], **args_ids_for(scenarios_metrics_map))
+def test_environment_init_metrics(metrics, expected):
     env = Environment(
         **dict(
             default_env_params,
             **dict(
-                metrics_params=dict(
-                    metrics_map=metrics_map, in_fold="all", oof="all", holdout="all"
-                )
+                metrics_params=dict(metrics_map=metrics, in_fold="all", oof="all", holdout="all")
             ),
         )
     )

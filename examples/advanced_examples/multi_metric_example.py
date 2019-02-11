@@ -18,28 +18,28 @@ train_df["diagnosis"] = data.target
 
 #################### 2. Set Up Environment ####################
 # Now we'll set up our `Environment`. If you've gone through the other examples, everything below
-# ... should be pretty standard, except for the `metrics_map`. In most examples, we give `metrics_map`
+# ... should be pretty standard, except for the `metrics`. In most examples, we give `metrics`
 # ... a single metric to record, but what if we just can't choose? Answer: Give `Environment` a bunch
-# ... of metrics in `metrics_map`! Notice that we provide the individual metrics in a few different
+# ... of metrics in `metrics`! Notice that we provide the individual metrics in a few different
 # ... formats accepted and documented by `Environment`.
 
-# First, near the top, we import `f1_score` from `sklearn.metrics`. Continuing to our `metrics_map`...
+# First, near the top, we import `f1_score` from `sklearn.metrics`. Continuing to our `metrics`...
 # 1. We start with the string "roc_auc_score", identifying the `sklearn.metrics` callable, and we name it **"roc_auc"**
 # 2. We add our imported `f1_score`, and name it **"f1"**
 # 3. We customize `f1_score` to use the `average="micro"` kwarg, and we name it **"f1_micro"**, and
 # 4. We customize `f1_score` again, using the `average="macro"` kwarg this time, and we name it **"f1_macro"**
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="diagnosis",
-    metrics_map=dict(
+    metrics=dict(
         roc_auc="roc_auc_score",
         f1=f1_score,
         f1_micro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro"),
         f1_macro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="macro"),
     ),
-    cross_validation_type="KFold",
-    cross_validation_params=dict(n_splits=10, shuffle=True, random_state=42),
+    cv_type="KFold",
+    cv_params=dict(n_splits=10, shuffle=True, random_state=42),
     verbose=1,
 )
 

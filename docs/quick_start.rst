@@ -19,10 +19,10 @@ Set Up an Environment
 
     env = Environment(
 	    train_dataset=df,
-	    root_results_path="path/to/results/directory",
-	    metrics_map=["roc_auc_score"],
-	    cross_validation_type=StratifiedKFold,
-	    cross_validation_params=dict(n_splits=5, shuffle=2, random_state=32)
+	    results_path="path/to/results/directory",
+	    metrics=["roc_auc_score"],
+	    cv_type=StratifiedKFold,
+	    cv_params=dict(n_splits=5, shuffle=2, random_state=32)
     )
 
 Individual Experimentation

@@ -131,7 +131,7 @@ class BaseExperiment(ScoringMixIn):
             :meth:`BaseExperiment.preparation_workflow`, followed by
             :meth:`BaseExperiment.experiment_workflow`, effectively completing all essential tasks
             without requiring additional method calls
-        target_metric: Tuple, str, default=('oof', <:attr:`environment.Environment.metrics_map`[0]>)
+        target_metric: Tuple, str, default=('oof', <:attr:`environment.Environment.metrics`[0]>)
             A path denoting the metric to be used to compare completed Experiments or to use for
             certain early stopping procedures in some model classes. The first value should be one
             of ['oof', 'holdout', 'in_fold']. The second value should be the name of a metric being
@@ -178,7 +178,7 @@ class BaseExperiment(ScoringMixIn):
         self.prediction_formatter = G.Env.prediction_formatter
         self.metrics_params = G.Env.metrics_params
         self.experiment_params = G.Env.cross_experiment_params
-        self.cross_validation_params = G.Env.cross_validation_params
+        self.cv_params = G.Env.cv_params
         self.result_paths = G.Env.result_paths
         self.cross_experiment_key = G.Env.cross_experiment_key
 
@@ -190,7 +190,7 @@ class BaseExperiment(ScoringMixIn):
         self.test_input_data = None
 
         self.model = None
-        self.metrics_map = None  # Set by :class:`metrics.ScoringMixIn`
+        self.metrics = None  # Set by :class:`metrics.ScoringMixIn`
         self.stat_aggregates = dict()
         self.result_description = None
 
@@ -320,7 +320,7 @@ class BaseExperiment(ScoringMixIn):
     def _validate_parameters(self):
         """Ensure provided input parameters are properly formatted"""
         #################### target_metric ####################
-        self.target_metric = get_formatted_target_metric(self.target_metric, self.metrics_map)
+        self.target_metric = get_formatted_target_metric(self.target_metric, self.metrics)
 
         #################### feature_selector ####################
         self.feature_selector = self.feature_selector or self.train_dataset.columns.values
@@ -422,8 +422,8 @@ class BaseExperiment(ScoringMixIn):
             self.experiment_params["random_seeds"] = np.random.randint(
                 *self.experiment_params["random_seed_bounds"],
                 size=(
-                    self.cross_validation_params.get("n_repeats", 1),
-                    self.cross_validation_params["n_splits"],
+                    self.cv_params.get("n_repeats", 1),
+                    self.cv_params["n_splits"],
                     self.experiment_params["runs"],
                 ),
             ).tolist()
@@ -538,10 +538,7 @@ class BaseCVExperiment(BaseExperiment):
         self.on_experiment_start()
 
         reshaped_indices = get_cv_indices(
-            self.folds,
-            self.cross_validation_params,
-            self.train_input_data,
-            self.train_target_data.iloc[:, 0],
+            self.folds, self.cv_params, self.train_input_data, self.train_target_data.iloc[:, 0]
         )
 
         for self._rep, rep_indices in enumerate(reshaped_indices):
@@ -607,7 +604,7 @@ class BaseCVExperiment(BaseExperiment):
             validation_target=self.fold_validation_target,
             do_predict_proba=self.do_predict_proba,
             target_metric=self.target_metric,
-            metrics_map=self.metrics_map,
+            metrics=self.metrics,
         )
         self.model.fit()
         self.on_run_end()
@@ -653,19 +650,19 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Set :attr:`folds` per cross_validation_type and :attr:`cross_validation_params`"""
-        cross_validation_type = self.experiment_params["cross_validation_type"]  # Allow failure
-        if not isclass(cross_validation_type):
-            raise TypeError(f"Expected a cross-validation class, not {type(cross_validation_type)}")
+        """Set :attr:`folds` per `cv_type` and :attr:`cv_params`"""
+        cv_type = self.experiment_params["cv_type"]  # Allow failure
+        if not isclass(cv_type):
+            raise TypeError(f"Expected a cross-validation class, not {type(cv_type)}")
 
         try:
-            _split_method = getattr(cross_validation_type, "split")
+            _split_method = getattr(cv_type, "split")
             if not callable(_split_method):
-                raise TypeError("`cross_validation_type` must implement a callable :meth:`split`")
+                raise TypeError("`cv_type` must implement a callable :meth:`split`")
         except AttributeError:
-            raise AttributeError("`cross_validation_type` must be class with :meth:`split`")
+            raise AttributeError("`cv_type` must be class with :meth:`split`")
 
-        self.folds = cross_validation_type(**self.cross_validation_params)
+        self.folds = cv_type(**self.cv_params)
 
 
 ##################################################
@@ -743,14 +740,12 @@ class RepeatedCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Initialize :attr:`folds` per cross_validation_type and :attr:`cross_validation_params`"""
-        cross_validation_type = self.experiment_params.get(
-            "cross_validation_type", "repeatedkfold"
-        ).lower()
-        if cross_validation_type in ("stratifiedkfold", "repeatedstratifiedkfold"):
-            self.folds = RepeatedStratifiedKFold(**self.cross_validation_params)
+        """Initialize :attr:`folds` per cv_type and :attr:`cv_params`"""
+        cv_type = self.experiment_params.get("cv_type", "repeatedkfold").lower()
+        if cv_type in ("stratifiedkfold", "repeatedstratifiedkfold"):
+            self.folds = RepeatedStratifiedKFold(**self.cv_params)
         else:
-            self.folds = RepeatedKFold(**self.cross_validation_params)
+            self.folds = RepeatedKFold(**self.cv_params)
 
 
 @Deprecated(
@@ -788,12 +783,12 @@ class StandardCVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         )
 
     def _initialize_folds(self):
-        """Initialize :attr:`folds` per cross_validation_type and :attr:`cross_validation_params`"""
-        cross_validation_type = self.experiment_params.get("cross_validation_type", "kfold").lower()
-        if cross_validation_type == "stratifiedkfold":
-            self.folds = StratifiedKFold(**self.cross_validation_params)
+        """Initialize :attr:`folds` per cv_type and :attr:`cv_params`"""
+        cv_type = self.experiment_params.get("cv_type", "kfold").lower()
+        if cv_type == "stratifiedkfold":
+            self.folds = StratifiedKFold(**self.cv_params)
         else:
-            self.folds = KFold(**self.cross_validation_params)
+            self.folds = KFold(**self.cv_params)
 
 
 # class NoValidationExperiment(BaseExperiment):

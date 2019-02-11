@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.metrics import ScoringMixIn, Metric, format_metrics_map
+from hyperparameter_hunter.metrics import ScoringMixIn, Metric, format_metrics
 from hyperparameter_hunter.metrics import get_formatted_target_metric, get_clean_prediction
 
 ##################################################
@@ -27,7 +27,7 @@ def my_r2_score(foo, bar):
     return r2_score(foo, bar)
 
 
-_metrics_map = dict(roc_auc_score=roc_auc_score)
+_metrics = dict(roc_auc_score=roc_auc_score)
 _in_fold, _oof, _holdout = "all", "all", "all"
 empty_class, empty_func = EmptyClass(), lambda _: _
 
@@ -111,9 +111,9 @@ def test_metric_initialization_invalid_direction(direction):
 ##################################################
 # ScoringMixIn Initialization Scenarios
 ##################################################
-scoring_mix_in_init_params = ["metrics_map", "in_fold", "oof", "holdout"]
-scenarios_valid_metrics_map = [
-    [_metrics_map],
+scoring_mix_in_init_params = ["metrics", "in_fold", "oof", "holdout"]
+scenarios_valid_metrics = [
+    [_metrics],
     [{"1": roc_auc_score}],
     [dict(my_roc_auc=roc_auc_score, roc_auc_score=None)],
     [dict(foo=roc_auc_score, roc_auc_score=None)],
@@ -122,9 +122,9 @@ scenarios_valid_metrics_map = [
     [["f1_score", "accuracy_score", "roc_auc_score"]],
 ]
 scenarios_valid_metrics_lists = [
-    (_metrics_map, _in_fold, None, None),
-    (_metrics_map, None, None, None),
-    (_metrics_map, ["roc_auc_score"], _oof, _holdout),
+    (_metrics, _in_fold, None, None),
+    (_metrics, None, None, None),
+    (_metrics, ["roc_auc_score"], _oof, _holdout),
     (
         ["f1_score", "accuracy_score", "roc_auc_score"],
         ["f1_score"],
@@ -134,7 +134,7 @@ scenarios_valid_metrics_lists = [
     (["f1_score", "accuracy_score", "roc_auc_score"], ["f1_score"], _oof, _holdout),
 ]
 scenarios_type_error = dict(
-    metrics_map=[
+    metrics=[
         ("foo", _in_fold, _oof, _holdout),
         (1, _in_fold, _oof, _holdout),
         (None, _in_fold, _oof, _holdout),
@@ -145,38 +145,38 @@ scenarios_type_error = dict(
         (list(), _in_fold, _oof, _holdout),
         (dict(), _in_fold, _oof, _holdout),
     ],
-    metrics_map_key=[
+    metrics_key=[
         ({1: roc_auc_score}, _in_fold, _oof, _holdout),
         ({empty_class: roc_auc_score}, _in_fold, _oof, _holdout),
         ({empty_func: roc_auc_score}, _in_fold, _oof, _holdout),
         ({tuple(): roc_auc_score}, _in_fold, _oof, _holdout),
     ],
-    metrics_map_value=[
+    metrics_value=[
         ({"roc_auc_score": 1}, _in_fold, _oof, _holdout),
         ({"roc_auc_score": 1.2}, _in_fold, _oof, _holdout),
         ({"roc_auc_score": ["a", "b"]}, _in_fold, _oof, _holdout),
         ({"roc_auc_score": dict(a=1, b=2)}, _in_fold, _oof, _holdout),
     ],
     metrics_lists=[
-        (_metrics_map, "foo", _oof, _holdout),
-        (_metrics_map, _in_fold, "foo", _holdout),
-        (_metrics_map, _in_fold, _oof, "foo"),
-        (_metrics_map, empty_class, _oof, _holdout),
-        (_metrics_map, empty_func, _oof, _holdout),
-        (_metrics_map, ("a", "b"), _oof, _holdout),
-        (_metrics_map, 1, _oof, _holdout),
-        (_metrics_map, 1.2, _oof, _holdout),
-        (_metrics_map, 1.2, "foo", empty_func),
+        (_metrics, "foo", _oof, _holdout),
+        (_metrics, _in_fold, "foo", _holdout),
+        (_metrics, _in_fold, _oof, "foo"),
+        (_metrics, empty_class, _oof, _holdout),
+        (_metrics, empty_func, _oof, _holdout),
+        (_metrics, ("a", "b"), _oof, _holdout),
+        (_metrics, 1, _oof, _holdout),
+        (_metrics, 1.2, _oof, _holdout),
+        (_metrics, 1.2, "foo", empty_func),
     ],
     metrics_lists_values=[
-        (_metrics_map, [1], _oof, _holdout),
-        (_metrics_map, _in_fold, [1.2], _holdout),
-        (_metrics_map, _in_fold, _oof, [empty_func]),
-        (_metrics_map, [empty_class], _oof, _holdout),
-        (_metrics_map, [tuple()], _oof, _holdout),
-        (_metrics_map, [["roc_auc"]], _oof, _holdout),
-        (_metrics_map, [dict(a=1, b=2)], 1, 1),
-        (_metrics_map, [None], _oof, _holdout),
+        (_metrics, [1], _oof, _holdout),
+        (_metrics, _in_fold, [1.2], _holdout),
+        (_metrics, _in_fold, _oof, [empty_func]),
+        (_metrics, [empty_class], _oof, _holdout),
+        (_metrics, [tuple()], _oof, _holdout),
+        (_metrics, [["roc_auc"]], _oof, _holdout),
+        (_metrics, [dict(a=1, b=2)], 1, 1),
+        (_metrics, [None], _oof, _holdout),
     ],
 )
 scenarios_attribute_error = [
@@ -187,39 +187,39 @@ scenarios_attribute_error = [
     ({"roc_auc_score": ("a", "b")}, _in_fold, _oof, _holdout),
 ]
 scenarios_key_error = [
-    (_metrics_map, ["foo"], _oof, _holdout),
-    (_metrics_map, _in_fold, ["foo"], _holdout),
-    (_metrics_map, _in_fold, _oof, ["foo"]),
-    (_metrics_map, ["roc_auc", "foo"], _oof, _holdout),
+    (_metrics, ["foo"], _oof, _holdout),
+    (_metrics, _in_fold, ["foo"], _holdout),
+    (_metrics, _in_fold, _oof, ["foo"]),
+    (_metrics, ["roc_auc", "foo"], _oof, _holdout),
 ]
 
 
-@pytest.mark.parametrize(["metrics_map"], **args_ids_for(scenarios_valid_metrics_map))
-def test_valid_scoring_mix_in_initialization_metrics_map(metrics_map):
-    ScoringMixIn(metrics_map=metrics_map, in_fold=_in_fold, oof=_oof, holdout=_holdout)
+@pytest.mark.parametrize(["metrics"], **args_ids_for(scenarios_valid_metrics))
+def test_valid_scoring_mix_in_initialization_metrics(metrics):
+    ScoringMixIn(metrics=metrics, in_fold=_in_fold, oof=_oof, holdout=_holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **args_ids_for(scenarios_valid_metrics_lists))
-def test_valid_scoring_mix_in_initialization_metrics_lists(metrics_map, in_fold, oof, holdout):
-    ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+def test_valid_scoring_mix_in_initialization_metrics_lists(metrics, in_fold, oof, holdout):
+    ScoringMixIn(metrics=metrics, in_fold=in_fold, oof=oof, holdout=holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **keyed_args_ids_for(scenarios_type_error))
-def test_type_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, holdout):
+def test_type_error_scoring_mix_in_initialization(metrics, in_fold, oof, holdout):
     with pytest.raises(TypeError):
-        ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+        ScoringMixIn(metrics=metrics, in_fold=in_fold, oof=oof, holdout=holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **args_ids_for(scenarios_attribute_error))
-def test_attribute_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, holdout):
+def test_attribute_error_scoring_mix_in_initialization(metrics, in_fold, oof, holdout):
     with pytest.raises(AttributeError):
-        ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+        ScoringMixIn(metrics=metrics, in_fold=in_fold, oof=oof, holdout=holdout)
 
 
 @pytest.mark.parametrize(scoring_mix_in_init_params, **args_ids_for(scenarios_key_error))
-def test_key_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, holdout):
+def test_key_error_scoring_mix_in_initialization(metrics, in_fold, oof, holdout):
     with pytest.raises(KeyError):
-        ScoringMixIn(metrics_map=metrics_map, in_fold=in_fold, oof=oof, holdout=holdout)
+        ScoringMixIn(metrics=metrics, in_fold=in_fold, oof=oof, holdout=holdout)
 
 
 ##################################################
@@ -231,7 +231,7 @@ def test_key_error_scoring_mix_in_initialization(metrics_map, in_fold, oof, hold
 )
 def test_get_formatted_target_metric_type_error(target_metric):
     with pytest.raises(TypeError):
-        get_formatted_target_metric(target_metric, format_metrics_map(["roc_auc_score"]))
+        get_formatted_target_metric(target_metric, format_metrics(["roc_auc_score"]))
 
 
 @pytest.mark.parametrize(
@@ -240,7 +240,7 @@ def test_get_formatted_target_metric_type_error(target_metric):
 )
 def test_get_formatted_target_metric_value_error(target_metric):
     with pytest.raises(ValueError):
-        get_formatted_target_metric(target_metric, format_metrics_map(["roc_auc_score"]))
+        get_formatted_target_metric(target_metric, format_metrics(["roc_auc_score"]))
 
 
 ##################################################

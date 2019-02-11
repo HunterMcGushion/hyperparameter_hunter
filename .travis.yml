@@ -14,3 +14,4 @@ script:
   - make test
 after_success:
   - coveralls
+  - codecov

@@ -35,11 +35,11 @@ def build_fn(input_shape=-1):
 def _execute():
     env = Environment(
         train_dataset=prep_data(),
-        root_results_path="HyperparameterHunterAssets",
-        metrics_map=["roc_auc_score"],
+        results_path="HyperparameterHunterAssets",
+        metrics=["roc_auc_score"],
         target_column=[f"target_{_}" for _ in range(10)],
-        cross_validation_type="StratifiedKFold",
-        cross_validation_params=dict(n_splits=10, shuffle=True, random_state=True),
+        cv_type="StratifiedKFold",
+        cv_params=dict(n_splits=10, shuffle=True, random_state=True),
     )
 
     experiment = CVExperiment(

@@ -126,12 +126,12 @@ class Metric(object):
         raise NotImplementedError
 
 
-def format_metrics_map(metrics_map):
-    """Properly format iterable `metrics_map` to contain instances of :class:`Metric`
+def format_metrics(metrics):
+    """Properly format iterable `metrics` to contain instances of :class:`Metric`
 
     Parameters
     ----------
-    metrics_map: Dict, List
+    metrics: Dict, List
         Iterable describing the metrics to be recorded, along with a means to compute the value of
         each metric. Should be of one of the two following forms:
 
@@ -168,62 +168,62 @@ def format_metrics_map(metrics_map):
 
     Returns
     -------
-    metrics_map_dict: Dict
-        Cast of `metrics_map` to a dict, in which values are instances of :class:`Metric`
+    metrics_dict: Dict
+        Cast of `metrics` to a dict, in which values are instances of :class:`Metric`
 
     Examples
     --------
-    >>> format_metrics_map(["roc_auc_score", "f1_score"])  # doctest: +ELLIPSIS
+    >>> format_metrics(["roc_auc_score", "f1_score"])  # doctest: +ELLIPSIS
     {'roc_auc_score': Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), 'f1_score': Metric(f1_score, <function f1_score at 0x...>, max)}
-    >>> format_metrics_map([Metric("log_loss"), Metric("r2_score", direction="min")])  # doctest: +ELLIPSIS
+    >>> format_metrics([Metric("log_loss"), Metric("r2_score", direction="min")])  # doctest: +ELLIPSIS
     {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'r2_score': Metric(r2_score, <function r2_score at 0x...>, min)}
-    >>> format_metrics_map({"log_loss": Metric("log_loss"), "r2_score": Metric("r2_score", direction="min")})  # doctest: +ELLIPSIS
+    >>> format_metrics({"log_loss": Metric("log_loss"), "r2_score": Metric("r2_score", direction="min")})  # doctest: +ELLIPSIS
     {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'r2_score': Metric(r2_score, <function r2_score at 0x...>, min)}
-    >>> format_metrics_map([("log_loss", None), ("my_r2_score", "r2_score", "min")])  # doctest: +ELLIPSIS
+    >>> format_metrics([("log_loss", None), ("my_r2_score", "r2_score", "min")])  # doctest: +ELLIPSIS
     {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'my_r2_score': Metric(my_r2_score, <function r2_score at 0x...>, min)}
-    >>> format_metrics_map({"roc_auc": sk_metrics.roc_auc_score, "f1": sk_metrics.f1_score})  # doctest: +ELLIPSIS
+    >>> format_metrics({"roc_auc": sk_metrics.roc_auc_score, "f1": sk_metrics.f1_score})  # doctest: +ELLIPSIS
     {'roc_auc': Metric(roc_auc, <function roc_auc_score at 0x...>, max), 'f1': Metric(f1, <function f1_score at 0x...>, max)}
-    >>> format_metrics_map({"log_loss": (None, ), "my_r2_score": ("r2_score", "min")})  # doctest: +ELLIPSIS
+    >>> format_metrics({"log_loss": (None, ), "my_r2_score": ("r2_score", "min")})  # doctest: +ELLIPSIS
     {'log_loss': Metric(log_loss, <function log_loss at 0x...>, min), 'my_r2_score': Metric(my_r2_score, <function r2_score at 0x...>, min)}
-    >>> format_metrics_map({"roc_auc": "roc_auc_score", "f1": "f1_score"})  # doctest: +ELLIPSIS
+    >>> format_metrics({"roc_auc": "roc_auc_score", "f1": "f1_score"})  # doctest: +ELLIPSIS
     {'roc_auc': Metric(roc_auc, <function roc_auc_score at 0x...>, max), 'f1': Metric(f1, <function f1_score at 0x...>, max)}
-    >>> format_metrics_map({"roc_auc_score": None, "f1_score": None})  # doctest: +ELLIPSIS
+    >>> format_metrics({"roc_auc_score": None, "f1_score": None})  # doctest: +ELLIPSIS
     {'roc_auc_score': Metric(roc_auc_score, <function roc_auc_score at 0x...>, max), 'f1_score': Metric(f1_score, <function f1_score at 0x...>, max)}
     """
-    if metrics_map and isinstance(metrics_map, dict):
-        if all(isinstance(_, Metric) for _ in metrics_map.values()):
-            return metrics_map
+    if metrics and isinstance(metrics, dict):
+        if all(isinstance(_, Metric) for _ in metrics.values()):
+            return metrics
 
-        metrics_map = [
-            (k,) + (v if isinstance(v, (tuple, Metric)) else (v,)) for k, v in metrics_map.items()
+        metrics = [
+            (k,) + (v if isinstance(v, (tuple, Metric)) else (v,)) for k, v in metrics.items()
         ]
-    elif not (metrics_map and isinstance(metrics_map, list)):
-        raise TypeError(f"`metrics_map` must be a non-empty list or dict. Received: {metrics_map}")
+    elif not (metrics and isinstance(metrics, list)):
+        raise TypeError(f"`metrics` must be a non-empty list or dict. Received: {metrics}")
 
-    metrics_map_dict = {}
+    metrics_dict = {}
 
-    for value in metrics_map:
+    for value in metrics:
         if not isinstance(value, Metric):
             if not isinstance(value, tuple):
                 value = (value,)
 
-            metrics_map_dict[value[0]] = Metric(*value)
+            metrics_dict[value[0]] = Metric(*value)
         else:
-            metrics_map_dict[value.name] = value
+            metrics_dict[value.name] = value
 
-    if not all(metrics_map_dict):
-        raise TypeError(f"`metrics_map` keys must all be truthy. Received: {metrics_map_dict}")
+    if not all(metrics_dict):
+        raise TypeError(f"`metrics` keys must all be truthy. Received: {metrics_dict}")
 
-    return metrics_map_dict
+    return metrics_dict
 
 
 class ScoringMixIn(object):
-    def __init__(self, metrics_map, in_fold="all", oof="all", holdout="all", do_score=True):
+    def __init__(self, metrics, in_fold="all", oof="all", holdout="all", do_score=True):
         """MixIn class to manage metrics to record for each dataset type, and perform evaluations
 
         Parameters
         ----------
-        metrics_map: Dict, List
+        metrics: Dict, List
             Specifies all metrics to be used by their id keys, along with a means to compute the
             metric. If list, all values must be strings that are attributes in
             :mod:`sklearn.metrics`. If dict, key/value pairs must be of the form:
@@ -233,12 +233,12 @@ class ScoringMixIn(object):
             a callable, 3) a string that is an attribute in `sklearn.metrics` and should be used to
             fetch a callable. Metric callable functions should expect inputs of form
             (target, prediction), and should return floats
-        in_fold: List of strings, None, default=<all ids in `metrics_map`>
-            Which metrics (from ids in `metrics_map`) should be recorded for in-fold data
-        oof: List of strings, None, default=<all ids in `metrics_map`>
-            Which metrics (from ids in `metrics_map`) should be recorded for out-of-fold data
-        holdout: List of strings, None, default=<all ids in `metrics_map`>
-            Which metrics (from ids in `metrics_map`) should be recorded for holdout data
+        in_fold: List of strings, None, default=<all ids in `metrics`>
+            Which metrics (from ids in `metrics`) should be recorded for in-fold data
+        oof: List of strings, None, default=<all ids in `metrics`>
+            Which metrics (from ids in `metrics`) should be recorded for out-of-fold data
+        holdout: List of strings, None, default=<all ids in `metrics`>
+            Which metrics (from ids in `metrics`) should be recorded for holdout data
         do_score: Boolean, default=True
             This is experimental. If False, scores will be neither calculated nor recorded for the
             duration of the experiment
@@ -246,8 +246,8 @@ class ScoringMixIn(object):
         Notes
         -----
         For each kwarg in [`in_fold`, `oof`, `holdout`], the following must be true: if the value
-        of the kwarg is a list, its contents must be a subset of `metrics_map`"""
-        self.metrics_map = format_metrics_map(metrics_map)
+        of the kwarg is a list, its contents must be a subset of `metrics`"""
+        self.metrics = format_metrics(metrics)
         self.do_score = do_score
 
         #################### ScoringMixIn-Only Mangled Attributes ####################
@@ -262,15 +262,15 @@ class ScoringMixIn(object):
         """Ensure metrics lists input parameters are correct types and compatible with each other"""
         for (_d_type, _m_val) in [(_, getattr(self, f"_ScoringMixIn{_}")) for _ in data_types]:
             if _m_val == "all":
-                setattr(self, _d_type, list(self.metrics_map.keys()))
+                setattr(self, _d_type, list(self.metrics.keys()))
             elif not isinstance(_m_val, list):
                 raise TypeError(f"{_d_type} must be one of: ['all', None, <list>], not {_m_val}")
             else:
                 for _id in _m_val:
                     if not isinstance(_id, str):
                         raise TypeError(f"{_d_type} values must be of type str. Received {_id}")
-                    if _id not in self.metrics_map.keys():
-                        raise KeyError(f"{_d_type} values must be in metrics_map. '{_id}' is not")
+                    if _id not in self.metrics.keys():
+                        raise KeyError(f"{_d_type} values must be in metrics. '{_id}' is not")
 
     def evaluate(self, data_type, target, prediction, return_list=False):
         """Apply metric(s) to the given data to calculate the value of the `prediction`
@@ -308,11 +308,11 @@ class ScoringMixIn(object):
 
         for _metric_id in _metric_ids:
             try:
-                _metric_value = self.metrics_map[_metric_id](target, prediction)
+                _metric_value = self.metrics[_metric_id](target, prediction)
             except ValueError:
                 # Check if target contains integer types, but prediction contains floats
                 prediction = get_clean_prediction(target, prediction)
-                _metric_value = self.metrics_map[_metric_id](target, prediction)
+                _metric_value = self.metrics[_metric_id](target, prediction)
 
             _result.append((_metric_id, _metric_value))
 
@@ -366,20 +366,20 @@ def get_clean_prediction(target, prediction):
     return prediction
 
 
-def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof"):
+def get_formatted_target_metric(target_metric, metrics, default_dataset="oof"):
     """Return a properly formatted target_metric tuple for use with navigating evaluation results
 
     Parameters
     ----------
     target_metric: Tuple, String, or None
         Path denoting metric to be used. If tuple, the first value should be in ['oof', 'holdout',
-        'in_fold'], and the second value should be the name of a metric supplied in `metrics_map`.
+        'in_fold'], and the second value should be the name of a metric supplied in `metrics`.
         If str, should be one of the two values from the tuple form. Else, a value will be chosen
-    metrics_map: Dict
-        Properly formatted `metrics_map` as produced by :func:`metrics.format_metrics_map`, in which
+    metrics: Dict
+        Properly formatted `metrics` as produced by :func:`metrics.format_metrics`, in which
         keys are strings identifying metrics, and values are instances of :class:`metrics.Metric`.
-        See the documentation of :func:`metrics.format_metrics_map` for more information on
-        different metrics_map formats
+        See the documentation of :func:`metrics.format_metrics` for more information on
+        different metrics formats
     default_dataset: String in ['oof', 'holdout', 'in_fold'], default='oof'
         The default dataset type value to use if one is not provided
 
@@ -390,17 +390,17 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
 
     Examples
     --------
-    >>> get_formatted_target_metric(('holdout', 'roc_auc_score'), format_metrics_map(['roc_auc_score', 'f1_score']))
+    >>> get_formatted_target_metric(('holdout', 'roc_auc_score'), format_metrics(['roc_auc_score', 'f1_score']))
     ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric(('holdout',), format_metrics_map(['roc_auc_score', 'f1_score']))
+    >>> get_formatted_target_metric(('holdout',), format_metrics(['roc_auc_score', 'f1_score']))
     ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric('holdout', format_metrics_map(['roc_auc_score', 'f1_score']))
+    >>> get_formatted_target_metric('holdout', format_metrics(['roc_auc_score', 'f1_score']))
     ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric('holdout', format_metrics_map({'roc': 'roc_auc_score', 'f1': 'f1_score'}))
+    >>> get_formatted_target_metric('holdout', format_metrics({'roc': 'roc_auc_score', 'f1': 'f1_score'}))
     ('holdout', 'roc')
-    >>> get_formatted_target_metric('roc_auc_score', format_metrics_map(['roc_auc_score', 'f1_score']))
+    >>> get_formatted_target_metric('roc_auc_score', format_metrics(['roc_auc_score', 'f1_score']))
     ('oof', 'roc_auc_score')
-    >>> get_formatted_target_metric(None, format_metrics_map(['f1_score', 'roc_auc_score']))
+    >>> get_formatted_target_metric(None, format_metrics(['f1_score', 'roc_auc_score']))
     ('oof', 'f1_score')
     """
     ok_datasets = ["oof", "holdout", "in_fold"]
@@ -417,7 +417,7 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
     elif len(target_metric) == 1:
         if target_metric[0] in ok_datasets:
             # Just a dataset was provided - Need metric name
-            first_metric_key = list(metrics_map.keys())[0]
+            first_metric_key = list(metrics.keys())[0]
             target_metric = target_metric + (first_metric_key,)
             # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
         else:
@@ -426,8 +426,8 @@ def get_formatted_target_metric(target_metric, metrics_map, default_dataset="oof
 
     if not any([_ == target_metric[0] for _ in ok_datasets]):
         raise ValueError(f"`target_metric`[0] must be in {ok_datasets}. Received {target_metric}")
-    if not target_metric[1] in metrics_map.keys():
-        raise ValueError(f"target_metric[1]={target_metric[1]} not in metrics_map={metrics_map}")
+    if not target_metric[1] in metrics.keys():
+        raise ValueError(f"target_metric[1]={target_metric[1]} not in metrics={metrics}")
 
     return target_metric
 

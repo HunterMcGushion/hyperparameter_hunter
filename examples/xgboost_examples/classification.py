@@ -13,11 +13,11 @@ train_df["diagnosis"] = data.target
 #################### Set Up Environment ####################
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="diagnosis",
-    metrics_map=["roc_auc_score"],
-    cross_validation_type=StratifiedKFold,
-    cross_validation_params=dict(n_splits=10, shuffle=True, random_state=32),
+    metrics=["roc_auc_score"],
+    cv_type=StratifiedKFold,
+    cv_params=dict(n_splits=10, shuffle=True, random_state=32),
 )
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:

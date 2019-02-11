@@ -36,16 +36,16 @@ assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 def env_0():
     return Environment(
         train_dataset=get_breast_cancer_data(target="diagnosis"),
-        root_results_path=assets_dir,
+        results_path=assets_dir,
         target_column="diagnosis",
-        metrics_map=dict(
+        metrics=dict(
             roc_auc="roc_auc_score",
             f1=f1_score,
             f1_micro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro"),
             f1_macro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="macro"),
         ),
-        cross_validation_type="KFold",
-        cross_validation_params=dict(n_splits=2, shuffle=True, random_state=42),
+        cv_type="KFold",
+        cv_params=dict(n_splits=2, shuffle=True, random_state=42),
         verbose=1,
     )
 

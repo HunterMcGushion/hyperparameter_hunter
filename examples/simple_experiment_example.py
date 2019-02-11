@@ -6,10 +6,10 @@ from xgboost import XGBClassifier
 def execute():
     env = Environment(
         train_dataset=get_toy_classification_data(),
-        root_results_path="HyperparameterHunterAssets",
-        metrics_map=["roc_auc_score"],
-        cross_validation_type="StratifiedKFold",
-        cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32),
+        results_path="HyperparameterHunterAssets",
+        metrics=["roc_auc_score"],
+        cv_type="StratifiedKFold",
+        cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
 
     experiment = CVExperiment(

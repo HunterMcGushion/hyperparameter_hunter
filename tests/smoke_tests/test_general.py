@@ -43,10 +43,10 @@ def env_0():
 
     return Environment(
         train_dataset=get_toy_classification_data(),
-        root_results_path=assets_dir,
-        metrics_map=["roc_auc_score"],
-        cross_validation_type=RepeatedStratifiedKFold,
-        cross_validation_params=dict(n_splits=3, n_repeats=2, random_state=32),
+        results_path=assets_dir,
+        metrics=["roc_auc_score"],
+        cv_type=RepeatedStratifiedKFold,
+        cv_params=dict(n_splits=3, n_repeats=2, random_state=32),
         do_full_save=do_full_save,
     )
 
@@ -56,8 +56,8 @@ def env_1():
     return Environment(
         train_dataset=get_breast_cancer_data(),
         environment_params_path="examples/advanced_examples/environment_params.json",
-        root_results_path=assets_dir,
-        cross_validation_params=dict(n_splits=3, shuffle=True, random_state=32),
+        results_path=assets_dir,
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
     )
 
 
@@ -69,12 +69,12 @@ def env_2():
 
     return Environment(
         train_dataset=get_toy_classification_data(),
-        root_results_path=assets_dir,
+        results_path=assets_dir,
         holdout_dataset=get_holdout_set,
         test_dataset=get_toy_classification_data(),
-        metrics_map=["roc_auc_score"],
-        cross_validation_type=StratifiedKFold,
-        cross_validation_params=dict(n_splits=3, shuffle=True, random_state=32),
+        metrics=["roc_auc_score"],
+        cv_type=StratifiedKFold,
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
     )
 
 
@@ -97,11 +97,11 @@ def env_3():
 
     return Environment(
         train_dataset=get_toy_classification_data(),
-        root_results_path=assets_dir,
-        metrics_map=["roc_auc_score"],
+        results_path=assets_dir,
+        metrics=["roc_auc_score"],
         holdout_dataset=get_toy_classification_data(),
-        cross_validation_type=RepeatedStratifiedKFold,
-        cross_validation_params=dict(n_splits=3, n_repeats=2, random_state=32),
+        cv_type=RepeatedStratifiedKFold,
+        cv_params=dict(n_splits=3, n_repeats=2, random_state=32),
         runs=2,
         experiment_callbacks=[
             printer_callback(),
@@ -115,16 +115,16 @@ def env_3():
 def env_4():
     return Environment(
         train_dataset=get_breast_cancer_data(target="diagnosis"),
-        root_results_path=assets_dir,
+        results_path=assets_dir,
         target_column="diagnosis",
-        metrics_map=dict(
+        metrics=dict(
             roc_auc="roc_auc_score",
             f1=f1_score,
             f1_micro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro"),
             f1_macro=lambda y_true, y_pred: f1_score(y_true, y_pred, average="macro"),
         ),
-        cross_validation_type="KFold",
-        cross_validation_params=dict(n_splits=2, shuffle=True, random_state=42),
+        cv_type="KFold",
+        cv_params=dict(n_splits=2, shuffle=True, random_state=42),
         verbose=1,
     )
 
@@ -144,11 +144,11 @@ def env_4():
 def env_5(request):
     return Environment(
         train_dataset=get_breast_cancer_data(),
-        root_results_path=assets_dir,
+        results_path=assets_dir,
         target_column="diagnosis",
-        metrics_map=["roc_auc_score"],
-        cross_validation_type=StratifiedKFold,
-        cross_validation_params=dict(n_splits=3, shuffle=True, random_state=32),
+        metrics=["roc_auc_score"],
+        cv_type=StratifiedKFold,
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
         experiment_recorders=request.param,
     )
 
@@ -238,9 +238,9 @@ def test_do_full_save(env_0, exp_gbc_0, exp_gbc_1):
 
 #################### environment_params_path_example ####################
 def test_environment_params_path(env_1, exp_knc_0):
-    assert env_1.root_results_path.startswith(assets_dir)
+    assert env_1.results_path.startswith(assets_dir)
     assert env_1.target_column == ["diagnosis"]
-    assert env_1.cross_validation_type.__name__ == "StratifiedKFold"
+    assert env_1.cv_type.__name__ == "StratifiedKFold"
     assert "heartbeat" in env_1.file_blacklist
 
     assert has_experiment_result_file(

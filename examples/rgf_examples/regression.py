@@ -13,11 +13,11 @@ train_df["progression"] = data.target
 #################### Set Up Environment ####################
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="progression",
-    metrics_map=dict(msle=(mean_squared_log_error, "min")),
-    cross_validation_type="KFold",
-    cross_validation_params=dict(n_splits=10, random_state=42),
+    metrics=dict(msle=(mean_squared_log_error, "min")),
+    cv_type="KFold",
+    cv_params=dict(n_splits=10, random_state=42),
     runs=3,
 )
 

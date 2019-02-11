@@ -142,12 +142,7 @@ def locate_sentinels(parameters):
 ##################################################
 class DatasetSentinel(Sentinel):
     def __init__(
-        self,
-        dataset_type,
-        dataset_hash,
-        cross_validation_type=None,
-        global_random_seed=None,
-        random_seeds=None,
+        self, dataset_type, dataset_hash, cv_type=None, global_random_seed=None, random_seeds=None
     ):
         """Class to create sentinels representing dataset input/target values
 
@@ -160,7 +155,7 @@ class DatasetSentinel(Sentinel):
         dataset_hash: Str
             The hash of the dataset for which a sentinel should be created that was generated while
             creating :attr:`hyperparameter_hunter.environment.Environment.cross_experiment_key`
-        cross_validation_type: Str, or None, default=None
+        cv_type: Str, or None, default=None
             If None, `dataset_type` should be one of ['holdout_input', 'holdout_target']. Else,
             should be a string that is one of the following: 1) a string attribute of
             `sklearn.model_selection._split`, or 2) a hash produced while creating
@@ -173,7 +168,7 @@ class DatasetSentinel(Sentinel):
             should be :attr:`hyperparameter_hunter.environment.Environment.random_seeds`"""
         self.dataset_type = dataset_type
         self.dataset_hash = dataset_hash
-        self.cross_validation_type = cross_validation_type
+        self.cv_type = cv_type
         self.global_random_seed = global_random_seed
         self.random_seeds = random_seeds
         super().__init__()
@@ -188,9 +183,8 @@ class DatasetSentinel(Sentinel):
         sentinel = "SENTINEL***"
         sentinel += self.dataset_type + "***"
         sentinel += self.dataset_hash + "***"
-        sentinel += (
-            self.cross_validation_type + "***" if self.cross_validation_type is not None else ""
-        )
+        sentinel += self.cv_type + "***" if self.cv_type is not None else ""
+
         if self.random_seeds is not None:
             sentinel += "{}".format(self.random_seeds)
         elif self.global_random_seed is not None:
@@ -232,11 +226,11 @@ class DatasetSentinel(Sentinel):
         if self.dataset_type not in acceptable_values:
             raise ValueError("Received invalid `dataset_type`: '{}'".format(self.dataset_type))
 
-        #################### cross_validation_type ####################
+        #################### cv_type ####################
         if self.dataset_type in ("holdout_input", "holdout_target"):
-            self.cross_validation_type = None
-        elif self.cross_validation_type is None:
-            raise ValueError("`cross_validation_type` may only be None if 'holdout' `dataset_type`")
+            self.cv_type = None
+        elif self.cv_type is None:
+            raise ValueError("`cv_type` may only be None if 'holdout' `dataset_type`")
 
         #################### global_random_seed ####################
         if self.dataset_type in ("holdout_input", "holdout_target"):

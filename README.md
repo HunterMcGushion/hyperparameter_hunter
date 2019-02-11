@@ -61,10 +61,10 @@ df['target'] = data.target
 
 env = Environment(
     train_dataset=df,  # Add holdout/test dataframes, too
-    root_results_path='path/to/results/directory',  # Where your result files will go
-    metrics_map=['roc_auc_score'],  # Callables, or strings referring to `sklearn.metrics`
-    cross_validation_type=StratifiedKFold,  # Class, or string in `sklearn.model_selection`
-    cross_validation_params=dict(n_splits=5, shuffle=True, random_state=32)
+    results_path='path/to/results/directory',  # Where your result files will go
+    metrics=['roc_auc_score'],  # Callables, or strings referring to `sklearn.metrics`
+    cv_type=StratifiedKFold,  # Class, or string in `sklearn.model_selection`
+    cv_params=dict(n_splits=5, shuffle=True, random_state=32)
 )
 ```
 
@@ -355,10 +355,10 @@ from xgboost import XGBClassifier
 # Start by creating an `Environment` - This is where you define how Experiments (and optimization) will be conducted
 env = Environment(
     train_dataset=get_breast_cancer_data(target='target'),
-    root_results_path='HyperparameterHunterAssets',
-    metrics_map=['roc_auc_score'],
-    cross_validation_type='StratifiedKFold',
-    cross_validation_params=dict(n_splits=10, shuffle=True, random_state=32),
+    results_path='HyperparameterHunterAssets',
+    metrics=['roc_auc_score'],
+    cv_type='StratifiedKFold',
+    cv_params=dict(n_splits=10, shuffle=True, random_state=32),
 )
 
 # Now, conduct an `Experiment`
@@ -372,7 +372,7 @@ experiment = CVExperiment(
 )
 
 # That's it. No annoying boilerplate code to fit models and record results
-# Now, the `Environment`'s `root_results_path` directory will contain new files describing the Experiment just conducted
+results_path
 
 # Time for the fun part. We'll set up some hyperparameter optimization by first defining the `OptimizationProtocol` we want
 optimizer = BayesianOptimization(verbose=1)

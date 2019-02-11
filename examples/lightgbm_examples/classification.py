@@ -15,11 +15,11 @@ train_df["y"] = data.target
 #################### Set Up Environment ####################
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="y",
-    metrics_map=dict(f1=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro")),
-    cross_validation_type="StratifiedKFold",
-    cross_validation_params=dict(n_splits=5, random_state=32),
+    metrics=dict(f1=lambda y_true, y_pred: f1_score(y_true, y_pred, average="micro")),
+    cv_type="StratifiedKFold",
+    cv_params=dict(n_splits=5, random_state=32),
 )
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:

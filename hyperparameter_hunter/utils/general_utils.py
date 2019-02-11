@@ -18,11 +18,12 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
+from inspect import Traceback
 import re
 import string
 from textwrap import dedent
 from warnings import warn, simplefilter
-from inspect import Traceback
+import wrapt
 
 
 ##################################################
@@ -389,7 +390,7 @@ class Deprecated(object):
             simplefilter("default", UnsupportedWarning)
 
 
-def split_version(s):
+def split_version(s: str):
     """Split a version string into a tuple of integers to facilitate comparison
 
     Parameters
@@ -418,20 +419,70 @@ class Alias:
         aliases: List, string
             One or multiple string aliases for `primary_name`. If `primary_name` is not used on
             call, its value will be set to that of a random alias in `aliases`. Before calling the
-            decorated callable, all `aliases` are removed from its kwargs"""
+            decorated callable, all `aliases` are removed from its kwargs
+
+        Examples
+        --------
+        >>> class Foo():
+        ...     @Alias("a", ["a2"])
+        ...     def __init__(self, a, b=None):
+        ...         print(a, b)
+        >>> @Alias("a", ["a2"])
+        ... @Alias("b", ["b2"])
+        ... def bar(a, b=None):
+        ...    print(a, b)
+        >>> foo = Foo(a2="x", b="y")
+        x y
+        >>> bar(a2="x", b2="y")
+        x y"""
         self.primary_name = primary_name
         self.aliases = aliases if isinstance(aliases, list) else [aliases]
 
-    def __call__(self, obj):
-        @wraps(obj)
-        def wrapped(*args, **kwargs):
-            for alias in set(self.aliases).intersection(kwargs):
-                kwargs.setdefault(self.primary_name, kwargs[alias])  # Only set if no `primary_name`
-                del kwargs[alias]  # Remove `aliases`, leaving only `primary_name`
+    @wrapt.decorator
+    def __call__(self, wrapped, instance, args, kwargs):
+        for alias in set(self.aliases).intersection(kwargs):
+            # Only set if no `primary_name` already. Remove `aliases`, leaving only `primary_name`
+            kwargs.setdefault(self.primary_name, kwargs.pop(alias))
+            # Record aliases used in `instance.__hh_aliases_used` or `wrapped.__hh_aliases_used`
+            if instance:
+                set_default_attr(instance, "__hh_aliases_used", {})[self.primary_name] = alias
+            else:
+                set_default_attr(wrapped, "__hh_aliases_used", {})[self.primary_name] = alias
+        return wrapped(*args, **kwargs)
 
-            return obj(*args, **kwargs)
 
-        return wrapped
+def set_default_attr(obj, name, value):
+    """Set the `name` attribute of `obj` to `value` if the attribute does not already exist
+
+    Parameters
+    ----------
+    obj: Object
+        Object whose `name` attribute will be returned (after setting it to `value`, if necessary)
+    name: String
+        Name of the attribute to set to `value`, or to return
+    value: Object
+        Default value to give to `obj.name` if the attribute does not already exist
+
+    Returns
+    -------
+    Object
+        `obj.name` if it exists. Else, `value`
+
+    Examples
+    --------
+    >>> foo = type("Foo", tuple(), {"my_attr": 32})
+    >>> set_default_attr(foo, "my_attr", 99)
+    32
+    >>> set_default_attr(foo, "other_attr", 9000)
+    9000
+    >>> assert foo.my_attr == 32
+    >>> assert foo.other_attr == 9000
+    """
+    try:
+        return getattr(obj, name)
+    except AttributeError:
+        setattr(obj, name, value)
+    return value
 
 
 ##################################################
@@ -477,13 +528,16 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
     {('bar', 'c'): 3}
     >>> subdict({("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3}, keep=lambda _: _[0] == "foo")
     {('foo', 'a'): 1, ('foo', 'b'): 2}
-    >>> subdict(
-    ...     {("foo", "a"): 1, ("foo", "b"): 2, ("bar", "c"): 3},
-    ...     keep=lambda _: _[0] == "foo",
-    ...     key=lambda _: _[1],
-    ... )
+    >>> subdict({(6, "a"): 1, (6, "b"): 2, (7, "c"): 3}, lambda _: _[0] == 6, key=lambda _: _[1])
     {'a': 1, 'b': 2}
-    """
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"], key="foo")
+    Traceback (most recent call last):
+        File "general_utils.py", line ?, in subdict
+    TypeError: Expected callable `key` function
+    >>> subdict({"a": 1, "b": 2, "c": 3}, drop=["b", "c"], value="foo")
+    Traceback (most recent call last):
+        File "general_utils.py", line ?, in subdict
+    TypeError: Expected callable `value` function"""
     keep = keep or d.keys()
     drop = drop or []
     key = key or (lambda _: _)

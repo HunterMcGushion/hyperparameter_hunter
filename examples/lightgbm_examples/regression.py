@@ -14,11 +14,11 @@ train_df["median_value"] = data.target
 #################### Set Up Environment ####################
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="median_value",
-    metrics_map=dict(r2=r2_score),
-    cross_validation_type=RepeatedKFold,
-    cross_validation_params=dict(n_repeats=2, n_splits=5, random_state=42),
+    metrics=dict(r2=r2_score),
+    cv_type=RepeatedKFold,
+    cv_params=dict(n_repeats=2, n_splits=5, random_state=42),
 )
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:

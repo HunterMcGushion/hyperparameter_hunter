@@ -20,7 +20,7 @@ import inspect
 class LoggerFitStatus(BaseLoggerCallback):
     float_format = "{:.5f}"
     log_separator = "  |  "
-    # FLAG: Add means of updating float_format to "G.Env.reporting_handler_params['float_format']"
+    # FLAG: Add means of updating float_format to "G.Env.reporting_params['float_format']"
 
     def __init__(self):
         """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
@@ -37,7 +37,7 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().on_experiment_start()
 
     def on_repetition_start(self):
-        if G.Env.verbose >= 3 and G.Env.cross_validation_params.get("n_repeats", 1) > 1:
+        if G.Env.verbose >= 3 and G.Env.cv_params.get("n_repeats", 1) > 1:
             G.log("", previous_frame=inspect.currentframe().f_back)
         super().on_repetition_start()
 
@@ -77,7 +77,7 @@ class LoggerFitStatus(BaseLoggerCallback):
         content += self.log_separator if not content.endswith(" ") else ""
         content += self.__elapsed_helper("folds")
 
-        if G.Env.verbose >= 2 and G.Env.cross_validation_params["n_splits"] > 1:
+        if G.Env.verbose >= 2 and G.Env.cv_params["n_splits"] > 1:
             G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
         else:
             G.debug(content, previous_frame=inspect.currentframe().f_back, add_time=False)
@@ -90,7 +90,7 @@ class LoggerFitStatus(BaseLoggerCallback):
         content += self.log_separator if not content.endswith(" ") else ""
         content += self.__elapsed_helper("reps")
 
-        if G.Env.verbose >= 2 and G.Env.cross_validation_params.get("n_repeats", 1) > 1:
+        if G.Env.verbose >= 2 and G.Env.cv_params.get("n_repeats", 1) > 1:
             G.log(content, previous_frame=inspect.currentframe().f_back)
         else:
             G.debug(content, previous_frame=inspect.currentframe().f_back)

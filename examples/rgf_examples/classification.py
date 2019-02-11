@@ -13,11 +13,11 @@ train_df["y"] = y
 #################### Set Up Environment ####################
 env = Environment(
     train_dataset=train_df,
-    root_results_path="HyperparameterHunterAssets",
+    results_path="HyperparameterHunterAssets",
     target_column="y",
-    metrics_map=["hamming_loss"],
-    cross_validation_type=RepeatedStratifiedKFold,
-    cross_validation_params=dict(n_repeats=2, n_splits=10, random_state=1337),
+    metrics=["hamming_loss"],
+    cv_type=RepeatedStratifiedKFold,
+    cv_params=dict(n_repeats=2, n_splits=10, random_state=1337),
 )
 
 # Now that HyperparameterHunter has an active `Environment`, we can do two things:

@@ -119,7 +119,7 @@ class RecorderList(object):
         extra_recorders: List, None, default=None
             If not None, may be a list whose values are tuples of
             (<:class:`recorders.BaseRecorder` descendant>, <str result_path>). The result_path str
-            should be a path relative to `root_results_path`, specifying the directory/file in which
+            should be a path relative to `results_path`, specifying the directory/file in which
             the product of the custom recorder will be saved. The contents of `extra_recorders` are
             appended to the list of default `recorders` and used to create/update result files for
             an Experiment. The contents of `extra_recorders` are blacklisted in the same way as
@@ -389,7 +389,7 @@ class LeaderboardEntryRecorder(BaseRecorder):
     # ... minimum to achieve full library functionality. Furthermore, "leaderboards" is an invalid
     # ... blacklist value - "tested_keys" must be used, instead
     result_path_key = "tested_keys"
-    required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
+    required_attributes = ["result_paths", "current_task", "target_metric", "metrics"]
     # Despite not being allowed in the blacklist, the "leaderboards" and "global_leaderboard" keys
     # ... of `result_paths` are still referenced herein
 
@@ -400,7 +400,7 @@ class LeaderboardEntryRecorder(BaseRecorder):
         # Sort rows by first column (target metric), then descending "experiment_#" (newest first)
         self.result.sort(
             by=[list(self.result.data.columns)[0], "experiment_#"],
-            ascending=[(self.metrics_map[self.target_metric[-1]].direction == "min"), False],
+            ascending=[(self.metrics[self.target_metric[-1]].direction == "min"), False],
         )
 
     def save_result(self):
@@ -417,7 +417,7 @@ class LeaderboardEntryRecorder(BaseRecorder):
 ##################################################
 class UnsortedIDLeaderboardRecorder(BaseRecorder):
     result_path_key = "unsorted_id_leaderboard"
-    required_attributes = ["result_paths", "current_task", "target_metric", "metrics_map"]
+    required_attributes = ["result_paths", "current_task", "target_metric", "metrics"]
 
     def format_result(self):
         """Read existing global leaderboard, add current entry, then sort the updated leaderboard"""
@@ -426,7 +426,7 @@ class UnsortedIDLeaderboardRecorder(BaseRecorder):
         no_sort = ["experiment_id", "hyperparameter_key", "cross_experiment_key", "algorithm_name"]
         self.result.sort(
             by=[_ for _ in list(self.result.data.columns) if _ not in no_sort],
-            ascending=(self.metrics_map[self.target_metric[-1]].direction == "min"),
+            ascending=(self.metrics[self.target_metric[-1]].direction == "min"),
         )
 
     def save_result(self):

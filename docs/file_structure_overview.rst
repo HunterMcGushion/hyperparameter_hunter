@@ -76,7 +76,7 @@ experiments would be created by the same file.
 * Specifically, this directory is concerned with any python classes, or callables, or DataFrames you may provide, and will create
   a the appropriate file or directory to properly store the object.
 
-    * If a class is provided (as is the case with ``cross_validation_type``, and ``model_initializer``), the Shelve and Dill
+    * If a class is provided (as is the case with ``cv_type``, and ``model_initializer``), the Shelve and Dill
       libraries are used to pickle a copy of the class, linked to the class's hash as its key.
     * If a defined function, or a lambda is provided (as is the case with ``prediction_formatter``, which is an optional
       ``Environment`` kwarg), a .json file entry is created linking the callable's hash to its source code saved as a string,
@@ -94,7 +94,7 @@ experiments would be created by the same file.
     * They are created whenever ``Environment``\s or ``Experiment``\s are provided arguments too complex to neatly display in the
       ``Experiment``'s **'Descriptions/'** entry file.
     * Some other complex attributes you may come across that are given **'KeyAttributeLookup/'** entries include: custom metrics
-      provided via ``Environment``'s ``metrics_map`` and ``metrics_params`` kwargs, and Keras Neural Network ``callbacks`` and
+      provided via ``Environment``'s ``metrics`` and ``metrics_params`` kwargs, and Keras Neural Network ``callbacks`` and
       ``build_fn``\s.
 
 /**Leaderboards/**

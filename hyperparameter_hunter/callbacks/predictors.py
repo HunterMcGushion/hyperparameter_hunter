@@ -64,7 +64,7 @@ class PredictorOOF(BasePredictorCallback):
         super().on_repetition_end()
 
     def on_experiment_end(self):
-        self.final_oof_predictions /= self.cross_validation_params.get("n_repeats", 1)
+        self.final_oof_predictions /= self.cv_params.get("n_repeats", 1)
         super().on_experiment_end()
 
     def __zeros_df(self):
@@ -108,12 +108,12 @@ class PredictorHoldout(BasePredictorCallback):
         super().on_fold_end()
 
     def on_repetition_end(self):
-        self.repetition_holdout_predictions /= self.cross_validation_params["n_splits"]
+        self.repetition_holdout_predictions /= self.cv_params["n_splits"]
         self.final_holdout_predictions += self.repetition_holdout_predictions
         super().on_repetition_end()
 
     def on_experiment_end(self):
-        self.final_holdout_predictions /= self.cross_validation_params.get("n_repeats", 1)
+        self.final_holdout_predictions /= self.cv_params.get("n_repeats", 1)
         super().on_experiment_end()
 
 
@@ -154,12 +154,12 @@ class PredictorTest(BasePredictorCallback):
         super().on_fold_end()
 
     def on_repetition_end(self):
-        self.repetition_test_predictions /= self.cross_validation_params["n_splits"]
+        self.repetition_test_predictions /= self.cv_params["n_splits"]
         self.final_test_predictions += self.repetition_test_predictions
         super().on_repetition_end()
 
     def on_experiment_end(self):
-        self.final_test_predictions /= self.cross_validation_params.get("n_repeats", 1)
+        self.final_test_predictions /= self.cv_params.get("n_repeats", 1)
         super().on_experiment_end()
 
 
