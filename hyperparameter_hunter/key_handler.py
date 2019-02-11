@@ -28,6 +28,7 @@ from hyperparameter_hunter.metrics import Metric
 from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json, make_dirs
+from hyperparameter_hunter.utils.general_utils import subdict
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 
 ##################################################
@@ -55,17 +56,8 @@ try:
     from keras.callbacks import Callback as BaseKerasCallback
     from keras.initializers import Initializer as BaseKerasInitializer
 except ModuleNotFoundError:
-
-    class BaseKerasCallback:
-        placeholder_attribute = """
-        Hello, there! I am a `placeholder_attribute` for `BaseKerasCallback` if attempting to import `Keras` raised a 
-        `ModuleNotFoundError`. You might be wondering what I'm doing here. I'm special because no normal/sane person would make a
-        class, or an attribute just like me! That means that if anyone checks to see if something is an instance of yours truly, 
-        hopefully it won't be! :) Nice to meet you! &*%#))(%#(*&@*HIOV0(#*W*Q()UFIJW_Q)_#R*(*(T{_E_QWO_))T+VMS"W)|GO{>A?C<A/woe0
-        """
-
-    class BaseKerasInitializer:
-        ...
+    BaseKerasCallback = type("BaseKerasCallback", tuple(), {})
+    BaseKerasInitializer = type("BaseKerasInitializer", tuple(), {})
 
 
 ##################################################
@@ -208,10 +200,7 @@ class KeyMaker(metaclass=ABCMeta):
         #################### Check for Identical DataFrames ####################
         for df_hash, df_names in dataframe_hashes.items():
             if len(df_names) > 1:
-                G.warn(
-                    f"The dataframes: {df_names} have an identical hash: {df_hash!s}. This implies the dataframes are "
-                    + "identical, which is probably unintentional. If left alone, scores may be misleading!"
-                )
+                G.warn(f"The dataframes: {df_names} are identical. Scores may be misleading!")
 
     def add_complex_type_lookup_entry(self, path, key, value, hashed_value):
         """Add lookup entry in `lookup_dir` for a complex-typed parameter, linking
@@ -380,10 +369,9 @@ class HyperparameterKeyMaker(KeyMaker):
             parameters["model_init_params"]["layers"] = temp_layers
             parameters["model_init_params"]["compile_params"] = temp_compile_params
 
-            if "params" in parameters["model_extra_params"]:
-                parameters["model_extra_params"] = {
-                    _k: _v for _k, _v in parameters["model_extra_params"].items() if _k != "params"
-                }
+            parameters["model_extra_params"] = subdict(
+                parameters["model_extra_params"], drop=["params"]
+            )
 
         KeyMaker.__init__(self, parameters, **kwargs)
 
@@ -401,26 +389,14 @@ class HyperparameterKeyMaker(KeyMaker):
         -------
         parameters: Dict
             Filtered version of the given `parameters`"""
-        reject_keys = {
-            "verbose",
-            "verbosity",
-            "silent",
-            "random_state",
-            "random_seed",
-            "seed",
-            "n_jobs",
-            "nthread",
-        }
+        reject = ["verbose", "verbosity", "silent"]
+        reject += ["random_state", "random_seed", "seed", "n_jobs", "nthread"]
 
         if self.is_task_keras:
-            reject_keys.add("build_fn")
+            reject.append("build_fn")
 
-        for k in reject_keys:
-            if parameters["model_init_params"] and (k in parameters["model_init_params"].keys()):
-                del parameters["model_init_params"][k]
-            if parameters["model_extra_params"] and (k in parameters["model_extra_params"].keys()):
-                del parameters["model_extra_params"][k]
-
+        parameters["model_init_params"] = subdict(parameters["model_init_params"], drop=reject)
+        parameters["model_extra_params"] = subdict(parameters["model_extra_params"], drop=reject)
         return parameters
 
     def does_key_exist(self):
