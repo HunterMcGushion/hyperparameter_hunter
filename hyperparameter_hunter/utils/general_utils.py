@@ -15,7 +15,6 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from collections import defaultdict
 from datetime import datetime
 from functools import wraps
 from inspect import Traceback
@@ -181,39 +180,6 @@ def to_standard_string(a_string):
 def standard_equality(string_1, string_2):
     # assert (isinstance(string_1, str) and isinstance(string_2, str))
     return to_standard_string(string_1) == to_standard_string(string_2)
-
-
-def to_even(value, append_char=" "):
-    try:
-        if len(value) % 2 != 0:
-            return value + append_char
-    except TypeError:
-        if value % 2 != 0:
-            return value + 1
-    return value
-
-
-def composed(*decorators):
-    def _deco(f):
-        for dec in reversed(decorators):
-            f = dec(f)
-        return f
-
-    return _deco
-
-
-##################################################
-# Recursive Dictionary for Deep Setting
-##################################################
-recursive_dict = lambda: defaultdict(recursive_dict)
-
-
-def deep_dict_set(rec_dict, keys, value):
-    for key in keys[:-1]:
-        rec_dict = rec_dict[key]
-
-    rec_dict[keys[-1]] = value
-    return rec_dict
 
 
 ##################################################
