@@ -1,6 +1,10 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+
+<a name="2.2.0"></a>
+## [2.2.0] (2019-02-10)
+
 ### Features
 * Enhanced support for Keras `initializers`
     * In addition to providing strings to the various "...initializer" parameters of Keras layers 
@@ -39,6 +43,7 @@ continue using the original names for the parameters mentioned above
 
 ### Bug-Fixes
 * Fix bug caused by yaml import when not using `recorders.YAMLDescriptionRecorder`
+
 
 <a name="2.1.0"></a>
 ## [2.1.0] (2019-01-15)
@@ -422,7 +427,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.0...v2.0.1
