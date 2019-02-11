@@ -145,6 +145,31 @@ def now_time():
 
 
 def sec_to_hms(seconds, ms_places=5, as_str=False):
+    """Convert `seconds` to hours, minutes, and seconds
+
+    Parameters
+    ----------
+    seconds: Integer
+        Number of total seconds to be converted to hours, minutes, seconds format
+    ms_places: Integer, default=5
+        Rounding precision for calculating number of seconds
+    as_str: Boolean, default=False
+        If True, return string "{hours} h, {minutes} m, {seconds} s". Else, return a triple
+
+    Returns
+    -------
+    String or tuple
+        If `as_str=True`, return a formatted string containing the hours, minutes, and seconds.
+        Else, return a 3-item tuple of (hours, minutes, seconds)
+
+    Examples
+    --------
+    >>> assert sec_to_hms(55, as_str=True) == '55 s'
+    >>> assert sec_to_hms(86400) == (24, 0, 0)
+    >>> assert sec_to_hms(86400, as_str=True) == '24 h'
+    >>> assert sec_to_hms(86370) == (23, 59, 30)
+    >>> assert sec_to_hms(86370, as_str=True) == '23 h, 59 m, 30 s'
+    """
     t_hour, temp_sec = divmod(seconds, 3600)
     t_min, t_sec = divmod(temp_sec, 60)
     t_sec = round(t_sec, ms_places)
@@ -157,13 +182,9 @@ def sec_to_hms(seconds, ms_places=5, as_str=False):
             result += "{} m, ".format(t_min)
         if t_sec != 0:
             result += "{} s".format(t_sec)
-        return result
+        return result.strip(", ")
     else:
         return (t_hour, t_min, t_sec)
-
-
-def flatten(l):
-    return [item for sublist in l for item in sublist]
 
 
 def type_val(val):
