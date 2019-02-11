@@ -5,9 +5,7 @@
 import numpy as np
 import os
 import os.path
-import pickle
 import simplejson as json
-import sys
 
 
 ##################################################
@@ -51,8 +49,6 @@ def write_json(file_path, data, do_clear=False):
         The content to save at the .json file given by `file_path`
     do_clear: Boolean, default=False
         If True, the contents of the file at `file_path` will be cleared before saving `data`"""
-    file_path = validate_extension(file_path, "json")
-
     if do_clear is True:
         clear_file(file_path)
 
@@ -134,42 +130,6 @@ def add_to_json(file_path, data_to_add, key=None, condition=None, default=None, 
 
 
 ##################################################
-# Pickle File Functions
-##################################################
-def read_pickle(file_path, default_value=None):
-    file_path = validate_extension(file_path, "pkl")
-
-    try:
-        target_file = open(file_path, "rb")
-    except IOError as err:
-        if default_value is not None:
-            write_pickle(file_path, default_value)
-            target_file = open(file_path, "rb")
-        else:
-            raise err
-    file_content = pickle.load(target_file)
-    target_file.close()
-
-    return file_content
-
-
-def write_pickle(file_path, content, do_create=True):
-    file_path = validate_extension(file_path, "pkl")
-
-    try:
-        target_file = open(file_path, "wb")
-    except IOError as err:
-        if do_create is True:
-            make_dirs(os.path.dirname(file_path))
-            target_file = open(file_path, "wb")
-        else:
-            raise IOError("Invalid `file_path`\n{}".format(err)).with_traceback(sys.exc_info()[2])
-
-    pickle.dump(content, target_file)
-    target_file.close()
-
-
-##################################################
 # General File Functions
 ##################################################
 def make_dirs(name, mode=0o0777, exist_ok=False):
@@ -187,34 +147,6 @@ def make_dirs(name, mode=0o0777, exist_ok=False):
     old_mask = os.umask(000)
     os.makedirs(name, mode=mode, exist_ok=exist_ok)
     os.umask(old_mask)
-
-
-def validate_extension(file_path, extension, do_fix=False):
-    extension = extension if extension.startswith(".") else ".{}".format(extension)
-
-    if os.path.splitext(file_path)[1] != extension:
-        if do_fix is True:
-            return "{}{}".format(file_path, extension)
-        else:
-            raise ValueError(f"Invalid extension ({extension}) for file_path='{file_path}'")
-    else:
-        return file_path
-
-
-def write_file(file_path, data, do_clear=False, txt=False):
-    # file_path = validate_extension(file_path, '.txt') if txt is True else file_path
-
-    if do_clear is True:
-        clear_file(file_path)
-
-    file_w = open(file_path, "a+")
-    file_w.write(data)
-
-
-def read_file(file_path):
-    with open(file_path, "r") as f:
-        read_target = f.read()
-    return read_target
 
 
 def clear_file(file_path):
