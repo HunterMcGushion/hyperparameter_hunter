@@ -13,6 +13,7 @@ from hyperparameter_hunter.exceptions import EnvironmentInactiveError, Environme
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs, read_json
+from hyperparameter_hunter.utils.general_utils import subdict
 
 ##################################################
 # Import Miscellaneous Assets
@@ -226,13 +227,9 @@ class DescriptionRecorder(BaseRecorder):
         )
 
         #################### Filter Hyperparameters' model_init_params ####################
-        bad_keys = {"random_state", "seed"}
-
-        self.result["hyperparameters"]["model_init_params"] = {
-            _k: _v
-            for _k, _v in self.result["hyperparameters"]["model_init_params"].items()
-            if _k not in bad_keys
-        }
+        self.result["hyperparameters"]["model_init_params"] = subdict(
+            self.result["hyperparameters"]["model_init_params"], drop=["random_state", "seed"]
+        )
 
     def save_result(self):
         """Save the Experiment description as a .json file, named after :attr:`experiment_id`. If
