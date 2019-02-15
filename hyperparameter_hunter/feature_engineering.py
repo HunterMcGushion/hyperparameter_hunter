@@ -1,584 +1,379 @@
-# """This module is still in an experimental stage and should not be assumed to be "reliable", or
-# "useful", or anything else that might be expected of a normal module"""
-# ##################################################
-# # Import Own Assets
-# ##################################################
-# from hyperparameter_hunter.utils.general_utils import type_val
-# from hyperparameter_hunter.utils.learning_utils import upsample
-# from hyperparameter_hunter.settings import G
-#
-# ##################################################
-# # Import Miscellaneous Assets
-# ##################################################
-# from collections import Counter
-#
-# ##################################################
-# # Import Learning Assets
-# ##################################################
-# from sklearn.preprocessing import StandardScaler
-# from imblearn.over_sampling import SMOTE, ADASYN, RandomOverSampler
-#
-#
-# class PreprocessingPipelineMixIn(object):
-#     def __init__(
-#         self,
-#         pipeline,
-#         preprocessing_params,
-#         features,
-#         target_column,
-#         train_input_data: object = None,
-#         train_target_data: object = None,
-#         validation_input_data: object = None,
-#         validation_target_data: object = None,
-#         holdout_input_data: object = None,
-#         holdout_target_data: object = None,
-#         test_input_data: object = None,
-#         fitting_guide=None,
-#         fail_gracefully=False,
-#         preprocessing_stage="infer",
-#     ):
-#         """
-#
-#         Parameters
-#         ----------
-#         pipeline: List
-#             List of tuples of form: (<string id>, <callable function>), in which the id identifies
-#             the paired function transformations to be fitted on dfs specified by fitting_guide[i],
-#             then applied to all other same-type, non-null dfs
-#         preprocessing_params: Dict
-#             All the parameters necessary for the desired preprocessing functionality
-#         features: List
-#             List containing strings that specify the columns to be used as input
-#         target_column: String
-#             String naming the target column
-#         train_input_data: Pandas Dataframe
-#             ...
-#         train_target_data: Pandas Dataframe
-#             ...
-#         validation_input_data: Pandas Dataframe
-#             ...
-#         validation_target_data: Pandas Dataframe
-#             ...
-#         holdout_input_data: Pandas Dataframe
-#             ...
-#         holdout_target_data: Pandas Dataframe
-#             ...
-#         test_input_data: Pandas Dataframe
-#             ...
-#         fitting_guide: List of same length as pipeline containing tuples of strings, default=None
-#             If not None, specifies datasets used to fit each manipulation in pipeline. Those not
-#             included in the list (and of same type: input/target) will be transformed according to
-#             the fitted functions. Else, infer from preprocessing_stage
-#         fail_gracefully: Boolean, default=False
-#             If True, Exceptions thrown by preprocessing transformations will be logged and skipped,
-#             so processing can continue
-#         preprocessing_stage: String in ['pre_cv', 'intra_cv', 'infer'], default='infer'
-#             Denotes when preprocessing is occurring. If 'pre_cv', pipeline functions are fit on all
-#             available data. If 'intra_cv', pipeline functions are fit on train data and applied to
-#             all same-type, non-null data. Else, infer stage"""
-#         ##################################################
-#         # Core Attributes
-#         ##################################################
-#         self.pipeline = pipeline
-#         self.preprocessing_params = preprocessing_params
-#         self.features = features
-#         self.target_column = target_column
-#
-#         ##################################################
-#         # Dataset Attributes
-#         ##################################################
-#         self.train_input_data = train_input_data.copy() if train_input_data is not None else None
-#         self.train_target_data = train_target_data.copy() if train_target_data is not None else None
-#         self.validation_input_data = (
-#             validation_input_data.copy() if validation_input_data is not None else None
-#         )
-#         self.validation_target_data = (
-#             validation_target_data.copy() if validation_target_data is not None else None
-#         )
-#         self.holdout_input_data = (
-#             holdout_input_data.copy() if holdout_input_data is not None else None
-#         )
-#         self.holdout_target_data = (
-#             holdout_target_data.copy() if holdout_target_data is not None else None
-#         )
-#         self.test_input_data = test_input_data.copy() if test_input_data is not None else None
-#
-#         ##################################################
-#         # Miscellaneous Attributes
-#         ##################################################
-#         self.fitting_guide = fitting_guide
-#         self.fail_gracefully = fail_gracefully
-#
-#         ##################################################
-#         # Preprocessing Stage and Dataset Type Attributes
-#         ##################################################
-#         self.preprocessing_stage = preprocessing_stage
-#         self.all_input_sets = self.get_non_null(
-#             ["{}_input_data".format(_) for _ in ("train", "validation", "holdout", "test")]
-#         )
-#         self.all_target_sets = self.get_non_null(
-#             ["{}_target_data".format(_) for _ in ("train", "validation", "holdout")]
-#         )
-#         self.fit_input_sets = None
-#         self.fit_target_sets = None
-#
-#         ##################################################
-#         # Initialize Mix-Ins/Inherited Classes
-#         ##################################################
-#         pass
-#
-#         ##################################################
-#         # Ensure Attributes are Properly Initialized
-#         ##################################################
-#         self.set_preprocessing_stage_and_sets()
-#
-#     def get_non_null(self, dataset_names):
-#         return [_ for _ in dataset_names if self.__getattribute__(_) is not None]
-#
-#     def set_preprocessing_stage_and_sets(self):
-#         """Ensures preprocessing_stage has been properly initialized before initializing
-#         fit_input_sets and fit_target_sets"""
-#         try:
-#             self.preprocessing_stage = self.initialize_preprocessing_stage()
-#         except Exception as _ex:
-#             raise (_ex)
-#         else:
-#             if self.preprocessing_stage == "pre_cv":
-#                 self.fit_input_sets = self.all_input_sets
-#                 self.fit_target_sets = self.all_target_sets
-#                 # self.fit_target_sets = ['train_target_data', 'holdout_target_data']
-#             elif self.preprocessing_stage == "intra_cv":
-#                 self.fit_input_sets = ["train_input_data"]
-#                 self.fit_target_sets = ["train_target_data"]
-#                 # self.fit_input_sets = ['train_input_data', 'validation_input_data', 'holdout_input_data', 'test_input_data']
-#                 # self.fit_target_sets = ['train_target_data', 'validation_target_data', 'holdout_target_data']
-#
-#     def initialize_preprocessing_stage(self):
-#         """Ensures preprocessing_stage can be set according to class attributes or method input"""
-#         _stages, _err = ["pre_cv", "intra_cv"], "Unknown error occurred."
-#         _i_strs = ["validation_input_data", "validation_target_data"]
-#         _i_sets = [getattr(self, _) for _ in _i_strs]
-#
-#         if self.preprocessing_stage in _stages:
-#             return self.preprocessing_stage
-#         elif self.preprocessing_stage == "infer":
-#             if all([_ for _ in _i_sets]):
-#                 return "intra_cv"
-#             elif any([_ for _ in _i_sets]):
-#                 _err = "Inference failed. {} types must be same. Received: {}".format(
-#                     _i_strs, [type(_) for _ in _i_sets]
-#                 )
-#             else:
-#                 return "pre_cv"
-#         else:
-#             _err = "preprocessing_stage must be in {}. Received type {}: {}".format(
-#                 _stages, *type_val(self.preprocessing_stage)
-#             )
-#
-#         if self.fail_gracefully is True:
-#             G.warn(_err)
-#             return "pre_cv"
-#         else:
-#             raise ValueError(_err)
-#
-#     def build_pipeline(self):
-#         new_pipeline = (
-#             []
-#         )  # (<str id>, <callable transformation>, <sets to fit on>, <sets to transform>)
-#
-#         if not isinstance(self.pipeline, list):
-#             raise TypeError(
-#                 "Expected pipeline of type list. Received {}: {}".format(*type_val(self.pipeline))
-#             )
-#
-#         for i, step in enumerate(self.pipeline):
-#             step_id, step_callable, step_fit_sets, step_transform_sets = None, None, None, None
-#
-#             ##################################################
-#             # Pipeline is a list of strings
-#             ##################################################
-#             if isinstance(step, str):
-#                 # element names a method in this class to use
-#                 step_id, step_callable = step, getattr(self, step, default=None)
-#                 if step_callable is None:
-#                     raise AttributeError(
-#                         "Expected pipeline value to name a method. Received {}: {}".format(
-#                             *type_val(step)
-#                         )
-#                     )
-#             ##################################################
-#             # Pipeline is a list of tuple/list pairs
-#             ##################################################
-#             # TODO: Instead of forcing len() == 2, merge self.fitting_guide into self.pipeline.
-#             # TODO: Max valid length == 4 after adding fit_sets(subset of transform_sets), transform_sets
-#             # TODO: If len > 4, throw WARNING that extra values will be ignored and continue
-#             elif any([isinstance(step, _) for _ in (tuple, list)]) and len(step) == 2:
-#                 # element is a tuple/list of length 2, where 2nd value is a callable or names method of transformation
-#                 if isinstance(step[0], str):
-#                     step_id = step[0]
-#                 else:
-#                     pass
-#
-#                 if callable(step[1]):
-#                     pass
-#                     # TODO: Dynamically create new method, whose name is heavily mangled and modified
-#                     # TODO: Try to include original callable __name__ in new method's name. If unavailable use "i"
-#                     # TODO: New method name should be something like: "__dynamic_pipeline_method_{}".format(step[1].__name__ or i)
-#                     # TODO: Actual name that would be called would be mangled because of double underscore prefix
-#                     # FLAG: If you want your method to have other arguments, place them in preprocessing_params dict, instead
-#                     # FLAG: Then just use self.preprocessing_params[<your arg>] inside your callable
-#                     # FLAG: In fact, declaring values that may change later on directly in your callable could be problematic
-#                     # FLAG: If you include them in preprocessing_params, hyperparameters for experiment will be clear
-#             ##################################################
-#             # Pipeline type is invalid
-#             ##################################################
-#             else:
-#                 raise TypeError(
-#                     "Expected pipeline step to be: a str, or a tuple pair. Received {}: {}".format(
-#                         *type_val(step)
-#                     )
-#                 )
-#
-#             ##################################################
-#             # Additional Error Handling
-#             ##################################################
-#             if step_id is None:
-#                 raise TypeError(
-#                     "Expected str as first value in each pipeline tuple. Received {}: {}".format(
-#                         *type_val(step[0])
-#                     )
-#                 )
-#
-#             new_pipeline.append((step_id, step_callable, step_fit_sets, step_transform_sets))
-#
-#     def custom_pipeline_method_builder(self, functionality, name=None):
-#         """...
-#
-#         Parameters
-#         ----------
-#         functionality: Callable
-#             Performs all desired transformations/alterations/work for this pipeline step. This
-#             callable will not receive any input arguments, so don't expect any. Instead, it is
-#             implemented as a class method, so it has access to all class attributes and methods. To
-#             work properly, the class attributes: ['self.train_input_data', 'self.train_target_data',
-#             'self.validation_input_data', 'self.validation_target_data', 'self.holdout_input_data',
-#             'self.holdout_target_data', 'self.test_input_data'] are expected to be directly
-#             modified. See the "Notes"/"Examples" sections below for more
-#         name: String, or None, default=None
-#             Suffix for the name of the new custom method. See below "Notes" section for details on
-#             method name creation
-#
-#         Returns
-#         -------
-#         name: str
-#             The name of the new method that was created
-#
-#         Notes
-#         -----
-#         WARNING: Because the custom functionality is implemented as a class method, it is capable
-#         of modifying values that are not expected to change, or setting new attributes. Doing either
-#         of these is a bad idea. The only attributes that should be set are those listed in the above
-#         "Parameters" description for the "functionality" argument. Additionally, the only values
-#         that should be retrieved are the aforementioned "data" attributes, plus
-#         :attr:`preprocessing_params`
-#
-#         METHOD ARGUMENTS: If the custom functionality requires some input argument that could be
-#         subject to change later (like a hyperparameter), it should be included in
-#         :attr:`preprocessing_params`. Then in the custom functionality, it can be retrieved with
-#         "self.preprocessing_params[<your_arg>]". See the "Examples" section below for details on how
-#         to do this. The two primary reasons for this behavior are as follows:
-#
-#         1) to get around having to make sense of methods' expected arguments and the arguments
-#         actually input to them, and
-#         2) to include any necessary arguments in the experiment's hyperparameters.
-#
-#         Examples
-#         --------
-#         >>> from hyperparameter_hunter.feature_engineering import PreprocessingPipelineMixIn
-#         >>> def my_function(self):
-#         >>>     self.train_input_data = self.train_input_data.fillna(self.preprocessing_params['my_imputer'])
-#         Notice in "my_function", "self" is the only input, "self.train_input_data" is directly
-#         modified, and instead of passing "my_imputer" as an input, it is referenced in
-#         "self.preprocessing_params". Now, the class can use "my_function" below.
-#         >>> preprocessor = PreprocessingPipelineMixIn(
-#         >>>     pipeline=[('my_function', my_function)],
-#         >>>     preprocessing_params=dict(my_imputer=-1), features=[], target_column=''
-#         >>> )
-#         The "pipeline" is set to include "my_function", which, after its creation, will be able to
-#         retrieve "my_imputer" from "self.preprocessing_params". Note that this example just
-#         demonstrates custom method building. It won't work as-is, without any train_input_data,
-#         among other things. Now in a later experiment, null values can be imputed to -2 instead of
-#         -1, just by changing "preprocessing_params":
-#         >>> preprocessor = PreprocessingPipelineMixIn(
-#         >>>     pipeline=[('my_function', my_function)],
-#         >>>     preprocessing_params=dict(my_imputer=-2), features=[], target_column=''
-#         >>> )
-#         This makes it much easier to keep track of the actual hyperparameters being used in an
-#         experiment than having to scour obscure functions for some number that may or may not even
-#         be declared inside"""
-#         if not callable(functionality):
-#             raise TypeError(
-#                 "Custom pipeline methods must be callable. Received type {}".format(
-#                     type(functionality)
-#                 )
-#             )
-#
-#         # TODO: Set name (using "functionality.__name__") if name is None
-#
-#         while hasattr(self, name):
-#             _name = name + ""  # TODO: Make changes to "name" here
-#             # TODO: Do something to further modify name and check again
-#             G.warn(
-#                 'Encountered naming conflict in custom_pipeline_method_builder with "{}". Trying "{}"'.format(
-#                     name, _name
-#                 )
-#             )
-#             name = _name
-#
-#         #################### Create New Custom Method ####################
-#         setattr(self, name, functionality)
-#
-#         return name
-#
-#     def data_imputation(self, which_sets=None):
-#         imputer = self.preprocessing_params.get("imputer", None)
-#         which_sets = which_sets if which_sets else self.fit_input_sets
-#
-#         for data_key in which_sets:
-#             data = self.__getattribute__(data_key)
-#
-#             if data is not None:
-#                 if callable(imputer):  # Apply Function to Impute Data
-#                     # TODO: Send either "self" or all attributes in self as other input to "imputer"
-#                     # TODO: Force callable "imputer" to have **kwargs, or check for the args it expects and send only those
-#                     self.__setattr__(data_key, imputer(data))
-#                 elif any(
-#                     [isinstance(imputer, _) for _ in (int, float)]
-#                 ):  # Fill Null Data With Given Value
-#                     self.__setattr__(data_key, data.fillna(imputer))
-#
-#         G.log("Completed data_imputation preprocessing")
-#
-#     def target_data_transformation(self, which_sets=None):
-#         transformation = self.preprocessing_params.get("target_transformation", None)
-#         which_sets = which_sets if which_sets else self.fit_target_sets
-#
-#         for data_key in which_sets:
-#             data = self.__getattribute__(data_key)
-#
-#             if callable(transformation) and data:
-#                 # TODO: Send either "self" or all attributes in self as other input to "imputer"
-#                 # TODO: Force callable "imputer" to have **kwargs, or check for the args it expects and send only those
-#                 self.__setattr__(data_key, transformation(data))
-#
-#         G.log("Completed target_data_transformation preprocessing")
-#
-#     def data_scaling(self, which_sets=None):
-#         which_sets = which_sets if which_sets else self.fit_input_sets
-#
-#         # TODO: Expand method to include other scaling types by sending string param or callable for apply_scale arg
-#         if self.preprocessing_params.get("apply_standard_scale", False) is True:
-#             scaler = StandardScaler()
-#
-#             # TODO: Modify fitting process to use 'which_sets' and 'self.fit_input_sets' like 'data_imputation' method
-#             scaler.fit(self.train_input_data[self.features].values)
-#
-#             if "train_input_data" in self.all_input_sets:
-#                 self.train_input_data[self.features] = scaler.transform(
-#                     self.train_input_data[self.features].values
-#                 )
-#             if "holdout_input_data" in self.all_input_sets:
-#                 self.holdout_input_data[self.features] = scaler.transform(
-#                     self.holdout_input_data[self.features].values
-#                 )
-#             if "test_input_data" in self.all_input_sets:
-#                 self.test_input_data[self.features] = scaler.transform(
-#                     self.test_input_data[self.features].values
-#                 )
-#
-#         G.log(
-#             'Completed data_scaling preprocessing. preprocessing_params["apply_standard_scale"]={}'.format(
-#                 self.preprocessing_params.get("apply_standard_scale", False)
-#             )
-#         )
-#
-#
-# class PreCVPreprocessingPipeline(PreprocessingPipelineMixIn):
-#     def __init__(
-#         self,
-#         features,
-#         target_column,
-#         train_input_data,
-#         train_target_data,
-#         holdout_input_data,
-#         holdout_target_data,
-#         test_input_data=None,
-#     ):
-#         PreprocessingPipelineMixIn.__init__(
-#             self,
-#             preprocessing_stage="pre_cv",
-#             pipeline=None,
-#             fitting_guide=None,
-#             preprocessing_params=None,
-#             features=features,
-#             target_column=target_column,
-#             train_input_data=train_input_data,
-#             train_target_data=train_target_data,
-#             validation_input_data=None,
-#             validation_target_data=None,
-#             holdout_input_data=holdout_input_data,
-#             holdout_target_data=holdout_target_data,
-#             test_input_data=test_input_data,
-#             fail_gracefully=False,
-#         )
-#
-#     # FLAG: WARNING: Method of same name in "CrossValidationWrapper" class
-#     # FLAG: WARNING: Method of same name in "CrossValidationWrapper" class
-#     def pre_cv_preprocessing(self):
-#         # FLAG: WARNING: Method of same name in "CrossValidationWrapper" class
-#         # FLAG: WARNING: Method of same name in "CrossValidationWrapper" class
-#         #################### Feature Selection ####################
-#         pass
-#
-#         #################### Impute Missing Values in Data ####################
-#         pass
-#
-#
-# class IntraCVPreprocessingPipeline(PreprocessingPipelineMixIn):
-#     def __init__(
-#         self,
-#         features,
-#         target_column,
-#         train_input_data,
-#         train_target_data,
-#         validation_input_data,
-#         validation_target_data,
-#         holdout_input_data=None,
-#         holdout_target_data=None,
-#         test_input_data=None,
-#     ):
-#         PreprocessingPipelineMixIn.__init__(
-#             self,
-#             preprocessing_stage="intra_cv",
-#             pipeline=None,
-#             fitting_guide=None,
-#             preprocessing_params=None,
-#             features=features,
-#             target_column=target_column,
-#             train_input_data=train_input_data,
-#             train_target_data=train_target_data,
-#             validation_input_data=validation_input_data,
-#             validation_target_data=validation_target_data,
-#             holdout_input_data=holdout_input_data,
-#             holdout_target_data=holdout_target_data,
-#             test_input_data=test_input_data,
-#             fail_gracefully=False,
-#         )
-#
-#
-# class Sampler:
-#     def __init__(self, parameters, input_data, target_data):
-#         self.input_data = input_data
-#         self.target_data = target_data
-#         self.parameters = parameters
-#
-#     def execute_pipeline(self):
-#         default_element = dict(
-#             method="", target_feature="target", target_value=-1.0, parameters=dict()
-#         )
-#         if len(self.parameters) > 0:
-#             self.report_status()
-#
-#             for element in self.parameters:
-#                 default_element.update(element)
-#
-#                 self.advance_pipeline(default_element)
-#
-#     def advance_pipeline(self, element):
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#
-#         if element["method"] == "smote":
-#             self.input_data, self.target_data = SMOTE(**element["parameters"]).fit_sample(
-#                 self.input_data, self.target_data
-#             )
-#         elif element["method"] == "adasyn":
-#             self.input_data, self.target_data = ADASYN(**element["parameters"]).fit_sample(
-#                 self.input_data, self.target_data
-#             )
-#         elif element["method"] == "RandomOverSampler":
-#             self.input_data, self.target_data = RandomOverSampler(
-#                 **element["parameters"]
-#             ).fit_sample(self.input_data, self.target_data)
-#
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#         # FLAG: imblearn functions return ndarray when give pandas series - FIGURE THAT SHIT OUT
-#
-#         elif element["method"] == "upsample":
-#             self.input_data, self.target_data = upsample(
-#                 self.input_data,
-#                 self.target_data,
-#                 element["target_feature"],
-#                 element["target_value"],
-#                 **element["parameters"]
-#             )
-#
-#         self.report_status(element["method"])
-#
-#     def report_status(self, method=None):
-#         if method is None:
-#             print("Target Label Counts... {}".format(sorted(Counter(self.target_data).items())))
-#         else:
-#             print(
-#                 "After Performing... {}... Target Label Counts... {}".format(
-#                     method, sorted(Counter(self.target_data).items())
-#                 )
-#             )
-#
-#
-# # def _execute():
-# #     """EXPERIMENTAL"""
-# #     test_parameters = [
-# #         dict(
-# #             target_feature='target',
-# #             target_value=1.0,
-# #             method='smote'
-# #         ),
-# #         dict(
-# #             target_feature='target',
-# #             method='upsample',
-# #             target_value=1.0,
-# #             parameters=dict(
-# #                 n_times=3
-# #             )
-# #         ),
-# #         # dict(
-# #         #     target_feature='target',
-# #         #     target_value=1.0,
-# #         #     method='smote'
-# #         # ),
-# #         # dict(
-# #         #     target_feature='target',
-# #         #     target_value=1.0,
-# #         #     method='adasyn'
-# #         # )
-# #     ]
-# #
-# #     # train_data = pd.read_csv('./data/porto_seguro_train.csv')
-# #     # train_input = train_data.drop(['id', 'target'], axis=1)
-# #     # train_target = train_data['target']
-# #
-# #     test_sampler = Sampler(test_parameters, train_input, train_target)
-# #     # test_sampler.report_status()
-# #     # test_sampler.advance_pipeline()
-# #     test_sampler.execute_pipeline()
-# #
-# #     print('hold')
-# #
-# #
-# # if __name__ == '__main__':
-# #     _execute()
+"""This module is still in an experimental stage and should not be assumed to be "reliable", or
+"useful", or anything else that might be expected of a normal module"""
+##################################################
+# Import Own Assets
+##################################################
+from hyperparameter_hunter.key_handler import make_hash_sha256
+from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.utils.general_utils import subdict
+
+##################################################
+# Import Miscellaneous Assets
+##################################################
+from ast import NodeVisitor, parse
+from inspect import getsource
+import pandas as pd
+from typing import List, Callable
+
+##################################################
+# Global Variables
+##################################################
+EMPTY_SENTINEL = type("EMPTY_SENTINEL", tuple(), {})
+
+
+class EngineerStep:
+    def __init__(self, f: Callable, name=None, params=None, stage=None, do_validate=False):
+        self._f = f
+        self._name = name
+        self._params = params
+        self._stage = stage
+        self.do_validate = do_validate
+
+        self.original_hashes = dict()
+        self.updated_hashes = dict()
+
+    def __call__(self, **datasets) -> dict:
+        """
+        ...
+
+        Parameters
+        ----------
+        **datasets: Dict
+            ...
+
+        Returns
+        -------
+        new_datasets: Dict
+            ...
+
+        """
+        self.original_hashes = hash_datasets(datasets)
+        step_result = self.f(**subdict(datasets, keep=self.params))
+        new_datasets = dict(datasets, **dict(zip(self.params, step_result)))
+        self.updated_hashes = hash_datasets(new_datasets)
+        # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
+        return new_datasets
+
+    @property
+    def f(self) -> Callable:
+        return self._f
+
+    @property
+    def name(self) -> str:
+        if self._name is None:
+            self._name = self.f.__name__
+        return self._name
+
+    @property
+    def params(self) -> list:
+        if self._params is None:
+            self._params = get_engineering_step_params(self.f)
+        return self._params
+
+    @property
+    def stage(self) -> str:
+        if self._stage is None:
+            self._stage = get_engineering_step_stage(self.params)
+        return self._stage
+
+
+class FeatureEngineer:
+    def __init__(self, steps=None, do_validate=False, **datasets):
+        """
+        ...
+
+        Parameters
+        ----------
+        steps: List, or None, default=None
+            ...
+        do_validate: Boolean, or "strict", default=False
+            Whether to validate the datasets resulting from feature engineering steps. If True,
+            hashes of the new datasets will be compared to those of the originals to ensure they
+            were actually modified. Results will be logged. If `do_validate`="strict", an exception
+            will be raised if any anomalies are found, rather than logging a message. If
+            `do_validate`=False, no validation will be performed
+        **datasets: Dict
+            Mapping of datasets necessary to perform feature engineering steps. This is not expected
+            to be provided on initialization and is offered primarily for debugging/testing
+        """
+        self._steps = steps or []
+        self.do_validate = do_validate
+        self.datasets = datasets or {}
+
+    def __call__(self, stage, **datasets):
+        if datasets:
+            self.datasets = datasets
+
+        for i, step in enumerate(self.steps):
+            self.datasets = step(**self.datasets)
+
+        # if stage == "pre_cv":
+        #     ...  # TODO: Execute all steps in "pre_cv" stage
+        # elif stage == "intra_cv":
+        #     ...  # TODO: Execute all steps in "intra_cv" stage
+        # else:
+        #     raise ValueError("")
+
+    # def do_step(self, step_number, **datasets):
+    #     """Perform the specified step in the feature engineering workflow"""
+    #     if datasets:
+    #         self.datasets = datasets
+    #     self.datasets = self.steps[step_number](**self.datasets)
+
+    @property
+    def steps(self) -> list:
+        return self._steps
+
+    @steps.setter
+    def steps(self, value: list):
+        self._steps = value
+
+    def add_step(
+        self,
+        step: Callable,
+        name: str = None,
+        before: str = EMPTY_SENTINEL,
+        after: str = EMPTY_SENTINEL,
+        number: int = EMPTY_SENTINEL,
+    ):
+        self._steps.append(EngineerStep(step, name))
+
+    ##################################################
+    # Constructors
+    ##################################################
+    @classmethod
+    def from_list(cls, steps):
+        """Construct a `FeatureEngineer` instance using a list of engineering steps"""
+        f = FeatureEngineer()
+        f.steps = steps
+        return f
+
+
+# FLAG: Tally number of columns "transformed" and "added" at each step and report
+
+
+def get_engineering_step_stage(datasets: List[str]):
+    """Determine the stage in which a feature engineering step that requests `datasets` as input
+    should be executed
+
+    Parameters
+    ----------
+    datasets: List[str]
+        Dataset names requested by a feature engineering step callable
+
+    Returns
+    -------
+    stage: {"pre_cv", "intra_cv"}
+        "pre_cv" if a step processing the given `datasets` should be executed in the
+        pre-cross-validation stage. "intra_cv" if the step should be executed for each
+        cross-validation split. Generally, feature engineering conducted in the "pre_cv" stage
+        should regard each sample/row as independent entities. For example, steps like converting
+        a string day of the week to one-hot encoded columns, or imputing missing values by replacing
+        them with -1 might be conducted "pre_cv", since they are unlikely to introduce an
+        information leakage. Conversely, steps like scaling/normalization, whose results for the
+        data in one row are affected by the data in other rows should be performed "intra_cv" in
+        order to recalculate the final values of the datasets for each cross validation split and
+        avoid information leakage
+
+    Examples
+    --------
+    >>> get_engineering_step_stage(["train_inputs", "validation_inputs", "holdout_inputs"])
+    'intra_cv'
+    >>> get_engineering_step_stage(["all_data"])
+    'pre_cv'
+    >>> get_engineering_step_stage(["all_inputs", "all_targets"])
+    'pre_cv'
+    >>> get_engineering_step_stage(["train_data", "non_train_data"])
+    'intra_cv'
+    """
+    if all(_.startswith("all_") for _ in datasets):
+        return "pre_cv"
+    return "intra_cv"
+
+
+class ParameterParser(NodeVisitor):
+    def __init__(self):
+        self.args = []
+        self.returns = []
+
+    def visit_arg(self, node):
+        self.args.append(node.arg)
+        self.generic_visit(node)
+
+    def visit_Return(self, node):
+        try:
+            self.returns.append(node.value.id)
+        except AttributeError:
+            for element in node.value.elts:
+                self.returns.append(element.id)
+        self.generic_visit(node)
+
+
+def get_engineering_step_params(f):
+    """Verify that callable `f` requests valid input parameters, and returns a tuple of the same
+    parameters, with the assumption that the parameters are modified by `f`
+
+    Parameters
+    ----------
+    f: Callable
+        Feature engineering step function that requests, modifies, and returns datasets
+
+    Returns
+    -------
+    List
+        Argument/return value names declared by `f`
+
+    Examples
+    --------
+    >>> def impute_negative_one(all_data):
+    ...     all_data.fillna(-1, inplace=True)
+    ...     return all_data
+    >>> get_engineering_step_params(impute_negative_one)
+    ['all_data']
+    >>> def standard_scale(train_inputs, non_train_inputs):
+    ...     scaler = StandardScaler()
+    ...     train_inputs[train_inputs.columns] = scaler.fit_transform(train_inputs.values)
+    ...     non_train_inputs[train_inputs.columns] = scaler.transform(non_train_inputs.values)
+    ...     return train_inputs, non_train_inputs
+    >>> get_engineering_step_params(standard_scale)
+    ['train_inputs', 'non_train_inputs']
+    >>> def error_mismatch(train_inputs, non_train_inputs):
+    ...     return validation_inputs, holdout_inputs
+    >>> get_engineering_step_params(error_mismatch)
+    Traceback (most recent call last):
+        File "feature_engineering.py", line ?, in get_engineering_step_params
+    ValueError: Mismatched `f` inputs (['train_inputs', 'non_train_inputs']), and returns (['validation_inputs', 'holdout_inputs'])
+    >>> def error_invalid_dataset(train_inputs, foo):
+    ...     return train_inputs, foo
+    >>> get_engineering_step_params(error_invalid_dataset)
+    Traceback (most recent call last):
+        File "feature_engineering.py", line ?, in get_engineering_step_params
+    ValueError: Invalid dataset name in ['train_inputs', 'foo']"""
+    valid_datasets = ["all_data", "all_inputs", "all_targets"]
+    valid_datasets += ["train_data", "train_inputs", "train_targets"]
+    valid_datasets += ["non_train_data", "non_train_inputs", "non_train_targets"]
+    # "non_train_data" probably only usable if test_inputs is not in play
+    valid_datasets += ["validation_data", "validation_inputs", "validation_targets"]
+    valid_datasets += ["holdout_data", "holdout_inputs", "holdout_targets"]
+    valid_datasets += ["test_inputs"]
+
+    source_code = getsource(f)
+    tree = parse(source_code)
+    parser = ParameterParser()
+    parser.visit(tree)
+
+    if parser.args != parser.returns:
+        raise ValueError(f"Mismatched `f` inputs ({parser.args}), and returns ({parser.returns})")
+    elif any(_ not in valid_datasets for _ in parser.args):
+        raise ValueError(f"Invalid dataset name in {parser.args}")
+    return parser.args
+
+
+def _hash_dataset(dataset: pd.DataFrame) -> dict:
+    """Generate hashes for `dataset` at various levels of specificity
+
+    Parameters
+    ----------
+    dataset: pandas.DataFrame
+        DataFrame to be described with a dict of hashes
+
+    Returns
+    -------
+    dict
+        "dataset" (str): Hash of `dataset`, itself
+        "column_names" (str): Hash of `dataset.columns`, capturing names, order, and add/drops
+        "column_values" (dict): Keys are `dataset.columns`, and values are hashes for each column
+
+    Examples
+    --------
+    >>> assert _hash_dataset(pd.DataFrame(dict(a=[0, 1], b=[2, 3], c=[4, 5]))) == {
+    ...     'dataset': 'UD0kfFLj7_eX4P5g02UWV-P04yuJkrsOcnS6yBa48Ps=',
+    ...     'column_names': 'OUPCVME21ryrnjJtyZ1R-_rrr-wSMPxo9Gc1KxcdlhM=',
+    ...     'column_values': {
+    ...         'a': 'buQ0yuUUbLN57tC6050g7yWrvAdk-NwGIEEWHJC88EY=',
+    ...         'b': 'j9nBFZVu4ZEnsoaRYiI93DcrbV3A_hzcKdf0P5gS7g4=',
+    ...         'c': 'qO0pJn3TLhlsYj3nqliMBi8zds66JPsQ1uCJSFv9q9g=',
+    ...     },
+    ... }
+    >>> assert _hash_dataset(pd.DataFrame(dict(a=[0, 1], b=[6, 7], d=[8, 9]))) == {
+    ...     'dataset': '0jA8SnjKAbyG6tnwxwJ51Q8haeVcfMhBZ45ELuD2U6k=',
+    ...     'column_names': 'G-xgYT0flyJV26HrfFYiMh_BiSkStKkh-Utqq94DZAM=',
+    ...     'column_values': {
+    ...         'a': 'buQ0yuUUbLN57tC6050g7yWrvAdk-NwGIEEWHJC88EY=',
+    ...         'b': 'uIvA32AuBuj9LTU652UQUBI0VH9UmF2ZJeL4NefiiLg=',
+    ...         'd': 'G_y3SLas04T-_ejL4AVACrDQM_uyT4HFxo1Ig1tF5Z8=',
+    ...     },
+    ... }
+    """
+    return dict(
+        dataset=make_hash_sha256(dataset),
+        column_names=make_hash_sha256(dataset.columns),
+        column_values={_: make_hash_sha256(dataset[_]) for _ in dataset.columns},
+    )
+
+
+def hash_datasets(datasets: dict) -> dict:
+    """Describe `datasets` with dicts of hashes for their values, column names, and column values
+
+    Parameters
+    ----------
+    datasets: Dict
+        Mapping of dataset names to `pandas.DataFrame` instances
+
+    Returns
+    -------
+    hashes: Dict
+        Mapping with same keys as `datasets`, whose values are dicts returned from
+        :func:`_hash_dataset` that provide hashes for each DataFrame and its column names/values
+
+    Examples
+    --------
+    >>> df_x = pd.DataFrame(dict(a=[0, 1], b=[2, 3], c=[4, 5]))
+    >>> df_y = pd.DataFrame(dict(a=[0, 1], b=[6, 7], d=[8, 9]))
+    >>> hash_datasets(dict(x=df_x, y=df_y)) == dict(x=_hash_dataset(df_x), y=_hash_dataset(df_y))
+    True"""
+    hashes = {k: _hash_dataset(v) for k, v in datasets.items()}
+    return hashes
+
+
+# def _compare_hash_(columns_a: dict, columns_b: dict):
+#     """
+#
+#     Parameters
+#     ----------
+#     columns_a
+#     columns_b
+#
+#     Returns
+#     -------
+#
+#     """
+#     columns_added = dict()
+#     columns_dropped = dict()
+#     columns_modified = dict()
+#     columns_unchanged = dict()
+#
+#
+# def compare_dataset_columns(datasets_a: dict, datasets_b: dict):
+#     compare_column_hashes(..., ...)
+
+
+# def step(order=None, before=None, after=None, returns="frame"):
+#     """
+#
+#     Parameters
+#     ----------
+#     order: Integer, or None, default=None
+#         ...
+#     before: String, or None, default=None
+#         ...
+#     after: String, or None, default=None
+#         ...
+#     returns: {"frame", "cols"}, default="frame"
+#         ...
+#
+#     Returns
+#     -------
+#
+#     """
+#     ...
