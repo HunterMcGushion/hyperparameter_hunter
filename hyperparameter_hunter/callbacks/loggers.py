@@ -47,8 +47,7 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().on_fold_start()
 
     def on_run_start(self):
-        content = ""
-        content += format_fold_run(fold=self._fold, run=self._run)  # TODO: Add repetition count
+        content = format_fold_run(rep=self._rep, fold=self._fold, run=self._run)
         content += format(self.log_separator if content != "" and self.current_seed else "")
         content += "Seed: {}".format(self.current_seed) if self.current_seed else ""
 
@@ -60,7 +59,7 @@ class LoggerFitStatus(BaseLoggerCallback):
 
     def on_run_end(self):
         content = [
-            format_fold_run(fold=self._fold, run=self._run),  # TODO: Add repetition count
+            format_fold_run(rep=self._rep, fold=self._fold, run=self._run),
             format_evaluation(self.last_evaluation_results, float_format=self.float_format),
             self.__elapsed_helper("runs"),
         ]
@@ -72,7 +71,8 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().on_run_end()
 
     def on_fold_end(self):
-        content = "F{}.{} AVG:   ".format(self._rep, self._fold)  # TODO: Prepend rep count
+        content = format_fold_run(rep=self._rep, fold=self._fold, run="-")
+        content += self.log_separator if not content.endswith(" ") else ""
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
         content += self.__elapsed_helper("folds")
@@ -84,8 +84,8 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().on_fold_end()
 
     def on_repetition_end(self):
-        content = ""
-        content += "Repetition {} AVG:   ".format(self._rep)
+        content = format_fold_run(rep=self._rep, fold="-", run="-")
+        content += self.log_separator if not content.endswith(" ") else ""
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
         content += self.__elapsed_helper("reps")
