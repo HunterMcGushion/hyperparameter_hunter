@@ -14,6 +14,7 @@ Related
 ##################################################
 from collections import OrderedDict
 import numpy as np
+from typing import Dict, List, Optional, Tuple, Union
 
 ##################################################
 # Import Learning Assets
@@ -30,7 +31,12 @@ data_types = ("__in_fold", "__oof", "__holdout")
 # Metric and Metrics Map Helpers
 ##################################################
 class Metric(object):
-    def __init__(self, name, metric_function=None, direction="infer"):
+    def __init__(
+        self,
+        name: str,
+        metric_function: Union[callable, str, None] = None,
+        direction: str = "infer",
+    ):
         """Class to encapsulate all necessary information for identifying, calculating, and
         evaluating metrics results
 
@@ -44,7 +50,7 @@ class Metric(object):
             string, will be treated as an attribute in :mod:`sklearn.metrics`. If None, `name`
             will be treated as an attribute in :mod:`sklearn.metrics`, the value of which will be
             retrieved and used as `metric_function`
-        direction: String in ["infer", "max", "min"], default="infer"
+        direction: {"infer", "max", "min"}, default="infer"
             How to evaluate the result of `metric_function` relative to previous results produced by
             it. "max" signifies that metric values should be maximized, and that higher metric
             values are better than lower values; it should be used for measures of accuracy. "min"
@@ -72,8 +78,7 @@ class Metric(object):
         >>> Metric("hamming_loss", sk_metrics.hamming_loss)  # doctest: +ELLIPSIS
         Metric(hamming_loss, <function hamming_loss at 0x...>, min)
         >>> Metric("r2_score", sk_metrics.r2_score, direction="min")  # doctest: +ELLIPSIS
-        Metric(r2_score, <function r2_score at 0x...>, min)
-        """
+        Metric(r2_score, <function r2_score at 0x...>, min)"""
         self.name = name
         self.metric_function = self._set_metric_function(metric_function)
         self.direction = self._set_direction(direction)
@@ -124,12 +129,8 @@ class Metric(object):
                 raise AttributeError(f"`sklearn.metrics` has no attribute: {f or self.name}")
         return f
 
-    def get_xgboost_wrapper(self):
-        # TODO: Move `utils.metrics_utils.wrap_xgboost_metric` here, and remove `utils.metrics_utils`
-        raise NotImplementedError
 
-
-def format_metrics(metrics):
+def format_metrics(metrics: Union[Dict, List]) -> Dict[str, Metric]:
     """Properly format iterable `metrics` to contain instances of :class:`Metric`
 
     Parameters
@@ -220,7 +221,9 @@ def format_metrics(metrics):
     return metrics_dict
 
 
-def get_formatted_target_metric(target_metric, metrics, default_dataset="oof"):
+def get_formatted_target_metric(
+    target_metric: Union[tuple, str, None], metrics: dict, default_dataset: str = "oof"
+) -> Tuple[str, str]:
     """Return a properly formatted target_metric tuple for use with navigating evaluation results
 
     Parameters
@@ -234,7 +237,7 @@ def get_formatted_target_metric(target_metric, metrics, default_dataset="oof"):
         keys are strings identifying metrics, and values are instances of :class:`metrics.Metric`.
         See the documentation of :func:`metrics.format_metrics` for more information on
         different metrics formats
-    default_dataset: String in ['oof', 'holdout', 'in_fold'], default='oof'
+    default_dataset: {"oof", "holdout", "in_fold"}, default="oof"
         The default dataset type value to use if one is not provided
 
     Returns
@@ -427,9 +430,7 @@ def get_clean_prediction(target, prediction):
         else:
             # TODO: If len(min/max) > 1: multi-class classification, or other multi-output problem
             # TODO: Then each prediction value must be clipped to its specific min/max
-            raise ValueError(
-                f"Cannot handle multi-output problems. Received bounds of: {target_min}, {target_max}."
-            )
+            raise ValueError(f"Cannot handle multi-outputs. Bounds: {target_min}, {target_max}")
 
         prediction = np.clip(prediction, target_min, target_max)
         prediction = np.rint(prediction)
