@@ -3,7 +3,7 @@
 ##################################################
 from hyperparameter_hunter import exceptions
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.general_utils import now_time
+from hyperparameter_hunter.utils.general_utils import now_time, expand_mins_secs
 
 ##################################################
 # Import Miscellaneous Assets
@@ -443,15 +443,7 @@ class OptimizationReporter:
 
         #################### Time Elapsed ####################
         minutes, seconds = divmod((datetime.now() - self.last_round).total_seconds(), 60)
-        if minutes < 60:
-            print("{:>02d}m{:>02d}s".format(int(minutes), int(seconds)), end=self.end)
-        else:
-            hours, minutes = divmod(minutes, 60)
-            if hours < 24:
-                print("{:>02d}h{:>02d}m".format(int(hours), int(minutes)), end=self.end)
-            else:
-                days, hours = divmod(hours, 24)
-                print("{:>02d}d{:>02d}h".format(int(days), int(hours)), end=self.end)
+        print(expand_mins_secs(minutes, seconds), end=self.end)
 
         #################### Evaluation Result ####################
         if (
