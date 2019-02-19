@@ -609,41 +609,62 @@ def add_time_to_content(content, add_time=False):
     return content
 
 
-def format_fold_run(fold=None, run=None, mode="concise"):  # TODO: Add repetition count
-    """Construct a string to display the fold, and run currently being executed
+def format_fold_run(rep=None, fold=None, run=None, mode="concise"):
+    """Construct a string to display the repetition, fold, and run currently being executed
 
     Parameters
     ----------
+    rep: Int, or None, default=None
+        The repetition number currently being executed
     fold: Int, or None, default=None
         The fold number currently being executed
     run: Int, or None, default=None
         The run number currently being executed
-    mode: Str in ['concise', 'verbose'], default='concise'
-        If 'concise', the result will contain abbreviations for fold/run
+    mode: {"concise", "verbose"}, default="concise"
+        If "concise", the result will contain abbreviations for rep/fold/run
 
     Returns
     -------
     content: Str
-        A clean display of the current fold/run"""
+        A clean display of the current repetition/fold/run
+
+    Examples
+    --------
+    >>> format_fold_run(rep=0, fold=3, run=2, mode="concise")
+    'R0-f3-r2'
+    >>> format_fold_run(rep=0, fold=3, run=2, mode="verbose")
+    'Rep-Fold-Run: 0-3-2'
+    >>> format_fold_run(rep=0, fold=3, run="*", mode="concise")
+    'R0-f3-r*'
+    >>> format_fold_run(rep=0, fold=3, run=2, mode="foo")
+    Traceback (most recent call last):
+        File "reporting.py", line ?, in format_fold_run
+    ValueError: Received invalid mode value: 'foo'"""
     content = ""
-    valid_fold, valid_run = isinstance(fold, int), isinstance(run, int)
 
     if mode == "verbose":
-        content += format("Fold" if valid_fold else "")
-        content += format("/" if valid_fold and valid_run else "")
-        content += format("Run" if valid_run else "")
-        content += format(": " if valid_fold or valid_run else "")
-        content += format(fold if valid_fold else "")
-        content += format("/" if valid_fold and valid_run else "")
-        content += format(run if valid_run else "")
+        content += format("Rep" if rep is not None else "")
+        content += format("-" if rep is not None and fold is not None else "")
+        content += format("Fold" if fold is not None else "")
+        content += format("-" if fold is not None and run is not None else "")
+        content += format("Run" if run is not None else "")
+        content += format(": " if any(_ is not None for _ in [rep, fold, run]) else "")
+        content += format(rep if rep is not None else "")
+        content += format("-" if rep is not None and fold is not None else "")
+        content += format(fold if fold is not None else "")
+        content += format("-" if fold is not None and run is not None else "")
+        content += format(run if run is not None else "")
     elif mode == "concise":
-        content += format("F" if valid_fold else "")
-        content += format(fold if valid_fold else "")
-        content += format("/" if valid_fold and valid_run else "")
-        content += format("R" if valid_run else "")
-        content += format(run if valid_run else "")
+        content += format("R" if rep is not None else "")
+        content += format(rep if rep is not None else "")
+        content += format("-" if rep is not None and fold is not None else "")
+        content += format("f" if fold is not None else "")
+        content += format(fold if fold is not None else "")
+        content += format("-" if fold is not None and run is not None else "")
+        content += format("r" if run is not None else "")
+        content += format(run if run is not None else "")
     else:
-        raise ValueError('Received invalid mode value: "{}". Expected mode string'.format(mode))
+        raise ValueError("Received invalid mode value: '{}'".format(mode))
 
     return content
 
