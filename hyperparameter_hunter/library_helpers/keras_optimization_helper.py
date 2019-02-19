@@ -463,7 +463,12 @@ def find_space_fragments(string):
         The names of all hyperparameter choice declarations in `string` - in order of appearance
     start_indexes: List
         The indexes at which each hyperparameter choice declaration string was found in `string` -
-        in order of appearance"""
+        in order of appearance
+
+    Examples
+    --------
+    >>> find_space_fragments("foo")
+    ([], [], [])"""
     try:
         unclipped_choices, start_indexes = zip(*iter_fragments(string, is_match=is_space_match))
     except ValueError:
