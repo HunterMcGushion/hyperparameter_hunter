@@ -563,7 +563,18 @@ def stringify_frame_source(
     Returns
     -------
     source_content: Str
-        A formatted string containing the location in the code at which a call was made"""
+        A formatted string containing the location in the code at which a call was made
+
+    Examples
+    --------
+    >>> stringify_frame_source("reporting.py", 570, "stringify_frame_source", None)
+    '570  - reporting.stringify_frame_source()                                       '
+    >>> stringify_frame_source("reporting.py", 12, "bar", "Foo")
+    '12   - reporting.Foo.bar()                                                      '
+    >>> stringify_frame_source("reporting.py", 12, "bar", "Foo", add_line_no=False)
+    'reporting.Foo.bar()                                                             '
+    >>> stringify_frame_source("reporting.py", 12, "bar", "Foo", total_max_size=60)
+    '12   - reporting.Foo.bar()                                  '"""
     source_content = ""
 
     if add_line_no is True:
