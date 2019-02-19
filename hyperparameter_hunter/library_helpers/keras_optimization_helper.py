@@ -24,7 +24,7 @@ from hyperparameter_hunter.settings import G, TEMP_MODULES_DOT_PATH, TEMP_MODULE
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
 from hyperparameter_hunter.space import Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
-from hyperparameter_hunter.utils.general_utils import deep_restricted_update
+from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict
 from hyperparameter_hunter.utils.parsing_utils import (
     stringify_model_builder,
     write_python,
@@ -220,17 +220,13 @@ def merge_compile_params(compile_params, dummified_params):
         has the same path/key, in which case the hyperparameter space choice value in
         `dummified_params` is used"""
     # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`="Adam" vs "adam"
-    _dummified_params = {
-        (k[1:] if k[0] == "params" else k): v for k, v in dummified_params.copy().items()
-    }
-
-    # TODO: Replace above with `general_utils.subdict` call that modifies key to a slice
+    _dummy_params = subdict(dummified_params.copy(), key=lambda _: _[1:] if _[0] == "params" else _)
 
     def _visit(path, key, value):
-        """If (`path` + `key`) in `_dummified_params`, return its value instead. Else, default"""
+        """If (`path` + `key`) in `_dummy_params`, return its value instead. Else, default"""
         location = path + (key,)
-        if len(_dummified_params) and location in _dummified_params:
-            return (key, _dummified_params.pop(location))
+        if len(_dummy_params) and location in _dummy_params:
+            return (key, _dummy_params.pop(location))
         return (key, value)
 
     merged_params = remap(compile_params, visit=_visit)
