@@ -187,6 +187,40 @@ def sec_to_hms(seconds, ms_places=5, as_str=False):
         return (t_hour, t_min, t_sec)
 
 
+def expand_mins_secs(mins, secs):
+    """Format string expansion of `mins`, `secs` to the appropriate units up to (days, hours)
+
+    Parameters
+    ----------
+    mins: Integer
+        Number of minutes to be expanded to the appropriate string format
+    secs: Integer
+        Number of seconds to be expanded to the appropriate string format
+
+    Returns
+    -------
+    String
+        Formatted pair of one of the following: (minutes, seconds); (hours, minutes); or
+        (days, hours) depending on the appropriate units given `mins`
+
+    Examples
+    --------
+    >>> assert expand_mins_secs(34, 57) == "34m57s"
+    >>> assert expand_mins_secs(72, 57) == "01h12m"
+    >>> assert expand_mins_secs(1501, 57) == "01d01h"
+    >>> assert expand_mins_secs(2880, 57) == "02d00h"
+    """
+    if mins < 60:
+        return "{:>02d}m{:>02d}s".format(int(mins), int(secs))
+    else:
+        hours, mins = divmod(mins, 60)
+        if hours < 24:
+            return "{:>02d}h{:>02d}m".format(int(hours), int(mins))
+        else:
+            days, hours = divmod(hours, 24)
+            return "{:>02d}d{:>02d}h".format(int(days), int(hours))
+
+
 def type_val(val):
     return type(val), val
 

@@ -3,7 +3,7 @@
 ##################################################
 from hyperparameter_hunter import exceptions
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.general_utils import now_time
+from hyperparameter_hunter.utils.general_utils import now_time, expand_mins_secs
 
 ##################################################
 # Import Miscellaneous Assets
@@ -199,15 +199,12 @@ class ReportingHandler(object):
     ##################################################
     def log(self, content, **kwargs):
         """Placeholder method before proper initialization"""
-        pass
 
     def debug(self, content, **kwargs):
         """Placeholder method before proper initialization"""
-        pass
 
     def warn(self, content, **kwargs):
         """Placeholder method before proper initialization"""
-        pass
 
     ##################################################
     # Logging-Logging Methods:
@@ -446,15 +443,7 @@ class OptimizationReporter:
 
         #################### Time Elapsed ####################
         minutes, seconds = divmod((datetime.now() - self.last_round).total_seconds(), 60)
-        if minutes < 60:
-            print("{:>02d}m{:>02d}s".format(int(minutes), int(seconds)), end=self.end)
-        else:
-            hours, minutes = divmod(minutes, 60)
-            if hours < 24:
-                print("{:>02d}h{:>02d}m".format(int(hours), int(minutes)), end=self.end)
-            else:
-                days, hours = divmod(hours, 24)
-                print("{:>02d}d{:>02d}h".format(int(days), int(hours)), end=self.end)
+        print(expand_mins_secs(minutes, seconds), end=self.end)
 
         #################### Evaluation Result ####################
         if (
@@ -574,7 +563,18 @@ def stringify_frame_source(
     Returns
     -------
     source_content: Str
-        A formatted string containing the location in the code at which a call was made"""
+        A formatted string containing the location in the code at which a call was made
+
+    Examples
+    --------
+    >>> stringify_frame_source("reporting.py", 570, "stringify_frame_source", None)
+    '570  - reporting.stringify_frame_source()                                       '
+    >>> stringify_frame_source("reporting.py", 12, "bar", "Foo")
+    '12   - reporting.Foo.bar()                                                      '
+    >>> stringify_frame_source("reporting.py", 12, "bar", "Foo", add_line_no=False)
+    'reporting.Foo.bar()                                                             '
+    >>> stringify_frame_source("reporting.py", 12, "bar", "Foo", total_max_size=60)
+    '12   - reporting.Foo.bar()                                  '"""
     source_content = ""
 
     if add_line_no is True:
@@ -620,41 +620,62 @@ def add_time_to_content(content, add_time=False):
     return content
 
 
-def format_fold_run(fold=None, run=None, mode="concise"):  # TODO: Add repetition count
-    """Construct a string to display the fold, and run currently being executed
+def format_fold_run(rep=None, fold=None, run=None, mode="concise"):
+    """Construct a string to display the repetition, fold, and run currently being executed
 
     Parameters
     ----------
+    rep: Int, or None, default=None
+        The repetition number currently being executed
     fold: Int, or None, default=None
         The fold number currently being executed
     run: Int, or None, default=None
         The run number currently being executed
-    mode: Str in ['concise', 'verbose'], default='concise'
-        If 'concise', the result will contain abbreviations for fold/run
+    mode: {"concise", "verbose"}, default="concise"
+        If "concise", the result will contain abbreviations for rep/fold/run
 
     Returns
     -------
     content: Str
-        A clean display of the current fold/run"""
+        A clean display of the current repetition/fold/run
+
+    Examples
+    --------
+    >>> format_fold_run(rep=0, fold=3, run=2, mode="concise")
+    'R0-f3-r2'
+    >>> format_fold_run(rep=0, fold=3, run=2, mode="verbose")
+    'Rep-Fold-Run: 0-3-2'
+    >>> format_fold_run(rep=0, fold=3, run="*", mode="concise")
+    'R0-f3-r*'
+    >>> format_fold_run(rep=0, fold=3, run=2, mode="foo")
+    Traceback (most recent call last):
+        File "reporting.py", line ?, in format_fold_run
+    ValueError: Received invalid mode value: 'foo'"""
     content = ""
-    valid_fold, valid_run = isinstance(fold, int), isinstance(run, int)
 
     if mode == "verbose":
-        content += format("Fold" if valid_fold else "")
-        content += format("/" if valid_fold and valid_run else "")
-        content += format("Run" if valid_run else "")
-        content += format(": " if valid_fold or valid_run else "")
-        content += format(fold if valid_fold else "")
-        content += format("/" if valid_fold and valid_run else "")
-        content += format(run if valid_run else "")
+        content += format("Rep" if rep is not None else "")
+        content += format("-" if rep is not None and fold is not None else "")
+        content += format("Fold" if fold is not None else "")
+        content += format("-" if fold is not None and run is not None else "")
+        content += format("Run" if run is not None else "")
+        content += format(": " if any(_ is not None for _ in [rep, fold, run]) else "")
+        content += format(rep if rep is not None else "")
+        content += format("-" if rep is not None and fold is not None else "")
+        content += format(fold if fold is not None else "")
+        content += format("-" if fold is not None and run is not None else "")
+        content += format(run if run is not None else "")
     elif mode == "concise":
-        content += format("F" if valid_fold else "")
-        content += format(fold if valid_fold else "")
-        content += format("/" if valid_fold and valid_run else "")
-        content += format("R" if valid_run else "")
-        content += format(run if valid_run else "")
+        content += format("R" if rep is not None else "")
+        content += format(rep if rep is not None else "")
+        content += format("-" if rep is not None and fold is not None else "")
+        content += format("f" if fold is not None else "")
+        content += format(fold if fold is not None else "")
+        content += format("-" if fold is not None and run is not None else "")
+        content += format("r" if run is not None else "")
+        content += format(run if run is not None else "")
     else:
-        raise ValueError('Received invalid mode value: "{}". Expected mode string'.format(mode))
+        raise ValueError("Received invalid mode value: '{}'".format(mode))
 
     return content
 
@@ -676,9 +697,6 @@ def format_evaluation(results, separator="  |  ", float_format="{:.5f}"):
     -------
     content: Str
         The model's evaluation results"""
-    if isinstance(results, list):
-        raise TypeError("Incompatible with results of type list. Please use OrderedDict, instead")
-
     content = []
 
     for data_type, values in results.items():
