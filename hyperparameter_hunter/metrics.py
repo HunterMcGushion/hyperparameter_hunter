@@ -26,6 +26,9 @@ from sklearn import metrics as sk_metrics
 data_types = ("__in_fold", "__oof", "__holdout")
 
 
+##################################################
+# Metric and Metrics Map Helpers
+##################################################
 class Metric(object):
     def __init__(self, name, metric_function=None, direction="infer"):
         """Class to encapsulate all necessary information for identifying, calculating, and
@@ -217,6 +220,74 @@ def format_metrics(metrics):
     return metrics_dict
 
 
+def get_formatted_target_metric(target_metric, metrics, default_dataset="oof"):
+    """Return a properly formatted target_metric tuple for use with navigating evaluation results
+
+    Parameters
+    ----------
+    target_metric: Tuple, String, or None
+        Path denoting metric to be used. If tuple, the first value should be in ['oof', 'holdout',
+        'in_fold'], and the second value should be the name of a metric supplied in `metrics`.
+        If str, should be one of the two values from the tuple form. Else, a value will be chosen
+    metrics: Dict
+        Properly formatted `metrics` as produced by :func:`metrics.format_metrics`, in which
+        keys are strings identifying metrics, and values are instances of :class:`metrics.Metric`.
+        See the documentation of :func:`metrics.format_metrics` for more information on
+        different metrics formats
+    default_dataset: String in ['oof', 'holdout', 'in_fold'], default='oof'
+        The default dataset type value to use if one is not provided
+
+    Returns
+    -------
+    target_metric: Tuple
+        A formatted target_metric containing two strings: a dataset_type, followed by a metric name
+
+    Examples
+    --------
+    >>> get_formatted_target_metric(('holdout', 'roc_auc_score'), format_metrics(['roc_auc_score', 'f1_score']))
+    ('holdout', 'roc_auc_score')
+    >>> get_formatted_target_metric(('holdout',), format_metrics(['roc_auc_score', 'f1_score']))
+    ('holdout', 'roc_auc_score')
+    >>> get_formatted_target_metric('holdout', format_metrics(['roc_auc_score', 'f1_score']))
+    ('holdout', 'roc_auc_score')
+    >>> get_formatted_target_metric('holdout', format_metrics({'roc': 'roc_auc_score', 'f1': 'f1_score'}))
+    ('holdout', 'roc')
+    >>> get_formatted_target_metric('roc_auc_score', format_metrics(['roc_auc_score', 'f1_score']))
+    ('oof', 'roc_auc_score')
+    >>> get_formatted_target_metric(None, format_metrics(['f1_score', 'roc_auc_score']))
+    ('oof', 'f1_score')"""
+    ok_datasets = ["oof", "holdout", "in_fold"]
+
+    if isinstance(target_metric, str):
+        target_metric = (target_metric,)
+    elif target_metric is None:
+        target_metric = (default_dataset,)
+
+    if not isinstance(target_metric, tuple):
+        raise TypeError(f"`target_metric` should be: tuple, str, or None. Received {target_metric}")
+    elif len(target_metric) > 2:
+        raise ValueError(f"`target_metric` should be tuple of length 2. Received {target_metric}")
+    elif len(target_metric) == 1:
+        if target_metric[0] in ok_datasets:
+            # Just a dataset was provided - Need metric name
+            first_metric_key = list(metrics.keys())[0]
+            target_metric = target_metric + (first_metric_key,)
+            # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
+        else:
+            # Just a metric name was provided - Need dataset type
+            target_metric = (default_dataset,) + target_metric
+
+    if not any([_ == target_metric[0] for _ in ok_datasets]):
+        raise ValueError(f"`target_metric`[0] must be in {ok_datasets}. Received {target_metric}")
+    if not target_metric[1] in metrics.keys():
+        raise ValueError(f"target_metric[1]={target_metric[1]} not in metrics={metrics}")
+
+    return target_metric
+
+
+##################################################
+# ScoringMixIn and Helpers
+##################################################
 class ScoringMixIn(object):
     def __init__(self, metrics, in_fold="all", oof="all", holdout="all", do_score=True):
         """MixIn class to manage metrics to record for each dataset type, and perform evaluations
@@ -366,70 +437,45 @@ def get_clean_prediction(target, prediction):
     return prediction
 
 
-def get_formatted_target_metric(target_metric, metrics, default_dataset="oof"):
-    """Return a properly formatted target_metric tuple for use with navigating evaluation results
+##################################################
+# Miscellaneous Utilities
+##################################################
+def wrap_xgboost_metric(metric, metric_name):
+    """Create a function to use as the `eval_metric` kwarg for :meth:`xgboost.sklearn.XGBModel.fit`
 
     Parameters
     ----------
-    target_metric: Tuple, String, or None
-        Path denoting metric to be used. If tuple, the first value should be in ['oof', 'holdout',
-        'in_fold'], and the second value should be the name of a metric supplied in `metrics`.
-        If str, should be one of the two values from the tuple form. Else, a value will be chosen
-    metrics: Dict
-        Properly formatted `metrics` as produced by :func:`metrics.format_metrics`, in which
-        keys are strings identifying metrics, and values are instances of :class:`metrics.Metric`.
-        See the documentation of :func:`metrics.format_metrics` for more information on
-        different metrics formats
-    default_dataset: String in ['oof', 'holdout', 'in_fold'], default='oof'
-        The default dataset type value to use if one is not provided
+    metric: Function
+        The function to calculate the value of metric, with signature: (`target`, `prediction`)
+    metric_name: String
+        The name of the metric being evaluated
 
     Returns
     -------
-    target_metric: Tuple
-        A formatted target_metric containing two strings: a dataset_type, followed by a metric name
+    eval_metric: Function
+        The function to pass to XGBoost's :meth:`fit`, with signature: (`prediction`, `target`). It
+        will return a tuple of (`metric_name`: str, `metric_value`: float)"""
 
-    Examples
-    --------
-    >>> get_formatted_target_metric(('holdout', 'roc_auc_score'), format_metrics(['roc_auc_score', 'f1_score']))
-    ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric(('holdout',), format_metrics(['roc_auc_score', 'f1_score']))
-    ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric('holdout', format_metrics(['roc_auc_score', 'f1_score']))
-    ('holdout', 'roc_auc_score')
-    >>> get_formatted_target_metric('holdout', format_metrics({'roc': 'roc_auc_score', 'f1': 'f1_score'}))
-    ('holdout', 'roc')
-    >>> get_formatted_target_metric('roc_auc_score', format_metrics(['roc_auc_score', 'f1_score']))
-    ('oof', 'roc_auc_score')
-    >>> get_formatted_target_metric(None, format_metrics(['f1_score', 'roc_auc_score']))
-    ('oof', 'f1_score')
-    """
-    ok_datasets = ["oof", "holdout", "in_fold"]
+    def eval_metric(prediction, target):
+        """Evaluate a custom metric for use as the `eval_metric` kwarg in
+        :meth:`xgboost.sklearn.XGBModel.fit`
 
-    if isinstance(target_metric, str):
-        target_metric = (target_metric,)
-    elif target_metric is None:
-        target_metric = (default_dataset,)
+        Parameters
+        ----------
+        prediction: Array-like
+            Predicted values
+        target: `xgboost.DMatrix`
+            True labels
 
-    if not isinstance(target_metric, tuple):
-        raise TypeError(f"`target_metric` should be: tuple, str, or None. Received {target_metric}")
-    elif len(target_metric) > 2:
-        raise ValueError(f"`target_metric` should be tuple of length 2. Received {target_metric}")
-    elif len(target_metric) == 1:
-        if target_metric[0] in ok_datasets:
-            # Just a dataset was provided - Need metric name
-            first_metric_key = list(metrics.keys())[0]
-            target_metric = target_metric + (first_metric_key,)
-            # TODO: Above will cause problems if `Environment.metrics_params['oof']` is not "all"
-        else:
-            # Just a metric name was provided - Need dataset type
-            target_metric = (default_dataset,) + target_metric
+        Returns
+        -------
+        Tuple of (`metric_name`: str, `metric_value`: float)"""
+        target = target.get_label()
+        metric_value = metric(target, prediction)
+        # return [(metric_name, metric_value)]
+        return (metric_name, metric_value)
 
-    if not any([_ == target_metric[0] for _ in ok_datasets]):
-        raise ValueError(f"`target_metric`[0] must be in {ok_datasets}. Received {target_metric}")
-    if not target_metric[1] in metrics.keys():
-        raise ValueError(f"target_metric[1]={target_metric[1]} not in metrics={metrics}")
-
-    return target_metric
+    return eval_metric
 
 
 if __name__ == "__main__":
