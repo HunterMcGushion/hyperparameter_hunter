@@ -199,15 +199,12 @@ class ReportingHandler(object):
     ##################################################
     def log(self, content, **kwargs):
         """Placeholder method before proper initialization"""
-        pass
 
     def debug(self, content, **kwargs):
         """Placeholder method before proper initialization"""
-        pass
 
     def warn(self, content, **kwargs):
         """Placeholder method before proper initialization"""
-        pass
 
     ##################################################
     # Logging-Logging Methods:
@@ -676,9 +673,6 @@ def format_evaluation(results, separator="  |  ", float_format="{:.5f}"):
     -------
     content: Str
         The model's evaluation results"""
-    if isinstance(results, list):
-        raise TypeError("Incompatible with results of type list. Please use OrderedDict, instead")
-
     content = []
 
     for data_type, values in results.items():
