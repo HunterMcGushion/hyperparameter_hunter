@@ -180,7 +180,26 @@ def _format_predictions(predictions, target_column, index=None, dtype=np.float64
     Returns
     -------
     predictions: `pandas.DataFrame`
-        Formatted DataFrame containing `predictions` that has been one-hot encoded if necessary"""
+        Formatted DataFrame containing `predictions` that has been one-hot encoded if necessary
+
+    Examples
+    --------
+    >>> _format_predictions(np.array([3.2, 14.5, 6.8]), ["y"])
+          y
+    0   3.2
+    1  14.5
+    2   6.8
+    >>> _format_predictions(np.array([1, 0, 1]), ["y"])
+         y
+    0  1.0
+    1  0.0
+    2  1.0
+    >>> _format_predictions(np.array([2, 1, 0]), ["y_0", "y_1", "y_2"], dtype=np.int8)
+       y_0  y_1  y_2
+    0    0    0    1
+    1    0    1    0
+    2    1    0    0"""
+    # `target_column` indicates multidimensional output, but predictions are one-dimensional
     if (len(target_column) > 1) and ((len(predictions.shape) == 1) or (predictions.shape[1] == 1)):
         predictions = pd.get_dummies(predictions).values
 
