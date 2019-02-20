@@ -6,7 +6,6 @@ import numpy as np
 import os
 import os.path
 import simplejson as json
-from tempfile import TemporaryDirectory
 
 
 ##################################################
@@ -203,6 +202,7 @@ def print_tree(start_path, depth=-1, pretty=True):
 
     Examples
     --------
+    >>> from tempfile import TemporaryDirectory
     >>> with TemporaryDirectory(dir="") as d:
     ...     os.mkdir(f"{d}/root")
     ...     os.mkdir(f"{d}/root/sub_a")
