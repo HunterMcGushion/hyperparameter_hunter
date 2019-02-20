@@ -1,7 +1,11 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.environment import Environment
+from hyperparameter_hunter.environment import (
+    Environment,
+    define_holdout_set,
+    validate_file_blacklist,
+)
 
 ##################################################
 # Import Miscellaneous Assets
@@ -121,3 +125,63 @@ def test_environment_init_cross_experiment_params(runs, cv_type, _cv_params, exp
         )
     )
     assert env == expected
+
+
+##################################################
+# `define_holdout_set` Scenarios
+##################################################
+def test_define_holdout_set_str(monkeypatch):
+    dummy_df = pd.DataFrame(dict(a=[0, 1], b=[2, 3]))
+
+    # noinspection PyUnusedLocal
+    def mock_pandas_read_csv(*args, **kwargs):
+        return dummy_df
+
+    monkeypatch.setattr(pd, "read_csv", mock_pandas_read_csv)
+    assert define_holdout_set(pd.DataFrame(dict(a=[4], b=[5])), "foo", "x")[1].equals(dummy_df)
+
+
+@pytest.mark.parametrize("holdout_set", [42, np.array([[0, 1], [2, 3]])])
+def test_define_holdout_set_type_error(holdout_set):
+    with pytest.raises(TypeError, match="holdout_set must be None, DataFrame, callable, or str,.*"):
+        define_holdout_set(pd.DataFrame(), holdout_set, "target")
+
+
+def test_define_holdout_set_file_not_found_error():
+    with pytest.raises(FileNotFoundError):
+        define_holdout_set(pd.DataFrame(), "foo", "target")
+
+
+@pytest.mark.parametrize("holdout_set", [dict(), dict(a=[0], c=[2]), dict(a=[0])])
+def test_define_holdout_set_value_error(holdout_set):
+    with pytest.raises(ValueError, match="Mismatched columns.*"):
+        define_holdout_set(pd.DataFrame(dict(a=[0, 1], b=[2, 3])), pd.DataFrame(holdout_set), "x")
+
+
+##################################################
+# `validate_file_blacklist` Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["blacklist", "expected"],
+    [["ALL", "ALL"], [["current_heartbeat"], ["current_heartbeat", "heartbeat"]]],
+)
+def test_validate_file_blacklist(blacklist, expected):
+    assert validate_file_blacklist(blacklist) == expected
+
+
+@pytest.mark.parametrize("blacklist", ["foo", 42, dict(a=17, b=18)])
+def test_validate_file_blacklist_type_error_list(blacklist):
+    with pytest.raises(TypeError, match="Expected blacklist to be a list, not:.*"):
+        validate_file_blacklist(blacklist)
+
+
+@pytest.mark.parametrize("blacklist", [["foo", None], [1], [["foo"]], [dict(a="foo")]])
+def test_validate_file_blacklist_type_error_contents(blacklist):
+    with pytest.raises(TypeError, match="Expected blacklist contents to be strings, not:.*"):
+        validate_file_blacklist(blacklist)
+
+
+@pytest.mark.parametrize("blacklist", [["description", "foo"], ["foo"]])
+def test_validate_file_blacklist_value_error(blacklist):
+    with pytest.raises(ValueError, match="Invalid blacklist value: foo.*"):
+        validate_file_blacklist(blacklist)
