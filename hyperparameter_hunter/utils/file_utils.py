@@ -210,8 +210,9 @@ def print_tree(start_path, depth=-1, pretty=True):
     ...     os.mkdir(f"{d}/root/sub_b/sub_c")
     ...     _ = open(f"{d}/root/file_0.txt", "w+")
     ...     _ = open(f"{d}/root/file_1.py", "w+")
-    ...     _ = open(f"{d}/root/sub_b/file_2.py", "w+")
-    ...     _ = open(f"{d}/root/sub_b/sub_c/file_3.py", "w+")
+    ...     _ = open(f"{d}/root/sub_a/file_2.py", "w+")
+    ...     _ = open(f"{d}/root/sub_b/file_3.py", "w+")
+    ...     _ = open(f"{d}/root/sub_b/sub_c/file_4.py", "w+")
     ...     print_tree(f"{d}/root", pretty=False)
     ...     print("#" * 50)
     ...     print_tree(f"{d}/root", depth=2, pretty=False)
@@ -221,26 +222,29 @@ def print_tree(start_path, depth=-1, pretty=True):
     |   |-- file_1.py
     |   |-- file_0.txt
     |   |-- sub_a/
-    |   |-- sub_b/
     |   |   |-- file_2.py
+    |   |-- sub_b/
+    |   |   |-- file_3.py
     |   |   |-- sub_c/
-    |   |   |   |-- file_3.py
+    |   |   |   |-- file_4.py
     ##################################################
     |-- root/
     |   |-- file_1.py
     |   |-- file_0.txt
     |   |-- sub_a/
-    |   |-- sub_b/
     |   |   |-- file_2.py
+    |   |-- sub_b/
+    |   |   |-- file_3.py
     ##################################################
     root/
     |-- file_1.py
     |-- file_0.txt
     |-- sub_a/
-    |-- sub_b/
     |   |-- file_2.py
+    |-- sub_b/
+    |   |-- file_3.py
     |   |-- sub_c/
-    |   |   |-- file_3.py"""
+    |   |   |-- file_4.py"""
     prefix = 0
 
     if start_path != "/":
