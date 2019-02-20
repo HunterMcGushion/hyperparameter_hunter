@@ -266,7 +266,7 @@ def print_tree(start_path, depth=-1, pretty=True):
 
         print(content)
 
-        for d in dirs:
+        for d in sorted(dirs):
             if os.path.islink(os.path.join(root, d)):
                 content = "{}{}".format(sub_indent, real_name(d, root=root))
                 print(content)
