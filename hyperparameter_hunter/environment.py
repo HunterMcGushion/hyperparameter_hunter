@@ -39,6 +39,7 @@ from inspect import signature, isclass
 import numpy as np
 import os.path
 import pandas as pd
+from typing import List, Optional, Tuple, Union
 
 ##################################################
 # Import Learning Assets
@@ -425,7 +426,9 @@ class Environment:
         """Execute all methods required to validate the environment and run Experiments"""
         self.update_custom_environment_params()
         self.validate_parameters()
-        self.define_holdout_set()
+        self.train_dataset, self.holdout_dataset = define_holdout_set(
+            self.train_dataset, self.holdout_dataset, self.target_column
+        )
         self.format_result_paths()
         self.generate_cross_experiment_key()
         G.log("Cross-Experiment Key:   '{!s}'".format(self.cross_experiment_key))
@@ -504,38 +507,6 @@ class Environment:
                 raise TypeError(f"experiment_callbacks must be classes, not {type(cb)}: {cb}")
             if cb.__name__ != "LambdaCallback":
                 raise ValueError(f"experiment_callbacks must be LambdaCallback instances, not {cb}")
-
-    def define_holdout_set(self):
-        """Define :attr:`Environment.holdout_dataset`, and (if holdout_dataset is callable), also
-        modifies train_dataset"""
-        if callable(self.holdout_dataset):
-            self.train_dataset, self.holdout_dataset = self.holdout_dataset(
-                self.train_dataset, self.target_column
-            )
-        elif isinstance(self.holdout_dataset, str):
-            try:
-                self.holdout_dataset = pd.read_csv(self.holdout_dataset)
-            except FileNotFoundError:
-                raise
-        elif self.holdout_dataset is not None and (
-            not isinstance(self.holdout_dataset, pd.DataFrame)
-        ):
-            raise TypeError(
-                f"holdout_dataset must be one of: [None, DataFrame, callable, str], not {type(self.holdout_dataset)}"
-            )
-
-        if (self.holdout_dataset is not None) and (
-            not np.array_equal(self.train_dataset.columns, self.holdout_dataset.columns)
-        ):
-            raise ValueError(
-                "\n".join(
-                    [
-                        "train_dataset and holdout_dataset must have the same columns. Instead, "
-                        f"train_dataset had {len(self.train_dataset.columns)} columns: {self.train_dataset.columns}",
-                        f"holdout_dataset had {len(self.holdout_dataset.columns)} columns: {self.holdout_dataset.columns}",
-                    ]
-                )
-            )
 
     def format_result_paths(self):
         """Remove paths contained in file_blacklist, and format others to prepare for saving results"""
@@ -763,6 +734,47 @@ class Environment:
             global_random_seed=params["cross_experiment_params"]["global_random_seed"],
             random_seeds=params["cross_experiment_params"]["random_seeds"],
         )
+
+
+def define_holdout_set(
+    train_set: pd.DataFrame,
+    holdout_set: Union[pd.DataFrame, callable, str, None],
+    target_column: Union[str, List[str]],
+) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
+    """Create `holdout_set` (if necessary) by loading a DataFrame from a .csv file, or by separating
+    `train_set`, and return the updated (`train_set`, `holdout_set`) pair
+
+    Parameters
+    ----------
+    train_set: Pandas.DataFrame
+        Training DataFrame. Will be split into train/holdout data, if `holdout_set` is callable
+    holdout_set: Pandas.DataFrame, callable, str, or None
+        If pd.DataFrame, this is the holdout dataset. If callable, expects a function that takes
+        (`train_set`, `target_column`) as input and returns the new (`train_set`, `holdout_set`). If
+        str, will attempt to read file at path via :func:`pandas.read_csv`. Else, no holdout set
+    target_column: Str, or list
+        If str, denotes the column name in provided datasets that contains the target output. If
+        list, should be a list of strs designating multiple target columns
+
+    Returns
+    -------
+    train_set: Pandas.DataFrame
+        `train_set` if `holdout_set` is not callable. Else `train_set` modified by `holdout_set`
+    holdout_set: Pandas.DataFrame, or None
+        Original DataFrame, or DataFrame read from str filepath, or a portion of `train_set` if
+        `holdout_set` is callable, or None"""
+    #################### Update `holdout_set` ####################
+    if callable(holdout_set):
+        train_set, holdout_set = holdout_set(train_set, target_column)
+    elif isinstance(holdout_set, str):
+        holdout_set = pd.read_csv(holdout_set)
+    #################### Validate `holdout_set` ####################
+    try:
+        if holdout_set is None or np.array_equal(train_set.columns, holdout_set.columns):
+            return train_set, holdout_set
+    except AttributeError:
+        raise TypeError(f"holdout_set must be None, DataFrame, callable, or str, not {holdout_set}")
+    raise ValueError(f"Mismatched columns\n{train_set.columns}\n!=\n{holdout_set.columns}")
 
 
 ##################################################
