@@ -210,7 +210,7 @@ def print_tree(start_path, depth=-1, pretty=True):
     ...     _ = open(f"{d}/root/file_0.txt", "w+")
     ...     _ = open(f"{d}/root/file_1.py", "w+")
     ...     _ = open(f"{d}/root/sub_a/file_2.py", "w+")
-    ...     _ = open(f"{d}/root/sub_a/sub_b/file_3.py", "w+")
+    ...     _ = open(f"{d}/root/sub_a/sub_b/file_3.txt", "w+")
     ...     _ = open(f"{d}/root/sub_a/sub_b/file_4.py", "w+")
     ...     print_tree(f"{d}/root", pretty=False)
     ...     print("#" * 50)
@@ -224,7 +224,7 @@ def print_tree(start_path, depth=-1, pretty=True):
     |   |   |-- file_2.py
     |   |   |-- sub_b/
     |   |   |   |-- file_4.py
-    |   |   |   |-- file_3.py
+    |   |   |   |-- file_3.txt
     ##################################################
     |-- root/
     |   |-- file_1.py
@@ -239,7 +239,7 @@ def print_tree(start_path, depth=-1, pretty=True):
     |   |-- file_2.py
     |   |-- sub_b/
     |   |   |-- file_4.py
-    |   |   |-- file_3.py"""
+    |   |   |-- file_3.txt"""
     prefix = 0
 
     if start_path != "/":
