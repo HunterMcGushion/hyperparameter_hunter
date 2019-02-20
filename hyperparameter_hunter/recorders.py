@@ -83,7 +83,6 @@ class BaseRecorder(metaclass=ABCMeta):
     def result_path_key(self) -> str:
         """Return key from :attr:`environment.Environment.result_paths`, corresponding to the
         target record"""
-        raise NotImplementedError()
 
     @property
     @abstractmethod
@@ -93,19 +92,16 @@ class BaseRecorder(metaclass=ABCMeta):
          which can also be regarded as :class:`environment.Environment.current_task`, but this is
          an implementation detail. It is simpler to use :class:`experiments.BaseExperiment`, and its
          appropriate descendants as a reference for acceptable values of `required_attributes`"""
-        raise NotImplementedError()
 
     @abstractmethod
     def format_result(self):
         """Set :attr:`BaseRecorder.result` to the final result object to be saved by
         :meth:`BaseRecorder.save_result`"""
-        raise NotImplementedError()
 
     @abstractmethod
     def save_result(self):
         """Save :attr:`BaseRecorder.result` to :attr:`BaseRecorder.result_path`, or elsewhere if
         special case"""
-        raise NotImplementedError()
 
 
 class RecorderList(object):

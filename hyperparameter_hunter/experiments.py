@@ -262,7 +262,6 @@ class BaseExperiment(ScoringMixIn):
     @abstractmethod
     def _additional_preparation_steps(self):
         """Perform extra preparation tasks prior to initializing random seeds and preprocessing"""
-        raise NotImplementedError()
 
     @abstractmethod
     def execute(self):
@@ -270,7 +269,6 @@ class BaseExperiment(ScoringMixIn):
         of learners for each run, preprocessing of data as appropriate, training learners, making
         predictions, and evaluating and aggregating those predictions and other stats/metrics for
         later use"""
-        raise NotImplementedError()
 
     ##################################################
     # Data Preprocessing Methods:
@@ -525,7 +523,7 @@ class BaseCVExperiment(BaseExperiment):
 
     @abstractmethod
     def _initialize_folds(self):
-        raise NotImplementedError()
+        """"""
 
     def execute(self):
         self.cross_validation_workflow()
