@@ -27,7 +27,17 @@ def default_json_write(obj):
     Raises
     ------
     TypeError
-        If the type of `obj` is unhandled"""
+        If the type of `obj` is unhandled
+
+    Examples
+    --------
+    >>> assert default_json_write(np.array([1, 2, 3])) == [1, 2, 3]
+    >>> assert default_json_write(np.int8(32)) == 32
+    >>> assert np.isclose(default_json_write(np.float16(3.14)), 3.14, atol=0.001)
+    >>> default_json_write(object())  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        File "file_utils.py", line ?, in default_json_write
+    TypeError: <object object at ...> is not JSON serializable"""
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     if isinstance(obj, np.integer):
@@ -177,7 +187,59 @@ def real_name(path, root=None):
     return result
 
 
-def print_tree(start_path, depth=-1):
+def print_tree(start_path, depth=-1, pretty=True):
+    """Print directory/file tree structure
+
+    Parameters
+    ----------
+    start_path: String
+        Root directory path, whose children should be traversed and printed
+    depth: Integer, default=-1
+        Maximum number of subdirectories allowed to be between the root `start_path` and the current
+        element. -1 allows all child directories beneath `start_path` to be traversed
+    pretty: Boolean, default=True
+        If True, directory names will be bolded
+
+    Examples
+    --------
+    >>> from tempfile import TemporaryDirectory
+    >>> with TemporaryDirectory(dir="") as d:
+    ...     os.mkdir(f"{d}/root")
+    ...     os.mkdir(f"{d}/root/sub_a")
+    ...     os.mkdir(f"{d}/root/sub_a/sub_b")
+    ...     _ = open(f"{d}/root/file_0.txt", "w+")
+    ...     _ = open(f"{d}/root/file_1.py", "w+")
+    ...     _ = open(f"{d}/root/sub_a/file_2.py", "w+")
+    ...     _ = open(f"{d}/root/sub_a/sub_b/file_3.txt", "w+")
+    ...     _ = open(f"{d}/root/sub_a/sub_b/file_4.py", "w+")
+    ...     print_tree(f"{d}/root", pretty=False)
+    ...     print("#" * 50)
+    ...     print_tree(f"{d}/root", depth=2, pretty=False)
+    ...     print("#" * 50)
+    ...     print_tree(f"{d}/root/", pretty=False)
+    |-- root/
+    |   |-- file_1.py
+    |   |-- file_0.txt
+    |   |-- sub_a/
+    |   |   |-- file_2.py
+    |   |   |-- sub_b/
+    |   |   |   |-- file_4.py
+    |   |   |   |-- file_3.txt
+    ##################################################
+    |-- root/
+    |   |-- file_1.py
+    |   |-- file_0.txt
+    |   |-- sub_a/
+    |   |   |-- file_2.py
+    ##################################################
+    root/
+    |-- file_1.py
+    |-- file_0.txt
+    |-- sub_a/
+    |   |-- file_2.py
+    |   |-- sub_b/
+    |   |   |-- file_4.py
+    |   |   |-- file_3.txt"""
     prefix = 0
 
     if start_path != "/":
@@ -198,10 +260,12 @@ def print_tree(start_path, depth=-1):
         sub_indent = "|   " * (level) + "|-- "
 
         content = "{}{}/".format(indent, real_name(root))
-        content = "\u001b[;1m" + content + "\u001b[0m"
+        if pretty:
+            content = "\u001b[;1m" + content + "\u001b[0m"
+
         print(content)
 
-        for d in dirs:
+        for d in sorted(dirs):
             if os.path.islink(os.path.join(root, d)):
                 content = "{}{}".format(sub_indent, real_name(d, root=root))
                 print(content)
