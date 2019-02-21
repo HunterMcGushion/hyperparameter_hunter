@@ -11,29 +11,13 @@ import pandas as pd
 
 
 class PredictorOOF(BasePredictorCallback):
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.final_oof_predictions = None
-        self.repetition_oof_predictions = None
-        self.run_validation_predictions = None
-        self.validation_index = None
-        self.experiment_params = None
-        super().__init__()
+    final_oof_predictions: pd.DataFrame
+    repetition_oof_predictions: pd.DataFrame
+    run_validation_predictions: pd.DataFrame
+    validation_index: list
+    experiment_params = dict
 
     def on_experiment_start(self):
-        required_attributes = [
-            "final_oof_predictions",
-            "repetition_oof_predictions",
-            "run_validation_predictions",
-            "train_dataset",
-            "validation_index",
-            "target_column",
-            "experiment_params",
-        ]
-        for attr in required_attributes:
-            if not hasattr(self, attr):
-                raise AttributeError("Missing required `PredictorOOF` attribute: {}".format(attr))
-
         self.final_oof_predictions = self.__zeros_df()
         super().on_experiment_start()
 
@@ -72,14 +56,11 @@ class PredictorOOF(BasePredictorCallback):
 
 
 class PredictorHoldout(BasePredictorCallback):
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.final_holdout_predictions = None
-        self.repetition_holdout_predictions = None
-        self.fold_holdout_predictions = None
-        self.run_holdout_predictions = None
-        self.experiment_params = None
-        super().__init__()
+    final_holdout_predictions: pd.DataFrame
+    repetition_holdout_predictions: pd.DataFrame
+    fold_holdout_predictions: pd.DataFrame
+    run_holdout_predictions: pd.DataFrame
+    experiment_params: dict
 
     def on_experiment_start(self):
         self.final_holdout_predictions = 0
@@ -118,14 +99,11 @@ class PredictorHoldout(BasePredictorCallback):
 
 
 class PredictorTest(BasePredictorCallback):
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.final_test_predictions = None
-        self.repetition_test_predictions = None
-        self.fold_test_predictions = None
-        self.run_test_predictions = None
-        self.experiment_params = None
-        super().__init__()
+    final_test_predictions: pd.DataFrame
+    repetition_test_predictions: pd.DataFrame
+    fold_test_predictions: pd.DataFrame
+    run_test_predictions: pd.DataFrame
+    experiment_params: dict
 
     def on_experiment_start(self):
         self.final_test_predictions = 0
