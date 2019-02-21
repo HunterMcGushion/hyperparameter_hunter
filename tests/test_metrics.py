@@ -7,6 +7,8 @@ from hyperparameter_hunter.metrics import get_formatted_target_metric, get_clean
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from collections import OrderedDict
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -49,8 +51,6 @@ def keyed_args_ids_for(scenarios):
 ##################################################
 # Metric Scenarios
 ##################################################
-
-
 @pytest.fixture(scope="session")
 def metric_init_params_lookup():
     """Lookup dictionary for `Metric` initialization parameters used in test scenarios. Keys
@@ -220,6 +220,76 @@ def test_attribute_error_scoring_mix_in_initialization(metrics, in_fold, oof, ho
 def test_key_error_scoring_mix_in_initialization(metrics, in_fold, oof, holdout):
     with pytest.raises(KeyError):
         ScoringMixIn(metrics=metrics, in_fold=in_fold, oof=oof, holdout=holdout)
+
+
+##################################################
+# `ScoringMixIn.evaluate` Scenarios
+##################################################
+data_types = ["in_fold", "oof", "holdout"]
+
+
+#################### `ScoringMixIn` Instance Helpers ####################
+def _get_mixin_data_types(mixin):
+    return [getattr(mixin, f"_ScoringMixIn__{_}") for _ in data_types]
+
+
+def _call_evaluate(mixin):
+    for data_type in data_types:
+        mixin.evaluate(data_type, np.array([1, 0, 1, 0]), np.array([0.9, 0.3, 0.7, 0.8]))
+    return mixin
+
+
+#################### `ScoringMixIn` Fixtures ####################
+@pytest.fixture(scope="function")
+def scoring_mix_in_fixture_0():
+    mixin = ScoringMixIn(metrics=dict(roc_auc=roc_auc_score, f1=f1_score), do_score=True)
+    assert _get_mixin_data_types(mixin) == [["roc_auc", "f1"], ["roc_auc", "f1"], ["roc_auc", "f1"]]
+    return mixin
+
+
+@pytest.fixture(scope="function")
+def scoring_mix_in_fixture_1():
+    mixin = ScoringMixIn(metrics=dict(roc_auc=roc_auc_score, f1=f1_score), oof=["f1"], holdout=None)
+    assert _get_mixin_data_types(mixin) == [["roc_auc", "f1"], ["f1"], []]
+    return mixin
+
+
+@pytest.fixture(scope="function")
+def scoring_mix_in_fixture_2():
+    mixin = ScoringMixIn(metrics=["f1_score"], do_score=False)
+    assert _get_mixin_data_types(mixin) == [["f1_score"], ["f1_score"], ["f1_score"]]
+    return mixin
+
+
+@pytest.fixture(params=[f"scoring_mix_in_fixture_{_}" for _ in [0, 1, 2]])
+def scoring_mix_in_fixture(request):
+    return request.getfixturevalue(request.param)
+
+
+#################### `ScoringMixIn` Tests ####################
+def test_initial_results(scoring_mix_in_fixture):
+    assert all(_ is None for _ in scoring_mix_in_fixture.last_evaluation_results.values())
+
+
+def test_evaluate_mix_in_0(scoring_mix_in_fixture_0):
+    scoring_mix_in_fixture_0 = _call_evaluate(scoring_mix_in_fixture_0)
+    assert scoring_mix_in_fixture_0.last_evaluation_results == {
+        _: OrderedDict([("roc_auc", 0.75), ("f1", 0.8)]) for _ in data_types
+    }
+
+
+def test_evaluate_mix_in_1(scoring_mix_in_fixture_1):
+    scoring_mix_in_fixture_1 = _call_evaluate(scoring_mix_in_fixture_1)
+    assert scoring_mix_in_fixture_1.last_evaluation_results == dict(
+        in_fold=OrderedDict([("roc_auc", 0.75), ("f1", 0.8)]),
+        oof=OrderedDict([("f1", 0.8)]),
+        holdout=OrderedDict(),
+    )
+
+
+def test_evaluate_mix_in_2(scoring_mix_in_fixture_2):
+    scoring_mix_in_fixture_2 = _call_evaluate(scoring_mix_in_fixture_2)
+    assert scoring_mix_in_fixture_2.last_evaluation_results == {_: None for _ in data_types}
 
 
 ##################################################
