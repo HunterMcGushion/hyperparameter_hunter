@@ -13,6 +13,7 @@ Related
 # Import Miscellaneous Assets
 ##################################################
 from collections import OrderedDict
+from contextlib import suppress
 import numpy as np
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -336,7 +337,7 @@ class ScoringMixIn(object):
         """Ensure metrics lists input parameters are correct types and compatible with each other"""
         for (_d_type, _m_val) in [(_, getattr(self, f"_ScoringMixIn{_}")) for _ in data_types]:
             if _m_val == "all":
-                setattr(self, _d_type, list(self.metrics.keys()))
+                setattr(self, f"_ScoringMixIn{_d_type}", list(self.metrics.keys()))
             elif not isinstance(_m_val, list):
                 raise TypeError(f"{_d_type} must be one of: ['all', None, <list>], not {_m_val}")
             else:
@@ -351,7 +352,7 @@ class ScoringMixIn(object):
 
         Parameters
         ----------
-        data_type: String in: ['in_fold', 'oof', 'holdout']
+        data_type: {"in_fold", "oof", "holdout"}
             The type of dataset for which `target` and `prediction` arguments are being provided
         target: Array-like
             True labels for the data. Should be same shape as `prediction`
@@ -374,10 +375,7 @@ class ScoringMixIn(object):
         if self.do_score is False:
             return
 
-        if data_type not in ("in_fold", "oof", "holdout"):
-            raise ValueError(f"data_type must be in ['in_fold', 'oof', 'holdout'], not {data_type}")
-
-        _metric_ids = getattr(self, "__{}".format(data_type))
+        _metric_ids = getattr(self, f"_ScoringMixIn__{data_type}")
         _result = []
 
         for _metric_id in _metric_ids:
@@ -425,12 +423,13 @@ def get_clean_prediction(target, prediction):
         # ValueError probably: "Classification metrics can't handle a mix of binary and continuous targets"
         target_min, target_max = target.min(), target.max()
 
-        if (len(target_min) == 1) and (len(target_max) == 1):
-            target_min, target_max = target_min[0], target_max[0]
-        else:
-            # TODO: If len(min/max) > 1: multi-class classification, or other multi-output problem
-            # TODO: Then each prediction value must be clipped to its specific min/max
-            raise ValueError(f"Cannot handle multi-outputs. Bounds: {target_min}, {target_max}")
+        with suppress(TypeError):  # Bypass one-dimensional arrays, whose min/max should be a scalar
+            if (len(target_min) == 1) and (len(target_max) == 1):
+                target_min, target_max = target_min[0], target_max[0]
+            else:
+                # TODO: If len(min/max) > 1: multi-class classification, or other multi-output problem
+                # TODO: Then each prediction value must be clipped to its specific min/max
+                raise ValueError(f"Cannot handle multi-outputs. Bounds: {target_min}, {target_max}")
 
         prediction = np.clip(prediction, target_min, target_max)
         prediction = np.rint(prediction)
