@@ -221,10 +221,6 @@ def expand_mins_secs(mins, secs):
             return "{:>02d}d{:>02d}h".format(int(days), int(hours))
 
 
-def type_val(val):
-    return type(val), val
-
-
 def to_standard_string(a_string):
     for to_replace in string.punctuation + " ":
         a_string = a_string.replace(to_replace, "")
