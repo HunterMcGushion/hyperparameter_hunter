@@ -35,16 +35,8 @@ def keras_callback_to_key(callback):
     -------
     callback_key: String
         A string identifying and describing `callback`"""
-    signature_args = sorted(signature(callback.__class__).parameters.items())
-    string_args = []
-
-    for arg_name, arg_val in signature_args:
-        if arg_name not in ["verbose"]:
-            try:
-                string_args.append(f"{arg_name}={getattr(callback, arg_name)!r}")
-            except AttributeError:
-                string_args.append(f"{arg_name}={arg_val.default!r}")
-
+    signature_args = parameters_by_signature(callback, lambda n, v: n not in ["verbose"])
+    string_args = [f"{k}={v!r}" for k, v in sorted(signature_args.items())]
     callback_key = f"{callback.__class__.__name__}(" + ", ".join(string_args) + ")"
     return callback_key
 
