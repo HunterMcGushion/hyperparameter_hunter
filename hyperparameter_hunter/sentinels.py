@@ -78,9 +78,6 @@ class Sentinel(metaclass=ABCMeta):
         ----------
         value: Str
             The new value of :attr:`Sentinel._sentinel`"""
-        if not isinstance(value, str):
-            raise TypeError('`sentinel` must be str, not "{}": {}'.format(type(value), value))
-
         self._sentinel = value
         G.sentinel_registry.append(self)
 
