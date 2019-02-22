@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.metrics import ScoringMixIn, Metric, format_metrics
+from hyperparameter_hunter.metrics import ScoringMixIn, Metric, format_metrics, wrap_xgboost_metric
 from hyperparameter_hunter.metrics import get_formatted_target_metric, get_clean_prediction
 
 ##################################################
@@ -11,11 +11,17 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 import pytest
+import sys
 
 ##################################################
 # Import Learning Assets
 ##################################################
 from sklearn.metrics import roc_auc_score, hamming_loss, r2_score, f1_score
+
+try:
+    from xgboost import DMatrix
+except ImportError:
+    pass
 
 
 ##################################################
@@ -329,3 +335,13 @@ def test_get_clean_prediction(target, prediction, expected):
     assert pd.DataFrame(
         get_clean_prediction(pd.DataFrame(target), pd.DataFrame(prediction))
     ).equals(pd.DataFrame(expected))
+
+
+##################################################
+# `wrap_xgboost_metric` Scenarios
+##################################################
+@pytest.mark.skipif("xgboost" not in sys.modules, reason="Requires `XGBoost` library")
+def test_wrap_xgboost_metric():
+    eval_metric = wrap_xgboost_metric(roc_auc_score, "roc_auc")
+    d_matrix = DMatrix(np.array([[7], [14], [21], [28]]), label=[1, 0, 1, 0])
+    assert eval_metric([0.9, 0.3, 0.7, 0.8], d_matrix) == ("roc_auc", 0.75)
