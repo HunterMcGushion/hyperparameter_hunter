@@ -306,10 +306,6 @@ def dimension_subset(hyperparameters, dimensions):
     -------
     List of hyperparameter values"""
     dimensions = [("model_init_params", _) if isinstance(_, str) else _ for _ in dimensions]
-
-    if not all(isinstance(_, tuple) for _ in dimensions):
-        raise TypeError(f"All dimensions should be strings or tuples. Received: {dimensions}")
-
     values = [get_path(hyperparameters, _, default=None) for _ in dimensions]
     # FLAG: Might need to set `default`=<some sentinel str> in above `get_path` call - In case `None` is an accepted value
     return values
