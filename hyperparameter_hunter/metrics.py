@@ -16,7 +16,7 @@ from collections import OrderedDict
 from contextlib import suppress
 import numpy as np
 import pandas as pd
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Tuple, Union
 
 ##################################################
 # Import Learning Assets
