@@ -7,3 +7,4 @@ omit =
     hyperparameter_hunter/library_helpers/__temp_files/*
     hyperparameter_hunter/utils/boltons_utils.py
     hyperparameter_hunter/*/__init__.py
+precision = 2
