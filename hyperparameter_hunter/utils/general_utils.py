@@ -103,6 +103,10 @@ def extra_enter_attrs(iter_attrs):
     return _enter
 
 
+def flatten(l):
+    return [item for sublist in l for item in sublist]
+
+
 ##################################################
 # Miscellaneous Utilities
 ##################################################
