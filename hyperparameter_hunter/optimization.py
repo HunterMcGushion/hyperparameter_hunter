@@ -14,11 +14,31 @@ from hyperparameter_hunter.optimization_core import SKOptimizationProtocol
 from hyperparameter_hunter.space import normalize_dimensions
 
 ##################################################
+# Import Miscellaneous Assets
+##################################################
+from typing import Optional, Type, Union
+
+##################################################
 # Import Learning Assets
 ##################################################
+from sklearn.base import BaseEstimator
 from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
 from skopt.learning.gbrt import GradientBoostingQuantileRegressor
 from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
+
+
+EstTypes = Union[str, Type[BaseEstimator]]
+
+
+def _validate_estimator(estimator: EstTypes, *valid_values: EstTypes) -> Optional[bool]:
+    # TODO: Add docstring
+    for valid_value in valid_values:
+        if isinstance(valid_value, str) and estimator == valid_value.upper():
+            return True
+        if isinstance(valid_value, type) and isinstance(estimator, valid_value):
+            return True
+
+    raise TypeError(f"Expected `base_estimator` in {valid_values}, not {estimator}")
 
 
 ##################################################
@@ -45,13 +65,7 @@ class BayesianOptimization(SKOptimizationProtocol):
         callbacks=None,
         base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != "GP" and not isinstance(
-            base_estimator, GaussianProcessRegressor
-        ):
-            raise TypeError(
-                f'Expected `base_estimator`="GP", or `GaussianProcessRegressor`, not {base_estimator}'
-            )
-
+        _validate_estimator(base_estimator, "GP", GaussianProcessRegressor)
         base_estimator_kwargs = base_estimator_kwargs or {}
         base_estimator_kwargs.setdefault("noise", "gaussian")
 
@@ -99,13 +113,7 @@ class GradientBoostedRegressionTreeOptimization(SKOptimizationProtocol):
         callbacks=None,
         base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != "GBRT" and not isinstance(
-            base_estimator, GradientBoostingQuantileRegressor
-        ):
-            raise TypeError(
-                f'Expected `base_estimator`="GBRT", or `GradientBoostingQuantileRegressor`, not {base_estimator}'
-            )
-
+        _validate_estimator(base_estimator, "GBRT", GradientBoostingQuantileRegressor)
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
@@ -148,11 +156,7 @@ class RandomForestOptimization(SKOptimizationProtocol):
         callbacks=None,
         base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != "RF" and not isinstance(base_estimator, RandomForestRegressor):
-            raise TypeError(
-                f'Expected `base_estimator`="RF", or `RandomForestRegressor`, not {base_estimator}'
-            )
-
+        _validate_estimator(base_estimator, "RF", RandomForestRegressor)
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
@@ -195,11 +199,7 @@ class ExtraTreesOptimization(SKOptimizationProtocol):
         callbacks=None,
         base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != "ET" and not isinstance(base_estimator, ExtraTreesRegressor):
-            raise TypeError(
-                f'Expected `base_estimator`="ET", or `ExtraTreesRegressor`, not {base_estimator}'
-            )
-
+        _validate_estimator(base_estimator, "ET", ExtraTreesRegressor)
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
@@ -242,9 +242,7 @@ class DummySearch(SKOptimizationProtocol):
         callbacks=None,
         base_estimator_kwargs=None,
     ):
-        if base_estimator.upper() != "DUMMY":
-            raise TypeError(f'Expected `base_estimator`="DUMMY", not {base_estimator}')
-
+        _validate_estimator(base_estimator, "DUMMY")
         base_estimator_kwargs = base_estimator_kwargs or {}
 
         super().__init__(
