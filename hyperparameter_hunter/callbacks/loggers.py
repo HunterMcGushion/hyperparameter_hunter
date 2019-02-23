@@ -18,19 +18,16 @@ import inspect
 
 
 class LoggerFitStatus(BaseLoggerCallback):
+    stat_aggregates: dict
+    last_evaluation_results: dict
+    current_seed: int
+    _rep: int
+    _fold: int
+    _run: int
+
     float_format = "{:.5f}"
     log_separator = "  |  "
     # FLAG: Add means of updating float_format to "G.Env.reporting_params['float_format']"
-
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.stat_aggregates = None
-        self.last_evaluation_results = None
-        self.current_seed = None
-        self._rep = None
-        self._fold = None
-        self._run = None
-        super().__init__()
 
     def on_experiment_start(self):
         G.log("", previous_frame=inspect.currentframe().f_back)

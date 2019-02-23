@@ -13,8 +13,10 @@ Related
 # Import Miscellaneous Assets
 ##################################################
 from collections import OrderedDict
+from contextlib import suppress
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Union
+import pandas as pd
+from typing import Dict, Iterable, List, Tuple, Union
 
 ##################################################
 # Import Learning Assets
@@ -25,6 +27,7 @@ from sklearn import metrics as sk_metrics
 # Declare Global Variables
 ##################################################
 data_types = ("__in_fold", "__oof", "__holdout")
+ArrayLike = Union[Iterable, pd.DataFrame]
 
 
 ##################################################
@@ -336,7 +339,7 @@ class ScoringMixIn(object):
         """Ensure metrics lists input parameters are correct types and compatible with each other"""
         for (_d_type, _m_val) in [(_, getattr(self, f"_ScoringMixIn{_}")) for _ in data_types]:
             if _m_val == "all":
-                setattr(self, _d_type, list(self.metrics.keys()))
+                setattr(self, f"_ScoringMixIn{_d_type}", list(self.metrics.keys()))
             elif not isinstance(_m_val, list):
                 raise TypeError(f"{_d_type} must be one of: ['all', None, <list>], not {_m_val}")
             else:
@@ -351,7 +354,7 @@ class ScoringMixIn(object):
 
         Parameters
         ----------
-        data_type: String in: ['in_fold', 'oof', 'holdout']
+        data_type: {"in_fold", "oof", "holdout"}
             The type of dataset for which `target` and `prediction` arguments are being provided
         target: Array-like
             True labels for the data. Should be same shape as `prediction`
@@ -374,10 +377,7 @@ class ScoringMixIn(object):
         if self.do_score is False:
             return
 
-        if data_type not in ("in_fold", "oof", "holdout"):
-            raise ValueError(f"data_type must be in ['in_fold', 'oof', 'holdout'], not {data_type}")
-
-        _metric_ids = getattr(self, "__{}".format(data_type))
+        _metric_ids = getattr(self, f"_ScoringMixIn__{data_type}")
         _result = []
 
         for _metric_id in _metric_ids:
@@ -396,7 +396,32 @@ class ScoringMixIn(object):
         return _result
 
 
-def get_clean_prediction(target, prediction):
+def _is_int(a):
+    """Determine whether the values of `a` are of type `numpy.int`
+
+    Parameters
+    ----------
+    a: Array-like
+        Array, whose values' types will be checked
+
+    Returns
+    -------
+    Boolean
+        True if the `dtype` of the values of `a` == `numpy.int`. Else, False
+
+    Examples
+    --------
+    >>> assert _is_int(np.array([0, 1, 2, 3]))
+    >>> assert _is_int(pd.DataFrame([0, 1], [2, 3]))
+    >>> assert not _is_int(np.array([0.0, 1.1, 2.2, 3.3]))
+    >>> assert not _is_int(pd.DataFrame([0.0, 1.1], [2.2, 3.3]))"""
+    try:
+        return a.values.dtype == np.int
+    except AttributeError:
+        return a.dtype == np.int
+
+
+def get_clean_prediction(target: ArrayLike, prediction: ArrayLike):
     """Create `prediction` that is of a form comparable to `target`
 
     Parameters
@@ -412,29 +437,22 @@ def get_clean_prediction(target, prediction):
         If `target` types are ints, and `prediction` types are not, given predicted labels clipped
         between the min, and max of `target`, then rounded to the nearest integer. Else, original
         predicted labels"""
-    try:
-        target_is_int = target.values.dtype == np.int
-    except AttributeError:
-        target_is_int = target.dtype == np.int
-    try:
-        prediction_is_int = prediction.dtype == np.int
-    except AttributeError:
-        prediction_is_int = prediction.values.dtype == np.int
-
-    if (target_is_int is True) and (prediction_is_int is False):
-        # ValueError probably: "Classification metrics can't handle a mix of binary and continuous targets"
+    # ValueError probably: "Classification metrics can't handle a mix of binary and continuous targets"
+    if _is_int(target) and not _is_int(prediction):
+        #################### Get Minimum/Maximum ####################
         target_min, target_max = target.min(), target.max()
 
-        if (len(target_min) == 1) and (len(target_max) == 1):
-            target_min, target_max = target_min[0], target_max[0]
-        else:
-            # TODO: If len(min/max) > 1: multi-class classification, or other multi-output problem
-            # TODO: Then each prediction value must be clipped to its specific min/max
-            raise ValueError(f"Cannot handle multi-outputs. Bounds: {target_min}, {target_max}")
+        with suppress(TypeError):  # Bypass one-dimensional arrays, whose min/max should be a scalar
+            if (len(target_min) == 1) and (len(target_max) == 1):
+                target_min, target_max = target_min[0], target_max[0]
 
-        prediction = np.clip(prediction, target_min, target_max)
-        prediction = np.rint(prediction)
-
+        #################### Clip/Round `prediction` ####################
+        try:
+            prediction = np.clip(prediction, target_min, target_max)
+        except ValueError:
+            prediction = prediction.clip(target_min, target_max, axis=1)
+        finally:
+            prediction = np.rint(prediction)
     return prediction
 
 

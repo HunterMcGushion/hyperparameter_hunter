@@ -1,19 +1,27 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.metrics import ScoringMixIn, Metric, format_metrics
+from hyperparameter_hunter.metrics import ScoringMixIn, Metric, format_metrics, wrap_xgboost_metric
 from hyperparameter_hunter.metrics import get_formatted_target_metric, get_clean_prediction
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from collections import OrderedDict
+import numpy as np
 import pandas as pd
 import pytest
+import sys
 
 ##################################################
 # Import Learning Assets
 ##################################################
 from sklearn.metrics import roc_auc_score, hamming_loss, r2_score, f1_score
+
+try:
+    from xgboost import DMatrix
+except ImportError:
+    pass
 
 
 ##################################################
@@ -49,8 +57,6 @@ def keyed_args_ids_for(scenarios):
 ##################################################
 # Metric Scenarios
 ##################################################
-
-
 @pytest.fixture(scope="session")
 def metric_init_params_lookup():
     """Lookup dictionary for `Metric` initialization parameters used in test scenarios. Keys
@@ -223,6 +229,76 @@ def test_key_error_scoring_mix_in_initialization(metrics, in_fold, oof, holdout)
 
 
 ##################################################
+# `ScoringMixIn.evaluate` Scenarios
+##################################################
+data_types = ["in_fold", "oof", "holdout"]
+
+
+#################### `ScoringMixIn` Instance Helpers ####################
+def _get_mixin_data_types(mixin):
+    return [getattr(mixin, f"_ScoringMixIn__{_}") for _ in data_types]
+
+
+def _call_evaluate(mixin):
+    for data_type in data_types:
+        mixin.evaluate(data_type, np.array([1, 0, 1, 0]), np.array([0.9, 0.3, 0.7, 0.8]))
+    return mixin
+
+
+#################### `ScoringMixIn` Fixtures ####################
+@pytest.fixture(scope="function")
+def scoring_mix_in_fixture_0():
+    mixin = ScoringMixIn(metrics=dict(roc_auc=roc_auc_score, f1=f1_score), do_score=True)
+    assert _get_mixin_data_types(mixin) == [["roc_auc", "f1"], ["roc_auc", "f1"], ["roc_auc", "f1"]]
+    return mixin
+
+
+@pytest.fixture(scope="function")
+def scoring_mix_in_fixture_1():
+    mixin = ScoringMixIn(metrics=dict(roc_auc=roc_auc_score, f1=f1_score), oof=["f1"], holdout=None)
+    assert _get_mixin_data_types(mixin) == [["roc_auc", "f1"], ["f1"], []]
+    return mixin
+
+
+@pytest.fixture(scope="function")
+def scoring_mix_in_fixture_2():
+    mixin = ScoringMixIn(metrics=["f1_score"], do_score=False)
+    assert _get_mixin_data_types(mixin) == [["f1_score"], ["f1_score"], ["f1_score"]]
+    return mixin
+
+
+@pytest.fixture(params=[f"scoring_mix_in_fixture_{_}" for _ in [0, 1, 2]])
+def scoring_mix_in_fixture(request):
+    return request.getfixturevalue(request.param)
+
+
+#################### `ScoringMixIn` Tests ####################
+def test_initial_results(scoring_mix_in_fixture):
+    assert all(_ is None for _ in scoring_mix_in_fixture.last_evaluation_results.values())
+
+
+def test_evaluate_mix_in_0(scoring_mix_in_fixture_0):
+    scoring_mix_in_fixture_0 = _call_evaluate(scoring_mix_in_fixture_0)
+    assert scoring_mix_in_fixture_0.last_evaluation_results == {
+        _: OrderedDict([("roc_auc", 0.75), ("f1", 0.8)]) for _ in data_types
+    }
+
+
+def test_evaluate_mix_in_1(scoring_mix_in_fixture_1):
+    scoring_mix_in_fixture_1 = _call_evaluate(scoring_mix_in_fixture_1)
+    assert scoring_mix_in_fixture_1.last_evaluation_results == dict(
+        in_fold=OrderedDict([("roc_auc", 0.75), ("f1", 0.8)]),
+        oof=OrderedDict([("f1", 0.8)]),
+        holdout=OrderedDict(),
+    )
+
+
+def test_evaluate_mix_in_2(scoring_mix_in_fixture_2):
+    scoring_mix_in_fixture_2 = _call_evaluate(scoring_mix_in_fixture_2)
+    assert scoring_mix_in_fixture_2.last_evaluation_results == {_: None for _ in data_types}
+
+
+##################################################
 # get_formatted_target_metric Scenarios
 ##################################################
 @pytest.mark.parametrize(
@@ -253,9 +329,29 @@ def test_get_formatted_target_metric_value_error(target_metric):
         ([[3.1, 2.2], [4.1, 0.9]], [[3.2, 2.3], [3.9, 0.8]], [[3.2, 2.3], [3.9, 0.8]]),
         ([1, 0, 1, 0], [0.9, 0.1, 0.8, 0.2], [1.0, 0.0, 1.0, 0.0]),
         ([1, 0, 1, 0], [2.3, -1.2, 1.9, 0.01], [1.0, 0.0, 1.0, 0.0]),
+        (
+            [[0, 0, 1], [0, 1, 0], [1, 0, 0]],
+            [[-0.1, 0.2, 0.7], [0.2, 1.9, 0.1], [0.7, -0.1, -0.2]],
+            [[0.0, 0.0, 1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]],
+        ),
+        (
+            [[0, 0, 1], [0, 1, 0], [1, 0, 0]],
+            [[-0.1, 0.2, 0.7], [2.3, 1.9, 0.1], [0.7, -0.1, -0.2]],
+            [[0.0, 0.0, 1.0], [1.0, 1.0, 0.0], [1.0, 0.0, 0.0]],
+        ),
     ],
 )
 def test_get_clean_prediction(target, prediction, expected):
     assert pd.DataFrame(
         get_clean_prediction(pd.DataFrame(target), pd.DataFrame(prediction))
     ).equals(pd.DataFrame(expected))
+
+
+##################################################
+# `wrap_xgboost_metric` Scenarios
+##################################################
+@pytest.mark.skipif("xgboost" not in sys.modules, reason="Requires `XGBoost` library")
+def test_wrap_xgboost_metric():
+    eval_metric = wrap_xgboost_metric(roc_auc_score, "roc_auc")
+    d_matrix = DMatrix(np.array([[7], [14], [21], [28]]), label=[1, 0, 1, 0])
+    assert eval_metric([0.9, 0.3, 0.7, 0.8], d_matrix) == ("roc_auc", 0.75)

@@ -68,10 +68,6 @@ class BaseCallback(object):
     #     if key == 'stat_aggregates':
     #         self.__dict__[key] = value
 
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        print("I should not be printed. Ever.")
-
     def on_experiment_start(self):
         """Perform tasks when an Experiment is started"""
         G.debug("BaseCallback.on_experiment_start()")

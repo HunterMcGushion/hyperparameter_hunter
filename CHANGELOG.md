@@ -1,6 +1,11 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Bug-Fixes
+* Fix bug causing descendants of `SKOptimizationProtocol` to break when given non-string `base_estimator`s
+* Fix bug causing `ScoringMixIn` to incorrectly keep track of the metrics to record for different dataset types
+* Fix bug preventing `get_clean_predictions` from working with multi-output datasets
+
 
 <a name="2.2.0"></a>
 ## [2.2.0] (2019-02-10)

@@ -476,7 +476,6 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     @abstractmethod
     def _set_hyperparameter_space(self):
         """Initialize :attr:`space` according to the provided hyperparameter search dimensions"""
-        raise NotImplementedError()
 
     @abstractmethod
     def _get_current_hyperparameters(self):
@@ -486,14 +485,12 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         -------
         current_hyperparameters: Dict
             The next set of hyperparameters that will be searched"""
-        raise NotImplementedError()
 
     @property
     @abstractmethod
     def search_space_size(self):
         """The number of different hyperparameter permutations possible given the current
         hyperparameter search space"""
-        raise NotImplementedError()
 
     ##################################################
     # Utility Methods:

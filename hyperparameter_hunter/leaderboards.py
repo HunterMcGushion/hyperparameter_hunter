@@ -54,7 +54,6 @@ class Leaderboard(metaclass=ABCMeta):
         ----------
         experiment: :class:`experiments.BaseExperiment`
             An instance of a completed Experiment from which to construct a Leaderboard entry"""
-        raise NotImplementedError()
 
     def save(self, path, **kwargs):
         """Save the Leaderboard instance

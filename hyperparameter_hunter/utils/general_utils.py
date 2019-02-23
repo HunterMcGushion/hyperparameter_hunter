@@ -103,6 +103,10 @@ def extra_enter_attrs(iter_attrs):
     return _enter
 
 
+def flatten(l):
+    return [item for sublist in l for item in sublist]
+
+
 ##################################################
 # Miscellaneous Utilities
 ##################################################
@@ -219,10 +223,6 @@ def expand_mins_secs(mins, secs):
         else:
             days, hours = divmod(hours, 24)
             return "{:>02d}d{:>02d}h".format(int(days), int(hours))
-
-
-def type_val(val):
-    return type(val), val
 
 
 def to_standard_string(a_string):
