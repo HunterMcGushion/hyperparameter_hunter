@@ -3,7 +3,6 @@
 ##################################################
 from functools import partial
 from inspect import signature
-import numpy as np
 
 
 def identify_algorithm(model_initializer):
@@ -76,38 +75,6 @@ def identify_algorithm_hyperparameters(model_initializer):  # FLAG: Play nice wi
             hyperparameter_defaults[k] = v.default
 
     return hyperparameter_defaults
-
-
-def identify_hyperparameter_choices(algorithm_name, module_name, hyperparameter_defaults):
-    choices = dict()
-    for hyperparameter, default_value in hyperparameter_defaults.items():
-        if isinstance(default_value, (int, float)):
-            # Likely Continuous Feature
-            choices[hyperparameter] = dict(
-                lower_bound=-np.inf,  # FLAG: Might be safer to set to 0
-                # FLAG: If sticking with -np.inf, wrap optimization rounds in try/except. If fail, try raising lower_bound to 0
-                upper_bound=np.inf,
-            )
-        elif isinstance(default_value, bool):
-            # Likely Binary Feature
-            choices[hyperparameter] = dict(
-                select=[True, False]
-                # FLAG: May be other possible values mentioned in docstring, though...
-            )
-        elif isinstance(default_value, str):
-            # Likely Categorical Feature
-            choices[hyperparameter] = dict(
-                select=[default_value]
-                # FLAG: Other types may be possible (like callable)
-                # FLAG: Will need to manually define options for all parameters, or rely on user to reveal different options
-            )
-        else:
-            # Likely Categorical Feature
-            # FLAG: Other values that should be expected are: dict, None, callable, other object from library
-            choices[hyperparameter] = dict(
-                select=[default_value]
-                # FLAG: Will need to handle this like other categorical features
-            )
 
 
 if __name__ == "__main__":

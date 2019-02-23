@@ -11,13 +11,10 @@ import numpy as np
 
 
 class AggregatorTimes(BaseAggregatorCallback):
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.stat_aggregates = dict()
-        self._rep = None
-        self._fold = None
-        self._run = None
-        super().__init__()
+    stat_aggregates: dict
+    _rep: int
+    _fold: int
+    _run: int
 
     def on_experiment_start(self):
         self.stat_aggregates.setdefault(
@@ -75,14 +72,11 @@ class AggregatorTimes(BaseAggregatorCallback):
 
 
 class AggregatorEvaluations(BaseAggregatorCallback):
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.stat_aggregates = dict()
-        self.last_evaluation_results = dict(in_fold=None, oof=None, holdout=None)
-        self._rep = None
-        self._fold = None
-        self._run = None
-        super().__init__()
+    stat_aggregates: dict
+    last_evaluation_results: dict
+    _rep: int
+    _fold: int
+    _run: int
 
     def on_run_end(self):
         #################### Initialize Evaluations Aggregator ####################

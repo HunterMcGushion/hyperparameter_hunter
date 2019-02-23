@@ -80,10 +80,7 @@ def read_json(file_path, np_arr=False):
     -------
     content: Object
         The contents of the .json file located at `file_path`"""
-    try:
-        content = json.loads(open(file_path).read())
-    except json.JSONDecodeError as _ex:
-        raise _ex
+    content = json.loads(open(file_path).read())
 
     if np_arr is True:
         return np.array(content)

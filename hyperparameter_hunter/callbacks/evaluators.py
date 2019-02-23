@@ -13,16 +13,18 @@ Related
 ##################################################
 from hyperparameter_hunter.callbacks.bases import BaseEvaluatorCallback
 
+##################################################
+# Import Miscellaneous Assets
+##################################################
+import pandas as pd
+
 
 class EvaluatorOOF(BaseEvaluatorCallback):
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.fold_validation_target = None
-        self.final_oof_predictions = None
-        self.repetition_oof_predictions = None
-        self.run_validation_predictions = None
-        self.validation_index = None
-        super().__init__()
+    fold_validation_target: pd.DataFrame
+    final_oof_predictions: pd.DataFrame
+    repetition_oof_predictions: pd.DataFrame
+    run_validation_predictions: pd.DataFrame
+    validation_index: list
 
     def on_run_end(self):
         """Evaluate out-of-fold predictions for the run"""
@@ -50,14 +52,11 @@ class EvaluatorOOF(BaseEvaluatorCallback):
 
 
 class EvaluatorHoldout(BaseEvaluatorCallback):
-    def __init__(self):
-        """Uncalled - See 'Notes' section of :class:`callbacks.bases.BaseCallback` for details"""
-        self.holdout_target_data = None
-        self.final_holdout_predictions = None
-        self.repetition_holdout_predictions = None
-        self.fold_holdout_predictions = None
-        self.run_holdout_predictions = None
-        super().__init__()
+    holdout_target_data: pd.DataFrame
+    final_holdout_predictions: pd.DataFrame
+    repetition_holdout_predictions: pd.DataFrame
+    fold_holdout_predictions: pd.DataFrame
+    run_holdout_predictions: pd.DataFrame
 
     def on_run_end(self):
         """Evaluate holdout predictions for the run"""
