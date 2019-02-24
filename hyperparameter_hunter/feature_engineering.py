@@ -304,7 +304,10 @@ def _hash_dataset(dataset: pd.DataFrame) -> dict:
     ...         'd': 'G_y3SLas04T-_ejL4AVACrDQM_uyT4HFxo1Ig1tF5Z8=',
     ...     },
     ... }
-    """
+    >>> _hash_dataset(None)
+    {'dataset': None, 'column_names': None, 'column_values': None}"""
+    if dataset is None:
+        return dict(dataset=None, column_names=None, column_values=None)
     return dict(
         dataset=make_hash_sha256(dataset),
         column_names=make_hash_sha256(dataset.columns),
