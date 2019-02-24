@@ -91,7 +91,9 @@ def test_1():
 
     feature_engineer = FeatureEngineer()
     feature_engineer.add_step(set_nan_0)
+    assert feature_engineer._steps[-1].name == "set_nan_0"
     feature_engineer.add_step(impute_negative_one_0)
+    assert feature_engineer._steps[-1].name == "impute_negative_one_0"
     feature_engineer("foo", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy())
 
     expected_train_inputs = [
