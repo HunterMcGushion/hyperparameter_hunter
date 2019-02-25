@@ -27,6 +27,12 @@ env = Environment(
 experiment = CVExperiment(
     model_initializer=LGBMClassifier,
     model_init_params=dict(boosting_type="gbdt", num_leaves=31, max_depth=-1, subsample=0.5),
+    model_extra_params=dict(
+        fit=dict(
+            feature_name=train_df.columns.values[:-1].tolist(),
+            categorical_feature=train_df.columns.values[11:-1].tolist(),
+        )
+    ),
 )
 
 # And/or...
@@ -39,6 +45,12 @@ optimizer.set_experiment_guidelines(
         num_leaves=Integer(10, 40),
         max_depth=-1,
         subsample=Real(0.3, 0.7),
+    ),
+    model_extra_params=dict(
+        fit=dict(
+            feature_name=train_df.columns.values[:-1].tolist(),
+            categorical_feature=train_df.columns.values[11:-1].tolist(),
+        )
     ),
 )
 optimizer.go()
