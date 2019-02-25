@@ -28,6 +28,7 @@ from hyperparameter_hunter.metrics import Metric
 from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, read_json, add_to_json, make_dirs
+from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
 from hyperparameter_hunter.utils.general_utils import subdict
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 
@@ -186,12 +187,7 @@ class KeyMaker(metaclass=ABCMeta):
                     dataframe_hashes.setdefault(hashed_value, []).append(key)
 
                 if self.tested_keys_dir is not None:  # Key-making not blacklisted
-                    try:
-                        self.add_complex_type_lookup_entry(path, key, value, hashed_value)
-                    except (FileNotFoundError, OSError):
-                        make_dirs(os.path.join(self.lookup_dir, *path), exist_ok=False)
-                        self.add_complex_type_lookup_entry(path, key, value, hashed_value)
-
+                    self.add_complex_type_lookup_entry(path, key, value, hashed_value)
                 return (key, hashed_value)
             return (key, value)
 
@@ -202,6 +198,7 @@ class KeyMaker(metaclass=ABCMeta):
             if len(df_names) > 1:
                 G.warn(f"The dataframes: {df_names} are identical. Scores may be misleading!")
 
+    @RetryMakeDirs()
     def add_complex_type_lookup_entry(self, path, key, value, hashed_value):
         """Add lookup entry in `lookup_dir` for a complex-typed parameter, linking
         the parameter `key`, its `value`, and its `hashed_value`
@@ -217,9 +214,11 @@ class KeyMaker(metaclass=ABCMeta):
         hashed_value: Str
             The hash produced for `value`"""
         shelve_params = ["model_initializer", "cv_type"]
-        lookup_path = partial(os.path.join, self.lookup_dir, *path)
+        lookup_path = partial(os.path.join, self.lookup_dir, *[f"{_}" for _ in path])
 
         if isclass(value) or (key in shelve_params):
+            make_dirs(lookup_path(f"{key}"), exist_ok=True)
+
             with shelve.open(lookup_path(f"{key}"), flag="c") as s:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
                 try:
