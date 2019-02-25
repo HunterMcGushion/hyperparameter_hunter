@@ -217,7 +217,7 @@ class KeyMaker(metaclass=ABCMeta):
         lookup_path = partial(os.path.join, self.lookup_dir, *[f"{_}" for _ in path])
 
         if isclass(value) or (key in shelve_params):
-            make_dirs(lookup_path(f"{key}"), exist_ok=True)
+            make_dirs(lookup_path(), exist_ok=True)
 
             with shelve.open(lookup_path(f"{key}"), flag="c") as s:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
