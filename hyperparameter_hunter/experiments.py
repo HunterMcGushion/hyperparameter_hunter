@@ -40,7 +40,7 @@ from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
 
 # from hyperparameter_hunter.tracers import TranslateTrace  # TODO: Add when tested with `Mirror`
-from hyperparameter_hunter.utils.file_utils import make_dirs, RetryMakeDirs
+from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
 from hyperparameter_hunter.utils.general_utils import Deprecated
 
 ##################################################

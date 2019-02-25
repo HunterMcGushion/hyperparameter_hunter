@@ -16,7 +16,7 @@ approach to Keras hyperparameter optimization. Without them, Keras hyperparamete
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.utils.file_utils import make_dirs, RetryMakeDirs
+from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
 
 ##################################################
 # Import Miscellaneous Assets
