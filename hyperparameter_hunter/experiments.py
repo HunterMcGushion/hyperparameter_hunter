@@ -40,7 +40,7 @@ from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
 
 # from hyperparameter_hunter.tracers import TranslateTrace  # TODO: Add when tested with `Mirror`
-from hyperparameter_hunter.utils.file_utils import make_dirs
+from hyperparameter_hunter.utils.file_utils import make_dirs, RetryMakeDirs
 from hyperparameter_hunter.utils.general_utils import Deprecated
 
 ##################################################
@@ -376,11 +376,7 @@ class BaseExperiment(ScoringMixIn):
                 G.Env.result_paths["script_backup"] = None
 
             if G.Env.result_paths["script_backup"] is not None:
-                try:
-                    self._source_copy_helper()
-                except FileNotFoundError:
-                    make_dirs(self.result_paths["script_backup"], exist_ok=False)
-                    self._source_copy_helper()
+                self._source_copy_helper()
                 G.log("Created source backup:  '{}'".format(self.source_script), 4)
             else:
                 G.log("Skipped source backup:  '{}'".format(self.source_script), 4)
@@ -398,6 +394,7 @@ class BaseExperiment(ScoringMixIn):
                 )
             raise
 
+    @RetryMakeDirs()
     def _source_copy_helper(self):
         """Helper method to handle attempting to copy source script to backup file"""
         shutil.copyfile(
