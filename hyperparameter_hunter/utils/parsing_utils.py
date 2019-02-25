@@ -16,7 +16,7 @@ approach to Keras hyperparameter optimization. Without them, Keras hyperparamete
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.utils.file_utils import make_dirs
+from hyperparameter_hunter.utils.file_utils import make_dirs, RetryMakeDirs
 
 ##################################################
 # Import Miscellaneous Assets
@@ -101,6 +101,7 @@ def read_source_script(filepath):
     return source
 
 
+@RetryMakeDirs()
 def write_python(source_str, filepath="temp_modified.py"):
     """Save `source_str` to the file located at `filepath`
 
@@ -110,12 +111,8 @@ def write_python(source_str, filepath="temp_modified.py"):
         The content to write to the file at `filepath`
     filepath: String
         The filepath of the file to which `source_str` should be written"""
-    try:
-        with open(filepath, "w") as f:
-            f.write(source_str)
-    except FileNotFoundError:
-        make_dirs(os.path.split(filepath)[0])
-        write_python(source_str, filepath=filepath)
+    with open(filepath, "w") as f:
+        f.write(source_str)
 
 
 ##################################################
