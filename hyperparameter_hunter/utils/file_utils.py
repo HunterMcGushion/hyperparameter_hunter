@@ -6,6 +6,7 @@ import numpy as np
 import os
 import os.path
 import simplejson as json
+import wrapt
 
 
 ##################################################
@@ -166,6 +167,38 @@ def clear_file(file_path):
     clear_target = open(file_path, "w")
     clear_target.truncate()
     clear_target.close()
+
+
+class RetryMakeDirs(object):
+    def __init__(self):
+        """Execute decorated callable, but if `OSError` is raised, call :func:`make_dirs` on the
+        directory specified by the exception, then recall the decorated callable again
+
+        Examples
+        --------
+        >>> from tempfile import TemporaryDirectory
+        >>> with TemporaryDirectory(dir="") as d:  # doctest: +ELLIPSIS
+        ...     def f_0():
+        ...         os.mkdir(f"{d}/nonexistent_dir/subdir")
+        ...     f_0()
+        Traceback (most recent call last):
+            File "file_utils.py", line ?, in f_0
+        FileNotFoundError: [Errno 2] No such file or directory...
+        >>> with TemporaryDirectory(dir="") as d:
+        ...     @RetryMakeDirs()
+        ...     def f_1():
+        ...         os.mkdir(f"{d}/nonexistent_dir/subdir")
+        ...     f_1()
+        """
+
+    @wrapt.decorator
+    def __call__(self, wrapped, instance, args, kwargs):
+        try:
+            return wrapped(*args, **kwargs)
+        except OSError as _ex:
+            if _ex.filename:
+                make_dirs(os.path.split(_ex.filename)[0], exist_ok=True)
+        return wrapped(*args, **kwargs)
 
 
 ##################################################

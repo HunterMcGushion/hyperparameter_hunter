@@ -13,6 +13,7 @@ from hyperparameter_hunter.exceptions import EnvironmentInactiveError, Environme
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs, read_json
+from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
 from hyperparameter_hunter.utils.general_utils import subdict
 
 ##################################################
@@ -260,16 +261,9 @@ class HeartbeatRecorder(BaseRecorder):
         """Do nothing"""
         pass
 
+    @RetryMakeDirs()
     def save_result(self):
         """Copy global Heartbeat log to results dir as .log file named for :attr:`experiment_id`"""
-        try:
-            self._copy_heartbeat()
-        except FileNotFoundError:
-            make_dirs(self.result_path, exist_ok=False)
-            self._copy_heartbeat()
-
-    def _copy_heartbeat(self):
-        """Helper method to copy the global Heartbeat log to a file named for the Experiment"""
         shutil.copyfile(
             G.Env.result_paths["current_heartbeat"], f"{self.result_path}/{self.experiment_id}.log"
         )
@@ -297,13 +291,10 @@ class PredictionsHoldoutRecorder(BaseRecorder):
             self.final_holdout_predictions, self.holdout_dataset, self.target_column, self.id_column
         )
 
+    @RetryMakeDirs()
     def save_result(self):
         """Save holdout predictions to a .csv file, named after :attr:`experiment_id`"""
-        try:
-            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
-        except FileNotFoundError:
-            make_dirs(self.result_path, exist_ok=False)
-            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
+        self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
 class PredictionsOOFRecorder(BaseRecorder):
@@ -316,13 +307,10 @@ class PredictionsOOFRecorder(BaseRecorder):
             self.final_oof_predictions, self.train_dataset, self.target_column, self.id_column
         )
 
+    @RetryMakeDirs()
     def save_result(self):
         """Save out-of-fold predictions to a .csv file, named after :attr:`experiment_id`"""
-        try:
-            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
-        except FileNotFoundError:
-            make_dirs(self.result_path, exist_ok=False)
-            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
+        self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
 class PredictionsTestRecorder(BaseRecorder):
@@ -335,13 +323,10 @@ class PredictionsTestRecorder(BaseRecorder):
             self.final_test_predictions, self.test_dataset, self.target_column, self.id_column
         )
 
+    @RetryMakeDirs()
     def save_result(self):
         """Save test predictions to a .csv file, named after :attr:`experiment_id`"""
-        try:
-            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
-        except FileNotFoundError:
-            make_dirs(self.result_path, exist_ok=False)
-            self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
+        self.result.to_csv(f"{self.result_path}/{self.experiment_id}.csv", **self.to_csv_params)
 
 
 # class PredictionsInFoldRecorder(BaseRecorder):
@@ -396,13 +381,10 @@ class LeaderboardEntryRecorder(BaseRecorder):
             ascending=[(self.metrics[self.target_metric[-1]].direction == "min"), False],
         )
 
+    @RetryMakeDirs()
     def save_result(self):
         """Save the updated leaderboard file"""
-        try:
-            self.result.save(path=self.result_paths["global_leaderboard"])
-        except FileNotFoundError:
-            make_dirs(self.result_paths["leaderboards"], exist_ok=False)
-            self.result.save(path=self.result_paths["global_leaderboard"])
+        self.result.save(path=self.result_paths["global_leaderboard"])
 
 
 ##################################################
@@ -422,13 +404,10 @@ class UnsortedIDLeaderboardRecorder(BaseRecorder):
             ascending=(self.metrics[self.target_metric[-1]].direction == "min"),
         )
 
+    @RetryMakeDirs()
     def save_result(self):
         """Save the updated leaderboard file"""
-        try:
-            self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
-        except FileNotFoundError:
-            make_dirs(self.result_paths["leaderboards"], exist_ok=False)
-            self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
+        self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
 
 
 class YAMLDescriptionRecorder(BaseRecorder):
