@@ -421,49 +421,145 @@ class Environment:
     #     G.reset_attributes()
 
     ##################################################
+    # Properties
+    ##################################################
+    #################### `results_path` ####################
+    @property
+    def results_path(self) -> Optional[str]:
+        return self._results_path
+
+    @results_path.setter
+    def results_path(self, value):
+        self._results_path = None
+        if value is None:
+            G.warn("Received results_path=None. Results will not be stored at all.")
+        elif isinstance(value, str):
+            if not value.endswith(ASSETS_DIRNAME):
+                self._results_path = os.path.join(value, ASSETS_DIRNAME)
+                # self.result_paths["root"] = self.results_path
+            if not os.path.exists(value):
+                make_dirs(self.results_path, exist_ok=True)
+        else:
+            raise TypeError(f"results_path must be None or str, not {value}")
+
+    #################### `target_column` ####################
+    @property
+    def target_column(self) -> list:
+        return self._target_column
+
+    @target_column.setter
+    def target_column(self, value):
+        self._target_column = [value] if isinstance(value, str) else value
+
+    #################### `train_dataset` ####################
+    @property
+    def train_dataset(self) -> pd.DataFrame:
+        return self._train_dataset
+
+    @train_dataset.setter
+    def train_dataset(self, value):
+        self._train_dataset = pd.read_csv(value) if isinstance(value, str) else value
+
+    #################### `test_dataset` ####################
+    @property
+    def test_dataset(self) -> Optional[pd.DataFrame]:
+        return self._test_dataset
+
+    @test_dataset.setter
+    def test_dataset(self, value):
+        self._test_dataset = pd.read_csv(value) if isinstance(value, str) else value
+
+    #################### `holdout_dataset` ####################
+    @property
+    def holdout_dataset(self) -> Optional[pd.DataFrame]:
+        return self._holdout_dataset
+
+    @holdout_dataset.setter
+    def holdout_dataset(self, value):
+        self._train_dataset, self._holdout_dataset = define_holdout_set(
+            self.train_dataset, value, self.target_column
+        )
+
+    #################### `file_blacklist` ####################
+    @property
+    def file_blacklist(self) -> Union[list, str]:
+        return self._file_blacklist
+
+    @file_blacklist.setter
+    def file_blacklist(self, value):
+        self._file_blacklist = validate_file_blacklist(value)
+
+        if self.results_path is None:
+            self._file_blacklist = "ALL"
+
+    #################### `metrics_params`/`metrics` ####################
+    # TODO: Move their validations to properties here
+
+    #################### `cv_type` ####################
+    @property
+    def cv_type(self) -> type:
+        return self._cv_type
+
+    @cv_type.setter
+    def cv_type(self, value):
+        if isinstance(value, str):
+            try:
+                self._cv_type = sk_cv.__getattribute__(value)
+            except AttributeError:
+                raise AttributeError(f"'{value}' not in `sklearn.model_selection._split`")
+        else:  # Assumed to be a valid CV class
+            self._cv_type = value
+
+    #################### `to_csv_params` ####################
+    @property
+    def to_csv_params(self) -> dict:
+        return self._to_csv_params
+
+    @to_csv_params.setter
+    def to_csv_params(self, value):
+        self._to_csv_params = {k: v for k, v in value.items() if k != "path_or_buf"}
+
+    #################### `cross_experiment_params` ####################
+    @property
+    def cross_experiment_params(self) -> dict:
+        return dict(
+            cv_type=self.cv_type,
+            runs=self.runs,
+            global_random_seed=self.global_random_seed,
+            random_seeds=self.random_seeds,
+            random_seed_bounds=self.random_seed_bounds,
+        )
+
+    #################### `experiment_callbacks` ####################
+    @property
+    def experiment_callbacks(self) -> list:
+        return self._experiment_callbacks
+
+    @experiment_callbacks.setter
+    def experiment_callbacks(self, value):
+        if not isinstance(value, list):
+            self._experiment_callbacks = [value]
+        else:
+            self._experiment_callbacks = value
+        for cb in self._experiment_callbacks:
+            if not isclass(cb):
+                raise TypeError(f"experiment_callbacks must be classes, not {type(cb)}: {cb}")
+            if cb.__name__ != "LambdaCallback":
+                raise ValueError(f"experiment_callbacks must be LambdaCallback instances, not {cb}")
+
+    ##################################################
     # Core Methods
     ##################################################
     def environment_workflow(self):
         """Execute all methods required to validate the environment and run Experiments"""
         self.update_custom_environment_params()
         self.validate_parameters()
-        self.train_dataset, self.holdout_dataset = define_holdout_set(
-            self.train_dataset, self.holdout_dataset, self.target_column
-        )
         self.format_result_paths()
         self.generate_cross_experiment_key()
         G.log("Cross-Experiment Key:   '{!s}'".format(self.cross_experiment_key))
 
     def validate_parameters(self):
         """Ensure the provided parameters are valid and properly formatted"""
-        #################### results_path ####################
-        if self.results_path is None:
-            G.warn("Received results_path=None. Results will not be stored at all.")
-        elif isinstance(self.results_path, str):
-            if not self.results_path.endswith(ASSETS_DIRNAME):
-                self.results_path = os.path.join(self.results_path, ASSETS_DIRNAME)
-                self.result_paths["root"] = self.results_path
-            if not os.path.exists(self.results_path):
-                make_dirs(self.results_path, exist_ok=True)
-        else:
-            raise TypeError(f"results_path must be None or str, not {self.results_path}")
-
-        #################### target_column ####################
-        if isinstance(self.target_column, str):
-            self.target_column = [self.target_column]
-
-        #################### file_blacklist ####################
-        self.file_blacklist = validate_file_blacklist(self.file_blacklist)
-
-        if self.results_path is None:
-            self.file_blacklist = "ALL"
-
-        #################### Train/Test Datasets ####################
-        if isinstance(self.train_dataset, str):
-            self.train_dataset = pd.read_csv(self.train_dataset)
-        if isinstance(self.test_dataset, str):
-            self.test_dataset = pd.read_csv(self.test_dataset)
-
         #################### metrics_params/metrics ####################
         if (self.metrics is not None) and ("metrics" in self.metrics_params.keys()):
             raise ValueError(
@@ -480,34 +576,6 @@ class Environment:
                     _metrics_alias = "metrics_map"
             self.metrics = format_metrics(self.metrics)
             self.metrics_params = {**{_metrics_alias: self.metrics}, **self.metrics_params}
-
-        #################### cv_type ####################
-        if isinstance(self.cv_type, str):
-            try:
-                self.cv_type = sk_cv.__getattribute__(self.cv_type)
-            except AttributeError:
-                raise AttributeError(f"'{self.cv_type}' not in `sklearn.model_selection._split`")
-
-        #################### to_csv_params ####################
-        self.to_csv_params = {k: v for k, v in self.to_csv_params.items() if k != "path_or_buf"}
-
-        #################### cross_experiment_params ####################
-        self.cross_experiment_params = dict(
-            cv_type=self.cv_type,
-            runs=self.runs,
-            global_random_seed=self.global_random_seed,
-            random_seeds=self.random_seeds,
-            random_seed_bounds=self.random_seed_bounds,
-        )
-
-        #################### experiment_callbacks ####################
-        if not isinstance(self.experiment_callbacks, list):
-            self.experiment_callbacks = [self.experiment_callbacks]
-        for cb in self.experiment_callbacks:
-            if not isclass(cb):
-                raise TypeError(f"experiment_callbacks must be classes, not {type(cb)}: {cb}")
-            if cb.__name__ != "LambdaCallback":
-                raise ValueError(f"experiment_callbacks must be LambdaCallback instances, not {cb}")
 
     def format_result_paths(self):
         """Remove paths contained in file_blacklist, and format others to prepare for saving results"""
