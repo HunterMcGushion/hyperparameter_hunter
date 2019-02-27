@@ -54,6 +54,17 @@ class EngineerStep:
         # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
         return new_datasets
 
+    def get_key_data(self) -> dict:
+        return dict(
+            name=self.name,
+            f=self.f,
+            params=self.params,
+            stage=self.stage,
+            do_validate=self.do_validate,
+            original_hashes=self.original_hashes,
+            updated_hashes=self.updated_hashes,
+        )
+
     @property
     def f(self) -> Callable:
         return self._f
@@ -127,6 +138,13 @@ class FeatureEngineer:
     @steps.setter
     def steps(self, value: list):
         self._steps = value
+
+    def get_key_data(self) -> dict:
+        return dict(
+            steps=[_.get_key_data() for _ in self.steps],
+            do_validate=self.do_validate,
+            datasets=self.datasets,
+        )
 
     def add_step(
         self,
