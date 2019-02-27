@@ -359,18 +359,18 @@ class Environment:
         self.results_path = results_path
 
         #################### Attributes Used by Experiments ####################
+        self.target_column = target_column
+        self.id_column = id_column
+
         self.train_dataset = train_dataset
         self.holdout_dataset = holdout_dataset
         self.test_dataset = test_dataset
 
-        self.target_column = target_column
-        self.id_column = id_column
         self.do_predict_proba = do_predict_proba
         self.prediction_formatter = prediction_formatter
         self.metrics = metrics
         self.metrics_params = metrics_params
 
-        self.cross_experiment_params = dict()
         self.cv_type = cv_type
         self.runs = runs
         self.global_random_seed = global_random_seed
