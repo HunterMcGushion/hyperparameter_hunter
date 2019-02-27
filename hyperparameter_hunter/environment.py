@@ -28,7 +28,7 @@ from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DI
 from hyperparameter_hunter.reporting import ReportingHandler
 from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
 from hyperparameter_hunter.utils.boltons_utils import remap
-from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
+from hyperparameter_hunter.utils.file_utils import make_dirs, read_json, ParametersFromFile
 from hyperparameter_hunter.utils.general_utils import Alias
 from hyperparameter_hunter.utils.result_utils import format_predictions, default_do_full_save
 
@@ -73,6 +73,7 @@ class Environment:
         do_full_save=default_do_full_save,
     )
 
+    @ParametersFromFile(key="environment_params_path", verbose=True)
     @Alias("cv_type", ["cross_validation_type"])
     @Alias("cv_params", ["cross_validation_params"])
     @Alias("metrics", ["metrics_map"])
@@ -546,29 +547,7 @@ class Environment:
         allowed_parameter_keys = [
             k for k, v in signature(Environment).parameters.items() if v.kind == v.KEYWORD_ONLY
         ]
-        user_defaults = {}
 
-        try:
-            user_defaults = read_json(self.environment_params_path)
-        except (TypeError, OSError):
-            # If `environment_params_path=None`, no error raised - `user_defaults` continues as {}
-            if self.environment_params_path is not None:
-                raise
-
-        if not isinstance(user_defaults, dict):
-            raise TypeError("environment_params_path must have dict, not {}".format(user_defaults))
-
-        #################### Check user_defaults ####################
-        for k, v in user_defaults.items():
-            if k not in allowed_parameter_keys:
-                G.warn(
-                    f"Invalid key ({k}) in user Environment parameters: {self.environment_params_path}"
-                )
-            elif getattr(self, k) is None:
-                setattr(self, k, v)
-                G.debug(f"Environment.`{k}` set to user default: '{self.environment_params_path}'")
-
-        #################### Check Module Default Environment Arguments ####################
         for k in allowed_parameter_keys:
             if getattr(self, k) is None:
                 setattr(self, k, self.DEFAULT_PARAMS.get(k, None))
