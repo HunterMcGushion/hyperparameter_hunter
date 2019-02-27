@@ -280,7 +280,7 @@ class ParametersFromFile(object):
             file_params = read_json(file)
 
         if not isinstance(file_params, dict):
-            raise TypeError("{} must have dict, not {}".format(file, user_defaults))
+            raise TypeError("{} must have dict, not {}".format(file, file_params))
 
         #################### Check Valid Parameters for `wrapped` ####################
         ok_keys = [k for k, v in signature(wrapped).parameters.items() if v.kind == v.KEYWORD_ONLY]
