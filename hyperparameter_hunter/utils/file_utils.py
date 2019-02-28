@@ -1,11 +1,19 @@
 """This module defines utilities for reading, writing, and modifying different types of files"""
 ##################################################
+# Import Own Assets
+##################################################
+from hyperparameter_hunter.settings import G
+
+##################################################
 # Import Miscellaneous Assets
 ##################################################
+from contextlib import suppress
+from inspect import signature
 import numpy as np
 import os
 import os.path
 import simplejson as json
+from typing import Union
 import wrapt
 
 
@@ -198,6 +206,94 @@ class RetryMakeDirs(object):
         except OSError as _ex:
             if _ex.filename:
                 make_dirs(os.path.split(_ex.filename)[0], exist_ok=True)
+        return wrapped(*args, **kwargs)
+
+
+class ParametersFromFile(object):
+    def __init__(self, key: Union[str, int] = None, file: str = None, verbose: bool = False):
+        """Decorator to specify a .json file that defines default values for the decorated callable.
+        The location of the file can either be specified explicitly with `file`, or it can be
+        retrieved when the decorated callable is called through an argument key/index given by `key`
+
+        Parameters
+        ----------
+        key: String, or integer, default=None
+            Used only if `file` is not also given. Determines a value for `file` based on the
+            parameters passed to the decorated callable. If string, represents a key in `kwargs`
+            passed to :meth:`ParametersFromFile.__call__`. In other words, this names a keyword
+            argument passed to the decorated callable. If `key` is integer, it represents an index
+            in `args` passed to :meth:`ParametersFromFile.__call__`, the value at which specifies a
+            filepath containing the default parameters dict to use
+        file: String, default=None
+            If not None, `key` will be ignored, and `file` will be used as the filepath from which
+            to read the dict of default parameters for the decorated callable
+        verbose: Boolean, default=False
+            If True, will log messages when invalid keys are found in the parameters file, and when
+            keys are set to the default values in the parameters file. Else, logging is silenced
+
+        Notes
+        -----
+        The order of precedence for determining the value of each parameter is as follows, with
+        items at the top having the highest priority, and deferring only to the items below if
+        their own value is not given:
+
+        * 1)parameters explicitly passed to the callable decorated by `ParametersFromFile`,
+        * 2)parameters in the .json file denoted by `key` or `file`,
+        * 3)parameter defaults defined in the signature of the decorated callable
+
+        Examples
+        --------
+        >>> from tempfile import TemporaryDirectory
+        >>> with TemporaryDirectory(dir="") as d:
+        ...     write_json(f"{d}/config.json", dict(b="I came from config.json", c="Me too!"))
+        ...     @ParametersFromFile(file=f"{d}/config.json")
+        ...     def f_0(a="first_a", b="first_b", c="first_c"):
+        ...         print(f"{a}   ...   {b}   ...   {c}")
+        ...     @ParametersFromFile(key="config_file")
+        ...     def f_1(a="second_a", b="second_b", c="second_c", config_file=None):
+        ...         print(f"{a}   ...   {b}   ...   {c}")
+        ...     f_0(c="Hello, there")
+        ...     f_0(b="General Kenobi")
+        ...     f_1()
+        ...     f_1(a="Generic prequel meme", config_file=f"{d}/config.json")
+        ...     f_1(c="This is where the fun begins", config_file=None)
+        first_a   ...   I came from config.json   ...   Hello, there
+        first_a   ...   General Kenobi   ...   Me too!
+        second_a   ...   second_b   ...   second_c
+        Generic prequel meme   ...   I came from config.json   ...   Me too!
+        second_a   ...   second_b   ...   This is where the fun begins"""
+        self.key = key
+        self.file = file
+        self.verbose = verbose
+
+    @wrapt.decorator
+    def __call__(self, wrapped, instance, args, kwargs):
+        file = self.file
+        file_params = {}
+
+        #################### Locate Parameters File ####################
+        if not file and self.key is not None:
+            with suppress(TypeError):
+                file = kwargs.get(self.key, None) or args[self.key]
+
+        if file:  # If `file=None`, continue with empty dict of `file_params`
+            file_params = read_json(file)
+
+        if not isinstance(file_params, dict):
+            raise TypeError("{} must have dict, not {}".format(file, file_params))
+
+        #################### Check Valid Parameters for `wrapped` ####################
+        ok_keys = [k for k, v in signature(wrapped).parameters.items() if v.kind == v.KEYWORD_ONLY]
+
+        for k, v in file_params.items():
+            if k not in ok_keys:
+                if self.verbose:
+                    G.warn(f"Invalid key ({k}) in user parameters file: {file}")
+            if k not in kwargs:
+                kwargs[k] = v
+                if self.verbose:
+                    G.debug(f"Parameter `{k}` set to user default in parameters file: '{file}'")
+
         return wrapped(*args, **kwargs)
 
 
