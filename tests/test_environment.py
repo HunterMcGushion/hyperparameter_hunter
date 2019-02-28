@@ -1,6 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.callbacks.recipes import confusion_matrix_oof, confusion_matrix_holdout
 from hyperparameter_hunter.environment import (
     Environment,
     define_holdout_set,
@@ -19,6 +20,7 @@ import pytest
 ##################################################
 from sklearn.datasets import load_breast_cancer
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import RepeatedStratifiedKFold
 
 
 ##################################################
@@ -125,6 +127,55 @@ def test_environment_init_cross_experiment_params(runs, cv_type, _cv_params, exp
         )
     )
     assert env == expected
+
+
+##################################################
+# Environment Property Scenarios
+##################################################
+#################### `results_path` ####################
+def test_results_path_setter_type_error(env_fixture_0):
+    with pytest.raises(TypeError, match="results_path must be None or str, not .*"):
+        env_fixture_0.results_path = lambda _: "`results_path` can't be a callable, dummy"
+
+
+#################### `cv_type` ####################
+@pytest.mark.parametrize("new_value", ["RepeatedStratifiedKFold", RepeatedStratifiedKFold])
+def test_cv_type_setter_valid(env_fixture_0, new_value):
+    env_fixture_0.cv_type = new_value
+    assert env_fixture_0.cv_type == RepeatedStratifiedKFold
+
+
+def test_cv_type_setter_attribute_error(env_fixture_0):
+    with pytest.raises(AttributeError, match="'foo' not in `sklearn.model_selection._split`"):
+        env_fixture_0.cv_type = "foo"
+
+
+#################### `experiment_callbacks` ####################
+cm_oof, cm_holdout = confusion_matrix_oof(), confusion_matrix_holdout()
+
+
+@pytest.mark.parametrize(
+    ["new_value", "expected"],
+    [
+        ([], []),
+        ([cm_oof], [cm_oof]),
+        (cm_oof, [cm_oof]),
+        ([cm_oof, cm_holdout], [cm_oof, cm_holdout]),
+    ],
+)
+def test_experiment_callbacks_setter_valid(env_fixture_0, new_value, expected):
+    env_fixture_0.experiment_callbacks = new_value
+    assert env_fixture_0.experiment_callbacks == expected
+
+
+def test_experiment_callbacks_setter_type_error(env_fixture_0):
+    with pytest.raises(TypeError, match="experiment_callbacks must be classes, not .*"):
+        env_fixture_0.experiment_callbacks = ["foo"]
+
+
+def test_experiment_callbacks_setter_value_error(env_fixture_0):
+    with pytest.raises(ValueError, match="experiment_callbacks must be LambdaCallback instances.*"):
+        env_fixture_0.experiment_callbacks = [RepeatedStratifiedKFold]
 
 
 ##################################################
