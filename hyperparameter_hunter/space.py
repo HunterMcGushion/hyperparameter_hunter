@@ -297,7 +297,7 @@ def dimension_subset(hyperparameters, dimensions):
     ----------
     hyperparameters: Dict
         Dict of hyperparameters containing at least the following keys: ['model_init_params',
-        'model_extra_params', 'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
+        'model_extra_params', 'feature_engineer', 'feature_selector']
     dimensions: List of: (strings, or tuples)
         Locations and order of the values to return from `hyperparameters`. If a value is a string,
         it is assumed to belong to `model_init_params`, and its path will be adjusted accordingly

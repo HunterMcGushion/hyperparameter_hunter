@@ -146,9 +146,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.model_initializer = None
         self.model_init_params = None
         self.model_extra_params = None
+        self.feature_engineer = None
         self.feature_selector = None
-        self.preprocessing_pipeline = None
-        self.preprocessing_params = None
         self.notes = None
         self.do_raise_repeated = True
 
@@ -193,9 +192,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         model_initializer,
         model_init_params,
         model_extra_params=None,
+        feature_engineer=None,
         feature_selector=None,
-        preprocessing_pipeline=None,
-        preprocessing_params=None,
         notes=None,
         do_raise_repeated=True,
     ):
@@ -215,16 +213,14 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             A dictionary of extra parameters passed to :class:`models.Model`. This is used to
             provide parameters to models' non-initialization methods (like `fit`, `predict`,
             `predict_proba`, etc.), and for neural networks
+        feature_engineer: `FeatureEngineer`, or None, default=None  # TODO: Add documentation
+            ...   # TODO: Add documentation
         feature_selector: List of str, callable, list of booleans, default=None
             The value provided when splitting apart the input data for all provided DataFrames.
             `feature_selector` is provided as the second argument for calls to
             `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
             :attr:`target_column`, and :attr:`id_column`
-        preprocessing_pipeline: ...
-            ... Experimental...
-        preprocessing_params: ...
-            ... Experimental...
         notes: String, or None, default=None
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
@@ -250,9 +246,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             self.model_init_params.update(dict(build_fn=model_init_params))
 
         self.model_extra_params = model_extra_params if model_extra_params is not None else {}
+        self.feature_engineer = feature_engineer if feature_engineer is not None else {}
         self.feature_selector = feature_selector if feature_selector is not None else []
-        self.preprocessing_pipeline = preprocessing_pipeline or {}
-        self.preprocessing_params = preprocessing_params if preprocessing_params is not None else {}
 
         self.notes = notes
         self.do_raise_repeated = do_raise_repeated
@@ -400,9 +395,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             model_initializer=self.model_initializer,
             model_init_params=self.current_init_params,
             model_extra_params=self.current_extra_params,
+            feature_engineer=self.feature_engineer,
             feature_selector=self.feature_selector,
-            preprocessing_pipeline=self.preprocessing_pipeline,
-            preprocessing_params=self.preprocessing_params,
             notes=self.notes,
             do_raise_repeated=self.do_raise_repeated,
             auto_start=False,
@@ -539,8 +533,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         model_params = dict(
             model_init_params=self.model_init_params,
             model_extra_params=self.model_extra_params,
-            preprocessing_pipeline=self.preprocessing_pipeline,
-            preprocessing_params=self.preprocessing_params,
+            feature_engineer=self.feature_engineer,
             feature_selector=self.feature_selector,
         )
 

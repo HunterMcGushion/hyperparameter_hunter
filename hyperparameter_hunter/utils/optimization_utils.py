@@ -377,8 +377,7 @@ def filter_by_space(hyperparameters_and_scores, space):
     hyperparameters_and_scores: List of tuples
         Each tuple in list should be a pair of form (hyperparameters <dict>, evaluation <float>),
         where the hyperparameter dict should contain at least the following keys:
-        ['model_init_params', 'model_extra_params', 'preprocessing_pipeline',
-        'preprocessing_params', 'feature_selector']
+        ['model_init_params', 'model_extra_params', 'feature_engineer', 'feature_selector']
     space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
 
@@ -415,8 +414,7 @@ def filter_by_guidelines(
     space,
     model_init_params,
     model_extra_params,
-    preprocessing_pipeline,
-    preprocessing_params,
+    feature_engineer,
     feature_selector,
     **kwargs,
 ):
@@ -428,13 +426,12 @@ def filter_by_guidelines(
     hyperparameters_and_scores: List of tuples
         Each tuple should be of form (hyperparameters <dict>, evaluation <float>), in which
         hyperparameters contains at least the keys: ['model_init_params', 'model_extra_params',
-        'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
+        'feature_engineer', 'feature_selector']
     space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
     model_init_params: Dict
     model_extra_params: Dict, or None
-    preprocessing_pipeline: Dict, or None
-    preprocessing_params: Dict, or None
+    feature_engineer: Dict
     feature_selector: List of column names, callable, list of booleans, or None
     **kwargs: Dict
         Extra parameter dicts to include in `guidelines`. For example, if filtering the
@@ -464,8 +461,7 @@ def filter_by_guidelines(
     temp_guidelines = dict(
         model_init_params=model_init_params if model_init_params is not None else {},
         model_extra_params=model_extra_params if model_extra_params is not None else {},
-        preprocessing_pipeline=preprocessing_pipeline if preprocessing_pipeline is not None else {},
-        preprocessing_params=preprocessing_params if preprocessing_params is not None else {},
+        feature_engineer=feature_engineer if feature_engineer is not None else {},
         feature_selector=feature_selector if feature_selector is not None else [],
         **kwargs,
     )
