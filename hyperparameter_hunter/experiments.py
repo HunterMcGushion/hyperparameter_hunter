@@ -306,6 +306,16 @@ class BaseExperiment(ScoringMixIn):
         if isinstance(self.test_dataset, pd.DataFrame):
             self.test_input_data = self.test_dataset.copy().loc[:, self.feature_selector]
 
+        if self.feature_engineer and callable(self.feature_engineer):
+            self.feature_engineer(
+                "pre_cv",
+                train_inputs=self.train_input_data,
+                train_targets=self.train_target_data,
+                holdout_inputs=self.holdout_input_data,
+                holdout_targets=self.holdout_target_data,
+                test_inputs=self.test_input_data,
+            )
+
         G.log("Initial preprocessing stage complete", 4)
 
     ##################################################
