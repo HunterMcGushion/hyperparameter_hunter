@@ -430,15 +430,15 @@ class Environment:
 
     @results_path.setter
     def results_path(self, value):
-        self._results_path = None
-        if value is None:
+        self._results_path = value
+        if self._results_path is None:
             G.warn("Received results_path=None. Results will not be stored at all.")
-        elif isinstance(value, str):
-            if not value.endswith(ASSETS_DIRNAME):
-                self._results_path = os.path.join(value, ASSETS_DIRNAME)
+        elif isinstance(self._results_path, str):
+            if not self._results_path.endswith(ASSETS_DIRNAME):
+                self._results_path = os.path.join(self._results_path, ASSETS_DIRNAME)
                 # self.result_paths["root"] = self.results_path
-            if not os.path.exists(value):
-                make_dirs(self.results_path, exist_ok=True)
+            if not os.path.exists(self._results_path):
+                make_dirs(self._results_path, exist_ok=True)
         else:
             raise TypeError(f"results_path must be None or str, not {value}")
 
