@@ -2,22 +2,24 @@
 :class:`hyperparameter_hunter.environment.Environment`, and
 :class:`hyperparameter_hunter.experiments.BaseExperiment`, respectively. It also handles the
 treatment of complex-typed inputs and their storage in the 'KeyAttributeLookup' subdirectory. The
-descendants of :class:`hyperparameter_hunter.key_handler.KeyMaker` defined herein are each
+descendants of :class:`hyperparameter_hunter.keys.makers.KeyMaker` defined herein are each
 responsible for the generation and saving of their keys, as well as determining whether such a key
 already exists
 
 Related
 -------
 :mod:`hyperparameter_hunter.environment`
-    This module uses :class:`hyperparameter_hunter.key_handler.CrossExperimentKeyMaker` to set
+    This module uses :class:`hyperparameter_hunter.keys.makers.CrossExperimentKeyMaker` to set
     :attr:`hyperparameter_hunter.environment.Environment.cross_experiment_key`
 :mod:`hyperparameter_hunter.experiments`
-    This module uses :class:`hyperparameter_hunter.key_handler.HyperparameterKeyMaker` to set
+    This module uses :class:`hyperparameter_hunter.keys.makers.HyperparameterKeyMaker` to set
     :attr:`hyperparameter_hunter.experiments.BaseExperiment.hyperparameter_key`"""
 ##################################################
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.exceptions import EnvironmentInvalidError, EnvironmentInactiveError
+from hyperparameter_hunter.feature_engineering import FeatureEngineer, EngineerStep
+from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,
     keras_initializer_to_dict,
@@ -36,19 +38,15 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 # Import Miscellaneous Assets
 ##################################################
 from abc import ABCMeta, abstractmethod
-import base64
 from copy import deepcopy
 import dill  # TODO: Figure out if this can be safely removed
 from functools import partial
-import hashlib
 from inspect import getsourcelines, isclass, getsource
 from os import listdir
 import os.path
 import pandas as pd
 from pickle import PicklingError
-import re
 import shelve
-import sys
 
 ##################################################
 # Import Learning Assets
@@ -149,6 +147,12 @@ class KeyMaker(metaclass=ABCMeta):
             if isinstance(value, Metric):
                 metric_attrs = ["name", "metric_function", "direction"]
                 return ({}, [(_, getattr(value, _)) for _ in metric_attrs])
+
+            if isinstance(value, EngineerStep):
+                return ({}, list(value.get_key_data().items()))
+            if isinstance(value, FeatureEngineer):
+                return ({}, list(value.get_key_data().items()))
+
             return default_enter(path, key, value)
 
         def visit(path, key, value):
@@ -176,6 +180,11 @@ class KeyMaker(metaclass=ABCMeta):
                 return (key, keras_initializer_to_dict(value))
             if isinstance(value, Sentinel):
                 return (key, value.sentinel)
+            # from hyperparameter_hunter.feature_engineering import FeatureEngineer, EngineerStep
+            # if isinstance(value, EngineerStep):
+            #     return (key, value.get_key_data())
+            # if isinstance(value, FeatureEngineer):
+            #     return (key, value.get_key_data())
             elif callable(value) or isinstance(value, pd.DataFrame):
                 # TODO: Check here if callable, and using a `Trace`d model/model_initializer
                 # TODO: If so, pass extra kwargs to below `make_hash_sha256`, which are eventually given to `hash_callable`
@@ -294,7 +303,7 @@ class CrossExperimentKeyMaker(KeyMaker):
             All the parameters to be included when creating the key hash. Keys should correspond to
             parameter names, and values should be the values of the corresponding keys
         **kwargs: Dict
-            Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
+            Additional arguments supplied to :meth:`keys.makers.KeyMaker.__init__`"""
         KeyMaker.__init__(self, parameters, **kwargs)
 
     def does_key_exist(self):
@@ -334,10 +343,10 @@ class HyperparameterKeyMaker(KeyMaker):
             parameter names, and values should be the values of the corresponding keys
         cross_experiment_key: Str
             The key produced by the active Environment via
-            :class:`key_handler.CrossExperimentKeyMaker`, used for determining when a
+            :class:`keys.makers.CrossExperimentKeyMaker`, used for determining when a
             hyperparameter key has already been tested under the same cross-experiment parameters
         **kwargs: Dict
-            Additional arguments supplied to :meth:`key_handler.KeyMaker.__init__`"""
+            Additional arguments supplied to :meth:`keys.makers.KeyMaker.__init__`"""
         self.cross_experiment_key = cross_experiment_key
         self.is_task_keras = (
             hasattr(G.Env, "current_task")
@@ -432,147 +441,3 @@ class HyperparameterKeyMaker(KeyMaker):
             G.log(f'Saved {self.key_type}_key: "{self.key}"', 4)
         else:
             G.log(f'{self.key_type}_key "{self.key}" already exists - Skipped saving', 4)
-
-
-def make_hash_sha256(obj, **kwargs):
-    """Create an sha256 hash of the input `obj`
-
-    Parameters
-    ----------
-    obj: Object
-        Object for which a hash will be created
-    **kwargs: Dict
-        Extra kwargs to supply to :func:`key_handler.hash_callable`
-
-    Returns
-    -------
-    Stringified sha256 hash"""
-    hasher = hashlib.sha256()
-    hasher.update(repr(to_hashable(obj, **kwargs)).encode())
-    return base64.urlsafe_b64encode(hasher.digest()).decode()
-
-
-def to_hashable(obj, **kwargs):
-    """Format the input `obj` to be hashable
-
-    Parameters
-    ----------
-    obj: Object
-        Object to convert to a hashable format
-    **kwargs: Dict
-        Extra kwargs to supply to :func:`key_handler.hash_callable`
-
-    Returns
-    -------
-    obj: object
-        Hashable object"""
-    if callable(obj):
-        return hash_callable(obj, **kwargs)
-    if isinstance(obj, (tuple, list)):
-        return tuple((to_hashable(_, **kwargs) for _ in obj))
-    if isinstance(obj, dict):
-        return tuple(sorted((_k, to_hashable(_v, **kwargs)) for _k, _v in obj.items()))
-    if isinstance(obj, (set, frozenset)):
-        return tuple(sorted(to_hashable(_, **kwargs) for _ in obj))
-
-    return obj
-
-
-def hash_callable(
-    obj,
-    ignore_line_comments=True,
-    ignore_first_line=False,
-    ignore_module=False,
-    ignore_name=False,
-    ignore_keywords=False,
-    ignore_source_lines=False,
-):
-    """Prepare callable object for hashing by selecting important characterization properties
-
-    Parameters
-    ----------
-    obj: Callable
-        Callable to convert to a hashable format. Supports: function, class, `functools.partial`
-    ignore_line_comments: Boolean, default=True
-        If True, any line comments will be stripped from the source code of `obj`, specifically any
-        lines that start with zero or more whitespaces, followed by an octothorpe (#). This does not
-        apply to comments on the same line as code
-    ignore_first_line: Boolean, default=False
-        If True, strip the first line from the callable's source code, specifically its name and
-        signature. If `ignore_name=True`, this will be treated as True
-    ignore_module: Boolean, default=False
-        If True, ignore the name of the module containing the source code (:attr:`obj.__module__`)
-    ignore_name: Boolean, default=False
-        If True, ignore :attr:`obj.__name__`. Note the difference from `ignore_first_line`, which
-        strips the entire callable signature from the source code. `ignore_name` does not alter the
-        source code. To ensure thorough ignorance, `ignore_first_line=True` is recommended
-    ignore_keywords: Boolean, default=False
-        If True and `obj` is a :class:`functools.partial`, ignore :attr:`obj.keywords`
-    ignore_source_lines: Boolean, default=False
-        If True, all source code will be ignored by the hashing function. Ignoring all other kwargs,
-        this means that only :attr:`obj.__module__`, and :attr:`obj.__name__`,
-        (and :attr:`obj.keywords` if `obj` is partial) will be used for hashing
-
-    Returns
-    -------
-    Tuple
-        Hashable properties of the callable object input"""
-    keywords, source_lines = None, None
-
-    #################### Clean Up Partial ####################
-    if isinstance(obj, partial):
-        keywords = None if ignore_keywords else obj.keywords
-        obj = obj.func  # Set partial to "func" attr - Expose same functionality as normal callable
-
-    #################### Get Identifying Data ####################
-    module = None if ignore_module else obj.__module__
-    try:
-        name = None if ignore_name else obj.__name__
-    except AttributeError:
-        obj = obj.__class__
-        name = obj.__name__
-
-    #################### Format Source Code Lines ####################
-    if not ignore_source_lines:
-        # TODO: Below only works on modified Keras `build_fn` during optimization if temp file still exists
-        # FLAG: May need to wrap below in try/except TypeError to handle "built-in class" errors during mirroring
-        # FLAG: ... Reference `settings.G.mirror_registry` for approval and its `original_sys_module_entry` attribute
-        try:
-            source_lines = getsourcelines(obj)[0]
-        except TypeError as _ex:
-            for a_mirror in G.mirror_registry:
-                if obj.__name__ == a_mirror.import_name:
-                    # TODO: Also, check `a_mirror.original_full_path` somehow, or object equality
-                    source_lines = a_mirror.asset_source_lines[0]
-                    break
-            else:
-                raise _ex.with_traceback(sys.exc_traceback)
-        # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
-
-        if ignore_line_comments:
-            source_lines = [_ for _ in source_lines if not is_line_comment(_)]
-        if (ignore_first_line is True) or (ignore_name is True):
-            source_lines = source_lines[1:]
-
-    #################### Select Relevant Data ####################
-    relevant_data = [_ for _ in [module, name, keywords, source_lines] if _ is not None]
-    # noinspection PyTypeChecker
-    return tuple(to_hashable(relevant_data))
-
-
-def is_line_comment(string):
-    """Return True if the given string is a line comment, else False
-
-    Parameters
-    ----------
-    string: Str
-        The str in which to check for a line comment
-
-    Returns
-    -------
-    Boolean"""
-    return bool(re.match(r"^\s*#", string))
-
-
-if __name__ == "__main__":
-    pass

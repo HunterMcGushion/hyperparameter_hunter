@@ -17,7 +17,7 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.key_handler import make_hash_sha256
+from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
 from hyperparameter_hunter.utils.file_utils import read_json

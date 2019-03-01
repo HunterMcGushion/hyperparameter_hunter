@@ -1,10 +1,10 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import key_handler
 from hyperparameter_hunter import settings
 from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
-from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
+from hyperparameter_hunter.keys import CrossExperimentKeyMaker
+from hyperparameter_hunter.keys.hashing import make_hash_sha256
 
 
 ##################################################
@@ -171,47 +171,47 @@ scenarios_function = [
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_string))
 def test_make_hash_sha256_string(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_number))
 def test_make_hash_sha256_number(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_tuple))
 def test_make_hash_sha256_tuple(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_list))
 def test_make_hash_sha256_list(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_dict))
 def test_make_hash_sha256_dict(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_dataframe))
 def test_make_hash_sha256_dataframe(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_lambda))
 def test_make_hash_sha256_lambda(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_partial))
 def test_make_hash_sha256_partial(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected", "kwargs"], **args_ids_for(scenarios_function))
 def test_make_hash_sha256_function(obj, expected, kwargs):
-    assert key_handler.make_hash_sha256(obj, **kwargs) == expected
+    assert make_hash_sha256(obj, **kwargs) == expected
 
 
 ##################################################
@@ -387,4 +387,4 @@ def test_invalid_environment(monkeypatch, env_fixture_0, missing_attr):
 #     }
 #
 #     def test_simple(self, obj, expected, kwargs):
-#         assert key_handler.make_hash_sha256(obj, **(kwargs or {})) == expected
+#         assert make_hash_sha256(obj, **(kwargs or {})) == expected
