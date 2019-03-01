@@ -12,6 +12,7 @@ from inspect import signature
 import numpy as np
 import os
 import os.path
+import pandas as pd
 import simplejson as json
 from typing import Union
 import wrapt
@@ -43,6 +44,7 @@ def default_json_write(obj):
     >>> assert default_json_write(np.array([1, 2, 3])) == [1, 2, 3]
     >>> assert default_json_write(np.int8(32)) == 32
     >>> assert np.isclose(default_json_write(np.float16(3.14)), 3.14, atol=0.001)
+    >>> assert default_json_write(pd.Index(["a", "b", "c"])) == ["a", "b", "c"]
     >>> default_json_write(object())  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         File "file_utils.py", line ?, in default_json_write
@@ -53,6 +55,8 @@ def default_json_write(obj):
         return int(obj)
     if isinstance(obj, np.floating):
         return float(obj)
+    if isinstance(obj, pd.Index):
+        return list(obj)
     raise TypeError(f"{obj!r} is not JSON serializable")
 
 
