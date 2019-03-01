@@ -104,6 +104,11 @@ class RepeatedExperimentError(Exception):
         super(RepeatedExperimentError, self).__init__(message + extra)
 
 
+class ContinueRemap(Exception):
+    def __str__(self):
+        return "Just keep doing what you were doing"
+
+
 ##################################################
 # Deprecation Warnings
 ##################################################
