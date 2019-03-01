@@ -4,7 +4,6 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
-from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import subdict
 
 ##################################################

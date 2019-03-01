@@ -9,7 +9,6 @@ from hyperparameter_hunter.feature_engineering import FeatureEngineer
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 import pandas as pd
-import pytest
 
 ##################################################
 # Import Learning Assets
