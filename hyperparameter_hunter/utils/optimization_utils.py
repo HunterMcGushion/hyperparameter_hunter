@@ -17,6 +17,7 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.exceptions import ContinueRemap
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
@@ -482,14 +483,10 @@ def filter_by_guidelines(
             return False
 
         #################### Clean `feature_engineer` ####################
-        if path and path[0] == "feature_engineer":
-            # Drop dataset hashes
-            if key in ("datasets", "original_hashes", "updated_hashes") and isinstance(value, dict):
-                return False
-            # Ensure `EngineerStep.f` is hashed
-            with suppress(IndexError):
-                if path[1] == "steps" and key == "f" and callable(value):
-                    return key, make_hash_sha256(value)
+        try:
+            return visit_feature_engineer(path, key, value)
+        except ContinueRemap:
+            ...
 
         for dimension in dimensions + dimensions_to_ignore:
             if (path + (key,) == dimension) or (dimension[0] is None and dimension[-1] == key):
@@ -506,6 +503,59 @@ def filter_by_guidelines(
     )
 
     return hyperparameters_and_scores
+
+
+def visit_feature_engineer(path, key, value):
+    """Helper to be used within a `visit` function intended for a `remap`-like function
+
+    Parameters
+    ----------
+    path: Tuple
+        The path of keys that leads to `key`
+    key: String
+        The parameter name
+    value: Object
+        The value of the parameter `key`
+
+    Returns
+    -------
+    False if the value represents a dataset, or tuple of (`key`, <hash of `value`>). If neither of
+    these are returned, a `ContinueRemap` exception is raised
+
+    Raises
+    ------
+    ContinueRemap
+        If a value is not returned by `visit_function_engineer`. For proper functioning, this raised
+        `ContinueRemap` is assumed to be handled by the calling `visit` function. Usually, the
+        `except` block for `ContinueRemap` will simply continue execution of `visit`
+
+    Examples
+    --------
+    >>> visit_feature_engineer(("feature_engineer",), "datasets", dict())
+    False
+    >>> visit_feature_engineer(("feature_engineer", "steps"), "f", lambda _: _)  # pytest: +ELLIPSIS
+    ('f', '...')
+    >>> visit_feature_engineer(("feature_engineer", "steps"), "foo", lambda _: _)
+    Traceback (most recent call last):
+        File "optimization_utils.py", line ?, in visit_feature_engineer
+    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing
+    >>> visit_feature_engineer(("feature_engineer",), "foo", dict())
+    Traceback (most recent call last):
+        File "optimization_utils.py", line ?, in visit_feature_engineer
+    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing
+    >>> visit_feature_engineer(("foo",), "bar", dict())
+    Traceback (most recent call last):
+        File "optimization_utils.py", line ?, in visit_feature_engineer
+    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing"""
+    if path and path[0] == "feature_engineer":
+        # Drop dataset hashes
+        if key in ("datasets", "original_hashes", "updated_hashes") and isinstance(value, dict):
+            return False
+        # Ensure `EngineerStep.f` is hashed
+        with suppress(IndexError):
+            if path[1] == "steps" and key == "f" and callable(value):
+                return key, make_hash_sha256(value)
+    raise ContinueRemap
 
 
 def get_choice_dimensions(params, iter_attrs=None):
