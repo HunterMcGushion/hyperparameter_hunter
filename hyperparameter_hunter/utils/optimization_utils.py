@@ -17,6 +17,7 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.key_handler import make_hash_sha256
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
 from hyperparameter_hunter.utils.file_utils import read_json
@@ -25,6 +26,7 @@ from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from contextlib import suppress
 import pandas as pd
 
 ##################################################
@@ -458,6 +460,10 @@ def filter_by_guidelines(
         ("model_init_params", "compile_params", "loss_functions"),
     ]
 
+    #################### Prepare `feature_engineer` ####################
+    feature_engineer = feature_engineer and feature_engineer.get_key_data()
+    # Dataset hashes in `feature_engineer` and candidates can be ignored, since it is assumed that candidates here had matching `Environment`s
+
     temp_guidelines = dict(
         model_init_params=model_init_params if model_init_params is not None else {},
         model_extra_params=model_extra_params if model_extra_params is not None else {},
@@ -474,6 +480,16 @@ def filter_by_guidelines(
             # Remove empty dicts in ("model_extra_params"). Simplify comparison between experiments
             # with no `model_extra_params` and, for example, `dict(fit=dict(verbose=True))`
             return False
+
+        #################### Clean `feature_engineer` ####################
+        if path and path[0] == "feature_engineer":
+            # Drop dataset hashes
+            if key in ("datasets", "original_hashes", "updated_hashes") and isinstance(value, dict):
+                return False
+            # Ensure `EngineerStep.f` is hashed
+            with suppress(IndexError):
+                if path[1] == "steps" and key == "f" and callable(value):
+                    return key, make_hash_sha256(value)
 
         for dimension in dimensions + dimensions_to_ignore:
             if (path + (key,) == dimension) or (dimension[0] is None and dimension[-1] == key):
