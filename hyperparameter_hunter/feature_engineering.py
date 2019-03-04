@@ -12,12 +12,84 @@ from hyperparameter_hunter.utils.general_utils import subdict
 from ast import NodeVisitor, parse
 from inspect import getsource
 import pandas as pd
-from typing import List, Callable
+from typing import List, Callable, Dict
 
 ##################################################
 # Global Variables
 ##################################################
 EMPTY_SENTINEL = type("EMPTY_SENTINEL", tuple(), {})
+DFDict = Dict[str, pd.DataFrame]
+
+
+def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
+    """Construct a multi-indexed DataFrame containing the values of `dfs` deemed necessary by
+    `merge_to` and `stage`
+
+    Parameters
+    ----------
+    merge_to: String
+        Type of `merged_df` to produce. Should be one of the following: {"all_data", "all_inputs",
+        "all_targets", "non_train_data", "non_train_inputs", "non_train_targets"}
+    stage: String in {"pre_cv", "intra_cv}
+        Feature engineering stage for which `merged_df` is requested. The results produced with each
+        option differ only in that a `merged_df` created with `stage="pre_cv"` will never contain
+        "validation" data because it doesn't exist before cross-validation has begun. Conversely,
+        a `merged_df` created with `stage="intra_cv"` will contain the appropriate "validation" data
+        if it exists
+    dfs: Dict
+        Mapping of dataset names to their DataFrame values. Keys in `dfs` should be a subset of
+        {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
+        "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets", "test_inputs"}
+
+    Returns
+    -------
+    merged_df: pd.DataFrame
+        Multi-indexed DataFrame, in which the first index is a string naming the dataset in `dfs`
+        from which the corresponding data originates. The following index(es) are the original
+        index(es) from the dataset in `dfs`. All primary indexes in `merged_df` will be one of the
+        strings considered to be valid keys for `dfs`"""
+    m_map = {
+        ("all", "data", "intra_cv"): ["train", "validation", "holdout"],
+        ("all", "data", "pre_cv"): ["train", "holdout"],
+        ("all", "inputs", "intra_cv"): ["train", "validation", "holdout", "test"],
+        ("all", "inputs", "pre_cv"): ["train", "holdout", "test"],
+        ("all", "targets", "intra_cv"): ["train", "validation", "holdout"],
+        ("all", "targets", "pre_cv"): ["train", "holdout"],
+    }
+
+    # Add "non_train"-prefixed entries to `m_map` based on "all"-prefixed entries
+    for group in ["data", "inputs", "targets"]:
+        m_map[("non_train", group, "intra_cv")] = m_map[("all", group, "intra_cv")][1:]
+        m_map[("non_train", group, "pre_cv")] = m_map[("all", group, "pre_cv")][1:]
+
+    target_group = tuple(merge_to.rsplit("_", 1))
+    df_names = [f"{_}_{target_group[-1]}" for _ in m_map[target_group + (stage,)]]
+    df_names = [_ for _ in df_names if dfs.get(_, None) is not None]
+    merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
+    return merged_df
+
+
+def split_merged_df(merged_df: pd.DataFrame) -> DFDict:
+    """Separate a multi-indexed DataFrame into a dict mapping primary indexes in `merged_df` to
+    DataFrames containing one fewer dimension than `merged_df`
+
+    Parameters
+    ----------
+    merged_df: pd.DataFrame
+        Multi-indexed DataFrame of the form returned by :func:`merge_dfs` to split into the separate
+        DataFrames named by the primary indexes of `merged_df`
+
+    Returns
+    -------
+    dfs: Dict
+        Mapping of dataset names to their DataFrame values. Keys in `dfs` will be a subset of
+        {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
+        "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets", "test_inputs"}
+        containing only those values that are also primary indexes in `merged_df`"""
+    dfs = dict()
+    for df_index in merged_df.index.levels[0]:
+        dfs[df_index] = merged_df.loc[df_index, :].copy()
+    return dfs
 
 
 class EngineerStep:
