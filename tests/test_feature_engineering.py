@@ -139,7 +139,7 @@ validation_data_0 = pd.DataFrame(dict(a=[4, 5], b=["e", "f"], t=[1, 0]))
 holdout_data_0 = pd.DataFrame(dict(a=[6, 7], b=["g", "h"], t=[0, 1]))
 test_inputs_0 = pd.DataFrame(dict(a=[8, 9], b=["i", "j"]))
 
-split_dfs_0 = dict(
+dfs_0 = dict(
     train_data=train_data_0,
     train_inputs=train_data_0.loc[:, ["a", "b"]],
     train_targets=train_data_0.loc[:, ["t"]],
@@ -152,36 +152,62 @@ split_dfs_0 = dict(
     test_inputs=test_inputs_0,
 )
 
+dfs_1 = dict(dfs_0, **dict(holdout_data=None, holdout_inputs=None, holdout_targets=None))
 
-def build_merged_df(dfs, group):
-    keys = [f"{_}_{group}" for _ in dfs]
-    return pd.concat([split_dfs_0[_] for _ in keys], keys=keys)
+
+def build_merged_df(df_names, group, original_dfs):
+    keys = [f"{_}_{group}" for _ in df_names]
+    return pd.concat([original_dfs[_] for _ in keys], keys=keys)
 
 
 @pytest.mark.parametrize(
-    ["merge_to", "stage", "expected_dfs", "expected_group"],
+    ["merge_to", "stage", "expected_dfs", "expected_group", "original_dfs"],
     [
-        ("all_data", "intra_cv", ["train", "validation", "holdout"], "data"),
-        ("all_inputs", "intra_cv", ["train", "validation", "holdout", "test"], "inputs"),
-        ("all_targets", "intra_cv", ["train", "validation", "holdout"], "targets"),
-        ("all_data", "pre_cv", ["train", "holdout"], "data"),
-        ("all_inputs", "pre_cv", ["train", "holdout", "test"], "inputs"),
-        ("all_targets", "pre_cv", ["train", "holdout"], "targets"),
-        ("non_train_data", "intra_cv", ["validation", "holdout"], "data"),
-        ("non_train_inputs", "intra_cv", ["validation", "holdout", "test"], "inputs"),
-        ("non_train_targets", "intra_cv", ["validation", "holdout"], "targets"),
-        ("non_train_data", "pre_cv", ["holdout"], "data"),
-        ("non_train_inputs", "pre_cv", ["holdout", "test"], "inputs"),
-        ("non_train_targets", "pre_cv", ["holdout"], "targets"),
+        #################### `dfs_0` ####################
+        ("all_data", "intra_cv", ["train", "validation", "holdout"], "data", dfs_0),
+        ("all_inputs", "intra_cv", ["train", "validation", "holdout", "test"], "inputs", dfs_0),
+        ("all_targets", "intra_cv", ["train", "validation", "holdout"], "targets", dfs_0),
+        ("all_data", "pre_cv", ["train", "holdout"], "data", dfs_0),
+        ("all_inputs", "pre_cv", ["train", "holdout", "test"], "inputs", dfs_0),
+        ("all_targets", "pre_cv", ["train", "holdout"], "targets", dfs_0),
+        ("non_train_data", "intra_cv", ["validation", "holdout"], "data", dfs_0),
+        ("non_train_inputs", "intra_cv", ["validation", "holdout", "test"], "inputs", dfs_0),
+        ("non_train_targets", "intra_cv", ["validation", "holdout"], "targets", dfs_0),
+        ("non_train_data", "pre_cv", ["holdout"], "data", dfs_0),
+        ("non_train_inputs", "pre_cv", ["holdout", "test"], "inputs", dfs_0),
+        ("non_train_targets", "pre_cv", ["holdout"], "targets", dfs_0),
+        #################### `dfs_1` ####################
+        ("all_data", "intra_cv", ["train", "validation", "holdout"], "data", dfs_1),
+        ("all_inputs", "intra_cv", ["train", "validation", "holdout", "test"], "inputs", dfs_1),
+        ("all_targets", "intra_cv", ["train", "validation", "holdout"], "targets", dfs_1),
+        ("all_data", "pre_cv", ["train", "holdout"], "data", dfs_1),
+        ("all_inputs", "pre_cv", ["train", "holdout", "test"], "inputs", dfs_1),
+        ("all_targets", "pre_cv", ["train", "holdout"], "targets", dfs_1),
+        ("non_train_data", "intra_cv", ["validation", "holdout"], "data", dfs_1),
+        ("non_train_inputs", "intra_cv", ["validation", "holdout", "test"], "inputs", dfs_1),
+        ("non_train_targets", "intra_cv", ["validation", "holdout"], "targets", dfs_1),
+        ("non_train_inputs", "pre_cv", ["holdout", "test"], "inputs", dfs_1),
     ],
 )
-def test_merge_dfs(merge_to, stage, expected_dfs, expected_group):
+def test_merge_dfs_0(merge_to, stage, expected_dfs, expected_group, original_dfs):
     # Test building `actual_merged_df` via `merge_dfs`
-    actual_merged_df = merge_dfs(merge_to, stage, split_dfs_0)
-    expected_merged_df = build_merged_df(expected_dfs, expected_group)
+    actual_merged_df = merge_dfs(merge_to, stage, original_dfs)
+    expected_merged_df = build_merged_df(expected_dfs, expected_group, original_dfs)
     assert actual_merged_df.equals(expected_merged_df)
     # Test splitting `actual_merged_df` via `split_merged_df`
     actual_split_dfs = split_merged_df(actual_merged_df)
     expected_split_dfs_names = [f"{_}_{expected_group}" for _ in expected_dfs]
-    expected_split_dfs = {_: split_dfs_0[_] for _ in expected_split_dfs_names}
+    expected_split_dfs = {_: original_dfs[_] for _ in expected_split_dfs_names}
     assert all(v.equals(expected_split_dfs[k]) for k, v in actual_split_dfs.items())
+
+
+@pytest.mark.parametrize(
+    ["merge_to", "stage", "expected_dfs", "expected_group", "original_dfs"],
+    [
+        ("non_train_data", "pre_cv", ["holdout"], "data", dfs_1),
+        ("non_train_targets", "pre_cv", ["holdout"], "targets", dfs_1),
+    ],
+)
+def test_merge_dfs_value_error(merge_to, stage, expected_dfs, expected_group, original_dfs):
+    with pytest.raises(ValueError, match="Merging .* into .* does not produce DataFrame"):
+        merge_dfs(merge_to, stage, original_dfs)
