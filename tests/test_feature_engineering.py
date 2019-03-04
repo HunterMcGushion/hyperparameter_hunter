@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.feature_engineering import FeatureEngineer
+from hyperparameter_hunter.feature_engineering import FeatureEngineer, merge_dfs
 
 ##################################################
 # Import Miscellaneous Assets
@@ -9,6 +9,7 @@ from hyperparameter_hunter.feature_engineering import FeatureEngineer
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 import pandas as pd
+import pytest
 
 ##################################################
 # Import Learning Assets
@@ -128,3 +129,53 @@ def test_2():
 
     assert_array_almost_equal(feature_engineer.datasets["train_inputs"], expected_train_inputs)
     assert_array_almost_equal(feature_engineer.datasets["holdout_inputs"], expected_holdout_inputs)
+
+
+##################################################
+# `merge_dfs` / `split_merged_df`
+##################################################
+train_data_0 = pd.DataFrame(dict(a=[0, 1, 2, 3], b=["a", "b", "c", "d"], t=[1, 1, 0, 0]))
+validation_data_0 = pd.DataFrame(dict(a=[4, 5], b=["e", "f"], t=[1, 0]))
+holdout_data_0 = pd.DataFrame(dict(a=[6, 7], b=["g", "h"], t=[0, 1]))
+test_inputs_0 = pd.DataFrame(dict(a=[8, 9], b=["i", "j"]))
+
+split_dfs_0 = dict(
+    train_data=train_data_0,
+    train_inputs=train_data_0.loc[:, ["a", "b"]],
+    train_targets=train_data_0.loc[:, ["t"]],
+    validation_data=validation_data_0,
+    validation_inputs=validation_data_0.loc[:, ["a", "b"]],
+    validation_targets=validation_data_0.loc[:, ["t"]],
+    holdout_data=holdout_data_0,
+    holdout_inputs=holdout_data_0.loc[:, ["a", "b"]],
+    holdout_targets=holdout_data_0.loc[:, ["t"]],
+    test_inputs=test_inputs_0,
+)
+
+
+def build_merged_df(dfs, group):
+    keys = [f"{_}_{group}" for _ in dfs]
+    return pd.concat([split_dfs_0[_] for _ in keys], keys=keys)
+
+
+@pytest.mark.parametrize(
+    ["merge_to", "stage", "expected_dfs", "expected_group"],
+    [
+        ("all_data", "intra_cv", ["train", "validation", "holdout"], "data"),
+        ("all_inputs", "intra_cv", ["train", "validation", "holdout", "test"], "inputs"),
+        ("all_targets", "intra_cv", ["train", "validation", "holdout"], "targets"),
+        ("all_data", "pre_cv", ["train", "holdout"], "data"),
+        ("all_inputs", "pre_cv", ["train", "holdout", "test"], "inputs"),
+        ("all_targets", "pre_cv", ["train", "holdout"], "targets"),
+        ("non_train_data", "intra_cv", ["validation", "holdout"], "data"),
+        ("non_train_inputs", "intra_cv", ["validation", "holdout", "test"], "inputs"),
+        ("non_train_targets", "intra_cv", ["validation", "holdout"], "targets"),
+        ("non_train_data", "pre_cv", ["holdout"], "data"),
+        ("non_train_inputs", "pre_cv", ["holdout", "test"], "inputs"),
+        ("non_train_targets", "pre_cv", ["holdout"], "targets"),
+    ],
+)
+def test_merge_dfs(merge_to, stage, expected_dfs, expected_group):
+    actual = merge_dfs(merge_to, stage, split_dfs_0)
+    expected = build_merged_df(expected_dfs, expected_group)
+    assert actual.equals(expected)
