@@ -47,7 +47,15 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
         Multi-indexed DataFrame, in which the first index is a string naming the dataset in `dfs`
         from which the corresponding data originates. The following index(es) are the original
         index(es) from the dataset in `dfs`. All primary indexes in `merged_df` will be one of the
-        strings considered to be valid keys for `dfs`"""
+        strings considered to be valid keys for `dfs`
+
+    Raises
+    ------
+    ValueError
+        If all the DataFrames that would have been used in `merged_df` are None. This can happen if
+        requesting `merge_to="non_train_targets"` during `stage="pre_cv"` when there is no holdout
+        dataset available. Under these circumstances, the holdout dataset targets would be the sole
+        contents of `merged_df`, rendering `merged_df` invalid since the data is unavailable"""
     m_map = {
         ("all", "data", "intra_cv"): ["train", "validation", "holdout"],
         ("all", "data", "pre_cv"): ["train", "holdout"],
@@ -65,7 +73,10 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
     target_group = tuple(merge_to.rsplit("_", 1))
     df_names = [f"{_}_{target_group[-1]}" for _ in m_map[target_group + (stage,)]]
     df_names = [_ for _ in df_names if dfs.get(_, None) is not None]
-    merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
+    try:
+        merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
+    except ValueError as _ex:
+        raise ValueError(f"Merging {df_names} into {merge_to} does not produce DataFrame") from _ex
     return merged_df
 
 
