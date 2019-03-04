@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.feature_engineering import FeatureEngineer, merge_dfs
+from hyperparameter_hunter.feature_engineering import FeatureEngineer, merge_dfs, split_merged_df
 
 ##################################################
 # Import Miscellaneous Assets
@@ -176,6 +176,12 @@ def build_merged_df(dfs, group):
     ],
 )
 def test_merge_dfs(merge_to, stage, expected_dfs, expected_group):
-    actual = merge_dfs(merge_to, stage, split_dfs_0)
-    expected = build_merged_df(expected_dfs, expected_group)
-    assert actual.equals(expected)
+    # Test building `actual_merged_df` via `merge_dfs`
+    actual_merged_df = merge_dfs(merge_to, stage, split_dfs_0)
+    expected_merged_df = build_merged_df(expected_dfs, expected_group)
+    assert actual_merged_df.equals(expected_merged_df)
+    # Test splitting `actual_merged_df` via `split_merged_df`
+    actual_split_dfs = split_merged_df(actual_merged_df)
+    expected_split_dfs_names = [f"{_}_{expected_group}" for _ in expected_dfs]
+    expected_split_dfs = {_: split_dfs_0[_] for _ in expected_split_dfs_names}
+    assert all(v.equals(expected_split_dfs[k]) for k, v in actual_split_dfs.items())
