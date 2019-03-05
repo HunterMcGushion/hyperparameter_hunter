@@ -23,7 +23,7 @@ DFDict = Dict[str, pd.DataFrame]
 
 def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
     """Construct a multi-indexed DataFrame containing the values of `dfs` deemed necessary by
-    `merge_to` and `stage`
+    `merge_to` and `stage`. This is the opposite of `split_merged_df`
 
     Parameters
     ----------
@@ -82,7 +82,7 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
 
 def split_merged_df(merged_df: pd.DataFrame) -> DFDict:
     """Separate a multi-indexed DataFrame into a dict mapping primary indexes in `merged_df` to
-    DataFrames containing one fewer dimension than `merged_df`
+    DataFrames containing one fewer dimension than `merged_df`. This is the opposite of `merge_dfs`
 
     Parameters
     ----------
