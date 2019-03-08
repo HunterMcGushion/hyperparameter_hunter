@@ -40,6 +40,66 @@ COUPLED_DATASET_CANDIDATES = [
 ]
 
 
+def names_for_merge(merge_to: str, stage: str) -> List[str]:
+    """Retrieve the names of the standard datasets that are allowed to be included in a merged
+    DataFrame of type `merge_to` at stage `stage`
+
+    Parameters
+    ----------
+    merge_to: String
+        Type of merged dataframe to produce. Should be one of the following: {"all_data",
+        "all_inputs", "all_targets", "non_train_data", "non_train_inputs", "non_train_targets"}
+    stage: String in {"pre_cv", "intra_cv}
+        Feature engineering stage for which the merged dataframe is requested. The results produced
+        with each option differ only in that a `merged_df` created with `stage="pre_cv"` will never
+        contain "validation" data because it doesn't exist before cross-validation has begun.
+        Conversely, a `merged_df` created with `stage="intra_cv"` will contain the appropriate
+        "validation" data if it exists
+
+    Returns
+    -------
+    names: List
+        Subset of {"train_data", "train_inputs", "train_targets", "validation_data",
+        "validation_inputs", "validation_targets", "holdout_data", "holdout_inputs",
+        "holdout_targets", "test_inputs"}
+
+    Examples
+    --------
+    >>> names_for_merge("all_data", "intra_cv")
+    ['train_data', 'validation_data', 'holdout_data']
+    >>> names_for_merge("all_inputs", "intra_cv")
+    ['train_inputs', 'validation_inputs', 'holdout_inputs', 'test_inputs']
+    >>> names_for_merge("all_targets", "intra_cv")
+    ['train_targets', 'validation_targets', 'holdout_targets']
+    >>> names_for_merge("all_data", "pre_cv")
+    ['train_data', 'holdout_data']
+    >>> names_for_merge("all_inputs", "pre_cv")
+    ['train_inputs', 'holdout_inputs', 'test_inputs']
+    >>> names_for_merge("all_targets", "pre_cv")
+    ['train_targets', 'holdout_targets']
+    >>> names_for_merge("non_train_data", "intra_cv")
+    ['validation_data', 'holdout_data']
+    >>> names_for_merge("non_train_inputs", "intra_cv")
+    ['validation_inputs', 'holdout_inputs', 'test_inputs']
+    >>> names_for_merge("non_train_targets", "intra_cv")
+    ['validation_targets', 'holdout_targets']
+    >>> names_for_merge("non_train_data", "pre_cv")
+    ['holdout_data']
+    >>> names_for_merge("non_train_inputs", "pre_cv")
+    ['holdout_inputs', 'test_inputs']
+    >>> names_for_merge("non_train_targets", "pre_cv")
+    ['holdout_targets']"""
+    merge_type, data_group = merge_to.rsplit("_", 1)
+    names = [_ for _ in STANDARD_DATASET_NAMES if _.endswith(data_group)]
+
+    if stage == "pre_cv":
+        names = [_ for _ in names if _ not in N_DATASET_VALIDATION]
+    if merge_type == "non_train":
+        names = [_ for _ in names if not _.startswith("train")]
+
+    return names
+
+
 def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
     """Construct a multi-indexed DataFrame containing the values of `dfs` deemed necessary by
     `merge_to` and `stage`. This is the opposite of `split_merged_df`
