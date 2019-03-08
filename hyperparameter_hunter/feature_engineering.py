@@ -4,6 +4,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
+from hyperparameter_hunter.utils.boltons_utils import remap, default_visit, default_enter
 from hyperparameter_hunter.utils.general_utils import subdict
 
 ##################################################
@@ -12,13 +13,14 @@ from hyperparameter_hunter.utils.general_utils import subdict
 from ast import NodeVisitor, parse
 from inspect import getsource
 import pandas as pd
-from typing import List, Callable, Dict
+from typing import List, Callable, Dict, Union
 
 ##################################################
 # Global Variables
 ##################################################
 EMPTY_SENTINEL = type("EMPTY_SENTINEL", tuple(), {})
 DFDict = Dict[str, pd.DataFrame]
+DescendantsType = Dict[str, Union["DescendantsType", None]]
 
 N_DATASET_TRAIN = ["train_data", "train_inputs", "train_targets"]
 N_DATASET_VALIDATION = ["validation_data", "validation_inputs", "validation_targets"]
@@ -38,6 +40,77 @@ COUPLED_DATASET_CANDIDATES = [
     N_DATASET_ALL,
     N_DATASET_NON_TRAIN,
 ]
+
+
+class DatasetNameReport:
+    def __init__(self, params: List[str], stage: str):
+        """Characterize the relationships between the dataset names `params`
+
+        Parameters
+        ----------
+        params: List[str]
+            Dataset names requested by a feature engineering step callable. Must be a subset of
+            {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
+            "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
+            "test_inputs", "all_data", "all_inputs", "all_targets", "non_train_data",
+            "non_train_inputs", "non_train_targets"}
+        stage: String in {"pre_cv", "intra_cv"}
+            Feature engineering stage during which the datasets `params` are requested
+
+        Attributes
+        ----------
+        merged_datasets: List[tuple]
+            Tuples of strings denoting paths to datasets that represent a merge between multiple
+            datasets. Merged datasets are those prefixed with either "all" or "non_train". These
+            paths are locations in `descendants`
+        coupled_datasets: List[tuple]
+            Tuples of strings denoting paths to datasets that represent a coupling of "inputs" and
+            "targets" datasets. Coupled datasets are those suffixed with "data". These paths are
+            locations in `descendants`, and the values at each path should be a dict containing keys
+            with "inputs" and "targets" suffixes
+        leaves: Dict[tuple, str]
+            Mapping of full path tuples in `descendants` to their leaf values. Tuple paths represent
+            the steps necessary to reach the standard dataset leaf value in `descendants` by
+            traversing merged and coupled datasets. Values in `leaves` should be identical to the
+            last element of the corresponding tuple key
+        descendants: DescendantsType
+            Nested dict in which all keys are dataset name strings, and all leaf values are `None`.
+            Represents the structure of the requested dataset names, traversing over merged and
+            coupled datasets (if necessary) in order to reach the standard dataset leaves"""
+        self.params: List[str] = params
+        self.stage: str = stage
+
+        self.merged_datasets: List[tuple] = []
+        self.coupled_datasets: List[tuple] = []
+        self.leaves: Dict[tuple, str] = dict()
+        self.descendants: DescendantsType = remap(
+            {_: _ for _ in self.params}, visit=self._visit, enter=self._enter, use_registry=False
+        )
+
+    @staticmethod
+    def _visit(path, key, value):
+        if key and key == value:
+            return (key, None)
+        return default_visit(path, key, value)
+
+    def _enter(self, path, key, value):
+        #################### Merged Datasets ####################
+        if value in MERGED_DATASET_NAMES:
+            self.merged_datasets.append(path + (key,))
+            _names_for_merge = names_for_merge(value, self.stage)
+            return dict(), zip(_names_for_merge, _names_for_merge)
+
+        #################### Coupled Datasets ####################
+        for coupled_candidate in COUPLED_DATASET_CANDIDATES:
+            if value == coupled_candidate[0]:
+                self.coupled_datasets.append(path + (key,))
+                return dict(), zip(coupled_candidate[1:], coupled_candidate[1:])
+
+        #################### Leaf Datasets ####################
+        if key:
+            self.leaves[path + (key,)] = key
+
+        return default_enter(path, key, value)
 
 
 def names_for_merge(merge_to: str, stage: str) -> List[str]:
