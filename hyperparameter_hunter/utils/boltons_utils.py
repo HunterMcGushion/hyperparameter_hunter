@@ -684,7 +684,9 @@ def default_exit(path, key, old_parent, new_parent, new_items):
     return ret
 
 
-def remap(root, visit=default_visit, enter=default_enter, exit=default_exit, **kwargs):
+def remap(
+    root, visit=default_visit, enter=default_enter, exit=default_exit, use_registry=True, **kwargs
+):
     """The remap ("recursive map") function is used to traverse and
     transform nested structures. Lists, tuples, sets, and dictionaries
     are just a few of the data structures nested into heterogenous
@@ -748,6 +750,12 @@ def remap(root, visit=default_visit, enter=default_enter, exit=default_exit, **k
             :class:`namedtuple`, must be recreated from scratch, but
             use the same type as the new parent passed back from the
             *enter* function.
+        use_registry (bool): Whether to enforce the rule of calling
+            `enter` and `exit` only once per unique value. If ``True``
+            (default), `enter` and `exit` are only called once for each
+            unique value. If ``False``, the registry of values traversed
+            by `enter` and `exit` is ignored, meaning they are called
+            again on previously traversed values
         reraise_visit (bool): A pragmatic convenience for the *visit*
             callable. When set to ``False``, remap ignores any errors
             raised by the *visit* callback. Items causing exceptions
@@ -791,7 +799,7 @@ def remap(root, visit=default_visit, enter=default_enter, exit=default_exit, **k
             registry[id_value] = value
             if not new_items_stack:
                 continue
-        elif id_value in registry:
+        elif use_registry and id_value in registry:
             value = registry[id_value]
         else:
             res = enter(path, key, value)
