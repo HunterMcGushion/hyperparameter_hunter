@@ -110,11 +110,7 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
         Type of `merged_df` to produce. Should be one of the following: {"all_data", "all_inputs",
         "all_targets", "non_train_data", "non_train_inputs", "non_train_targets"}
     stage: String in {"pre_cv", "intra_cv}
-        Feature engineering stage for which `merged_df` is requested. The results produced with each
-        option differ only in that a `merged_df` created with `stage="pre_cv"` will never contain
-        "validation" data because it doesn't exist before cross-validation has begun. Conversely,
-        a `merged_df` created with `stage="intra_cv"` will contain the appropriate "validation" data
-        if it exists
+        Feature engineering stage for which `merged_df` is requested
     dfs: Dict
         Mapping of dataset names to their DataFrame values. Keys in `dfs` should be a subset of
         {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
@@ -134,23 +130,12 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
         If all the DataFrames that would have been used in `merged_df` are None. This can happen if
         requesting `merge_to="non_train_targets"` during `stage="pre_cv"` when there is no holdout
         dataset available. Under these circumstances, the holdout dataset targets would be the sole
-        contents of `merged_df`, rendering `merged_df` invalid since the data is unavailable"""
-    m_map = {
-        ("all", "data", "intra_cv"): ["train", "validation", "holdout"],
-        ("all", "data", "pre_cv"): ["train", "holdout"],
-        ("all", "inputs", "intra_cv"): ["train", "validation", "holdout", "test"],
-        ("all", "inputs", "pre_cv"): ["train", "holdout", "test"],
-        ("all", "targets", "intra_cv"): ["train", "validation", "holdout"],
-        ("all", "targets", "pre_cv"): ["train", "holdout"],
-    }
+        contents of `merged_df`, rendering `merged_df` invalid since the data is unavailable
 
-    # Add "non_train"-prefixed entries to `m_map` based on "all"-prefixed entries
-    for group in ["data", "inputs", "targets"]:
-        m_map[("non_train", group, "intra_cv")] = m_map[("all", group, "intra_cv")][1:]
-        m_map[("non_train", group, "pre_cv")] = m_map[("all", group, "pre_cv")][1:]
-
-    target_group = tuple(merge_to.rsplit("_", 1))
-    df_names = [f"{_}_{target_group[-1]}" for _ in m_map[target_group + (stage,)]]
+    See Also
+    --------
+    names_for_merge: Describes how `stage` values differ"""
+    df_names = names_for_merge(merge_to, stage)
     df_names = [_ for _ in df_names if dfs.get(_, None) is not None]
     try:
         merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
