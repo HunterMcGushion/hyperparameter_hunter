@@ -20,6 +20,25 @@ from typing import List, Callable, Dict
 EMPTY_SENTINEL = type("EMPTY_SENTINEL", tuple(), {})
 DFDict = Dict[str, pd.DataFrame]
 
+N_DATASET_TRAIN = ["train_data", "train_inputs", "train_targets"]
+N_DATASET_VALIDATION = ["validation_data", "validation_inputs", "validation_targets"]
+N_DATASET_HOLDOUT = ["holdout_data", "holdout_inputs", "holdout_targets"]
+N_DATASET_TEST = ["test_inputs"]
+
+N_DATASET_ALL = ["all_data", "all_inputs", "all_targets"]
+N_DATASET_NON_TRAIN = ["non_train_data", "non_train_inputs", "non_train_targets"]
+
+STANDARD_DATASET_NAMES = N_DATASET_TRAIN + N_DATASET_VALIDATION + N_DATASET_HOLDOUT + N_DATASET_TEST
+MERGED_DATASET_NAMES = N_DATASET_ALL + N_DATASET_NON_TRAIN
+
+COUPLED_DATASET_CANDIDATES = [
+    N_DATASET_TRAIN,
+    N_DATASET_VALIDATION,
+    N_DATASET_HOLDOUT,
+    N_DATASET_ALL,
+    N_DATASET_NON_TRAIN,
+]
+
 
 def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
     """Construct a multi-indexed DataFrame containing the values of `dfs` deemed necessary by
@@ -349,14 +368,7 @@ def get_engineering_step_params(f):
     Traceback (most recent call last):
         File "feature_engineering.py", line ?, in get_engineering_step_params
     ValueError: Invalid dataset name in ['train_inputs', 'foo']"""
-    valid_datasets = ["all_data", "all_inputs", "all_targets"]
-    valid_datasets += ["train_data", "train_inputs", "train_targets"]
-    valid_datasets += ["non_train_data", "non_train_inputs", "non_train_targets"]
-    # "non_train_data" probably only usable if test_inputs is not in play
-    valid_datasets += ["validation_data", "validation_inputs", "validation_targets"]
-    valid_datasets += ["holdout_data", "holdout_inputs", "holdout_targets"]
-    valid_datasets += ["test_inputs"]
-
+    valid_datasets = MERGED_DATASET_NAMES + STANDARD_DATASET_NAMES
     source_code = getsource(f)
     tree = parse(source_code)
     parser = ParameterParser()
