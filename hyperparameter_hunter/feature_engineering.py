@@ -240,6 +240,46 @@ def split_merged_df(merged_df: pd.DataFrame) -> DFDict:
     return dfs
 
 
+def validate_dataset_names(params: List[str], stage: str) -> List[str]:
+    """Produce the names of merged datasets in `params` and verify there are no duplicate references
+    to any datasets in `params`
+
+    Parameters
+    ----------
+    params: List[str]
+        Dataset names requested by a feature engineering step callable. Must be a subset of
+        {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
+        "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
+        "test_inputs", "all_data", "all_inputs", "all_targets", "non_train_data",
+        "non_train_inputs", "non_train_targets"}
+    stage: String in {"pre_cv", "intra_cv}
+        Feature engineering stage for which `merged_df` is requested
+
+    Returns
+    -------
+    List[str]
+        Names of merged datasets in `params`
+
+    Raises
+    ------
+    ValueError
+        If requested `params` contain a duplicate reference to any dataset, either by way of
+        merging/coupling or not"""
+    report = DatasetNameReport(params, stage)
+
+    reverse_multidict = dict()
+    for leaf_path, leaf_name in report.leaves.items():
+        reverse_multidict.setdefault(leaf_name, set()).add(leaf_path)
+    for leaf_name, leaf_paths in reverse_multidict.items():
+        if len(leaf_paths) > 1:
+            err_str = f"Requested params include duplicate references to `{leaf_name}` by way of:"
+            err_str += "".join([f"\n   - {a_path}" for a_path in leaf_paths])
+            err_str += "\nEach dataset may only be requested by a single param for each function"
+            raise ValueError(err_str)
+
+    return [_[0] if len(_) == 1 else _ for _ in report.merged_datasets]
+
+
 class EngineerStep:
     def __init__(self, f: Callable, name=None, params=None, stage=None, do_validate=False):
         self._f = f
