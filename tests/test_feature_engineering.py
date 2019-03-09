@@ -3,6 +3,7 @@
 ##################################################
 from hyperparameter_hunter.feature_engineering import FeatureEngineer, merge_dfs, split_merged_df
 from hyperparameter_hunter.feature_engineering import DatasetNameReport
+from hyperparameter_hunter.feature_engineering import validate_dataset_names
 
 ##################################################
 # Import Miscellaneous Assets
@@ -467,3 +468,32 @@ def test_dataset_name_report(params, stage, merged_datasets, coupled_datasets, l
     assert report.coupled_datasets == coupled_datasets
     assert report.leaves == leaves
     assert report.descendants == descendants
+
+
+##################################################
+# `validate_dataset_names` Scenarios
+##################################################
+@pytest.mark.parametrize(
+    ["params", "stage", "expected"],
+    [
+        ([TR_I, HO_I, TE_I], "pre_cv", []),
+        ([TR_I, VA_I, HO_I, TE_I], "intra_cv", []),
+        ([TR_I, NT_I], "pre_cv", [NT_I]),
+        ([TR_I, NT_I], "intra_cv", [NT_I]),
+        ([A_I, A_T], "pre_cv", [A_I, A_T]),
+        ([A_I, A_T], "intra_cv", [A_I, A_T]),
+        ([TR_D, NT_I], "pre_cv", [NT_I]),
+        ([TR_D, NT_I], "intra_cv", [NT_I]),
+        ([TR_D, NT_D], "pre_cv", [NT_D]),
+        ([TR_D, NT_D], "intra_cv", [NT_D]),
+    ],
+)
+def test_validate_dataset_names(params, stage, expected):
+    assert validate_dataset_names(params, stage) == expected
+
+
+@pytest.mark.parametrize("params", [[A_D, A_T], [A_T, TR_T]])
+@pytest.mark.parametrize("stage", ["pre_cv", "intra_cv"])
+def test_validate_dataset_names_value_error(params, stage):
+    with pytest.raises(ValueError, match="Requested params include duplicate references to .*"):
+        validate_dataset_names(params, stage)
