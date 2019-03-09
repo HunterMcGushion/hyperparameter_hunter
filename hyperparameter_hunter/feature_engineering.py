@@ -288,6 +288,7 @@ class EngineerStep:
         self._stage = stage
         self.do_validate = do_validate
 
+        self.merged_datasets = []
         self.original_hashes = dict()
         self.updated_hashes = dict()
 
@@ -304,14 +305,43 @@ class EngineerStep:
         -------
         new_datasets: Dict
             ...
-
         """
         self.original_hashes = hash_datasets(datasets)
-        step_result = self.f(**subdict(datasets, keep=self.params))
-        new_datasets = dict(datasets, **dict(zip(self.params, step_result)))
+
+        datasets_for_f = self.get_datasets_for_f(datasets)
+        step_result = self.f(**datasets_for_f)
+        step_result = (step_result,) if not isinstance(step_result, tuple) else step_result
+
+        new_datasets = dict(zip(self.params, step_result))
+        for dataset_name, dataset_value in new_datasets.items():
+            if dataset_name in self.merged_datasets:
+                new_datasets = dict(new_datasets, **split_merged_df(dataset_value))
+        new_datasets = dict(datasets, **new_datasets)
+
         self.updated_hashes = hash_datasets(new_datasets)
         # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
         return new_datasets
+
+    def get_datasets_for_f(self, datasets: DFDict) -> DFDict:
+        """Produce a dict of DataFrames containing only the merged datasets and standard datasets
+        requested in :attr:`params`. In other words, add the requested merged datasets and remove
+        unnecessary standard datasets
+
+        Parameters
+        ----------
+        ...
+
+        Returns
+        -------
+        ...
+        """
+        self.merged_datasets: List[str] = validate_dataset_names(self.params, self.stage)
+        datasets_for_f = datasets
+
+        for _dataset_name in self.merged_datasets:
+            datasets_for_f[_dataset_name] = merge_dfs(_dataset_name, self.stage, datasets)
+
+        return subdict(datasets_for_f, keep=self.params)
 
     def get_key_data(self) -> dict:
         return dict(
