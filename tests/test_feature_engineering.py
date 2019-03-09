@@ -1,9 +1,9 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.feature_engineering import FeatureEngineer, merge_dfs, split_merged_df
-from hyperparameter_hunter.feature_engineering import DatasetNameReport
-from hyperparameter_hunter.feature_engineering import validate_dataset_names
+from hyperparameter_hunter.feature_engineering import DatasetNameReport, validate_dataset_names
 
 ##################################################
 # Import Miscellaneous Assets
@@ -11,25 +11,28 @@ from hyperparameter_hunter.feature_engineering import validate_dataset_names
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import pytest
 
 ##################################################
 # Import Learning Assets
 ##################################################
+from sklearn.ensemble import AdaBoostClassifier
 from sklearn.preprocessing import StandardScaler
 
 ##################################################
 # Dummy Objects for Testing
 ##################################################
+pima_cols = ["pregnancies", "glucose", "bp", "skin_thickness", "insulin", "bmi", "dpf", "age"]
 pima_indians_head = pd.DataFrame(
     {
         "pregnancies": [6, 1, 8, 1, 0],
         "glucose": [148, 85, 183, 89, 137],
-        "blood_pressure": [72, 66, 64, 66, 40],
+        "bp": [72, 66, 64, 66, 40],  # Originally "blood_pressure"
         "skin_thickness": [35, 29, 0, 23, 35],
         "insulin": [0, 0, 0, 94, 168],
         "bmi": [33.6, 26.6, 23.3, 28.1, 43.1],
-        "diabetes_pedigree_function": [0.627, 0.351, 0.672, 0.167, 2.288],
+        "dpf": [0.627, 0.351, 0.672, 0.167, 2.288],  # Originally "diabetes_pedigree_function"
         "age": [50, 31, 32, 21, 33],
         "class": [1, 0, 1, 0, 1],
     }
@@ -40,10 +43,10 @@ def get_pima_data():
     train_dataset = pima_indians_head.iloc[1:5, :]
     holdout_dataset = pima_indians_head.iloc[[0], :]
 
-    train_targets = train_dataset.loc[:, "class"]
+    train_targets = train_dataset.loc[:, ["class"]]
     train_inputs = train_dataset.drop(["class"], axis=1)
 
-    holdout_targets = holdout_dataset.loc[:, "class"]
+    holdout_targets = holdout_dataset.loc[:, ["class"]]
     holdout_inputs = holdout_dataset.drop(["class"], axis=1)
 
     return train_inputs, train_targets, holdout_inputs, holdout_targets
@@ -60,6 +63,11 @@ def impute_negative_one_0(train_inputs, holdout_inputs):
     train_inputs.fillna(-1, inplace=True)
     holdout_inputs.fillna(-1, inplace=True)
     return train_inputs, holdout_inputs
+
+
+def impute_negative_one_1(all_inputs):
+    all_inputs.fillna(-1, inplace=True)
+    return all_inputs
 
 
 def standard_scale_0(train_inputs, holdout_inputs):
@@ -468,6 +476,141 @@ def test_dataset_name_report(params, stage, merged_datasets, coupled_datasets, l
     assert report.coupled_datasets == coupled_datasets
     assert report.leaves == leaves
     assert report.descendants == descendants
+
+
+##################################################
+# `CVExperiment` with `FeatureEngineer`
+##################################################
+# noinspection PyUnusedLocal
+def holdout_first_row(train_dataset, target_column):
+    return train_dataset.iloc[1:5, :], train_dataset.iloc[[0], :]
+
+
+@pytest.fixture()
+def toy_environment_fixture():
+    return Environment(
+        train_dataset=pima_indians_head,
+        holdout_dataset=holdout_first_row,
+        metrics=["roc_auc_score"],
+        target_column="class",
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
+    )
+
+
+@pytest.fixture()
+def experiment_prep_fixture(request):
+    #################### Format `feature_engineer` ####################
+    feature_engineer = request.param
+
+    if isinstance(feature_engineer, list):
+        feature_engineer = FeatureEngineer()
+        for step in request.param:
+            feature_engineer.add_step(step)
+
+    #################### Partially Prepare `CVExperiment` ####################
+    experiment = CVExperiment(
+        model_initializer=AdaBoostClassifier,
+        model_init_params=dict(),
+        feature_engineer=feature_engineer,
+        auto_start=False,
+    )
+    experiment.preparation_workflow()
+    # noinspection PyProtectedMember
+    experiment._initialize_random_seeds()
+    # noinspection PyProtectedMember
+    experiment._initial_preprocessing()
+
+    return experiment
+
+
+#################### Expected End `CVExperiment` Data ####################
+end_data_unchanged = get_pima_data()
+end_data_sn = (
+    pd.DataFrame(
+        data=[
+            [1, 85, 66, 29, np.NaN, 26.6, 0.351, 31],
+            [8, 183, 64, np.NaN, np.NaN, 23.3, 0.672, 32],
+            [1, 89, 66, 23, 94, 28.1, 0.167, 21],
+            [0, 137, 40, 35, 168, 43.1, 2.288, 33],
+        ],
+        columns=pima_cols,
+        index=[1, 2, 3, 4],
+    ),
+    end_data_unchanged[1],
+    pd.DataFrame([[6, 148, 72, 35, np.NaN, 33.6, 0.627, 50]], columns=pima_cols),
+    end_data_unchanged[3],
+)
+end_data_sn_ino = (
+    pd.DataFrame(
+        data=[
+            [1, 85, 66, 29, -1, 26.6, 0.351, 31],
+            [8, 183, 64, -1, -1, 23.3, 0.672, 32],
+            [1, 89, 66, 23, 94, 28.1, 0.167, 21],
+            [0, 137, 40, 35, 168, 43.1, 2.288, 33],
+        ],
+        columns=pima_cols,
+        index=[1, 2, 3, 4],
+    ),
+    end_data_unchanged[1],
+    pd.DataFrame([[6, 148, 72, 35, -1, 33.6, 0.627, 50]], columns=pima_cols),
+    end_data_unchanged[3],
+)
+end_data_sn_ino_ss = (
+    pd.DataFrame(
+        data=[
+            [-0.468521, -0.962876, 0.636364, 0.548821, -0.929624, -0.48321, -0.618238, 0.363422],
+            [1.717911, 1.488081, 0.454545, -1.646464, -0.929624, -0.917113, -0.235491, 0.571092],
+            [-0.468521, -0.862837, 0.636364, 0.109764, 0.408471, -0.285982, -0.837632, -1.713275],
+            [-0.780869, 0.337632, -1.727273, 0.987878, 1.450776, 1.686305, 1.691360, 0.778761],
+        ],
+        columns=pima_cols,
+        index=[1, 2, 3, 4],
+    ),
+    end_data_unchanged[1],
+    pd.DataFrame(
+        [[1.093216, 0.612739, 1.181818, 0.987878, -0.929624, 0.437190, -0.289147, 4.309145]],
+        columns=pima_cols,
+    ),
+    end_data_unchanged[3],
+)
+end_data_sn_ss = (
+    pd.DataFrame(
+        data=[
+            [-0.468521, -0.962876, 0.636363, 0.0, np.NaN, -0.483210, -0.618237, 0.363421],
+            [1.717911, 1.488081, 0.454545, np.NaN, np.NaN, -0.917113, -0.235490, 0.571091],
+            [-0.468521, -0.862837, 0.636363, -1.224744, -1.0, -0.285981, -0.837631, -1.713274],
+            [-0.780868, 0.337631, -1.727272, 1.224744, 1.0, 1.686305, 1.691360, 0.778761],
+        ],
+        columns=pima_cols,
+        index=[1, 2, 3, 4],
+    ),
+    end_data_unchanged[1],
+    pd.DataFrame(
+        [[1.093216, 0.612739, 1.181818, 1.224744, np.NaN, 0.437190, -0.289146, 4.309145]],
+        columns=pima_cols,
+    ),
+    end_data_unchanged[3],
+)
+
+
+@pytest.mark.parametrize(
+    ["experiment_prep_fixture", "end_data"],
+    [
+        (None, end_data_unchanged),
+        ([set_nan_0], end_data_sn),
+        ([impute_negative_one_0], end_data_unchanged),
+        ([set_nan_0, impute_negative_one_0], end_data_sn_ino),
+        ([set_nan_0, impute_negative_one_1], end_data_sn_ino),
+        ([set_nan_0, impute_negative_one_0, standard_scale_0], end_data_sn_ino_ss),
+        ([set_nan_0, standard_scale_0], end_data_sn_ss),
+    ],
+    indirect=["experiment_prep_fixture"],
+)
+def test_feature_engineer_experiment(toy_environment_fixture, experiment_prep_fixture, end_data):
+    assert_frame_equal(experiment_prep_fixture.train_input_data, end_data[0], check_dtype=False)
+    assert_frame_equal(experiment_prep_fixture.train_target_data, end_data[1], check_dtype=False)
+    assert_frame_equal(experiment_prep_fixture.holdout_input_data, end_data[2], check_dtype=False)
+    assert_frame_equal(experiment_prep_fixture.holdout_target_data, end_data[3], check_dtype=False)
 
 
 ##################################################
