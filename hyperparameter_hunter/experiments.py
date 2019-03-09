@@ -315,6 +315,11 @@ class BaseExperiment(ScoringMixIn):
                 holdout_targets=self.holdout_target_data,
                 test_inputs=self.test_input_data,
             )
+            self.train_input_data = self.feature_engineer.datasets["train_inputs"]
+            self.train_target_data = self.feature_engineer.datasets["train_targets"]
+            self.holdout_input_data = self.feature_engineer.datasets["holdout_inputs"]
+            self.holdout_target_data = self.feature_engineer.datasets["holdout_targets"]
+            self.test_input_data = self.feature_engineer.datasets["test_inputs"]
 
         G.log("Initial preprocessing stage complete", 4)
 
