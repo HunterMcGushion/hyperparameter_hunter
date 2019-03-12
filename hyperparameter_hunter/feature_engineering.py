@@ -285,6 +285,32 @@ def validate_dataset_names(params: List[str], stage: str) -> List[str]:
 
 class EngineerStep:
     def __init__(self, f: Callable, name=None, params=None, stage=None, do_validate=False):
+        """:class:`FeatureEngineer` helper, compartmentalizing functions of singular engineer steps
+
+        Parameters
+        ----------
+        f: Callable
+            Feature engineering step function that requests, modifies, and returns datasets `params`
+        name: String, or None, default=None
+            Identifier for the transformation applied by this engineering step. If None,
+            `f.__name__` will be used
+        params: List[str], or None, default=None
+            Dataset names requested by feature engineering step callable `f`. Must be a subset of
+            {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
+            "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
+            "test_inputs", "all_data", "all_inputs", "all_targets", "non_train_data",
+            "non_train_inputs", "non_train_targets"}. If None, will be inferred by parsing the
+            abstract syntax tree of `f`
+        stage: String in {"pre_cv", "intra_cv}, or None, default=None
+            Feature engineering stage during which the callable `f` will be given the datasets
+            `params` to modify and return
+        do_validate: Boolean, or "strict", default=False
+            ... Experimental...
+            Whether to validate the datasets resulting from feature engineering steps. If True,
+            hashes of the new datasets will be compared to those of the originals to ensure they
+            were actually modified. Results will be logged. If `do_validate`="strict", an exception
+            will be raised if any anomalies are found, rather than logging a message. If
+            `do_validate`=False, no validation will be performed"""
         self._f = f
         self._name = name
         self._params = params
