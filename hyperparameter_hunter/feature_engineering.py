@@ -490,13 +490,34 @@ class FeatureEngineer:
 
     def add_step(
         self,
-        step: Callable,
+        step: Union[Callable, EngineerStep],
         name: str = None,
         before: str = EMPTY_SENTINEL,
         after: str = EMPTY_SENTINEL,
         number: int = EMPTY_SENTINEL,
     ):
-        self._steps.append(EngineerStep(step, name))
+        """Add an engineering step to :attr:`steps` to be executed with the other contents of
+        :attr:`steps` on :meth:`FeatureEngineer.__call__`
+
+        Parameters
+        ----------
+        step: Callable, or `EngineerStep`
+            If `EngineerStep` instance, will be added directly to :attr:`steps`. Otherwise, must be
+            a feature engineering step callable that requests, modifies, and returns datasets, which
+            will be used with `name` to instantiate a :class:`EngineerStep` to add to :attr:`steps`
+        name: String, or None, default=None
+            Identifier for the transformation applied by this engineering step. If None and `step`
+            is not an `EngineerStep`, will be inferred during :class:`EngineerStep` instantiation
+        before: String, default=EMPTY_SENTINEL
+            ... Experimental...
+        after: String, default=EMPTY_SENTINEL
+            ... Experimental...
+        number: String, default=EMPTY_SENTINEL
+            ... Experimental..."""
+        if isinstance(step, EngineerStep):
+            self._steps.append(step)
+        else:
+            self._steps.append(EngineerStep(step, name))
 
     ##################################################
     # Constructors
