@@ -89,11 +89,14 @@ class DatasetNameReport:
 
     @staticmethod
     def _visit(path, key, value):
+        """If `key` == `value`, return tuple of (`key`, None). Else `default_visit`"""
         if key and key == value:
             return (key, None)
         return default_visit(path, key, value)
 
     def _enter(self, path, key, value):
+        """Update contents of `merged_datasets`, `coupled_datasets`, and `leaves` and direct
+        traversal of the sub-datasets that compose the current dataset name"""
         #################### Merged Datasets ####################
         if value in MERGED_DATASET_NAMES:
             self.merged_datasets.append(path + (key,))
