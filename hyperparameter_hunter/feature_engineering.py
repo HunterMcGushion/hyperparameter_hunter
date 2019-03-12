@@ -426,7 +426,7 @@ class EngineerStep:
 
 
 class FeatureEngineer:
-    def __init__(self, steps=None, do_validate=False, **datasets):
+    def __init__(self, steps=None, do_validate=False, **datasets: DFDict):
         """
         ...
 
@@ -435,15 +435,15 @@ class FeatureEngineer:
         steps: List, or None, default=None
             ...
         do_validate: Boolean, or "strict", default=False
+            ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
             hashes of the new datasets will be compared to those of the originals to ensure they
             were actually modified. Results will be logged. If `do_validate`="strict", an exception
             will be raised if any anomalies are found, rather than logging a message. If
             `do_validate`=False, no validation will be performed
-        **datasets: Dict
+        **datasets: DFDict
             Mapping of datasets necessary to perform feature engineering steps. This is not expected
-            to be provided on initialization and is offered primarily for debugging/testing
-        """
+            to be provided on initialization and is offered primarily for debugging/testing"""
         self._steps = steps or []
         self.do_validate = do_validate
         self.datasets = datasets or {}
