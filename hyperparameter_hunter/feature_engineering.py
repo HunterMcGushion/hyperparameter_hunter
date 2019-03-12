@@ -527,16 +527,6 @@ class FeatureEngineer:
         else:
             self._steps.append(EngineerStep(step, name))
 
-    ##################################################
-    # Constructors
-    ##################################################
-    @classmethod
-    def from_list(cls, steps):
-        """Construct a `FeatureEngineer` instance using a list of engineering steps"""
-        f = FeatureEngineer()
-        f.steps = steps
-        return f
-
 
 # FLAG: Tally number of columns "transformed" and "added" at each step and report
 
