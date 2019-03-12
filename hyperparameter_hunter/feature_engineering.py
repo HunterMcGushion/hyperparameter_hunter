@@ -448,7 +448,18 @@ class FeatureEngineer:
         self.do_validate = do_validate
         self.datasets = datasets or {}
 
-    def __call__(self, stage, **datasets):
+    def __call__(self, stage: str, **datasets: DFDict):
+        """Execute all feature engineering steps in :attr:`steps` for `stage`, with datasets
+        `datasets` as inputs
+
+        Parameters
+        ----------
+        stage: String in {"pre_cv", "intra_cv"}
+             Feature engineering stage, specifying which :class:`EngineerStep` instances in
+             :attr:`steps` should be executed
+        datasets: DFDict
+            Original dict of datasets, containing all datasets, some of which may be superfluous, or
+            may require additional processing to resolve merged/coupled datasets"""
         if datasets:
             self.datasets = datasets
 
