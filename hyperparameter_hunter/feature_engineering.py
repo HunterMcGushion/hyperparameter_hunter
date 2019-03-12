@@ -385,22 +385,27 @@ class EngineerStep:
 
     @property
     def f(self) -> Callable:
+        """Feature engineering step callable that requests, modifies, and returns datasets"""
         return self._f
 
     @property
     def name(self) -> str:
+        """Identifier for the transformation applied by this engineering step"""
         if self._name is None:
             self._name = self.f.__name__
         return self._name
 
     @property
     def params(self) -> list:
+        """Dataset names requested by feature engineering step callable :attr:`f`. See documentation
+        in :meth:`EngineerStep.__init__` for more information/restrictions"""
         if self._params is None:
             self._params = get_engineering_step_params(self.f)
         return self._params
 
     @property
     def stage(self) -> str:
+        """Feature engineering stage during which the `EngineerStep` will be executed"""
         if self._stage is None:
             self._stage = get_engineering_step_stage(self.params)
         return self._stage
