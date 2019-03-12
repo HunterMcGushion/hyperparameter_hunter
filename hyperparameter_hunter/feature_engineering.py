@@ -427,13 +427,14 @@ class EngineerStep:
 
 class FeatureEngineer:
     def __init__(self, steps=None, do_validate=False, **datasets: DFDict):
-        """
-        ...
+        """Class to organize feature engineering step callables `steps` (:class:`EngineerStep`
+        instances) and the datasets that the steps request and return.
 
         Parameters
         ----------
         steps: List, or None, default=None
-            ...
+            If not None, should be list containing any of the following: :class:`EngineerStep`
+            instances, or callables used to instantiate :class:`EngineerStep`
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
@@ -444,7 +445,10 @@ class FeatureEngineer:
         **datasets: DFDict
             Mapping of datasets necessary to perform feature engineering steps. This is not expected
             to be provided on initialization and is offered primarily for debugging/testing"""
-        self._steps = steps or []
+        self.steps = []
+        for step in steps or []:
+            self.add_step(step)
+
         self.do_validate = do_validate
         self.datasets = datasets or {}
 
