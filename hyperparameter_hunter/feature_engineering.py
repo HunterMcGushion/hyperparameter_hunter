@@ -321,20 +321,23 @@ class EngineerStep:
         self.original_hashes = dict()
         self.updated_hashes = dict()
 
-    def __call__(self, **datasets) -> dict:
-        """
-        ...
+    def __call__(self, **datasets: DFDict) -> DFDict:
+        """Apply :attr:`f` to `datasets` to produce updated datasets. If `f` requests any
+        merged/coupled datasets (as reflected by :attr:`params`), conversions to accommodate those
+        requests will take place here
 
         Parameters
         ----------
-        **datasets: Dict
-            ...
+        **datasets: DFDict
+            Original dict of datasets, containing all datasets, some of which may be superfluous, or
+            may require additional processing to resolve merged/coupled datasets
 
         Returns
         -------
-        new_datasets: Dict
-            ...
-        """
+        new_datasets: DFDict
+            Dict of datasets, which have been updated by :attr:`f`. Any datasets that may have been
+            merged prior to being given to :attr:`f` have been split back into the original
+            datasets, with the updates made by :attr:`f`"""
         self.original_hashes = hash_datasets(datasets)
 
         datasets_for_f = self.get_datasets_for_f(datasets)
@@ -358,12 +361,16 @@ class EngineerStep:
 
         Parameters
         ----------
-        ...
+        datasets: DFDict
+            Original dict of datasets, containing all datasets provided to
+            :meth:`EngineerStep.__call__`, some of which may be superfluous, or may require
+            additional processing to resolve merged/coupled datasets
 
         Returns
         -------
-        ...
-        """
+        DFDict
+            Updated version of `datasets`, in which unnecessary datasets have been filtered out, and
+            the requested merged datasets have been added"""
         self.merged_datasets: List[str] = validate_dataset_names(self.params, self.stage)
         datasets_for_f = datasets
 
@@ -373,6 +380,13 @@ class EngineerStep:
         return subdict(datasets_for_f, keep=self.params)
 
     def get_key_data(self) -> dict:
+        """Produce a dict of critical attributes describing the :class:`EngineerStep` instance for
+        use by key-making classes
+
+        Returns
+        -------
+        Dict
+            Important attributes describing this :class:`EngineerStep` instance"""
         return dict(
             name=self.name,
             f=self.f,
