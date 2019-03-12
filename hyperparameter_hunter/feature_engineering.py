@@ -414,12 +414,6 @@ class FeatureEngineer:
         # else:
         #     raise ValueError("")
 
-    # def do_step(self, step_number, **datasets):
-    #     """Perform the specified step in the feature engineering workflow"""
-    #     if datasets:
-    #         self.datasets = datasets
-    #     self.datasets = self.steps[step_number](**self.datasets)
-
     @property
     def steps(self) -> list:
         return self._steps
@@ -459,7 +453,7 @@ class FeatureEngineer:
 # FLAG: Tally number of columns "transformed" and "added" at each step and report
 
 
-def get_engineering_step_stage(datasets: List[str]):
+def get_engineering_step_stage(datasets: List[str]) -> str:
     """Determine the stage in which a feature engineering step that requests `datasets` as input
     should be executed
 
@@ -516,7 +510,7 @@ class ParameterParser(NodeVisitor):
         self.generic_visit(node)
 
 
-def get_engineering_step_params(f):
+def get_engineering_step_params(f: callable) -> List[str]:
     """Verify that callable `f` requests valid input parameters, and returns a tuple of the same
     parameters, with the assumption that the parameters are modified by `f`
 
