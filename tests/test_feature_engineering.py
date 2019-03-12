@@ -4,6 +4,7 @@
 from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.feature_engineering import FeatureEngineer, merge_dfs, split_merged_df
 from hyperparameter_hunter.feature_engineering import DatasetNameReport, validate_dataset_names
+from hyperparameter_hunter.feature_engineering import EngineerStep
 
 ##################################################
 # Import Miscellaneous Assets
@@ -499,13 +500,8 @@ def toy_environment_fixture():
 
 @pytest.fixture()
 def experiment_prep_fixture(request):
-    #################### Format `feature_engineer` ####################
-    feature_engineer = request.param
-
-    if isinstance(feature_engineer, list):
-        feature_engineer = FeatureEngineer()
-        for step in request.param:
-            feature_engineer.add_step(step)
+    #################### Build `feature_engineer` ####################
+    feature_engineer = FeatureEngineer(steps=request.param)
 
     #################### Partially Prepare `CVExperiment` ####################
     experiment = CVExperiment(
@@ -603,6 +599,7 @@ end_data_sn_ss = (
         ([set_nan_0, impute_negative_one_1], end_data_sn_ino),
         ([set_nan_0, impute_negative_one_0, standard_scale_0], end_data_sn_ino_ss),
         ([set_nan_0, standard_scale_0], end_data_sn_ss),
+        ([set_nan_0, EngineerStep(standard_scale_0)], end_data_sn_ss),
     ],
     indirect=["experiment_prep_fixture"],
 )
