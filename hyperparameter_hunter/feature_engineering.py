@@ -474,7 +474,8 @@ class FeatureEngineer:
         #     raise ValueError("")
 
     @property
-    def steps(self) -> list:
+    def steps(self) -> List[EngineerStep]:
+        """Feature engineering steps to execute in sequence on :meth:`FeatureEngineer.__call__"""
         return self._steps
 
     @steps.setter
@@ -482,6 +483,13 @@ class FeatureEngineer:
         self._steps = value
 
     def get_key_data(self) -> dict:
+        """Produce a dict of critical attributes describing the :class:`FeatureEngineer` instance
+        for use by key-making classes
+
+        Returns
+        -------
+        Dict
+            Important attributes describing this :class:`FeatureEngineer` instance"""
         return dict(
             steps=[_.get_key_data() for _ in self.steps],
             do_validate=self.do_validate,
