@@ -497,6 +497,9 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
 
 class ParameterParser(NodeVisitor):
     def __init__(self):
+        """`ast.NodeVisitor` subclass that collects the arguments specified in the signature of a
+        callable node, as well as the values returned by the callable, in the attributes `args` and
+        `returns`, respectively"""
         self.args = []
         self.returns = []
 
