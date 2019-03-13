@@ -549,14 +549,25 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
     stage: {"pre_cv", "intra_cv"}
         "pre_cv" if a step processing the given `datasets` should be executed in the
         pre-cross-validation stage. "intra_cv" if the step should be executed for each
-        cross-validation split. Generally, feature engineering conducted in the "pre_cv" stage
-        should regard each sample/row as independent entities. For example, steps like converting
-        a string day of the week to one-hot encoded columns, or imputing missing values by replacing
-        them with -1 might be conducted "pre_cv", since they are unlikely to introduce an
-        information leakage. Conversely, steps like scaling/normalization, whose results for the
-        data in one row are affected by the data in other rows should be performed "intra_cv" in
-        order to recalculate the final values of the datasets for each cross validation split and
-        avoid information leakage
+        cross-validation split. If any of the elements in `datasets` is prefixed with "validation_"
+        or "non_train_", `stage` will be "intra_cv". Otherwise, it will be "pre_cv"
+
+    Notes
+    -----
+    Generally, feature engineering conducted in the "pre_cv" stage should regard each sample/row as
+    independent entities. For example, steps like converting a string day of the week to one-hot
+    encoded columns, or imputing missing values by replacement with -1 might be conducted "pre_cv",
+    since they are unlikely to introduce an information leakage. Conversely, steps like
+    scaling/normalization, whose results for the data in one row are affected by the data in other
+    rows should be performed "intra_cv" in order to recalculate the final values of the datasets for
+    each cross validation split and avoid information leakage
+
+    Technically, the inference of `stage="intra_cv"` due to the existence of a "non_train_"-prefixed
+    value in `datasets` could unnecessarily force steps to be executed "intra_cv" if, for example,
+    there is no validation data. However, this is safer than the alternative of executing these
+    steps "pre_cv", in which validation data would be a subset of train data, probably introducing
+    information leakage. A simple workaround for this is to explicitly provide :class:`EngineerStep`
+    with the desired `stage` parameter to bypass this inference
 
     Examples
     --------
@@ -567,11 +578,12 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
     >>> get_engineering_step_stage(["all_inputs", "all_targets"])
     'pre_cv'
     >>> get_engineering_step_stage(["train_data", "non_train_data"])
-    'intra_cv'
-    """
-    if all(_.startswith("all_") for _ in datasets):
-        return "pre_cv"
-    return "intra_cv"
+    'intra_cv'"""
+    if any(_.startswith("validation_") for _ in datasets):
+        return "intra_cv"
+    if any(_.startswith("non_train_") for _ in datasets):
+        return "intra_cv"
+    return "pre_cv"
 
 
 class ParameterParser(NodeVisitor):
