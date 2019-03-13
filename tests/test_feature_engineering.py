@@ -83,7 +83,9 @@ def test_0():
 
     feature_engineer = FeatureEngineer()
     feature_engineer.add_step(set_nan_0, "set_nan_0")
-    feature_engineer("foo", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy())
+    feature_engineer(
+        "pre_cv", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy()
+    )
 
     expected_train_inputs = [
         [1, 85, 66, 29, np.NaN, 26.6, 0.351, 31],
@@ -105,7 +107,9 @@ def test_1():
     assert feature_engineer._steps[-1].name == "set_nan_0"
     feature_engineer.add_step(impute_negative_one_0)
     assert feature_engineer._steps[-1].name == "impute_negative_one_0"
-    feature_engineer("foo", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy())
+    feature_engineer(
+        "pre_cv", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy()
+    )
 
     expected_train_inputs = [
         [1, 85, 66, 29, -1, 26.6, 0.351, 31],
@@ -126,7 +130,9 @@ def test_2():
     feature_engineer.add_step(set_nan_0)
     feature_engineer.add_step(impute_negative_one_0)
     feature_engineer.add_step(standard_scale_0)
-    feature_engineer("foo", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy())
+    feature_engineer(
+        "pre_cv", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy()
+    )
 
     expected_train_inputs = [
         [-0.468521, -0.962876, 0.636364, 0.548821, -0.929624, -0.48321, -0.618238, 0.363422],
