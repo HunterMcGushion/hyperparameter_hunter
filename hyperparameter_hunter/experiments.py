@@ -575,7 +575,27 @@ class BaseCVExperiment(BaseExperiment):
         overridden :meth:`on_fold_start` tasks, 2) Perform cv_run_workflow for each run, 3) Execute
         overridden :meth:`on_fold_end` tasks"""
         self.on_fold_start()
-        # TODO: Call self.intra_cv_preprocessing() - Ensure the 4 fold input/target attributes (from on_fold_start) are changed
+
+        if self.feature_engineer and callable(self.feature_engineer):
+            self.feature_engineer(
+                "intra_cv",
+                train_inputs=self.fold_train_input,
+                train_targets=self.fold_train_target,
+                validation_inputs=self.fold_validation_input,
+                validation_targets=self.fold_validation_target,
+                holdout_inputs=self.holdout_input_data,
+                holdout_targets=self.holdout_target_data,
+                test_inputs=self.test_input_data,
+            )
+            self.fold_train_input = self.feature_engineer.datasets["train_inputs"]
+            self.fold_train_target = self.feature_engineer.datasets["train_targets"]
+            self.fold_validation_input = self.feature_engineer.datasets["validation_inputs"]
+            self.fold_validation_target = self.feature_engineer.datasets["validation_targets"]
+            self.holdout_input_data = self.feature_engineer.datasets["holdout_inputs"]
+            self.holdout_target_data = self.feature_engineer.datasets["holdout_targets"]
+            self.test_input_data = self.feature_engineer.datasets["test_inputs"]
+
+        G.log("Intra-CV preprocessing stage complete", 4)
 
         for self._run in range(self.experiment_params.get("runs", 1)):
             self.cv_run_workflow()
