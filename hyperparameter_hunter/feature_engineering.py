@@ -284,26 +284,26 @@ def validate_dataset_names(params: List[str], stage: str) -> List[str]:
 
 
 class EngineerStep:
-    def __init__(self, f: Callable, name=None, params=None, stage=None, do_validate=False):
+    def __init__(self, f: Callable, stage=None, name=None, params=None, do_validate=False):
         """:class:`FeatureEngineer` helper, compartmentalizing functions of singular engineer steps
 
         Parameters
         ----------
         f: Callable
             Feature engineering step function that requests, modifies, and returns datasets `params`
+        stage: String in {"pre_cv", "intra_cv"}, or None, default=None
+            Feature engineering stage during which the callable `f` will be given the datasets
+            `params` to modify and return
         name: String, or None, default=None
             Identifier for the transformation applied by this engineering step. If None,
             `f.__name__` will be used
         params: List[str], or None, default=None
-            Dataset names requested by feature engineering step callable `f`. Must be a subset of
+            Dataset names requested by feature engineering step callable `f`. If None, will be
+            inferred by parsing the abstract syntax tree of `f`. Else, must be a subset of
             {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
             "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
             "test_inputs", "all_data", "all_inputs", "all_targets", "non_train_data",
-            "non_train_inputs", "non_train_targets"}. If None, will be inferred by parsing the
-            abstract syntax tree of `f`
-        stage: String in {"pre_cv", "intra_cv}, or None, default=None
-            Feature engineering stage during which the callable `f` will be given the datasets
-            `params` to modify and return
+            "non_train_inputs", "non_train_targets"}
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
@@ -497,6 +497,7 @@ class FeatureEngineer:
     def add_step(
         self,
         step: Union[Callable, EngineerStep],
+        stage: str = None,
         name: str = None,
         before: str = EMPTY_SENTINEL,
         after: str = EMPTY_SENTINEL,
@@ -510,7 +511,9 @@ class FeatureEngineer:
         step: Callable, or `EngineerStep`
             If `EngineerStep` instance, will be added directly to :attr:`steps`. Otherwise, must be
             a feature engineering step callable that requests, modifies, and returns datasets, which
-            will be used with `name` to instantiate a :class:`EngineerStep` to add to :attr:`steps`
+            will be used to instantiate a :class:`EngineerStep` to add to :attr:`steps`
+        stage: String in {"pre_cv", "intra_cv"}, or None, default=None
+            Feature engineering stage during which the callable `step` will be executed
         name: String, or None, default=None
             Identifier for the transformation applied by this engineering step. If None and `step`
             is not an `EngineerStep`, will be inferred during :class:`EngineerStep` instantiation
@@ -523,7 +526,9 @@ class FeatureEngineer:
         if isinstance(step, EngineerStep):
             self._steps.append(step)
         else:
-            self._steps.append(EngineerStep(step, name))
+            self._steps.append(
+                EngineerStep(step, name=name, stage=stage, do_validate=self.do_validate)
+            )
 
 
 # FLAG: Tally number of columns "transformed" and "added" at each step and report
