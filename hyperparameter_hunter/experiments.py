@@ -107,7 +107,7 @@ class BaseExperiment(ScoringMixIn):
             A dictionary of extra parameters passed to :class:`models.Model`. This is used to
             provide parameters to models' non-initialization methods (like `fit`, `predict`,
             `predict_proba`, etc.), and for neural networks
-        feature_engineer: `FeatureEngineer`, or None, default=None  # TODO: Add documentation
+        feature_engineer: `FeatureEngineer`, or None, default=None
             ...  # TODO: Add documentation
         feature_selector: List of str, callable, list of booleans, default=None
             The value provided when splitting apart the input data for all provided DataFrames.
@@ -560,15 +560,15 @@ class BaseCVExperiment(BaseExperiment):
     ##################################################
     def on_fold_start(self):
         """Override :meth:`on_fold_start` tasks set by :class:`experiment_core.ExperimentMeta`,
-        consisting of: 1) Log start, 2) Execute original tasks, 3) Split train/validation data"""
-        super().on_fold_start()
-
+        consisting of: 1) Split train/validation data, 2) Log start, 3) Execute original tasks"""
         #################### Split Train and Validation Data ####################
         self.fold_train_input = self.train_input_data.iloc[self.train_index, :].copy()
         self.fold_validation_input = self.train_input_data.iloc[self.validation_index, :].copy()
 
         self.fold_train_target = self.train_target_data.iloc[self.train_index].copy()
         self.fold_validation_target = self.train_target_data.iloc[self.validation_index].copy()
+
+        super().on_fold_start()
 
     def cv_fold_workflow(self):
         """Execute workflow for individual fold, consisting of the following tasks: Execute
