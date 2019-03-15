@@ -97,7 +97,7 @@ def test_0():
     train_inputs, train_targets, holdout_inputs, holdout_targets = get_pima_data()
 
     feature_engineer = FeatureEngineer()
-    feature_engineer.add_step(set_nan_0, "set_nan_0")
+    feature_engineer.add_step(set_nan_0, name="set_nan_0")
     feature_engineer(
         "pre_cv", train_inputs=train_inputs.copy(), holdout_inputs=holdout_inputs.copy()
     )
