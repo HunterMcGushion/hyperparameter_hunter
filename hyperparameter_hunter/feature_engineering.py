@@ -446,11 +446,11 @@ class FeatureEngineer:
             Mapping of datasets necessary to perform feature engineering steps. This is not expected
             to be provided on initialization and is offered primarily for debugging/testing"""
         self.steps = []
-        for step in steps or []:
-            self.add_step(step)
-
         self.do_validate = do_validate
         self.datasets = datasets or {}
+
+        for step in steps or []:
+            self.add_step(step)
 
     def __call__(self, stage: str, **datasets: DFDict):
         """Execute all feature engineering steps in :attr:`steps` for `stage`, with datasets
