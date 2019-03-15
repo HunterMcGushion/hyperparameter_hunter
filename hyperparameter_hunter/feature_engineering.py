@@ -468,14 +468,8 @@ class FeatureEngineer:
             self.datasets = datasets
 
         for i, step in enumerate(self.steps):
-            self.datasets = step(**self.datasets)
-
-        # if stage == "pre_cv":
-        #     ...  # TODO: Execute all steps in "pre_cv" stage
-        # elif stage == "intra_cv":
-        #     ...  # TODO: Execute all steps in "intra_cv" stage
-        # else:
-        #     raise ValueError("")
+            if step.stage == stage:
+                self.datasets = step(**self.datasets)
 
     @property
     def steps(self) -> List[EngineerStep]:
