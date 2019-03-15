@@ -287,6 +287,45 @@ def _confusion_matrix(targets, predictions):
 
 
 ##################################################
+# Excessive Recording Callbacks
+##################################################
+def dataset_recorder():
+    """Build a `LambdaCallback` that records the current state of all datasets `on_fold_start` and
+    `on_fold_end` in order to validate modifications made by
+    :class:`feature_engineering.FeatureEngineer`/:class:`feature_engineering.EngineerStep`
+
+    Returns
+    -------
+    LambdaCallback
+        Aggregator-like `LambdaCallback` whose values are aggregated under the name "_datasets" and
+        whose keys are named after the corresponding callback methods"""
+
+    def _on_fold(
+        fold_train_input,
+        fold_train_target,
+        fold_validation_input,
+        fold_validation_target,
+        holdout_input_data,
+        holdout_target_data,
+        test_input_data,
+    ):
+        d = dict(
+            fold_train_input=fold_train_input,
+            fold_train_target=fold_train_target,
+            fold_validation_input=fold_validation_input,
+            fold_validation_target=fold_validation_target,
+            holdout_input_data=holdout_input_data,
+            holdout_target_data=holdout_target_data,
+            test_input_data=test_input_data,
+        )
+        return {k: v if v is None else v.copy() for k, v in d.items()}
+
+    return lambda_callback(
+        on_fold_start=_on_fold, on_fold_end=_on_fold, agg_name="datasets", method_agg_keys=True
+    )
+
+
+##################################################
 # Experiment Description Callbacks
 ##################################################
 # TODO: Add callback recipe to save an Experiment's description file as a yaml file alongside json
