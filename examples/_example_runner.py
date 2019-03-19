@@ -16,6 +16,8 @@ def _filter_files(dirpath):
             if filename.endswith(".py") and filename not in reject_names:
                 if not filename.startswith("temp"):
                     file_path = os.path.join(root, filename)
+                    if "HyperparameterHunterAssets/Experiments/ScriptBackups" in file_path:
+                        continue
                     if not any(file_path.endswith(_) for _ in reject_paths):
                         yield file_path
 
