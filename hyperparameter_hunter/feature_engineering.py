@@ -10,7 +10,8 @@ from hyperparameter_hunter.utils.general_utils import subdict
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from ast import NodeVisitor, parse
+import ast
+from contextlib import suppress
 from inspect import getsource
 import pandas as pd
 from typing import List, Callable, Dict, Union
@@ -585,7 +586,7 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
     return "pre_cv"
 
 
-class ParameterParser(NodeVisitor):
+class ParameterParser(ast.NodeVisitor):
     def __init__(self):
         """`ast.NodeVisitor` subclass that collects the arguments specified in the signature of a
         callable node, as well as the values returned by the callable, in the attributes `args` and
@@ -594,7 +595,10 @@ class ParameterParser(NodeVisitor):
         self.returns = []
 
     def visit_arg(self, node):
-        self.args.append(node.arg)
+        with suppress(AttributeError):
+            if isinstance(node.parent.parent, ast.FunctionDef):
+                if isinstance(node.parent.parent.parent, ast.Module):
+                    self.args.append(node.arg)
         self.generic_visit(node)
 
     def visit_Return(self, node):
@@ -648,7 +652,14 @@ def get_engineering_step_params(f: callable) -> List[str]:
     ValueError: Invalid dataset name in ['train_inputs', 'foo']"""
     valid_datasets = MERGED_DATASET_NAMES + STANDARD_DATASET_NAMES
     source_code = getsource(f)
-    tree = parse(source_code)
+    tree = ast.parse(source_code)
+
+    #################### Add Links to Nodes' Parents ####################
+    for i, node in enumerate(ast.walk(tree)):
+        for child in ast.iter_child_nodes(node):
+            child.parent = node
+
+    #################### Collect Parameters and Returns ####################
     parser = ParameterParser()
     parser.visit(tree)
 
