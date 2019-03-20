@@ -314,7 +314,7 @@ class EngineerStep:
             `do_validate`=False, no validation will be performed"""
         self._f = f
         self._name = name
-        self._params = params
+        self.params = params
         self._stage = stage
         self.do_validate = do_validate
 
@@ -414,9 +414,11 @@ class EngineerStep:
     def params(self) -> list:
         """Dataset names requested by feature engineering step callable :attr:`f`. See documentation
         in :meth:`EngineerStep.__init__` for more information/restrictions"""
-        if self._params is None:
-            self._params = get_engineering_step_params(self.f)
         return self._params
+
+    @params.setter
+    def params(self, value):
+        self._params = value if value is not None else get_engineering_step_params(self.f)
 
     @property
     def stage(self) -> str:
