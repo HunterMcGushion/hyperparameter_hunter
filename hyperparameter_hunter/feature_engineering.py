@@ -657,7 +657,7 @@ def get_engineering_step_params(f: callable) -> List[str]:
     tree = ast.parse(source_code)
 
     #################### Add Links to Nodes' Parents ####################
-    for i, node in enumerate(ast.walk(tree)):
+    for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
             child.parent = node
 
