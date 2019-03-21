@@ -52,6 +52,7 @@ class EvaluatorOOF(BaseEvaluatorCallback):
 
 
 class EvaluatorHoldout(BaseEvaluatorCallback):
+    fold_holdout_target: pd.DataFrame
     holdout_target_data: pd.DataFrame
     final_holdout_predictions: pd.DataFrame
     repetition_holdout_predictions: pd.DataFrame
@@ -60,12 +61,12 @@ class EvaluatorHoldout(BaseEvaluatorCallback):
 
     def on_run_end(self):
         """Evaluate holdout predictions for the run"""
-        self.evaluate("holdout", self.holdout_target_data, self.run_holdout_predictions)
+        self.evaluate("holdout", self.fold_holdout_target, self.run_holdout_predictions)
         super().on_run_end()
 
     def on_fold_end(self):
         """Evaluate (run-averaged) holdout predictions for the fold"""
-        self.evaluate("holdout", self.holdout_target_data, self.fold_holdout_predictions)
+        self.evaluate("holdout", self.fold_holdout_target, self.fold_holdout_predictions)
         super().on_fold_end()
 
     def on_repetition_end(self):
