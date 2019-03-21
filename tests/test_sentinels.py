@@ -114,7 +114,7 @@ def env_0():
         metrics=["roc_auc_score"],
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=2, shuffle=True, random_state=32),
-        experiment_callbacks=[sentinel_validation_callback()],
+        experiment_callbacks=[sentinel_checker()],
     )
 
 
