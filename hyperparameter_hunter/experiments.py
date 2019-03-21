@@ -484,6 +484,9 @@ class BaseCVExperiment(BaseExperiment):
         self.fold_validation_input = None
         self.fold_train_target = None
         self.fold_validation_target = None
+        self.fold_holdout_input = None
+        self.fold_holdout_target = None
+        self.fold_test_input = None
 
         self.repetition_oof_predictions = None
         self.repetition_holdout_predictions = None
@@ -560,13 +563,22 @@ class BaseCVExperiment(BaseExperiment):
     ##################################################
     def on_fold_start(self):
         """Override :meth:`on_fold_start` tasks set by :class:`experiment_core.ExperimentMeta`,
-        consisting of: 1) Split train/validation data, 2) Log start, 3) Execute original tasks"""
+        consisting of: 1) Split train/validation data, 2) Make copies of holdout/test data for
+        current fold (for feature engineering), 3) Log start, 4) Execute original tasks"""
         #################### Split Train and Validation Data ####################
         self.fold_train_input = self.train_input_data.iloc[self.train_index, :].copy()
         self.fold_validation_input = self.train_input_data.iloc[self.validation_index, :].copy()
 
         self.fold_train_target = self.train_target_data.iloc[self.train_index].copy()
         self.fold_validation_target = self.train_target_data.iloc[self.validation_index].copy()
+
+        #################### Set Fold Copies of Other Data ####################
+        if self.holdout_input_data is not None and self.holdout_target_data is not None:
+            self.fold_holdout_input = self.holdout_input_data.copy()
+            self.fold_holdout_target = self.holdout_target_data.copy()
+
+        if self.test_input_data is not None:
+            self.fold_test_input = self.test_input_data.copy()
 
         super().on_fold_start()
 
@@ -583,17 +595,17 @@ class BaseCVExperiment(BaseExperiment):
                 train_targets=self.fold_train_target,
                 validation_inputs=self.fold_validation_input,
                 validation_targets=self.fold_validation_target,
-                holdout_inputs=self.holdout_input_data,
-                holdout_targets=self.holdout_target_data,
-                test_inputs=self.test_input_data,
+                holdout_inputs=self.fold_holdout_input,
+                holdout_targets=self.fold_holdout_target,
+                test_inputs=self.fold_test_input,
             )
             self.fold_train_input = self.feature_engineer.datasets["train_inputs"]
             self.fold_train_target = self.feature_engineer.datasets["train_targets"]
             self.fold_validation_input = self.feature_engineer.datasets["validation_inputs"]
             self.fold_validation_target = self.feature_engineer.datasets["validation_targets"]
-            self.holdout_input_data = self.feature_engineer.datasets["holdout_inputs"]
-            self.holdout_target_data = self.feature_engineer.datasets["holdout_targets"]
-            self.test_input_data = self.feature_engineer.datasets["test_inputs"]
+            self.fold_holdout_input = self.feature_engineer.datasets["holdout_inputs"]
+            self.fold_holdout_target = self.feature_engineer.datasets["holdout_targets"]
+            self.fold_test_input = self.feature_engineer.datasets["test_inputs"]
 
         G.log("Intra-CV preprocessing stage complete", 4)
 
