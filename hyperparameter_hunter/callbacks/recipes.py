@@ -305,18 +305,18 @@ def dataset_recorder():
         fold_train_target,
         fold_validation_input,
         fold_validation_target,
-        holdout_input_data,
-        holdout_target_data,
-        test_input_data,
+        fold_holdout_input,
+        fold_holdout_target,
+        fold_test_input,
     ):
         d = dict(
             fold_train_input=fold_train_input,
             fold_train_target=fold_train_target,
             fold_validation_input=fold_validation_input,
             fold_validation_target=fold_validation_target,
-            holdout_input_data=holdout_input_data,
-            holdout_target_data=holdout_target_data,
-            test_input_data=test_input_data,
+            fold_holdout_input=fold_holdout_input,
+            fold_holdout_target=fold_holdout_target,
+            fold_test_input=fold_test_input,
         )
         return {k: v if v is None else v.copy() for k, v in d.items()}
 
