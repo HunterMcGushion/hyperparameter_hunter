@@ -196,17 +196,7 @@ class DatasetSentinel(Sentinel):
         -------
         object
             The dataset for which the sentinel was being used as a placeholder"""
-        fold_dependent_datasets = (
-            "train_input",
-            "train_target",
-            "validation_input",
-            "validation_target",
-        )
-
-        if self.dataset_type in fold_dependent_datasets:
-            return getattr(G.Env.current_task, "fold_{}".format(self.dataset_type))
-        else:
-            return getattr(G.Env.current_task, "{}_data".format(self.dataset_type))
+        return getattr(G.Env.current_task, "fold_{}".format(self.dataset_type))
 
     def _validate_parameters(self):
         """Ensure input parameters are valid and properly formatted"""
