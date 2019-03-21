@@ -4,6 +4,7 @@
 from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical, GBRT
 from hyperparameter_hunter import lambda_callback
 from hyperparameter_hunter.sentinels import DatasetSentinel
+from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 
 ##################################################
@@ -55,70 +56,48 @@ def expected_sentinels(cv_scheme):
     target_df = data[["target"]]
     input_df = data.drop(["target"], axis=1)
 
+    # TODO: Need to account for feature engineering here - Probably need to have hardcoded test data rather than calculating splits here
     for train_i, validation_i in cv_scheme.split(input_df, target_df):
         train_sentinels.append((input_df.iloc[train_i, :], target_df.iloc[train_i, :]))
         validation_sentinels.append(
             (input_df.iloc[validation_i, :], target_df.iloc[validation_i, :])
         )
         holdout_sentinels.append((input_df, target_df))
+        # TODO: Need to account for feature engineering here - Probably need to have hardcoded test data rather than calculating splits here
 
     return train_sentinels, validation_sentinels, holdout_sentinels
 
 
-def sentinel_checker(cv_scheme):
+def sentinel_checker():
     """Build :func:`callbacks.bases.lambda_callback` to compare the current `CVExperiment` dataset
     values with the expected values of the dataset (train, validation, and holdout) sentinels
-
-    Parameters
-    ----------
-    cv_scheme: Descendant instance of `sklearn.model_selection._split._BaseKFold`
-        Cross-validation class instance provided to :func:`expected_sentinels`
 
     Returns
     -------
     LambdaCallback
-        Result of :func:`callbacks.bases.lambda_callback` to check DatasetSentinel values"""
-    train_sentinels, validation_sentinels, holdout_sentinels = expected_sentinels(cv_scheme)
+        Result of :func:`callbacks.bases.lambda_callback` to check `DatasetSentinel` values"""
 
-    def check_sentinels(
-        _rep,
-        _fold,
-        _run,
-        #################### Actual Dataset Values ####################
+    def on_run_start(
         fold_train_input,
         fold_train_target,
         fold_validation_input,
         fold_validation_target,
-        holdout_input_data,
-        holdout_target_data,
-        #################### Current Dataset Sentinels ####################
-        # These are properties of :class:`environment.Environment`, accessed through `CVExperiment`
-        train_input,
-        train_target,
-        validation_input,
-        validation_target,
-        holdout_input,
-        holdout_target,
+        fold_holdout_input,
+        fold_holdout_target,
     ):
         #################### Check Train Sentinels ####################
-        assert fold_train_input.equals(train_sentinels[_fold][0])
-        assert fold_train_target.equals(train_sentinels[_fold][1])
-        assert fold_train_input.equals(train_input.retrieve_by_sentinel())
-        assert fold_train_target.equals(train_target.retrieve_by_sentinel())
+        assert fold_train_input.equals(G.Env.train_input.retrieve_by_sentinel())
+        assert fold_train_target.equals(G.Env.train_target.retrieve_by_sentinel())
 
         #################### Check Validation Sentinels ####################
-        assert fold_validation_input.equals(validation_sentinels[_fold][0])
-        assert fold_validation_target.equals(validation_sentinels[_fold][1])
-        assert fold_validation_input.equals(validation_input.retrieve_by_sentinel())
-        assert fold_validation_target.equals(validation_target.retrieve_by_sentinel())
+        assert fold_validation_input.equals(G.Env.validation_input.retrieve_by_sentinel())
+        assert fold_validation_target.equals(G.Env.validation_target.retrieve_by_sentinel())
 
         #################### Check Holdout Sentinels ####################
-        assert holdout_input_data.equals(holdout_sentinels[_fold][0])
-        assert holdout_target_data.equals(holdout_sentinels[_fold][1])
-        assert holdout_input_data.equals(holdout_input.retrieve_by_sentinel())
-        assert holdout_target_data.equals(holdout_target.retrieve_by_sentinel())
+        assert fold_holdout_input.equals(G.Env.holdout_input.retrieve_by_sentinel())
+        assert fold_holdout_target.equals(G.Env.holdout_target.retrieve_by_sentinel())
 
-    return lambda_callback(on_fold_end=check_sentinels)
+    return lambda_callback(on_run_start=on_run_start)
 
 
 ##################################################
@@ -135,9 +114,7 @@ def env_0():
         metrics=["roc_auc_score"],
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=2, shuffle=True, random_state=32),
-        experiment_callbacks=[
-            sentinel_checker(StratifiedKFold(n_splits=2, shuffle=True, random_state=32))
-        ],
+        experiment_callbacks=[sentinel_validation_callback()],
     )
 
 
