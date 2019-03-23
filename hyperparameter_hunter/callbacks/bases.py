@@ -376,6 +376,12 @@ class BasePredictorCallback(BaseCallback):
     pass
 
 
+class BaseWranglerCallback(BaseCallback):
+    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.wranglers` are descendants"""
+
+    pass
+
+
 class BaseLoggerCallback(BaseCallback):
     """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.loggers` are descendants"""
 
