@@ -17,6 +17,7 @@ from hyperparameter_hunter.callbacks.bases import BaseEvaluatorCallback
 # Import Miscellaneous Assets
 ##################################################
 import pandas as pd
+from typing import Union
 
 
 class EvaluatorOOF(BaseEvaluatorCallback):
@@ -25,6 +26,8 @@ class EvaluatorOOF(BaseEvaluatorCallback):
     repetition_oof_predictions: pd.DataFrame
     run_validation_predictions: pd.DataFrame
     validation_index: list
+    transformed_repetition_oof_target: pd.DataFrame
+    transformed_final_oof_target: pd.DataFrame
 
     def on_run_end(self):
         """Evaluate out-of-fold predictions for the run"""
@@ -42,12 +45,20 @@ class EvaluatorOOF(BaseEvaluatorCallback):
 
     def on_repetition_end(self):
         """Evaluate (run-averaged) out-of-fold predictions for the repetition"""
-        self.evaluate("oof", self.train_target_data, self.repetition_oof_predictions)
+        try:
+            self.evaluate(
+                "oof", self.transformed_repetition_oof_target, self.repetition_oof_predictions
+            )
+        except (TypeError, AttributeError):
+            self.evaluate("oof", self.train_target_data, self.repetition_oof_predictions)
         super().on_repetition_end()
 
     def on_experiment_end(self):
         """Evaluate final (run/repetition-averaged) out-of-fold predictions"""
-        self.evaluate("oof", self.train_target_data, self.final_oof_predictions)
+        try:
+            self.evaluate("oof", self.transformed_final_oof_target, self.final_oof_predictions)
+        except (TypeError, AttributeError):
+            self.evaluate("oof", self.train_target_data, self.final_oof_predictions)
         super().on_experiment_end()
 
 
@@ -58,6 +69,8 @@ class EvaluatorHoldout(BaseEvaluatorCallback):
     repetition_holdout_predictions: pd.DataFrame
     fold_holdout_predictions: pd.DataFrame
     run_holdout_predictions: pd.DataFrame
+    transformed_repetition_holdout_target: Union[pd.DataFrame, int]
+    transformed_final_holdout_target: Union[pd.DataFrame, int]
 
     def on_run_end(self):
         """Evaluate holdout predictions for the run"""
@@ -71,12 +84,30 @@ class EvaluatorHoldout(BaseEvaluatorCallback):
 
     def on_repetition_end(self):
         """Evaluate (run-averaged) holdout predictions for the repetition"""
-        self.evaluate("holdout", self.holdout_target_data, self.repetition_holdout_predictions)
+        try:
+            # If no target transformation occurred, `transformed_repetition_holdout_target` will
+            # be `0`, raising `TypeError`
+            self.evaluate(
+                "holdout",
+                self.transformed_repetition_holdout_target,
+                self.repetition_holdout_predictions,
+            )
+        except (TypeError, AttributeError):
+            self.evaluate("holdout", self.holdout_target_data, self.repetition_holdout_predictions)
+
         super().on_repetition_end()
 
     def on_experiment_end(self):
         """Evaluate final (run/repetition-averaged) holdout predictions"""
-        self.evaluate("holdout", self.holdout_target_data, self.final_holdout_predictions)
+        try:
+            # If no target transformation occurred, `transformed_final_holdout_target` will
+            # be `0`, raising `TypeError`
+            self.evaluate(
+                "holdout", self.transformed_final_holdout_target, self.final_holdout_predictions
+            )
+        except (TypeError, AttributeError):
+            self.evaluate("holdout", self.holdout_target_data, self.final_holdout_predictions)
+
         super().on_experiment_end()
 
 
