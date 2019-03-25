@@ -1,9 +1,8 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import Environment, CVExperiment
+from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer, EngineerStep
 from hyperparameter_hunter.callbacks.recipes import dataset_recorder
-from hyperparameter_hunter.feature_engineering import FeatureEngineer, EngineerStep
 
 ##################################################
 # Import Miscellaneous Assets

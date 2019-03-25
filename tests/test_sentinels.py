@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical, GBRT
-from hyperparameter_hunter import lambda_callback
+from hyperparameter_hunter import FeatureEngineer, lambda_callback
 from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
