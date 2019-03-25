@@ -3,22 +3,20 @@
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.callbacks.recipes import dataset_recorder
-from hyperparameter_hunter.feature_engineering import FeatureEngineer, EngineerStep
+from hyperparameter_hunter.feature_engineering import FeatureEngineer
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-import numpy as np
 from numpy.testing import assert_array_almost_equal
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import pytest
 
 ##################################################
 # Import Learning Assets
 ##################################################
 from sklearn.linear_model import Ridge
-from sklearn.preprocessing import QuantileTransformer, StandardScaler
+from sklearn.preprocessing import QuantileTransformer
 
 ##################################################
 # Dummy Objects for Testing
