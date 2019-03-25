@@ -29,6 +29,7 @@ from hyperparameter_hunter.metrics import get_clean_prediction
 # Import Miscellaneous Assets
 ##################################################
 import numpy as np
+import pandas as pd
 
 ##################################################
 # Import Learning Assets
@@ -289,7 +290,7 @@ def _confusion_matrix(targets, predictions):
 ##################################################
 # Excessive Recording Callbacks
 ##################################################
-def dataset_recorder():
+def dataset_recorder(save_transformed=False):
     """Build a `LambdaCallback` that records the current state of all datasets `on_fold_start` and
     `on_fold_end` in order to validate modifications made by
     :class:`feature_engineering.FeatureEngineer`/:class:`feature_engineering.EngineerStep`
@@ -308,6 +309,7 @@ def dataset_recorder():
         fold_holdout_input,
         fold_holdout_target,
         fold_test_input,
+        kwargs,
     ):
         d = dict(
             fold_train_input=fold_train_input,
@@ -318,7 +320,11 @@ def dataset_recorder():
             fold_holdout_target=fold_holdout_target,
             fold_test_input=fold_test_input,
         )
-        return {k: v if v is None else v.copy() for k, v in d.items()}
+        if save_transformed:
+            for k in ["transformed_fold_holdout_target", "transformed_run_validation_target"]:
+                if k in kwargs:
+                    d[k] = kwargs[k]
+        return {k: v if not isinstance(v, pd.DataFrame) else v.copy() for k, v in d.items()}
 
     return lambda_callback(
         on_fold_start=_on_fold, on_fold_end=_on_fold, agg_name="datasets", method_agg_keys=True
