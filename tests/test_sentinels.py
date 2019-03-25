@@ -16,7 +16,6 @@ import sys
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.model_selection import StratifiedKFold
 
 try:
     from xgboost import XGBClassifier
