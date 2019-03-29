@@ -272,30 +272,8 @@ class BaseExperiment(ScoringMixIn):
     def _initial_preprocessing(self):
         """Perform preprocessing steps prior to executing fitting protocol (usually
         cross-validation), consisting of: 1) Split train/holdout data into respective train/holdout
-        input and target data attributes, 2) Feature selection on input data sets, 3) Set target
-        datasets to target_column contents, 4) Initialize PreprocessingPipeline to perform core
-        preprocessing, 5) Set datasets to their (modified) counterparts in PreprocessingPipeline,
-        6) Log whether datasets changed"""
-        #################### Preprocessing ####################
-        # preprocessor = PreprocessingPipelineMixIn(
-        #     pipeline=[], preprocessing_params=dict(apply_standard_scale=True), features=self.features,
-        #     target_column=self.target_column, train_input_data=self.train_input_data,
-        #     train_target_data=self.train_target_data, holdout_input_data=self.holdout_input_data,
-        #     holdout_target_data=self.holdout_target_data, test_input_data=self.test_input_data,
-        #     fitting_guide=None, fail_gracefully=False, preprocessing_stage='infer'
-        # )
-        #
-        # # TODO: Switch from below direct calls to preprocessor.execute_pipeline() call
-        # # TODO: After calling execute_pipeline(), set data attributes to their counterparts in preprocessor class
-        # preprocessor.data_imputation()
-        # preprocessor.target_data_transformation()
-        # preprocessor.data_scaling()
-        #
-        # for dataset_name in preprocessor.all_input_sets + preprocessor.all_target_sets:
-        #     old_val, new_val = getattr(self, dataset_name), getattr(preprocessor, dataset_name)
-        #     G.log('Dataset: "{}" {} updated'.format(dataset_name, 'was not' if old_val.equals(new_val) else 'was'))
-        #     setattr(self, dataset_name, new_val)
-
+        input and target data attributes, 2) Execute `feature_engineer` to perform "pre_cv"-stage
+        preprocessing, 3) Set datasets to their (modified) counterparts in `feature_engineer`"""
         self.train_input_data = self.train_dataset.copy().loc[:, self.feature_selector]
         self.train_target_data = self.train_dataset.copy().loc[:, self.target_column]
 
