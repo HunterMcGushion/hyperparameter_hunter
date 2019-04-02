@@ -294,7 +294,7 @@ class EngineerStep:
             Feature engineering step function that requests, modifies, and returns datasets `params`
         stage: String in {"pre_cv", "intra_cv"}, or None, default=None
             Feature engineering stage during which the callable `f` will be given the datasets
-            `params` to modify and return
+            `params` to modify and return. If None, will be inferred based on `params`
         name: String, or None, default=None
             Identifier for the transformation applied by this engineering step. If None,
             `f.__name__` will be used
