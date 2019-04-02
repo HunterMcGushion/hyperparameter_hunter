@@ -29,6 +29,7 @@ from hyperparameter_hunter.metrics import get_clean_prediction
 # Import Miscellaneous Assets
 ##################################################
 import numpy as np
+import pandas as pd
 
 ##################################################
 # Import Learning Assets
@@ -195,7 +196,7 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`"""
         stat_aggregates["confusion_matrix_holdout"] = dict(runs=[], folds=[], reps=[], final=None)
 
-    def _on_run_end(stat_aggregates, holdout_target_data, run_holdout_predictions):
+    def _on_run_end(stat_aggregates, fold_holdout_target, run_holdout_predictions):
         """Callback to execute upon ending an Experiment's run. Note that parameters are
         named after Experiment attributes
 
@@ -203,15 +204,15 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        holdout_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
+        fold_holdout_target: Array-like
+            :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_holdout_target`
         run_holdout_predictions: Array-like
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.run_holdout_predictions`"""
         stat_aggregates["confusion_matrix_holdout"]["runs"].append(
-            _confusion_matrix(holdout_target_data, run_holdout_predictions)
+            _confusion_matrix(fold_holdout_target, run_holdout_predictions)
         )
 
-    def _on_fold_end(stat_aggregates, holdout_target_data, fold_holdout_predictions):
+    def _on_fold_end(stat_aggregates, fold_holdout_target, fold_holdout_predictions):
         """Callback to execute upon ending an Experiment's fold. Note that parameters are
         named after Experiment attributes
 
@@ -219,12 +220,12 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        holdout_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
+        fold_holdout_target: Array-like
+            :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_holdout_target`
         fold_holdout_predictions: Array-like
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.fold_holdout_predictions`"""
         stat_aggregates["confusion_matrix_holdout"]["folds"].append(
-            _confusion_matrix(holdout_target_data, fold_holdout_predictions)
+            _confusion_matrix(fold_holdout_target, fold_holdout_predictions)
         )
 
     def _on_repetition_end(stat_aggregates, holdout_target_data, repetition_holdout_predictions):
@@ -284,6 +285,50 @@ def _confusion_matrix(targets, predictions):
     Array-like
         A confusion matrix for the given `targets` and `predictions`"""
     return sk_confusion_matrix(targets, get_clean_prediction(targets, predictions))
+
+
+##################################################
+# Excessive Recording Callbacks
+##################################################
+def dataset_recorder(save_transformed=False):
+    """Build a `LambdaCallback` that records the current state of all datasets `on_fold_start` and
+    `on_fold_end` in order to validate modifications made by
+    :class:`feature_engineering.FeatureEngineer`/:class:`feature_engineering.EngineerStep`
+
+    Returns
+    -------
+    LambdaCallback
+        Aggregator-like `LambdaCallback` whose values are aggregated under the name "_datasets" and
+        whose keys are named after the corresponding callback methods"""
+
+    def _on_fold(
+        fold_train_input,
+        fold_train_target,
+        fold_validation_input,
+        fold_validation_target,
+        fold_holdout_input,
+        fold_holdout_target,
+        fold_test_input,
+        kwargs,
+    ):
+        d = dict(
+            fold_train_input=fold_train_input,
+            fold_train_target=fold_train_target,
+            fold_validation_input=fold_validation_input,
+            fold_validation_target=fold_validation_target,
+            fold_holdout_input=fold_holdout_input,
+            fold_holdout_target=fold_holdout_target,
+            fold_test_input=fold_test_input,
+        )
+        if save_transformed:
+            for k in ["transformed_fold_holdout_target", "transformed_run_validation_target"]:
+                if k in kwargs:
+                    d[k] = kwargs[k]
+        return {k: v if not isinstance(v, pd.DataFrame) else v.copy() for k, v in d.items()}
+
+    return lambda_callback(
+        on_fold_start=_on_fold, on_fold_end=_on_fold, agg_name="datasets", method_agg_keys=True
+    )
 
 
 ##################################################

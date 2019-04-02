@@ -255,8 +255,8 @@ def test_holdout_test_datasets(env_2, exp_gbc_1):
 
 
 #################### lambda_callback_example ####################
-def test_recorder(env_3, opt_dtc_0):
-    ...  # TODO: Assert that custom result files have been recorded
+def test_lambda_callback(env_3, opt_dtc_0):
+    ...
 
 
 #################### multi_metric_example ####################
@@ -270,5 +270,6 @@ def test_multi_metric(env_4, exp_svc_0, opt_svc_0):
 
 
 #################### recorder_example ####################
-def test_lambda_callback(env_5, exp_gbc_1):
+def test_recorder(env_5, exp_gbc_1):
     assert has_experiment_result_file(assets_dir, exp_gbc_1)
+    # TODO: Assert that custom result files have been recorded

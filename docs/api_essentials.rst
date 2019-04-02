@@ -80,8 +80,20 @@ Hyperparameter Optimization
 Extras
 ======
 
+.. autoclass:: hyperparameter_hunter.feature_engineering.FeatureEngineer
+   :noindex:
+   :members: __init__
+
+----------------------------------------
+
+.. autoclass:: hyperparameter_hunter.feature_engineering.EngineerStep
+   :noindex:
+   :members: __init__
+
+----------------------------------------
+
 .. autofunction:: hyperparameter_hunter.callbacks.bases.lambda_callback
-    :noindex:
+   :noindex:
 
 
 Indices and tables

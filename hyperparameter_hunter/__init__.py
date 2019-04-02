@@ -37,6 +37,8 @@ from .space import Real
 from .space import Integer
 from .space import Categorical
 from .callbacks.bases import lambda_callback
+from .feature_engineering import FeatureEngineer
+from .feature_engineering import EngineerStep
 
 __all__ = [
     #################### Environment ####################
@@ -59,4 +61,7 @@ __all__ = [
     "Categorical",
     #################### Callbacks ####################
     "lambda_callback",
+    #################### Feature Engineering ####################
+    "FeatureEngineer",
+    "EngineerStep",
 ]

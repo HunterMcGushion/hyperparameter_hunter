@@ -75,7 +75,7 @@ class PredictorHoldout(BasePredictorCallback):
         super().on_fold_start()
 
     def on_run_end(self):
-        self.run_holdout_predictions = self.model.predict(self.holdout_input_data)
+        self.run_holdout_predictions = self.model.predict(self.fold_holdout_input)
         self.run_holdout_predictions = _format_predictions(
             self.run_holdout_predictions, self.target_column
         )
@@ -118,7 +118,7 @@ class PredictorTest(BasePredictorCallback):
         super().on_fold_start()
 
     def on_run_end(self):
-        self.run_test_predictions = self.model.predict(self.test_input_data)
+        self.run_test_predictions = self.model.predict(self.fold_test_input)
         self.run_test_predictions = _format_predictions(
             self.run_test_predictions, self.target_column
         )

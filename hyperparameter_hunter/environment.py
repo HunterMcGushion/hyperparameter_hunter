@@ -22,11 +22,12 @@ Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module l
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.callbacks.bases import BaseCallback
 from hyperparameter_hunter.metrics import format_metrics
 from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
-from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
+from hyperparameter_hunter.keys import CrossExperimentKeyMaker
 from hyperparameter_hunter.utils.boltons_utils import remap
 from hyperparameter_hunter.utils.file_utils import make_dirs, ParametersFromFile
 from hyperparameter_hunter.utils.general_utils import Alias
@@ -544,6 +545,8 @@ class Environment:
         for cb in self._experiment_callbacks:
             if not isclass(cb):
                 raise TypeError(f"experiment_callbacks must be classes, not {type(cb)}: {cb}")
+            if issubclass(cb, BaseCallback):
+                continue
             if cb.__name__ != "LambdaCallback":
                 raise ValueError(f"experiment_callbacks must be LambdaCallback instances, not {cb}")
 

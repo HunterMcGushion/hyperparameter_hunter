@@ -33,7 +33,7 @@ from hyperparameter_hunter.exceptions import (
     RepeatedExperimentError,
 )
 from hyperparameter_hunter.experiment_core import ExperimentMeta
-from hyperparameter_hunter.key_handler import HyperparameterKeyMaker
+from hyperparameter_hunter.keys import HyperparameterKeyMaker
 from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_metric
 from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList
@@ -81,9 +81,8 @@ class BaseExperiment(ScoringMixIn):
         model_initializer,
         model_init_params,
         model_extra_params=None,
+        feature_engineer=None,
         feature_selector=None,
-        preprocessing_pipeline=None,
-        preprocessing_params=None,
         notes=None,
         do_raise_repeated=False,
         auto_start=True,
@@ -108,16 +107,14 @@ class BaseExperiment(ScoringMixIn):
             A dictionary of extra parameters passed to :class:`models.Model`. This is used to
             provide parameters to models' non-initialization methods (like `fit`, `predict`,
             `predict_proba`, etc.), and for neural networks
+        feature_engineer: `FeatureEngineer`, or None, default=None
+            ...  # TODO: Add documentation
         feature_selector: List of str, callable, list of booleans, default=None
             The value provided when splitting apart the input data for all provided DataFrames.
             `feature_selector` is provided as the second argument for calls to
             `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
             :attr:`target_column`, and :attr:`id_column`
-        preprocessing_pipeline: ...
-            ... Experimental...
-        preprocessing_params: ...
-            ... Experimental...
         notes: String, or None, default=None
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
@@ -149,9 +146,8 @@ class BaseExperiment(ScoringMixIn):
             self.model_init_params.update(dict(build_fn=model_init_params))
 
         self.model_extra_params = model_extra_params if model_extra_params is not None else {}
+        self.feature_engineer = feature_engineer if feature_engineer is not None else {}
         self.feature_selector = feature_selector if feature_selector is not None else []
-        self.preprocessing_pipeline = preprocessing_pipeline or {}
-        self.preprocessing_params = preprocessing_params if preprocessing_params is not None else {}
 
         self.notes = notes
         self.do_raise_repeated = do_raise_repeated
@@ -276,30 +272,8 @@ class BaseExperiment(ScoringMixIn):
     def _initial_preprocessing(self):
         """Perform preprocessing steps prior to executing fitting protocol (usually
         cross-validation), consisting of: 1) Split train/holdout data into respective train/holdout
-        input and target data attributes, 2) Feature selection on input data sets, 3) Set target
-        datasets to target_column contents, 4) Initialize PreprocessingPipeline to perform core
-        preprocessing, 5) Set datasets to their (modified) counterparts in PreprocessingPipeline,
-        6) Log whether datasets changed"""
-        #################### Preprocessing ####################
-        # preprocessor = PreprocessingPipelineMixIn(
-        #     pipeline=[], preprocessing_params=dict(apply_standard_scale=True), features=self.features,
-        #     target_column=self.target_column, train_input_data=self.train_input_data,
-        #     train_target_data=self.train_target_data, holdout_input_data=self.holdout_input_data,
-        #     holdout_target_data=self.holdout_target_data, test_input_data=self.test_input_data,
-        #     fitting_guide=None, fail_gracefully=False, preprocessing_stage='infer'
-        # )
-        #
-        # # TODO: Switch from below direct calls to preprocessor.execute_pipeline() call
-        # # TODO: After calling execute_pipeline(), set data attributes to their counterparts in preprocessor class
-        # preprocessor.data_imputation()
-        # preprocessor.target_data_transformation()
-        # preprocessor.data_scaling()
-        #
-        # for dataset_name in preprocessor.all_input_sets + preprocessor.all_target_sets:
-        #     old_val, new_val = getattr(self, dataset_name), getattr(preprocessor, dataset_name)
-        #     G.log('Dataset: "{}" {} updated'.format(dataset_name, 'was not' if old_val.equals(new_val) else 'was'))
-        #     setattr(self, dataset_name, new_val)
-
+        input and target data attributes, 2) Execute `feature_engineer` to perform "pre_cv"-stage
+        preprocessing, 3) Set datasets to their (modified) counterparts in `feature_engineer`"""
         self.train_input_data = self.train_dataset.copy().loc[:, self.feature_selector]
         self.train_target_data = self.train_dataset.copy().loc[:, self.target_column]
 
@@ -309,6 +283,21 @@ class BaseExperiment(ScoringMixIn):
 
         if isinstance(self.test_dataset, pd.DataFrame):
             self.test_input_data = self.test_dataset.copy().loc[:, self.feature_selector]
+
+        if self.feature_engineer and callable(self.feature_engineer):
+            self.feature_engineer(
+                "pre_cv",
+                train_inputs=self.train_input_data,
+                train_targets=self.train_target_data,
+                holdout_inputs=self.holdout_input_data,
+                holdout_targets=self.holdout_target_data,
+                test_inputs=self.test_input_data,
+            )
+            self.train_input_data = self.feature_engineer.datasets["train_inputs"]
+            self.train_target_data = self.feature_engineer.datasets["train_targets"]
+            self.holdout_input_data = self.feature_engineer.datasets["holdout_inputs"]
+            self.holdout_target_data = self.feature_engineer.datasets["holdout_targets"]
+            self.test_input_data = self.feature_engineer.datasets["test_inputs"]
 
         G.log("Initial preprocessing stage complete", 4)
 
@@ -356,8 +345,7 @@ class BaseExperiment(ScoringMixIn):
             model_initializer=self.model_initializer,
             model_init_params=self.model_init_params,
             model_extra_params=self.model_extra_params,
-            preprocessing_pipeline=self.preprocessing_pipeline,
-            preprocessing_params=self.preprocessing_params,
+            feature_engineer=self.feature_engineer,
             feature_selector=self.feature_selector,
             # FLAG: Should probably add :attr:`target_metric` to key - With option to ignore it?
         )
@@ -455,9 +443,8 @@ class BaseCVExperiment(BaseExperiment):
         model_initializer,
         model_init_params,
         model_extra_params=None,
+        feature_engineer=None,
         feature_selector=None,
-        preprocessing_pipeline=None,
-        preprocessing_params=None,
         notes=None,
         do_raise_repeated=False,
         auto_start=True,
@@ -475,6 +462,9 @@ class BaseCVExperiment(BaseExperiment):
         self.fold_validation_input = None
         self.fold_train_target = None
         self.fold_validation_target = None
+        self.fold_holdout_input = None
+        self.fold_holdout_target = None
+        self.fold_test_input = None
 
         self.repetition_oof_predictions = None
         self.repetition_holdout_predictions = None
@@ -505,9 +495,8 @@ class BaseCVExperiment(BaseExperiment):
             model_initializer,
             model_init_params,
             model_extra_params=model_extra_params,
+            feature_engineer=feature_engineer,
             feature_selector=feature_selector,
-            preprocessing_pipeline=preprocessing_pipeline,
-            preprocessing_params=preprocessing_params,
             notes=notes,
             do_raise_repeated=do_raise_repeated,
             auto_start=auto_start,
@@ -552,9 +541,8 @@ class BaseCVExperiment(BaseExperiment):
     ##################################################
     def on_fold_start(self):
         """Override :meth:`on_fold_start` tasks set by :class:`experiment_core.ExperimentMeta`,
-        consisting of: 1) Log start, 2) Execute original tasks, 3) Split train/validation data"""
-        super().on_fold_start()
-
+        consisting of: 1) Split train/validation data, 2) Make copies of holdout/test data for
+        current fold (for feature engineering), 3) Log start, 4) Execute original tasks"""
         #################### Split Train and Validation Data ####################
         self.fold_train_input = self.train_input_data.iloc[self.train_index, :].copy()
         self.fold_validation_input = self.train_input_data.iloc[self.validation_index, :].copy()
@@ -562,12 +550,42 @@ class BaseCVExperiment(BaseExperiment):
         self.fold_train_target = self.train_target_data.iloc[self.train_index].copy()
         self.fold_validation_target = self.train_target_data.iloc[self.validation_index].copy()
 
+        #################### Set Fold Copies of Other Data ####################
+        if self.holdout_input_data is not None and self.holdout_target_data is not None:
+            self.fold_holdout_input = self.holdout_input_data.copy()
+            self.fold_holdout_target = self.holdout_target_data.copy()
+
+        if self.test_input_data is not None:
+            self.fold_test_input = self.test_input_data.copy()
+
+        super().on_fold_start()
+
     def cv_fold_workflow(self):
         """Execute workflow for individual fold, consisting of the following tasks: Execute
         overridden :meth:`on_fold_start` tasks, 2) Perform cv_run_workflow for each run, 3) Execute
         overridden :meth:`on_fold_end` tasks"""
         self.on_fold_start()
-        # TODO: Call self.intra_cv_preprocessing() - Ensure the 4 fold input/target attributes (from on_fold_start) are changed
+
+        if self.feature_engineer and callable(self.feature_engineer):
+            self.feature_engineer(
+                "intra_cv",
+                train_inputs=self.fold_train_input,
+                train_targets=self.fold_train_target,
+                validation_inputs=self.fold_validation_input,
+                validation_targets=self.fold_validation_target,
+                holdout_inputs=self.fold_holdout_input,
+                holdout_targets=self.fold_holdout_target,
+                test_inputs=self.fold_test_input,
+            )
+            self.fold_train_input = self.feature_engineer.datasets["train_inputs"]
+            self.fold_train_target = self.feature_engineer.datasets["train_targets"]
+            self.fold_validation_input = self.feature_engineer.datasets["validation_inputs"]
+            self.fold_validation_target = self.feature_engineer.datasets["validation_targets"]
+            self.fold_holdout_input = self.feature_engineer.datasets["holdout_inputs"]
+            self.fold_holdout_target = self.feature_engineer.datasets["holdout_targets"]
+            self.fold_test_input = self.feature_engineer.datasets["test_inputs"]
+
+        G.log("Intra-CV preprocessing stage complete", 4)
 
         for self._run in range(self.experiment_params.get("runs", 1)):
             self.cv_run_workflow()
@@ -618,9 +636,8 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         model_initializer,
         model_init_params,
         model_extra_params=None,
+        feature_engineer=None,
         feature_selector=None,
-        preprocessing_pipeline=None,
-        preprocessing_params=None,
         notes=None,
         do_raise_repeated=False,
         auto_start=True,
@@ -635,9 +652,8 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
             model_initializer,
             model_init_params,
             model_extra_params=model_extra_params,
+            feature_engineer=feature_engineer,
             feature_selector=feature_selector,
-            preprocessing_pipeline=preprocessing_pipeline,
-            preprocessing_params=preprocessing_params,
             notes=notes,
             do_raise_repeated=do_raise_repeated,
             auto_start=auto_start,

@@ -17,6 +17,8 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.exceptions import ContinueRemap
+from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
 from hyperparameter_hunter.utils.file_utils import read_json
@@ -25,6 +27,7 @@ from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from contextlib import suppress
 import pandas as pd
 
 ##################################################
@@ -377,8 +380,7 @@ def filter_by_space(hyperparameters_and_scores, space):
     hyperparameters_and_scores: List of tuples
         Each tuple in list should be a pair of form (hyperparameters <dict>, evaluation <float>),
         where the hyperparameter dict should contain at least the following keys:
-        ['model_init_params', 'model_extra_params', 'preprocessing_pipeline',
-        'preprocessing_params', 'feature_selector']
+        ['model_init_params', 'model_extra_params', 'feature_engineer', 'feature_selector']
     space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
 
@@ -415,8 +417,7 @@ def filter_by_guidelines(
     space,
     model_init_params,
     model_extra_params,
-    preprocessing_pipeline,
-    preprocessing_params,
+    feature_engineer,
     feature_selector,
     **kwargs,
 ):
@@ -428,13 +429,12 @@ def filter_by_guidelines(
     hyperparameters_and_scores: List of tuples
         Each tuple should be of form (hyperparameters <dict>, evaluation <float>), in which
         hyperparameters contains at least the keys: ['model_init_params', 'model_extra_params',
-        'preprocessing_pipeline', 'preprocessing_params', 'feature_selector']
+        'feature_engineer', 'feature_selector']
     space: instance of :class:`space.Space`
         The boundaries of the hyperparameters to be searched
     model_init_params: Dict
     model_extra_params: Dict, or None
-    preprocessing_pipeline: Dict, or None
-    preprocessing_params: Dict, or None
+    feature_engineer: Dict
     feature_selector: List of column names, callable, list of booleans, or None
     **kwargs: Dict
         Extra parameter dicts to include in `guidelines`. For example, if filtering the
@@ -461,11 +461,14 @@ def filter_by_guidelines(
         ("model_init_params", "compile_params", "loss_functions"),
     ]
 
+    #################### Prepare `feature_engineer` ####################
+    feature_engineer = feature_engineer and feature_engineer.get_key_data()
+    # Dataset hashes in `feature_engineer` and candidates can be ignored, since it is assumed that candidates here had matching `Environment`s
+
     temp_guidelines = dict(
         model_init_params=model_init_params if model_init_params is not None else {},
         model_extra_params=model_extra_params if model_extra_params is not None else {},
-        preprocessing_pipeline=preprocessing_pipeline if preprocessing_pipeline is not None else {},
-        preprocessing_params=preprocessing_params if preprocessing_params is not None else {},
+        feature_engineer=feature_engineer if feature_engineer is not None else {},
         feature_selector=feature_selector if feature_selector is not None else [],
         **kwargs,
     )
@@ -478,6 +481,12 @@ def filter_by_guidelines(
             # Remove empty dicts in ("model_extra_params"). Simplify comparison between experiments
             # with no `model_extra_params` and, for example, `dict(fit=dict(verbose=True))`
             return False
+
+        #################### Clean `feature_engineer` ####################
+        try:
+            return visit_feature_engineer(path, key, value)
+        except ContinueRemap:
+            ...
 
         for dimension in dimensions + dimensions_to_ignore:
             if (path + (key,) == dimension) or (dimension[0] is None and dimension[-1] == key):
@@ -494,6 +503,59 @@ def filter_by_guidelines(
     )
 
     return hyperparameters_and_scores
+
+
+def visit_feature_engineer(path, key, value):
+    """Helper to be used within a `visit` function intended for a `remap`-like function
+
+    Parameters
+    ----------
+    path: Tuple
+        The path of keys that leads to `key`
+    key: String
+        The parameter name
+    value: Object
+        The value of the parameter `key`
+
+    Returns
+    -------
+    False if the value represents a dataset, or tuple of (`key`, <hash of `value`>). If neither of
+    these are returned, a `ContinueRemap` exception is raised
+
+    Raises
+    ------
+    ContinueRemap
+        If a value is not returned by `visit_function_engineer`. For proper functioning, this raised
+        `ContinueRemap` is assumed to be handled by the calling `visit` function. Usually, the
+        `except` block for `ContinueRemap` will simply continue execution of `visit`
+
+    Examples
+    --------
+    >>> visit_feature_engineer(("feature_engineer",), "datasets", dict())
+    False
+    >>> visit_feature_engineer(("feature_engineer", "steps"), "f", lambda _: _)  # pytest: +ELLIPSIS
+    ('f', '...')
+    >>> visit_feature_engineer(("feature_engineer", "steps"), "foo", lambda _: _)
+    Traceback (most recent call last):
+        File "optimization_utils.py", line ?, in visit_feature_engineer
+    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing
+    >>> visit_feature_engineer(("feature_engineer",), "foo", dict())
+    Traceback (most recent call last):
+        File "optimization_utils.py", line ?, in visit_feature_engineer
+    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing
+    >>> visit_feature_engineer(("foo",), "bar", dict())
+    Traceback (most recent call last):
+        File "optimization_utils.py", line ?, in visit_feature_engineer
+    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing"""
+    if path and path[0] == "feature_engineer":
+        # Drop dataset hashes
+        if key in ("datasets", "original_hashes", "updated_hashes") and isinstance(value, dict):
+            return False
+        # Ensure `EngineerStep.f` is hashed
+        with suppress(IndexError):
+            if path[1] == "steps" and key == "f" and callable(value):
+                return key, make_hash_sha256(value)
+    raise ContinueRemap
 
 
 def get_choice_dimensions(params, iter_attrs=None):

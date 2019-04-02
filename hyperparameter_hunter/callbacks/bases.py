@@ -114,6 +114,8 @@ def lambda_callback(
     on_run_start=None,
     on_run_end=None,
     agg_name=None,
+    do_reshape_aggs=True,
+    method_agg_keys=False,
 ):
     """Utility for creating custom callbacks to be declared by :class:`Environment` and used by
     Experiments. The callable "on_<...>_<start/end>" parameters provided will receive as input
@@ -148,6 +150,17 @@ def lambda_callback(
         :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`. The purpose of
         this parameter is to make it easier to understand an Experiment's description file, as
         `agg_name` will default to a UUID if it is not given
+    do_reshape_aggs: Boolean, default=True
+        Whether to reshape the aggregated values to reflect the nested repetitions/folds/runs
+        structure used for other aggregated values. If False, lists of aggregated values are left in
+        their original shapes. This parameter is only used if the callables are behaving like
+        AggregatorCallbacks (see the "Notes" section below and `agg_name` for details on this)
+    method_agg_keys: Boolean, default=False
+        If True, the aggregate keys for the items added to the dict at `agg_name` are equivalent to
+        the names of the "on_<...>_<start/end>" pseudo-methods whose values are being aggregated. In
+        other words, the pool of all possible aggregate keys goes from ["runs", "folds", "reps",
+        "final"] to the names of the eight "on_<...>_<start/end>" kwargs of :func:`lambda_callback`.
+        See the "Notes" section below for further details and a rough outline
 
     Returns
     -------
@@ -181,7 +194,36 @@ def lambda_callback(
 
             - This is because :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates` is saved in its entirety
 
-    For examples using `lambda_callback` to create custom callbacks, see :mod:`hyperparameter_hunter.callbacks.recipes`
+    What follows is a rough outline of the structure produced when using an aggregator-like callback
+    that automatically populates :attr:`experiments.BaseExperiment.stat_aggregates` with results of
+    the functions used as arguments to :func:`lambda_callback`::
+
+        BaseExperiment.stat_aggregates = dict(
+            ...,
+            <`agg_name`>=dict(
+                <agg_key "runs">  = [...],
+                <agg_key "folds"> = [...],
+                <agg_key "reps">  = [...],
+                <agg_key "final"> = object(),
+                ...
+            ),
+            ...
+        )
+
+    In the above outline, the actual `agg_key`s included in the dict at `agg_name` depend on which
+    "on_<...>_<start/end>" callables are behaving like aggregators. For example, if neither
+    `on_run_start` nor `on_run_end` explicitly returns something, then the "runs" `agg_key` is not
+    included in the `agg_name` dict. Similarly, if, for example, neither `on_experiment_start` nor
+    `on_experiment_end` is provided, then the "final" `agg_key` is not included. If
+    `method_agg_keys=True`, then the agg keys used in the dict are modified to be named after the
+    method called. For example, if `method_agg_keys=True` and `on_fold_start` and `on_fold_end` are
+    both callables returning values to be aggregated, then the `agg_key`s used for each will be
+    "on_fold_start" and "on_fold_end", respectively. In this example, if `method_agg_keys=False`
+    (default) and `do_reshape_aggs=False`, then the single "folds" `agg_key` would contain the
+    combined contents returned by both methods in the order in which they were returned
+
+    For examples using `lambda_callback` to create custom callbacks, see
+    :mod:`hyperparameter_hunter.callbacks.recipes`
 
     Examples
     --------
@@ -218,9 +260,11 @@ def lambda_callback(
     LambdaCallback = type("LambdaCallback", (BaseCallback,), dict())
     agg_name = "_{}".format(agg_name or str(uuid()))
     does_aggregate = False
-    aggregated_shapes = dict(runs=None, folds=None)
+    agg_shapes = dict(runs=None, folds=None)
 
     for meth_name, meth_content, agg_key in methods:
+        if method_agg_keys:
+            agg_key = meth_name
 
         def _method_factory(_meth_name=meth_name, _meth_content=meth_content, _agg_key=agg_key):
             """Provide `_meth_name`, `_meth_content`, and `_agg_key` for :func:`_method`"""
@@ -244,23 +288,18 @@ def lambda_callback(
                     does_aggregate = True
                     self.stat_aggregates.setdefault(agg_name, dict())
 
-                    if _agg_key == "final":
+                    if _agg_key in ("final", "on_experiment_start", "on_experiment_end"):
                         self.stat_aggregates[agg_name][_agg_key] = return_value
                     else:
                         self.stat_aggregates[agg_name].setdefault(_agg_key, []).append(return_value)
                         # Record shapes of aggregated return values
-                        aggregated_shapes[_agg_key] = np.shape(return_value)
+                        agg_shapes[_agg_key] = np.shape(return_value)
 
                 #################### Reshape Aggregated Values ####################
-                if _meth_name == "on_experiment_end" and does_aggregate is True:
-                    runs_shape = (self._rep + 1, self._fold + 1, self._run + 1)
-
-                    for (key, shape) in [("runs", runs_shape), ("folds", runs_shape[:-1])]:
-                        if key not in self.stat_aggregates[agg_name]:
-                            continue
-                        self.stat_aggregates[agg_name][key] = np.reshape(
-                            self.stat_aggregates[agg_name][key], shape + aggregated_shapes[key]
-                        ).tolist()
+                if _meth_name == "on_experiment_end" and does_aggregate and do_reshape_aggs:
+                    self.stat_aggregates[agg_name] = _reshape_aggregates(
+                        self.stat_aggregates[agg_name], agg_shapes, self._rep, self._fold, self._run
+                    )
 
                 #################### Call Next Callback Method in Chain ####################
                 getattr(super(LambdaCallback, self), _meth_name)()
@@ -272,11 +311,73 @@ def lambda_callback(
     return LambdaCallback
 
 
+def _reshape_aggregates(named_aggregates, agg_shapes, rep, fold, run):
+    """Reshape specified values of `named_aggregates` to reflect the nested repetitions/folds/runs
+    structure used for other aggregated values
+
+    Parameters
+    ----------
+    named_aggregates: Dict[str, Union[list, object]]
+        Aggregated values collected by a particular aggregator-like `LambdaCallback`. Can have up to
+        four keys, with expected value types parenthesized: "runs" (list), "folds" (list),
+        "reps" (list), and "final" (object). This function will attempt to reshape the values of the
+        "runs" and "folds" keys to reflect the nested repetitions/folds/runs structure used for
+        other aggregated values
+    agg_shapes: Dict[str, Tuple[int, ...]]
+        Shapes of the values aggregated by aggregator-like `LambdaCallback` methods. Can have up to
+        two keys: "runs", "folds". If the return value of a method is not an iterable, its shape
+        will be an empty tuple
+    rep: Integer
+        The repetition number currently being executed
+    fold: Integer
+        The fold number currently being executed
+    run: Integer
+        The run number currently being executed
+
+    Returns
+    -------
+    named_aggregates: Dict[str, Union[list, object]]
+        Original aggregated values, with the values for keys "runs" and "folds" reshaped
+
+    Examples
+    --------
+    >>> _input = dict(
+    ...     runs=list("abcdefghijklmnopqrstuvwx"),
+    ...     folds=["abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx"],
+    ...     reps=["abcdefghijkl", "mnopqrstuvwx"],
+    ...     final="foo"
+    ... )
+    >>> _expected = dict(
+    ...     runs=[
+    ...         [["a", "b", "c"], ["d", "e", "f"], ["g", "h", "i"], ["j", "k", "l"]],
+    ...         [["m", "n", "o"], ["p", "q", "r"], ["s", "t", "u"], ["v", "w", "x"]],
+    ...     ],
+    ...     folds=[["abc", "def", "ghi", "jkl"], ["mno", "pqr", "stu", "vwx"]],
+    ...     reps=["abcdefghijkl", "mnopqrstuvwx"],
+    ...     final="foo",
+    ... )
+    >>> assert _reshape_aggregates(_input, dict(runs=tuple(), folds=tuple()), 1, 3, 2) == _expected
+    """
+    runs_shape = (rep + 1, fold + 1, run + 1)
+
+    for (key, shape) in [("runs", runs_shape), ("folds", runs_shape[:-1])]:
+        if key not in named_aggregates:
+            continue
+        named_aggregates[key] = np.reshape(named_aggregates[key], shape + agg_shapes[key]).tolist()
+    return named_aggregates
+
+
 ##################################################
 # Intermediate Base Callbacks
 ##################################################
 class BasePredictorCallback(BaseCallback):
     """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.predictors` are descendants"""
+
+    pass
+
+
+class BaseWranglerCallback(BaseCallback):
+    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.wranglers` are descendants"""
 
     pass
 

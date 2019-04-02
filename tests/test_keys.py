@@ -1,10 +1,10 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import key_handler
 from hyperparameter_hunter import settings
 from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
-from hyperparameter_hunter.key_handler import CrossExperimentKeyMaker
+from hyperparameter_hunter.keys import CrossExperimentKeyMaker
+from hyperparameter_hunter.keys.hashing import make_hash_sha256
 
 
 ##################################################
@@ -118,47 +118,47 @@ scenarios_dataframe = [
 # FLAG: Below test cases are highly sensitive. Any changes to declarations above (including comments), ...
 # FLAG: ... or to the module name can cause them to break. This behavior is intentional.
 scenarios_lambda = [
-    [lambda_0, "S7WzjLMEy-dfgIInHbv9TQMCqWdRxpkSrZP8n1HboSM="],
-    [lambda_1, "U4_pegRsJkHi92pFG51uQq5bVjo1l3aBSG-SY0UP19Y="],
-    [lambda_2, "Jy76XUd8xk2r_HckfYzkLns0eyhQUPer0cdseTqTC-8="],
+    [lambda_0, "Fblv_UfLw4qIe3RMQrNU1vA9Z8gl-0Brn3fNpkLua5k="],
+    [lambda_1, "at2AxzF9cO_GZyPzrgR0-zgAr3Mk-DWhmg4_-4ec0D8="],
+    [lambda_2, "b7i31rBTGifMEltKdEmEiS6hD02fd1ydNq2xbzegpGA="],
 ]
 scenarios_partial = [
-    [partial_0, "NxdcQB48nFqF7Iy06-J4G6ekLCq_uA8aG46iaMR-bI4="],
-    [partial_1, "mpntwKXpNO0icssa5_ZoBvbEFSHI_63f7YBW6T6-KI0="],
-    [partial_2, "D4ONH8UKclzPWc37x0WMXsiG6b9QTUwAr1IOZ3ykPRQ="],
-    [partial_3, "eO0LYg-Xkim-901T66TVWg4gN_kOxi0IVZnbDEq15-g="],
-    [partial_4, "odAQTkq4P-71JHt7sciar1pNFezy5xk11I6jt2QEWDM="],
+    [partial_0, "DVq0axBwpUhxAritItk7KatUmVK3qFms0JC0UkV1pgQ="],
+    [partial_1, "3rlttSo2Hp1xhipW2h1yENuGEyFLaa36SmMHCRsmu94="],
+    [partial_2, "kf1RqoxejYXH0BwvkWhmchgPpV0-boHpGrU5VzRHZw0="],
+    [partial_3, "3VtUUFGCaD9p051vuJpMheM3tjbaEbE_B-Wm-TOkycs="],
+    [partial_4, "2RpsON6ciWZ_5bMQaOXYU6ZdLRePwuRD_e4UGdPVbS8="],
 ]
 scenarios_function = [
-    [function_0, "PkIczE6TJlhU4gzJXHNogmePap4G-quJRR2hZMshc2I=", params_0],  # 0.0 (0)
-    [function_0, "PkIczE6TJlhU4gzJXHNogmePap4G-quJRR2hZMshc2I=", params_1],  # 0.1 (1)
-    [function_0, "PkIczE6TJlhU4gzJXHNogmePap4G-quJRR2hZMshc2I=", params_2],  # 0.2 (2)
-    [function_0, "XC8Ja2MRJu1a06mpnHd8JHUxhcEHDei2RcO7o6xlRD0=", params_3],  # 0.3 (3)
-    [function_0, "wiSeiu29hyw6AZaMBMEtNNg5_0naPAhFwhBiDM0V6fk=", params_4],  # 0.4 (4)
+    [function_0, "KiKTsFM_A3fPq03fd_8JfbxZ9fsDicQw8LJtMCWG5Oo=", params_0],  # 0.0 (0)
+    [function_0, "KiKTsFM_A3fPq03fd_8JfbxZ9fsDicQw8LJtMCWG5Oo=", params_1],  # 0.1 (1)
+    [function_0, "KiKTsFM_A3fPq03fd_8JfbxZ9fsDicQw8LJtMCWG5Oo=", params_2],  # 0.2 (2)
+    [function_0, "SIpsp66nfrPgUTiyZ1YQqykOxciUs8m9pLxQninQcIo=", params_3],  # 0.3 (3)
+    [function_0, "emsqFo8SSc8_ulrRPG2-x_7rWJZmqGQ5PmU5I3km6kY=", params_4],  # 0.4 (4)
     [function_0, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 0.5 (5)
-    [function_1, "DsOBgH1Dhh1nuNVMCEq5eivq7Ho0Q7UJq-H6olz5lmw=", params_0],  # 1.0 (6)
-    [function_1, "DsOBgH1Dhh1nuNVMCEq5eivq7Ho0Q7UJq-H6olz5lmw=", params_1],  # 1.1 (7)
-    [function_1, "DsOBgH1Dhh1nuNVMCEq5eivq7Ho0Q7UJq-H6olz5lmw=", params_2],  # 1.2 (8)
-    [function_1, "5zac36cZNjLt2_HTvODsn6jfC27Q2N8jhYS9d54aCC8=", params_3],  # 1.3 (9)
-    [function_1, "wiSeiu29hyw6AZaMBMEtNNg5_0naPAhFwhBiDM0V6fk=", params_4],  # 1.4 (10)
+    [function_1, "B2yVD1nYC4qBNqiOAgbuYnZ-lM0sfH6d_9lrWwMollE=", params_0],  # 1.0 (6)
+    [function_1, "B2yVD1nYC4qBNqiOAgbuYnZ-lM0sfH6d_9lrWwMollE=", params_1],  # 1.1 (7)
+    [function_1, "B2yVD1nYC4qBNqiOAgbuYnZ-lM0sfH6d_9lrWwMollE=", params_2],  # 1.2 (8)
+    [function_1, "SnQQCiMvqBy0Sq-5CvxpvT-5h1qeowi_fLhELH4e35c=", params_3],  # 1.3 (9)
+    [function_1, "emsqFo8SSc8_ulrRPG2-x_7rWJZmqGQ5PmU5I3km6kY=", params_4],  # 1.4 (10)
     [function_1, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 1.5 (11)
-    [function_2, "UgZmelvnucSySXnqUO7bJcLT-6pLyj2hAec1csair7w=", params_0],  # 2.0 (12)
-    [function_2, "UgZmelvnucSySXnqUO7bJcLT-6pLyj2hAec1csair7w=", params_1],  # 2.1 (13)
-    [function_2, "Z5YkLLLbCbqJi-aTa_5dwrY8C4BZ9Ehe3ZYqp3Z7fiQ=", params_2],  # 2.2 (14)
-    [function_2, "5zac36cZNjLt2_HTvODsn6jfC27Q2N8jhYS9d54aCC8=", params_3],  # 2.3 (15)
-    [function_2, "wiSeiu29hyw6AZaMBMEtNNg5_0naPAhFwhBiDM0V6fk=", params_4],  # 2.4 (16)
+    [function_2, "sA01sIRaW4lrrtf8fz-fNVg5uJR5LElp5R9z8W38dNk=", params_0],  # 2.0 (12)
+    [function_2, "sA01sIRaW4lrrtf8fz-fNVg5uJR5LElp5R9z8W38dNk=", params_1],  # 2.1 (13)
+    [function_2, "Vl-CqpdOFSX_AAjPmhN23NJqE7DW6i2DuK5CNuT0zAU=", params_2],  # 2.2 (14)
+    [function_2, "SnQQCiMvqBy0Sq-5CvxpvT-5h1qeowi_fLhELH4e35c=", params_3],  # 2.3 (15)
+    [function_2, "emsqFo8SSc8_ulrRPG2-x_7rWJZmqGQ5PmU5I3km6kY=", params_4],  # 2.4 (16)
     [function_2, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 2.5 (17)
-    [function_3, "VdCsQHz8bE-ibzAiLtSV5w5aINpMg28syAqnYu9x2nY=", params_0],  # 3.0 (18)
-    [function_3, "VdCsQHz8bE-ibzAiLtSV5w5aINpMg28syAqnYu9x2nY=", params_1],  # 3.1 (19)
-    [function_3, "ydOoRI9wkhyE2pI2Gk9Jnd3pJ_10WkULQ5CksqQtg70=", params_2],  # 3.2 (20)
-    [function_3, "5zac36cZNjLt2_HTvODsn6jfC27Q2N8jhYS9d54aCC8=", params_3],  # 3.3 (21)
-    [function_3, "wiSeiu29hyw6AZaMBMEtNNg5_0naPAhFwhBiDM0V6fk=", params_4],  # 3.4 (22)
+    [function_3, "Um_SX0jak8KrMcq1Lz7DIoYA0a5y8G5fhWfi9BBDXD4=", params_0],  # 3.0 (18)
+    [function_3, "Um_SX0jak8KrMcq1Lz7DIoYA0a5y8G5fhWfi9BBDXD4=", params_1],  # 3.1 (19)
+    [function_3, "PNtYek4MCHF35F1xcN8Bxe30ANM9tSEM7TxzLymvmZE=", params_2],  # 3.2 (20)
+    [function_3, "SnQQCiMvqBy0Sq-5CvxpvT-5h1qeowi_fLhELH4e35c=", params_3],  # 3.3 (21)
+    [function_3, "emsqFo8SSc8_ulrRPG2-x_7rWJZmqGQ5PmU5I3km6kY=", params_4],  # 3.4 (22)
     [function_3, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 3.5 (23)
-    [function_4, "9ORBiok43pbqsIXtldnTkVjLWpIB_hm07ojS2Jt6Qjk=", params_0],  # 4.0 (24)
-    [function_4, "9ORBiok43pbqsIXtldnTkVjLWpIB_hm07ojS2Jt6Qjk=", params_1],  # 4.1 (25)
-    [function_4, "N0BHP9CuqihSb2QqT4WF8A9qePjVNRbml0XAiC5m6xI=", params_2],  # 4.2 (26)
-    [function_4, "5zac36cZNjLt2_HTvODsn6jfC27Q2N8jhYS9d54aCC8=", params_3],  # 4.3 (27)
-    [function_4, "wiSeiu29hyw6AZaMBMEtNNg5_0naPAhFwhBiDM0V6fk=", params_4],  # 4.4 (28)
+    [function_4, "7MqD33qqcojZZ9ZVL26vDl9GUPLvzn5QxeV9ULwqYOk=", params_0],  # 4.0 (24)
+    [function_4, "7MqD33qqcojZZ9ZVL26vDl9GUPLvzn5QxeV9ULwqYOk=", params_1],  # 4.1 (25)
+    [function_4, "VBAiE1thD1KsI504xMDcW1mfNl6JCnhk1Ie8VhEEfCA=", params_2],  # 4.2 (26)
+    [function_4, "SnQQCiMvqBy0Sq-5CvxpvT-5h1qeowi_fLhELH4e35c=", params_3],  # 4.3 (27)
+    [function_4, "emsqFo8SSc8_ulrRPG2-x_7rWJZmqGQ5PmU5I3km6kY=", params_4],  # 4.4 (28)
     [function_4, "LjjneyLDFKRJ6R-v7ZKkOCasaqQDrmqKy2z1gjn7r10=", params_5],  # 4.5 (29)
     # Notes:
     # - "X.0" == "X.1" for X in <0, 1, 2, 3, 4> because default kwargs used
@@ -171,47 +171,47 @@ scenarios_function = [
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_string))
 def test_make_hash_sha256_string(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_number))
 def test_make_hash_sha256_number(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_tuple))
 def test_make_hash_sha256_tuple(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_list))
 def test_make_hash_sha256_list(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_dict))
 def test_make_hash_sha256_dict(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_dataframe))
 def test_make_hash_sha256_dataframe(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_lambda))
 def test_make_hash_sha256_lambda(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected"], **args_ids_for(scenarios_partial))
 def test_make_hash_sha256_partial(obj, expected):
-    assert key_handler.make_hash_sha256(obj) == expected
+    assert make_hash_sha256(obj) == expected
 
 
 @pytest.mark.parametrize(["obj", "expected", "kwargs"], **args_ids_for(scenarios_function))
 def test_make_hash_sha256_function(obj, expected, kwargs):
-    assert key_handler.make_hash_sha256(obj, **kwargs) == expected
+    assert make_hash_sha256(obj, **kwargs) == expected
 
 
 ##################################################
@@ -387,4 +387,4 @@ def test_invalid_environment(monkeypatch, env_fixture_0, missing_attr):
 #     }
 #
 #     def test_simple(self, obj, expected, kwargs):
-#         assert key_handler.make_hash_sha256(obj, **(kwargs or {})) == expected
+#         assert make_hash_sha256(obj, **(kwargs or {})) == expected

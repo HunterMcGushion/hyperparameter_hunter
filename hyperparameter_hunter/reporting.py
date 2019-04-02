@@ -334,13 +334,7 @@ class OptimizationReporter:
         self.start_time = datetime.now()
         self.last_round = datetime.now()
 
-        skip = (
-            "model_init_params",
-            "model_extra_params",
-            "preprocessing_pipeline",
-            "preprocessing_params",
-            "feature_selector",
-        )
+        skip = ("model_init_params", "model_extra_params", "feature_engineer", "feature_selector")
         self.parameter_names = [_[1:] if _[0] in skip else _ for _ in self.original_parameter_names]
         self.parameter_names = [_[1:] if _[0] == "params" else _ for _ in self.parameter_names]
         self.parameter_names = [
