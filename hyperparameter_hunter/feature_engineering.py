@@ -318,6 +318,7 @@ class EngineerStep:
         self._stage = stage
         self.do_validate = do_validate
 
+        self.inversion = None
         self.merged_datasets = []
         self.original_hashes = dict()
         self.updated_hashes = dict()
@@ -345,6 +346,9 @@ class EngineerStep:
         step_result = self.f(**datasets_for_f)
         step_result = (step_result,) if not isinstance(step_result, tuple) else step_result
 
+        if len(step_result) == len(self.params) + 1:
+            self.inversion, step_result = step_result[-1], step_result[:-1]
+
         new_datasets = dict(zip(self.params, step_result))
         for dataset_name, dataset_value in new_datasets.items():
             if dataset_name in self.merged_datasets:
@@ -354,6 +358,29 @@ class EngineerStep:
         self.updated_hashes = hash_datasets(new_datasets)
         # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
         return new_datasets
+
+    def inverse_transform(self, data):
+        """Perform the inverse transformation for this engineer step (if it exists)
+
+        Parameters
+        ----------
+        data: Array-like
+            Data to inverse transform with :attr:`inversion` or :attr:`inversion.inverse_transform`
+
+        Returns
+        -------
+        Array-like
+            If :attr:`inversion` is None, return `data` unmodified. Else, return the result of
+            :attr:`inversion` or :attr:`inversion.inverse_transform`, given `data`"""
+        if not self.inversion:
+            return data
+        elif callable(getattr(self.inversion, "inverse_transform", None)):
+            return self.inversion.inverse_transform(data)
+        elif callable(self.inversion):
+            return self.inversion(data)
+        raise TypeError(
+            f"`inversion` must be callable, or class with `inverse_transform`, not {self.inversion}"
+        )
 
     def get_datasets_for_f(self, datasets: DFDict) -> DFDict:
         """Produce a dict of DataFrames containing only the merged datasets and standard datasets
@@ -473,6 +500,29 @@ class FeatureEngineer:
         for i, step in enumerate(self.steps):
             if step.stage == stage:
                 self.datasets = step(**self.datasets)
+
+    def inverse_transform(self, data):
+        """Perform the inverse transformation for all engineer steps in :attr:`steps` in sequence
+        on `data`
+
+        Parameters
+        ----------
+        data: Array-like
+            Data to inverse transform with any inversions present in :attr:`steps`
+
+        Returns
+        -------
+        Array-like
+            Result of sequentially calling inverse transformations in :attr:`steps` on `data`. If
+            any step has :attr:`EngineerStep.inversion`=None, `data` is unmodified for that step,
+            and proceeds to next engineer step inversion"""
+        inverted_data = data
+
+        # TODO: Make sure "pre_cv"-stage steps are inverted first, then "intra_cv"-stage
+        for i, step in enumerate(self.steps):
+            inverted_data = step.inverse_transform(inverted_data)
+
+        return inverted_data
 
     @property
     def steps(self) -> List[EngineerStep]:
@@ -608,7 +658,10 @@ class ParameterParser(ast.NodeVisitor):
             self.returns.append(node.value.id)
         except AttributeError:
             for element in node.value.elts:
-                self.returns.append(element.id)
+                try:
+                    self.returns.append(element.id)
+                except AttributeError:  # Straight-up function probably, instead of variable name
+                    self.returns.append(element.attr)
         self.generic_visit(node)
 
 
@@ -665,9 +718,10 @@ def get_engineering_step_params(f: callable) -> List[str]:
     parser = ParameterParser()
     parser.visit(tree)
 
-    if parser.args != parser.returns:
-        raise ValueError(f"Mismatched `f` inputs ({parser.args}), and returns ({parser.returns})")
-    elif any(_ not in valid_datasets for _ in parser.args):
+    # TODO: Remove requirement for input arguments and return names to match
+    # if parser.args != parser.returns:
+    #     raise ValueError(f"Mismatched `f` inputs ({parser.args}), and returns ({parser.returns})")
+    if any(_ not in valid_datasets for _ in parser.args[:-1]):
         raise ValueError(f"Invalid dataset name in {parser.args}")
     return parser.args
 
