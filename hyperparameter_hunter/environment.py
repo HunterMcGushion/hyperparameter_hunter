@@ -734,7 +734,7 @@ class Environment:
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_validation_input`
             upon `Model` initialization"""
-        return DatasetSentinel("validation_input", **self._dataset_sentinel_helper())
+        return DatasetSentinel("oof_input", **self._dataset_sentinel_helper())
 
     @property
     def validation_target(self):
@@ -745,7 +745,7 @@ class Environment:
         DatasetSentinel:
             A `Sentinel` that will be converted to :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_validation_target`
             upon `Model` initialization"""
-        return DatasetSentinel("validation_target", **self._dataset_sentinel_helper())
+        return DatasetSentinel("oof_target", **self._dataset_sentinel_helper())
 
     @property
     def holdout_input(self):
