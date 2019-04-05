@@ -14,12 +14,6 @@ Related
 from hyperparameter_hunter.callbacks.bases import BaseEvaluatorCallback
 from hyperparameter_hunter.datasets import Dataset
 
-##################################################
-# Import Miscellaneous Assets
-##################################################
-import pandas as pd
-from typing import Union
-
 
 class EvaluatorOOF(BaseEvaluatorCallback):
     data_oof: Dataset
