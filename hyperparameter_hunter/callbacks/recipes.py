@@ -298,11 +298,11 @@ def dataset_recorder(save_transformed=False):
         d = dict(
             fold_train_input=data_train.input.fold,
             fold_train_target=data_train.target.fold,
-            fold_validation_input=None if data_oof is None else data_oof.input.fold,
-            fold_validation_target=None if data_oof is None else data_oof.target.fold,
-            fold_holdout_input=None if data_holdout is None else data_holdout.input.fold,
-            fold_holdout_target=None if data_holdout is None else data_holdout.target.fold,
-            fold_test_input=None if data_test is None else data_test.input.fold,
+            fold_validation_input=data_oof.input.fold,
+            fold_validation_target=data_oof.target.fold,
+            fold_holdout_input=data_holdout.input.fold,
+            fold_holdout_target=data_holdout.target.fold,
+            fold_test_input=data_test.input.fold,
         )
         if save_transformed:
             for k in ["transformed_fold_holdout_target", "transformed_run_validation_target"]:
