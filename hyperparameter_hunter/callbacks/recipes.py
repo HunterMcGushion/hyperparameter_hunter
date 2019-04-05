@@ -71,16 +71,14 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
     docstrings. It's surprisingly simple"""
 
     # noinspection PyUnusedLocal
-    def _on_run_end(fold_validation_target, run_validation_predictions, **kwargs):
+    def _on_run_end(data_oof, **kwargs):
         """Callback to execute upon ending an Experiment's run. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        fold_validation_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.fold_validation_target`
-        run_validation_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.run_validation_predictions`
+        data_oof: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
         **kwargs: Dict
             If this is given as a parameter to one of `lambda_callback`\'s functions, the entirety
             of the Experiment's attributes will be given as a dict. This can be used for debugging
@@ -88,18 +86,16 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
         Returns
         -------
         Array-like"""
-        return _confusion_matrix(fold_validation_target, run_validation_predictions)
+        return _confusion_matrix(data_oof.target.fold, data_oof.prediction.run)
 
-    def _on_fold_end(fold_validation_target, repetition_oof_predictions, validation_index):
+    def _on_fold_end(data_oof, validation_index):
         """Callback to execute upon ending an Experiment's fold. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        fold_validation_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.fold_validation_target`
-        repetition_oof_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.repetition_oof_predictions`
+        data_oof: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
         validation_index: Array-like
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.validation_index`
 
@@ -107,40 +103,42 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
         -------
         Array-like"""
         return _confusion_matrix(
-            fold_validation_target, repetition_oof_predictions.iloc[validation_index]
+            data_oof.target.fold, data_oof.prediction.rep.iloc[validation_index]
         )
 
-    def _on_repetition_end(train_target_data, repetition_oof_predictions):
+    def _on_repetition_end(data_train, data_oof):
         """Callback to execute upon ending an Experiment's repetition. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        train_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.train_target_data`
-        repetition_oof_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.repetition_oof_predictions`
+        data_train: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_train`
+        data_oof: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
 
         Returns
         -------
         Array-like"""
-        return _confusion_matrix(train_target_data, repetition_oof_predictions)
+        # return _confusion_matrix(data_oof.target.final, data_oof.prediction.rep)  # TODO: Should use this when collecting transformed targets
+        return _confusion_matrix(data_train.target.d, data_oof.prediction.rep)  # FLAG: TEMPORARY
 
-    def _on_experiment_end(train_target_data, final_oof_predictions):
+    def _on_experiment_end(data_train, data_oof):
         """Callback to execute upon ending an Experiment. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        train_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.train_target_data`
-        final_oof_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.final_oof_predictions`
+        data_train: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_train`
+        data_oof: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
 
         Returns
         -------
         Array-like"""
-        return _confusion_matrix(train_target_data, final_oof_predictions)
+        # return _confusion_matrix(data_oof.target.final, data_oof.prediction.final)  # TODO: Should use this when collecting transformed targets
+        return _confusion_matrix(data_train.target.d, data_oof.prediction.final)  # FLAG: TEMPORARY
 
     return lambda_callback(
         on_run_end=_on_run_end if on_run else None,
@@ -196,7 +194,7 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`"""
         stat_aggregates["confusion_matrix_holdout"] = dict(runs=[], folds=[], reps=[], final=None)
 
-    def _on_run_end(stat_aggregates, fold_holdout_target, run_holdout_predictions):
+    def _on_run_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment's run. Note that parameters are
         named after Experiment attributes
 
@@ -204,15 +202,13 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        fold_holdout_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_holdout_target`
-        run_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.run_holdout_predictions`"""
+        data_holdout: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["runs"].append(
-            _confusion_matrix(fold_holdout_target, run_holdout_predictions)
+            _confusion_matrix(data_holdout.target.fold, data_holdout.prediction.run)
         )
 
-    def _on_fold_end(stat_aggregates, fold_holdout_target, fold_holdout_predictions):
+    def _on_fold_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment's fold. Note that parameters are
         named after Experiment attributes
 
@@ -220,15 +216,13 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        fold_holdout_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_holdout_target`
-        fold_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.fold_holdout_predictions`"""
+        data_holdout: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["folds"].append(
-            _confusion_matrix(fold_holdout_target, fold_holdout_predictions)
+            _confusion_matrix(data_holdout.target.fold, data_holdout.prediction.fold)
         )
 
-    def _on_repetition_end(stat_aggregates, holdout_target_data, repetition_holdout_predictions):
+    def _on_repetition_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment's repetition. Note that parameters are
         named after Experiment attributes
 
@@ -236,15 +230,14 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        holdout_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
-        repetition_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.repetition_holdout_predictions`"""
+        data_holdout: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["reps"].append(
-            _confusion_matrix(holdout_target_data, repetition_holdout_predictions)
+            # _confusion_matrix(data_holdout.target.final, data_holdout.prediction.rep)  # TODO: Should use this when collecting transformed targets
+            _confusion_matrix(data_holdout.target.d, data_holdout.prediction.rep)  # FLAG: TEMPORARY
         )
 
-    def _on_experiment_end(stat_aggregates, holdout_target_data, final_holdout_predictions):
+    def _on_experiment_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment. Note that parameters are
         named after Experiment attributes
 
@@ -252,12 +245,12 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        holdout_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
-        final_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.final_holdout_predictions`"""
+        data_holdout: Dataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["final"] = _confusion_matrix(
-            holdout_target_data, final_holdout_predictions
+            # data_holdout.target.final, data_holdout.prediction.final  # TODO: Should use this when collecting transformed targets
+            data_holdout.target.d,
+            data_holdout.prediction.final,  # FLAG: TEMPORARY
         )
 
     return lambda_callback(
@@ -301,24 +294,15 @@ def dataset_recorder(save_transformed=False):
         Aggregator-like `LambdaCallback` whose values are aggregated under the name "_datasets" and
         whose keys are named after the corresponding callback methods"""
 
-    def _on_fold(
-        fold_train_input,
-        fold_train_target,
-        fold_validation_input,
-        fold_validation_target,
-        fold_holdout_input,
-        fold_holdout_target,
-        fold_test_input,
-        kwargs,
-    ):
+    def _on_fold(data_train, data_oof, data_holdout, data_test, kwargs):
         d = dict(
-            fold_train_input=fold_train_input,
-            fold_train_target=fold_train_target,
-            fold_validation_input=fold_validation_input,
-            fold_validation_target=fold_validation_target,
-            fold_holdout_input=fold_holdout_input,
-            fold_holdout_target=fold_holdout_target,
-            fold_test_input=fold_test_input,
+            fold_train_input=data_train.input.fold,
+            fold_train_target=data_train.target.fold,
+            fold_validation_input=None if data_oof is None else data_oof.input.fold,
+            fold_validation_target=None if data_oof is None else data_oof.target.fold,
+            fold_holdout_input=None if data_holdout is None else data_holdout.input.fold,
+            fold_holdout_target=None if data_holdout is None else data_holdout.target.fold,
+            fold_test_input=None if data_test is None else data_test.input.fold,
         )
         if save_transformed:
             for k in ["transformed_fold_holdout_target", "transformed_run_validation_target"]:
