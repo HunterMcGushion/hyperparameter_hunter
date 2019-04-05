@@ -76,25 +76,18 @@ def sentinel_checker():
     LambdaCallback
         Result of :func:`callbacks.bases.lambda_callback` to check `DatasetSentinel` values"""
 
-    def on_run_start(
-        fold_train_input,
-        fold_train_target,
-        fold_validation_input,
-        fold_validation_target,
-        fold_holdout_input,
-        fold_holdout_target,
-    ):
+    def on_run_start(data_train, data_oof, data_holdout):
         #################### Check Train Sentinels ####################
-        assert fold_train_input.equals(G.Env.train_input.retrieve_by_sentinel())
-        assert fold_train_target.equals(G.Env.train_target.retrieve_by_sentinel())
+        assert data_train.input.fold.equals(G.Env.train_input.retrieve_by_sentinel())
+        assert data_train.target.fold.equals(G.Env.train_target.retrieve_by_sentinel())
 
         #################### Check Validation Sentinels ####################
-        assert fold_validation_input.equals(G.Env.validation_input.retrieve_by_sentinel())
-        assert fold_validation_target.equals(G.Env.validation_target.retrieve_by_sentinel())
+        assert data_oof.input.fold.equals(G.Env.validation_input.retrieve_by_sentinel())
+        assert data_oof.target.fold.equals(G.Env.validation_target.retrieve_by_sentinel())
 
         #################### Check Holdout Sentinels ####################
-        assert fold_holdout_input.equals(G.Env.holdout_input.retrieve_by_sentinel())
-        assert fold_holdout_target.equals(G.Env.holdout_target.retrieve_by_sentinel())
+        assert data_holdout.input.fold.equals(G.Env.holdout_input.retrieve_by_sentinel())
+        assert data_holdout.target.fold.equals(G.Env.holdout_target.retrieve_by_sentinel())
 
     return lambda_callback(on_run_start=on_run_start)
 
