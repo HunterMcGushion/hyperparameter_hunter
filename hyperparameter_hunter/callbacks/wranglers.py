@@ -40,7 +40,7 @@ class WranglerTargetOOF(BaseWranglerCallback):
 
     # FLAG: `WranglerTarget` classes must be executed before `WranglerFeatureEngineer`, otherwise `fold_validation_target` won't be correct here
     def on_fold_start(self):
-        self.__initial_fold_validation_target = self.fold_validation_target.copy()
+        self.__initial_fold_validation_target = self.data_oof.target.fold.copy()
         super().on_fold_start()
 
     def on_run_start(self):
@@ -48,7 +48,7 @@ class WranglerTargetOOF(BaseWranglerCallback):
         super().on_run_start()
 
     def on_run_end(self):
-        if not self.__initial_fold_validation_target.equals(self.fold_validation_target):
+        if not self.__initial_fold_validation_target.equals(self.data_oof.target.fold):
             if (
                 self.transformed_final_oof_target is None
                 or self.transformed_repetition_oof_target is None
@@ -56,7 +56,7 @@ class WranglerTargetOOF(BaseWranglerCallback):
                 self.transformed_final_oof_target = self.__zeros_df()
                 self.transformed_repetition_oof_target = self.__zeros_df()
 
-            self.transformed_run_validation_target = self.fold_validation_target.copy()
+            self.transformed_run_validation_target = self.data_oof.target.fold.copy()
             self.transformed_run_validation_target.index = self.validation_index
             self.transformed_repetition_oof_target.iloc[
                 self.validation_index
@@ -109,8 +109,8 @@ class WranglerTargetHoldout(BaseWranglerCallback):
         super().on_run_start()
 
     def on_run_end(self):
-        if not self.holdout_target_data.equals(self.fold_holdout_target):
-            self.transformed_run_holdout_target = self.fold_holdout_target.copy()
+        if not self.data_holdout.target.d.equals(self.data_holdout.target.fold):
+            self.transformed_run_holdout_target = self.data_holdout.target.fold.copy()
             self.transformed_fold_holdout_target += self.transformed_run_holdout_target
         super().on_run_end()
 
