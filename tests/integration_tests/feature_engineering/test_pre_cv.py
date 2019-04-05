@@ -373,10 +373,12 @@ end_data_sn_ss = (
     indirect=["experiment_prep_fixture"],
 )
 def test_feature_engineer_experiment(toy_environment_fixture, experiment_prep_fixture, end_data):
-    assert_frame_equal(experiment_prep_fixture.train_input_data, end_data[0], check_dtype=False)
-    assert_frame_equal(experiment_prep_fixture.train_target_data, end_data[1], check_dtype=False)
-    assert_frame_equal(experiment_prep_fixture.holdout_input_data, end_data[2], check_dtype=False)
-    assert_frame_equal(experiment_prep_fixture.holdout_target_data, end_data[3], check_dtype=False)
+    assert_frame_equal(experiment_prep_fixture.data_train.input.d, end_data[0], check_dtype=False)
+    assert_frame_equal(experiment_prep_fixture.data_train.target.d, end_data[1], check_dtype=False)
+    assert_frame_equal(experiment_prep_fixture.data_holdout.input.d, end_data[2], check_dtype=False)
+    assert_frame_equal(
+        experiment_prep_fixture.data_holdout.target.d, end_data[3], check_dtype=False
+    )
 
 
 @pytest.mark.parametrize(
