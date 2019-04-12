@@ -712,7 +712,7 @@ def get_engineering_step_params(f: callable) -> List[str]:
     parser = ParameterParser()
     parser.visit(tree)
 
-    if any(_ not in valid_datasets for _ in parser.args[:-1]):
+    if any(_ not in valid_datasets for _ in parser.args):
         raise ValueError(f"Invalid dataset name in {parser.args}")
     return parser.args
 
