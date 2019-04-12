@@ -24,4 +24,5 @@ pytest \
     --cov-report html \
     --cov-report term \
     tests/ \
-    --durations=10
+    --durations=10 \
+    -rfE
