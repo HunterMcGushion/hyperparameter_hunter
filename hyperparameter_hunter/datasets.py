@@ -48,9 +48,9 @@ class BaseDataset:
 
 @dataclass
 class Dataset(BaseDataset):
-    # TODO: Update `wranglers`/`evaluators` to actually use `T` instead of old attributes
-    T: Optional[BaseDataset] = field(default=None, init=False)
-    # TODO: Update `wranglers`/`evaluators` to actually use `T` instead of old attributes
+    T: Optional[BaseDataset] = field(default_factory=lambda: BaseDataset(None, None), init=False)
+    # `T` contains the data after being transformed (if transformed) - This is the data actually used by models
+    # Conversely, the rest of the `Dataset` is data before transformation, or after inversion
 
 
 @dataclass
