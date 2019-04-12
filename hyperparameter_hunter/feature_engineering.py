@@ -693,12 +693,6 @@ def get_engineering_step_params(f: callable) -> List[str]:
     ...     return train_inputs, non_train_inputs
     >>> get_engineering_step_params(standard_scale)
     ['train_inputs', 'non_train_inputs']
-    >>> def error_mismatch(train_inputs, non_train_inputs):
-    ...     return validation_inputs, holdout_inputs
-    >>> get_engineering_step_params(error_mismatch)
-    Traceback (most recent call last):
-        File "feature_engineering.py", line ?, in get_engineering_step_params
-    ValueError: Mismatched `f` inputs (['train_inputs', 'non_train_inputs']), and returns (['validation_inputs', 'holdout_inputs'])
     >>> def error_invalid_dataset(train_inputs, foo):
     ...     return train_inputs, foo
     >>> get_engineering_step_params(error_invalid_dataset)
@@ -718,9 +712,6 @@ def get_engineering_step_params(f: callable) -> List[str]:
     parser = ParameterParser()
     parser.visit(tree)
 
-    # TODO: Remove requirement for input arguments and return names to match
-    # if parser.args != parser.returns:
-    #     raise ValueError(f"Mismatched `f` inputs ({parser.args}), and returns ({parser.returns})")
     if any(_ not in valid_datasets for _ in parser.args[:-1]):
         raise ValueError(f"Invalid dataset name in {parser.args}")
     return parser.args
