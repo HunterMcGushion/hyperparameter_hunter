@@ -77,6 +77,52 @@ class G(object):
         modules to check if :attr:`settings.G.Env` is None. If None, a
         :class:`environment.Environment` has not yet been instantiated. If not None, any attributes
         or methods of the instantiated Env may be called
+    save_transformed_predictions: False
+        Declares format in which a model's predictions should be saved, with regard to
+        :class:`feature_engineering.FeatureEngineer` transformations. If no transformation of the
+        target variable takes place (either through :class:`feature_engineering.FeatureEngineer`,
+        :class:`feature_engineering.EngineerStep`, or otherwise), then this setting can be ignored.
+
+        If `save_transformed_predictions` is True, and target transformation does occur, then
+        experiment predictions are saved in the same form as the transformed target, which is the
+        form returned directly by a fitted model's `predict` method. For example, if target data is
+        label-encoded, and an :class:`feature_engineering.EngineerStep` is used to one-hot encode
+        the target, then one-hot-encoded predictions will be saved.
+
+        Conversely, if `save_transformed_predictions` is False (default), and target transformation
+        does occur, then experiment predictions are saved in the inverted form of the transformed
+        target, which is the same form as the original target data. Continuing the example of
+        label-encoded target data, and an :class:`feature_engineering.EngineerStep` to one-hot
+        encode the target, in this case, label-encoded predictions will be saved.
+    save_transformed_metrics: True
+        Declares manner in which a model's predictions should be evaluated through the provided
+        :attr:`environment.Environment.metrics`, with regard to
+        :class:`feature_engineering.FeatureEngineer` transformations. If no transformation of the
+        target variable takes place (either through :class:`feature_engineering.FeatureEngineer`,
+        :class:`feature_engineering.EngineerStep`, or otherwise), then this setting can be ignored.
+
+        A more descriptive name for this may be "calculate_metrics_using_transformed_predictions",
+        but that's a bit verbose, even by my standards.
+
+        If `save_transformed_metrics` is True (default), and target transformation does occur, then
+        experiment metrics are calculated using the transformed targets and predictions, which is
+        the form returned directly by a fitted model's `predict` method. For example, if target data
+        is label-encoded, and an :class:`feature_engineering.EngineerStep` is used to one-hot encode
+        the target, then metrics functions will receive the following as input:
+        (one-hot-encoded targets, and one-hot-encoded predictions).
+
+        Conversely, if `save_transformed_metrics` is False, and target transformation does occur,
+        then experiment metrics are calculated using the inverse of the transformed targets and
+        predictions, which is same form as the original target data. Continuing the example of
+        label-encoded target data, and an :class:`feature_engineering.EngineerStep` to one-hot
+        encode the target, in this case, metrics functions will receive the following as input:
+        (label-encoded targets, and label-encoded predictions).
+    priority_callbacks: Tuple
+        Intended for internal use only. The contents of this tuple are inserted at the front of an
+        Experiment's list of callback bases via :class:`experiment_core.ExperimentMeta`, ahead of
+        even the Experiment's original base classes. This is used primarily for testing callbacks,
+        but it can also be used if you absolutely need a callback to be placed before the
+        Experiment's other ancestors in its MRO
     log_: print
         ...
     debug_: print
@@ -92,6 +138,13 @@ class G(object):
     """
 
     Env = None
+
+    #################### Miscellaneous Settings ####################
+    save_transformed_predictions = False
+    save_transformed_metrics = True
+
+    #################### Internal Settings ####################
+    priority_callbacks = tuple()
 
     #################### Standard Logging Set by :class:`environment.Environment` ####################
     @staticmethod

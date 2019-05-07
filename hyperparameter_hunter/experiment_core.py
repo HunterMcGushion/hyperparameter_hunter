@@ -60,7 +60,11 @@ class ExperimentMeta(type):
         those that are provided on an instance-wide basis. This is done in order to preserve the
         intended MRO of the original base classes, after adding and sorting new bases"""
         namespace = dict(
-            __original_bases=bases, __class_wide_bases=[], __instance_bases=[], source_script=None
+            __original_bases=bases,
+            __class_wide_bases=[],
+            __instance_bases=[],
+            __priority_callback_bases=[],
+            source_script=None,
         )
 
         return namespace
@@ -129,7 +133,8 @@ class ExperimentMeta(type):
         # FLAG: Add ability to record full_predictions, then provide callback to check on experiment end...
         # FLAG: ... to determine whether full_predictions should actually be saved - Like checking final score/std > threshold
 
-        cls.__bases__ = original_bases + auxiliary_bases
+        setattr(cls, "__priority_callback_bases", list(G.priority_callbacks))
+        cls.__bases__ = G.priority_callbacks + original_bases + auxiliary_bases
 
         return super().__call__(*args, **kwargs)
 
