@@ -309,9 +309,9 @@ class EngineerStep:
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
             hashes of the new datasets will be compared to those of the originals to ensure they
-            were actually modified. Results will be logged. If `do_validate`="strict", an exception
-            will be raised if any anomalies are found, rather than logging a message. If
-            `do_validate`=False, no validation will be performed"""
+            were actually modified. Results will be logged. If `do_validate` = "strict", an
+            exception will be raised if any anomalies are found, rather than logging a message. If
+            `do_validate` = False, no validation will be performed"""
         self._f = f
         self._name = name
         self.params = params
@@ -469,9 +469,9 @@ class FeatureEngineer:
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
             hashes of the new datasets will be compared to those of the originals to ensure they
-            were actually modified. Results will be logged. If `do_validate`="strict", an exception
-            will be raised if any anomalies are found, rather than logging a message. If
-            `do_validate`=False, no validation will be performed
+            were actually modified. Results will be logged. If `do_validate` = "strict", an
+            exception will be raised if any anomalies are found, rather than logging a message. If
+            `do_validate` = False, no validation will be performed
         **datasets: DFDict
             Mapping of datasets necessary to perform feature engineering steps. This is not expected
             to be provided on initialization and is offered primarily for debugging/testing"""
@@ -514,7 +514,7 @@ class FeatureEngineer:
         -------
         Array-like
             Result of sequentially calling inverse transformations in :attr:`steps` on `data`. If
-            any step has :attr:`EngineerStep.inversion`=None, `data` is unmodified for that step,
+            any step has :attr:`EngineerStep.inversion` = None, `data` is unmodified for that step,
             and proceeds to next engineer step inversion"""
         inverted_data = data
 
@@ -526,7 +526,7 @@ class FeatureEngineer:
 
     @property
     def steps(self) -> List[EngineerStep]:
-        """Feature engineering steps to execute in sequence on :meth:`FeatureEngineer.__call__"""
+        """Feature engineering steps to execute in sequence on :meth:`FeatureEngineer.__call__`"""
         return self._steps
 
     @steps.setter
@@ -601,8 +601,8 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
     stage: {"pre_cv", "intra_cv"}
         "pre_cv" if a step processing the given `datasets` should be executed in the
         pre-cross-validation stage. "intra_cv" if the step should be executed for each
-        cross-validation split. If any of the elements in `datasets` is prefixed with "validation_"
-        or "non_train_", `stage` will be "intra_cv". Otherwise, it will be "pre_cv"
+        cross-validation split. If any of the elements in `datasets` is prefixed with "validation"
+        or "non_train", `stage` will be "intra_cv". Otherwise, it will be "pre_cv"
 
     Notes
     -----
@@ -614,7 +614,7 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
     rows should be performed "intra_cv" in order to recalculate the final values of the datasets for
     each cross validation split and avoid information leakage
 
-    Technically, the inference of `stage="intra_cv"` due to the existence of a "non_train_"-prefixed
+    Technically, the inference of `stage="intra_cv"` due to the existence of a "non_train"-prefixed
     value in `datasets` could unnecessarily force steps to be executed "intra_cv" if, for example,
     there is no validation data. However, this is safer than the alternative of executing these
     steps "pre_cv", in which validation data would be a subset of train data, probably introducing
