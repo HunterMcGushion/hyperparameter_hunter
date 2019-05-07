@@ -188,7 +188,7 @@ class Environment:
         do_predict_proba: Boolean, or int, default=False
             * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
             * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in all
-             columns will be used as the actual prediction values
+              columns will be used as the actual prediction values
             * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
               :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
               True, but the int supplied as `do_predict_proba` declares the column index to use as
@@ -252,19 +252,19 @@ class Environment:
             Higher values indicate more frequent logging. Logs are still recorded in the heartbeat
             file regardless of verbosity level. `verbose` only dictates which logs are visible in
             the console. The following table illustrates which types of logging messages will be
-            visible with each verbosity level:
+            visible with each verbosity level::
 
-            | Verbosity | Keys/IDs | Final Score | Repetitions* | Folds | Runs* | Run Starts* | Result Files | Other |
-            |:---------:|:--------:|:-----------:|:------------:|:-----:|:-----:|:-----------:|:------------:|:-----:|
-            |     0     |          |             |              |       |       |             |              |       |
-            |     1     |    Yes   |     Yes     |              |       |       |             |              |       |
-            |     2     |    Yes   |     Yes     |      Yes     |  Yes  |       |             |              |       |
-            |     3     |    Yes   |     Yes     |      Yes     |  Yes  |  Yes  |             |              |       |
-            |     4     |    Yes   |     Yes     |      Yes     |  Yes  |  Yes  |     Yes     |      Yes     |  Yes  |
+                | Verbosity | Keys/IDs | Final Score | Repetitions* | Folds | Runs* | Run Starts* | Result Files | Other |
+                |:---------:|:--------:|:-----------:|:------------:|:-----:|:-----:|:-----------:|:------------:|:-----:|
+                |     0     |          |             |              |       |       |             |              |       |
+                |     1     |    Yes   |     Yes     |              |       |       |             |              |       |
+                |     2     |    Yes   |     Yes     |      Yes     |  Yes  |       |             |              |       |
+                |     3     |    Yes   |     Yes     |      Yes     |  Yes  |  Yes  |             |              |       |
+                |     4     |    Yes   |     Yes     |      Yes     |  Yes  |  Yes  |     Yes     |      Yes     |  Yes  |
 
-            * \*: If such logging is deemed appropriate with the given cross-validation parameters. In
+            *\*: If such logging is deemed appropriate with the given cross-validation parameters. In
             other words, repetition/run logging will only be verbose if Environment was given more
-            than one repetition/run, respectively *
+            than one repetition/run, respectively*
         file_blacklist: List of str, or None, or 'ALL', default=None
             If list of str, the result files named within are not saved to their respective
             directory in "<ASSETS_DIRNAME>/Experiments". If None, all result files are saved.
