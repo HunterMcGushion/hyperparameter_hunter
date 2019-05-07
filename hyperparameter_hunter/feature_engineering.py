@@ -213,7 +213,7 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
     --------
     names_for_merge: Describes how `stage` values differ"""
     df_names = names_for_merge(merge_to, stage)
-    df_names = [_ for _ in df_names if dfs.get(_, None) is not None]
+    df_names = [_ for _ in df_names if isinstance(dfs.get(_, None), pd.DataFrame)]
     try:
         merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
     except ValueError as _ex:
@@ -754,7 +754,7 @@ def _hash_dataset(dataset: pd.DataFrame) -> dict:
     ... }
     >>> _hash_dataset(None)
     {'dataset': None, 'column_names': None, 'column_values': None}"""
-    if dataset is None:
+    if (not isinstance(dataset, pd.DataFrame)) and (dataset is None or dataset == 0):
         return dict(dataset=None, column_names=None, column_values=None)
     return dict(
         dataset=make_hash_sha256(dataset),
