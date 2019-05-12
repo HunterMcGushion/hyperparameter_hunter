@@ -34,7 +34,7 @@ from hyperparameter_hunter.exceptions import (
     RepeatedExperimentError,
 )
 from hyperparameter_hunter.experiment_core import ExperimentMeta
-from hyperparameter_hunter.keys import HyperparameterKeyMaker
+from hyperparameter_hunter.keys.makers import HyperparameterKeyMaker
 from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_metric
 from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList

@@ -27,7 +27,7 @@ from hyperparameter_hunter.metrics import format_metrics
 from hyperparameter_hunter.sentinels import DatasetSentinel
 from hyperparameter_hunter.settings import G, ASSETS_DIRNAME, RESULT_FILE_SUB_DIR_PATHS
 from hyperparameter_hunter.reporting import ReportingHandler
-from hyperparameter_hunter.keys import CrossExperimentKeyMaker
+from hyperparameter_hunter.keys.makers import CrossExperimentKeyMaker
 from hyperparameter_hunter.utils.boltons_utils import remap
 from hyperparameter_hunter.utils.file_utils import make_dirs, ParametersFromFile
 from hyperparameter_hunter.utils.general_utils import Alias
