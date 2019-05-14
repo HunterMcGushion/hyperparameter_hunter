@@ -13,6 +13,7 @@ from hyperparameter_hunter.environment import (
 ##################################################
 import numpy as np
 import pandas as pd
+from pkg_resources import get_distribution
 import pytest
 
 ##################################################
@@ -73,27 +74,40 @@ default_env_params = dict(
 ##################################################
 # Environment Initialization Scenarios
 ##################################################
-scenarios_cv_params = [
-    [repeated_cv_params, "LQuf_lTfr1xa9-JdjXpEVm9_b7oFZrLjzKNWESXeHlU="],
-    [cv_params, "2YQ5gqPa98rQqClDOR82ubsp9qXiKlz4VqsONOcze3Q="],
-]
-scenarios_metrics_map = [
-    [
-        dict(roc="roc_auc_score", acc="accuracy_score"),
+if get_distribution("scikit-learn").version >= "0.21.0":
+    env_keys = [
+        "GaGtnkHlp-_N6wjSWlvFup1fVKRhptWKr5ZuO-Lfb1I=",
+        "kewedTF-4va4TbV1V_HtMDq1geaHjti8R0a2HRxo5rI=",
+        "pxDRseyZMF_-Uq5cVr6gVO6PdmjsrKcmnvVz6c5RqsA=",
+        "OTWwKWo9d7ir0KPNqIlwsoFNogJ_mrwQK_FqL4EK9gQ=",
+        "BGsfVUZC6hyFbr2YZzim6BJax3L90RiX5oGxhLN6RCw=",
+        "7eX67TmhSv9n5xn2IYgkMDmVZcXEjDVi8435WpLXv3A=",
+    ]
+else:
+    env_keys = [
+        "LQuf_lTfr1xa9-JdjXpEVm9_b7oFZrLjzKNWESXeHlU=",
+        "2YQ5gqPa98rQqClDOR82ubsp9qXiKlz4VqsONOcze3Q=",
         "nqICREczftTR3kphbkIXDEZup5utQmhqeyndjZ5lfqQ=",
-    ],
+        "thDRj-vOjsLpplfaZl5qY8U6jRVeIoNbQHwXtWPhUTk=",
+        "fFiOUZCDoqJ6NisIZ9_ZjGd4pVbCO-aXYzMvYzq1OAk=",
+        "Kgqa7eSV52fPYVYeF6aIySKz6-QBRRShWklcoyePgBg=",
+    ]
+
+scenarios_cv_params = [[repeated_cv_params, env_keys[0]], [cv_params, env_keys[1]]]
+scenarios_metrics_map = [
+    [dict(roc="roc_auc_score", acc="accuracy_score"), env_keys[2]],
     [
         dict(
             roc="roc_auc_score",
             f1="f1_score",
             acc=lambda _t, _p: accuracy_score(_t, np.clip(np.round(_p), 0, 1)),
         ),
-        "thDRj-vOjsLpplfaZl5qY8U6jRVeIoNbQHwXtWPhUTk=",
+        env_keys[3],
     ],
 ]
 scenarios_cross_experiment_params = [
-    [10, "StratifiedKFold", repeated_cv_params, "fFiOUZCDoqJ6NisIZ9_ZjGd4pVbCO-aXYzMvYzq1OAk="],
-    [3, "KFold", cv_params, "Kgqa7eSV52fPYVYeF6aIySKz6-QBRRShWklcoyePgBg="],
+    [10, "StratifiedKFold", repeated_cv_params, env_keys[4]],
+    [3, "KFold", cv_params, env_keys[5]],
 ]
 
 
