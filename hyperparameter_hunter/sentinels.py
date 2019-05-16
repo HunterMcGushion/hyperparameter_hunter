@@ -30,7 +30,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.datasets import Dataset
+from hyperparameter_hunter.datasets import BaseDataset
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.boltons_utils import remap
 
@@ -198,8 +198,8 @@ class DatasetSentinel(Sentinel):
         object
             The dataset for which the sentinel was being used as a placeholder"""
         kind, chunk = self.dataset_type.split("_")
-        dataset: Dataset = getattr(G.Env.current_task, "data_{}".format(kind))
-        return getattr(dataset, chunk).fold
+        dataset: BaseDataset = getattr(G.Env.current_task, "data_{}".format(kind))
+        return getattr(dataset, chunk).T.fold
 
     def _validate_parameters(self):
         """Ensure input parameters are valid and properly formatted"""

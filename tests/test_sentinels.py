@@ -78,16 +78,16 @@ def sentinel_checker():
 
     def on_run_start(data_train, data_oof, data_holdout):
         #################### Check Train Sentinels ####################
-        assert data_train.input.fold.equals(G.Env.train_input.retrieve_by_sentinel())
-        assert data_train.target.fold.equals(G.Env.train_target.retrieve_by_sentinel())
+        assert data_train.input.T.fold.equals(G.Env.train_input.retrieve_by_sentinel())
+        assert data_train.target.T.fold.equals(G.Env.train_target.retrieve_by_sentinel())
 
         #################### Check Validation Sentinels ####################
-        assert data_oof.input.fold.equals(G.Env.validation_input.retrieve_by_sentinel())
-        assert data_oof.target.fold.equals(G.Env.validation_target.retrieve_by_sentinel())
+        assert data_oof.input.T.fold.equals(G.Env.validation_input.retrieve_by_sentinel())
+        assert data_oof.target.T.fold.equals(G.Env.validation_target.retrieve_by_sentinel())
 
         #################### Check Holdout Sentinels ####################
-        assert data_holdout.input.fold.equals(G.Env.holdout_input.retrieve_by_sentinel())
-        assert data_holdout.target.fold.equals(G.Env.holdout_target.retrieve_by_sentinel())
+        assert data_holdout.input.T.fold.equals(G.Env.holdout_input.retrieve_by_sentinel())
+        assert data_holdout.target.T.fold.equals(G.Env.holdout_target.retrieve_by_sentinel())
 
     return lambda_callback(on_run_start=on_run_start)
 
