@@ -541,6 +541,8 @@ class FeatureEngineer:
         -------
         Dict
             Important attributes describing this :class:`FeatureEngineer` instance"""
+        if len(self.steps) == 0:
+            return dict()
         return dict(
             steps=[_.get_key_data() for _ in self.steps],
             do_validate=self.do_validate,
