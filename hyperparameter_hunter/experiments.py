@@ -111,11 +111,10 @@ class BaseExperiment(ScoringMixIn):
         feature_engineer: `FeatureEngineer`, or None, default=None
             ...  # TODO: Add documentation
         feature_selector: List of str, callable, list of booleans, default=None
-            The value provided when splitting apart the input data for all provided DataFrames.
-            `feature_selector` is provided as the second argument for calls to
-            `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
+            Column names to include as input data for all provided DataFrames. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
-            :attr:`target_column`, and :attr:`id_column`
+            :attr:`target_column`, and :attr:`id_column`. `feature_selector` is provided as the
+            second argument for calls to `pandas.DataFrame.loc` when constructing datasets
         notes: String, or None, default=None
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
