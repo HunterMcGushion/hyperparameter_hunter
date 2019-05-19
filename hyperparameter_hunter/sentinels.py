@@ -30,7 +30,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.datasets import BaseDataset
+from hyperparameter_hunter.data.data_core import BaseDataset
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.boltons_utils import remap
 
