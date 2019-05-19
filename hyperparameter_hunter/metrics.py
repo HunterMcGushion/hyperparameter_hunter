@@ -452,6 +452,7 @@ def get_clean_prediction(target: ArrayLike, prediction: ArrayLike):
         except ValueError:
             prediction = prediction.clip(target_min, target_max, axis=1)
         finally:
+            prediction = prediction.astype(np.float64)
             prediction = np.rint(prediction)
     return prediction
 
