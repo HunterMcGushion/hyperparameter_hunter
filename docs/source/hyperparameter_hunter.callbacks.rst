@@ -20,14 +20,6 @@ hyperparameter\_hunter.callbacks.bases module
     :undoc-members:
     :show-inheritance:
 
-hyperparameter\_hunter.callbacks.bases\_ORIGINAL\_4\-17\-19\_2000 module
-------------------------------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.callbacks.bases_ORIGINAL_4-17-19_2000
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 hyperparameter\_hunter.callbacks.evaluators module
 --------------------------------------------------
 
@@ -64,22 +56,6 @@ hyperparameter\_hunter.callbacks.wranglers module
 -------------------------------------------------
 
 .. automodule:: hyperparameter_hunter.callbacks.wranglers
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.callbacks.wranglers\_2 module
-----------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.callbacks.wranglers_2
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.callbacks.wranglers\_ORIGINAL\_4\-17\-19\_2000 module
-----------------------------------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.callbacks.wranglers_ORIGINAL_4-17-19_2000
     :members:
     :undoc-members:
     :show-inheritance:
