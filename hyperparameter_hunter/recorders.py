@@ -9,6 +9,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.data import OOFDataset, HoldoutDataset, TestDataset
 from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
@@ -284,6 +285,7 @@ prediction_requirements = [
 class PredictionsHoldoutRecorder(BaseRecorder):
     result_path_key = "predictions_holdout"
     required_attributes = ["data_holdout", "holdout_dataset"] + prediction_requirements
+    data_holdout: HoldoutDataset
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
@@ -303,6 +305,7 @@ class PredictionsHoldoutRecorder(BaseRecorder):
 class PredictionsOOFRecorder(BaseRecorder):
     result_path_key = "predictions_oof"
     required_attributes = ["data_oof", "train_dataset"] + prediction_requirements
+    data_oof: OOFDataset
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
@@ -319,6 +322,7 @@ class PredictionsOOFRecorder(BaseRecorder):
 class PredictionsTestRecorder(BaseRecorder):
     result_path_key = "predictions_test"
     required_attributes = ["data_test", "test_dataset"] + prediction_requirements
+    data_test: TestDataset
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
