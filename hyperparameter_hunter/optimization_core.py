@@ -216,11 +216,10 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         feature_engineer: `FeatureEngineer`, or None, default=None  # TODO: Add documentation
             ...   # TODO: Add documentation
         feature_selector: List of str, callable, list of booleans, default=None
-            The value provided when splitting apart the input data for all provided DataFrames.
-            `feature_selector` is provided as the second argument for calls to
-            `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
+            Column names to include as input data for all provided DataFrames. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
-            :attr:`target_column`, and :attr:`id_column`
+            :attr:`target_column`, and :attr:`id_column`. `feature_selector` is provided as the
+            second argument for calls to `pandas.DataFrame.loc` when constructing datasets
         notes: String, or None, default=None
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
@@ -234,9 +233,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         -----
         The `auto_start` kwarg is not available here because
         :meth:`BaseOptimizationProtocol._execute_experiment` sets it to False in order to check for
-        duplicated keys before running the whole Experiment. This is the most notable difference
-        between calling :meth:`set_experiment_guidelines` and instantiating
-        :class:`experiments.CVExperiment`"""
+        duplicated keys before running the whole Experiment. This and `target_metric` being moved to
+        :meth:`BaseOptimizationProtocol.__init__` are the most notable differences between calling
+        :meth:`set_experiment_guidelines` and instantiating :class:`experiments.CVExperiment`"""
         self.model_initializer = model_initializer
 
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
