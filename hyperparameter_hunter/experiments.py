@@ -27,7 +27,7 @@ from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
 )
-from hyperparameter_hunter.datasets import TrainData, OOFData, HoldoutData, TestData
+from hyperparameter_hunter.data import TrainDataset, OOFDataset, HoldoutDataset, TestDataset
 from hyperparameter_hunter.exceptions import (
     EnvironmentInactiveError,
     EnvironmentInvalidError,
@@ -49,6 +49,7 @@ from hyperparameter_hunter.utils.general_utils import Deprecated
 # Import Miscellaneous Assets
 ##################################################
 from abc import abstractmethod
+from copy import deepcopy
 from inspect import isclass
 import numpy as np
 import pandas as pd
@@ -234,7 +235,6 @@ class BaseExperiment(ScoringMixIn):
             G.warn("WARNING: Duplicate experiment!")
 
         self._initialize_random_seeds()
-        self._initial_preprocessing()
         self.execute()
 
         #################### Save Experiment Results ####################
@@ -272,50 +272,36 @@ class BaseExperiment(ScoringMixIn):
     ##################################################
     # Data Preprocessing Methods:
     ##################################################
-    # noinspection PyArgumentList
-    def _initial_preprocessing(self):
-        """Perform preprocessing steps prior to executing fitting protocol (usually
-        cross-validation), consisting of: 1) Split train/holdout data into respective train/holdout
-        input and target data attributes, 2) Execute `feature_engineer` to perform "pre_cv"-stage
-        preprocessing, 3) Set datasets to their (modified) counterparts in `feature_engineer`"""
+    def on_experiment_start(self):
+        """Prepare data prior to executing fitting protocol (cross-validation), by 1) Initializing
+        formal :mod:`~hyperparameter_hunter.data.datasets` attributes, 2) Invoking
+        `feature_engineer` to perform "pre_cv"-stage preprocessing, and 3) Updating datasets to
+        include their (transformed) counterparts in `feature_engineer`"""
         #################### Build Datasets ####################
-        self.data_train = TrainData(
-            self.train_dataset.copy().loc[:, self.feature_selector],
-            self.train_dataset.copy().loc[:, self.target_column],
-        )
-
-        self.data_oof = OOFData(None, None)
-
-        if isinstance(self.holdout_dataset, pd.DataFrame):
-            self.data_holdout = HoldoutData(
-                self.holdout_dataset.copy().loc[:, self.feature_selector],
-                self.holdout_dataset.copy().loc[:, self.target_column],
-            )
-        else:
-            self.data_holdout = HoldoutData(None, None)
-
-        if isinstance(self.test_dataset, pd.DataFrame):
-            self.data_test = TestData(self.test_dataset.copy().loc[:, self.feature_selector])
-        else:
-            self.data_test = TestData(None)
+        data_kwargs = dict(feature_selector=self.feature_selector, target_column=self.target_column)
+        self.data_train = TrainDataset(self.train_dataset, require_data=True, **data_kwargs)
+        # TODO: Might be better to initialize `data_oof` with same data as `data_train`
+        self.data_oof = OOFDataset(None, **data_kwargs)
+        self.data_holdout = HoldoutDataset(self.holdout_dataset, **data_kwargs)
+        self.data_test = TestDataset(self.test_dataset, **data_kwargs)
 
         #################### Perform Pre-CV Feature Engineering ####################
-        if self.feature_engineer and callable(self.feature_engineer):
-            self.feature_engineer(
-                "pre_cv",
-                train_inputs=self.data_train.input.d,
-                train_targets=self.data_train.target.d,
-                holdout_inputs=self.data_holdout.input.d,
-                holdout_targets=self.data_holdout.target.d,
-                test_inputs=self.data_test.input.d,
-            )
-            self.data_train.input.d = self.feature_engineer.datasets["train_inputs"]
-            self.data_train.target.d = self.feature_engineer.datasets["train_targets"]
-            self.data_holdout.input.d = self.feature_engineer.datasets["holdout_inputs"]
-            self.data_holdout.target.d = self.feature_engineer.datasets["holdout_targets"]
-            self.data_test.input.d = self.feature_engineer.datasets["test_inputs"]
+        self.feature_engineer(
+            "pre_cv",
+            train_inputs=deepcopy(self.data_train.input.d),
+            train_targets=deepcopy(self.data_train.target.d),
+            holdout_inputs=deepcopy(self.data_holdout.input.d),
+            holdout_targets=deepcopy(self.data_holdout.target.d),
+            test_inputs=deepcopy(self.data_test.input.d),
+        )
+        self.data_train.input.T.d = self.feature_engineer.datasets["train_inputs"]
+        self.data_train.target.T.d = self.feature_engineer.datasets["train_targets"]
+        self.data_holdout.input.T.d = self.feature_engineer.datasets["holdout_inputs"]
+        self.data_holdout.target.T.d = self.feature_engineer.datasets["holdout_targets"]
+        self.data_test.input.T.d = self.feature_engineer.datasets["test_inputs"]
 
         G.log("Initial preprocessing stage complete", 4)
+        super().on_experiment_start()
 
     ##################################################
     # Supporting Methods:
