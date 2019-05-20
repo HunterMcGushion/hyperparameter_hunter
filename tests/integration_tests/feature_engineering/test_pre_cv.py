@@ -254,7 +254,24 @@ def dataset_recorder_env(request):
 
 
 @pytest.fixture()
-def experiment_prep_fixture(request):
+def prepped_experiment(request):
+    """Build a partially prepared :class:`~hyperparameter_hunter.experiments.CVExperiment` instance
+
+    Specifically, automatic execution is disabled via `auto_start=False`, then the following methods
+    are called:
+
+    1. :meth:`~hyperparameter_hunter.experiments.BaseExperiment.preparation_workflow`,
+    2. :meth:`~hyperparameter_hunter.experiments.BaseExperiment._initialize_random_seeds`, and
+    3. :meth:`~hyperparameter_hunter.experiments.BaseExperiment.on_experiment_start`, which
+       initializes the four :mod:`~hyperparameter_hunter.data.datasets` classes, then performs
+       pre-CV feature engineering
+
+    Notes
+    -----
+    Directly calling `on_experiment_start` is ok in this test because after calling
+    `_initialize_random_seeds`, `BaseExperiment` calls `execute`, which is implemented by
+    `BaseCVExperiment`, and only calls `cross_validation_workflow`, whose first task is to call
+    `on_experiment_start`. So nothing gets skipped in between"""
     #################### Build `feature_engineer` ####################
     feature_engineer = FeatureEngineer(steps=request.param)
 
@@ -268,8 +285,7 @@ def experiment_prep_fixture(request):
     experiment.preparation_workflow()
     # noinspection PyProtectedMember
     experiment._initialize_random_seeds()
-    # noinspection PyProtectedMember
-    experiment._initial_preprocessing()
+    experiment.on_experiment_start()
 
     return experiment
 
@@ -359,7 +375,7 @@ end_data_sn_ss = (
 
 
 @pytest.mark.parametrize(
-    ["experiment_prep_fixture", "end_data"],
+    ["prepped_experiment", "end_data"],
     [
         (None, end_data_unchanged),
         ([set_nan_0], end_data_sn),
@@ -370,15 +386,13 @@ end_data_sn_ss = (
         ([set_nan_0, standard_scale_0], end_data_sn_ss),
         ([set_nan_0, EngineerStep(standard_scale_0)], end_data_sn_ss),
     ],
-    indirect=["experiment_prep_fixture"],
+    indirect=["prepped_experiment"],
 )
-def test_feature_engineer_experiment(toy_environment_fixture, experiment_prep_fixture, end_data):
-    assert_frame_equal(experiment_prep_fixture.data_train.input.d, end_data[0], check_dtype=False)
-    assert_frame_equal(experiment_prep_fixture.data_train.target.d, end_data[1], check_dtype=False)
-    assert_frame_equal(experiment_prep_fixture.data_holdout.input.d, end_data[2], check_dtype=False)
-    assert_frame_equal(
-        experiment_prep_fixture.data_holdout.target.d, end_data[3], check_dtype=False
-    )
+def test_feature_engineer_experiment(toy_environment_fixture, prepped_experiment, end_data):
+    assert_frame_equal(prepped_experiment.data_train.input.T.d, end_data[0], check_dtype=False)
+    assert_frame_equal(prepped_experiment.data_train.target.T.d, end_data[1], check_dtype=False)
+    assert_frame_equal(prepped_experiment.data_holdout.input.T.d, end_data[2], check_dtype=False)
+    assert_frame_equal(prepped_experiment.data_holdout.target.T.d, end_data[3], check_dtype=False)
 
 
 @pytest.mark.parametrize(
@@ -396,10 +410,9 @@ def test_feature_engineer_experiment(toy_environment_fixture, experiment_prep_fi
     ],
 )
 def test_intra_cv_engineer_experiment(dataset_recorder_env, experiment_fixture, end_data):
+    """Tests that original and transformed train/validation inputs for each fold are correct"""
     for f, datasets in enumerate(experiment_fixture.stat_aggregates["_datasets"]["on_fold_start"]):
-        assert_frame_equal(datasets["fold_train_input"], end_data[0][f])
-        assert_frame_equal(datasets["fold_validation_input"], end_data[1][f])
-
-    for f, datasets in enumerate(experiment_fixture.stat_aggregates["_datasets"]["on_fold_end"]):
-        assert_frame_equal(datasets["fold_train_input"], end_data[2][f])
-        assert_frame_equal(datasets["fold_validation_input"], end_data[3][f])
+        assert_frame_equal(datasets["data_train"].input.fold, end_data[0][f])
+        assert_frame_equal(datasets["data_oof"].input.fold, end_data[1][f])
+        assert_frame_equal(datasets["data_train"].input.T.fold, end_data[2][f])
+        assert_frame_equal(datasets["data_oof"].input.T.fold, end_data[3][f])

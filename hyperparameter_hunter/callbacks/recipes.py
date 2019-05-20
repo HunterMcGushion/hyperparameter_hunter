@@ -28,6 +28,7 @@ from hyperparameter_hunter.metrics import get_clean_prediction
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from copy import deepcopy
 import numpy as np
 import pandas as pd
 
@@ -77,7 +78,7 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
 
         Parameters
         ----------
-        data_oof: Dataset
+        data_oof: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
         **kwargs: Dict
             If this is given as a parameter to one of `lambda_callback`\'s functions, the entirety
@@ -94,7 +95,7 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
 
         Parameters
         ----------
-        data_oof: Dataset
+        data_oof: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
         validation_index: Array-like
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.validation_index`
@@ -112,9 +113,9 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
 
         Parameters
         ----------
-        data_train: Dataset
+        data_train: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_train`
-        data_oof: Dataset
+        data_oof: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
 
         Returns
@@ -129,9 +130,9 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
 
         Parameters
         ----------
-        data_train: Dataset
+        data_train: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_train`
-        data_oof: Dataset
+        data_oof: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
 
         Returns
@@ -202,7 +203,7 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        data_holdout: Dataset
+        data_holdout: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["runs"].append(
             _confusion_matrix(data_holdout.target.fold, data_holdout.prediction.run)
@@ -216,7 +217,7 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        data_holdout: Dataset
+        data_holdout: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["folds"].append(
             _confusion_matrix(data_holdout.target.fold, data_holdout.prediction.fold)
@@ -230,7 +231,7 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        data_holdout: Dataset
+        data_holdout: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["reps"].append(
             # _confusion_matrix(data_holdout.target.final, data_holdout.prediction.rep)  # TODO: Should use this when collecting transformed targets
@@ -245,7 +246,7 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        data_holdout: Dataset
+        data_holdout: BaseDataset
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["final"] = _confusion_matrix(
             # data_holdout.target.final, data_holdout.prediction.final  # TODO: Should use this when collecting transformed targets
@@ -283,9 +284,9 @@ def _confusion_matrix(targets, predictions):
 ##################################################
 # Excessive Recording Callbacks
 ##################################################
-def dataset_recorder(save_transformed=False):
-    """Build a `LambdaCallback` that records the current state of all datasets `on_fold_start` and
-    `on_fold_end` in order to validate modifications made by
+def dataset_recorder():
+    """Build a `LambdaCallback` that records the current state of all datasets `on_fold_start` in
+    order to validate modifications made by
     :class:`feature_engineering.FeatureEngineer`/:class:`feature_engineering.EngineerStep`
 
     Returns
@@ -294,25 +295,16 @@ def dataset_recorder(save_transformed=False):
         Aggregator-like `LambdaCallback` whose values are aggregated under the name "_datasets" and
         whose keys are named after the corresponding callback methods"""
 
-    def _on_fold(data_train, data_oof, data_holdout, data_test, kwargs):
+    def _on_fold(data_train, data_oof, data_holdout, data_test):
         d = dict(
-            fold_train_input=data_train.input.fold,
-            fold_train_target=data_train.target.fold,
-            fold_validation_input=data_oof.input.fold,
-            fold_validation_target=data_oof.target.fold,
-            fold_holdout_input=data_holdout.input.fold,
-            fold_holdout_target=data_holdout.target.fold,
-            fold_test_input=data_test.input.fold,
+            data_train=deepcopy(data_train),
+            data_oof=deepcopy(data_oof),
+            data_holdout=deepcopy(data_holdout),
+            data_test=deepcopy(data_test),
         )
-        if save_transformed:
-            for k in ["transformed_fold_holdout_target", "transformed_run_validation_target"]:
-                if k in kwargs:
-                    d[k] = kwargs[k]
-        return {k: v if not isinstance(v, pd.DataFrame) else v.copy() for k, v in d.items()}
+        return d
 
-    return lambda_callback(
-        on_fold_start=_on_fold, on_fold_end=_on_fold, agg_name="datasets", method_agg_keys=True
-    )
+    return lambda_callback(on_fold_start=_on_fold, agg_name="datasets", method_agg_keys=True)
 
 
 ##################################################
