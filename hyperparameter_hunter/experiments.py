@@ -533,6 +533,26 @@ class BaseCVExperiment(BaseExperiment):
         for data_chunk in [self.data_holdout.input, self.data_holdout.target, self.data_test.input]:
             if data_chunk.d is not None:
                 data_chunk.fold = data_chunk.d.copy()
+                data_chunk.T.fold = data_chunk.T.d.copy()
+
+        #################### Perform Intra-CV Feature Engineering ####################
+        self.feature_engineer(
+            "intra_cv",
+            train_inputs=self.data_train.input.T.fold,
+            train_targets=self.data_train.target.T.fold,
+            validation_inputs=self.data_oof.input.T.fold,
+            validation_targets=self.data_oof.target.T.fold,
+            holdout_inputs=self.data_holdout.input.T.fold,
+            holdout_targets=self.data_holdout.target.T.fold,
+            test_inputs=self.data_test.input.T.fold,
+        )
+        self.data_train.input.T.fold = self.feature_engineer.datasets["train_inputs"]
+        self.data_train.target.T.fold = self.feature_engineer.datasets["train_targets"]
+        self.data_oof.input.T.fold = self.feature_engineer.datasets["validation_inputs"]
+        self.data_oof.target.T.fold = self.feature_engineer.datasets["validation_targets"]
+        self.data_holdout.input.T.fold = self.feature_engineer.datasets["holdout_inputs"]
+        self.data_holdout.target.T.fold = self.feature_engineer.datasets["holdout_targets"]
+        self.data_test.input.T.fold = self.feature_engineer.datasets["test_inputs"]
 
         super().on_fold_start()
 
@@ -541,26 +561,6 @@ class BaseCVExperiment(BaseExperiment):
         overridden :meth:`on_fold_start` tasks, 2) Perform cv_run_workflow for each run, 3) Execute
         overridden :meth:`on_fold_end` tasks"""
         self.on_fold_start()
-
-        if self.feature_engineer and callable(self.feature_engineer):
-            self.feature_engineer(
-                "intra_cv",
-                train_inputs=self.data_train.input.fold,
-                train_targets=self.data_train.target.fold,
-                validation_inputs=self.data_oof.input.fold,
-                validation_targets=self.data_oof.target.fold,
-                holdout_inputs=self.data_holdout.input.fold,
-                holdout_targets=self.data_holdout.target.fold,
-                test_inputs=self.data_test.input.fold,
-            )
-            self.data_train.input.fold = self.feature_engineer.datasets["train_inputs"]
-            self.data_train.target.fold = self.feature_engineer.datasets["train_targets"]
-            self.data_oof.input.fold = self.feature_engineer.datasets["validation_inputs"]
-            self.data_oof.target.fold = self.feature_engineer.datasets["validation_targets"]
-            self.data_holdout.input.fold = self.feature_engineer.datasets["holdout_inputs"]
-            self.data_holdout.target.fold = self.feature_engineer.datasets["holdout_targets"]
-            self.data_test.input.fold = self.feature_engineer.datasets["test_inputs"]
-
         G.log("Intra-CV preprocessing stage complete", 4)
 
         for self._run in range(self.experiment_params.get("runs", 1)):
