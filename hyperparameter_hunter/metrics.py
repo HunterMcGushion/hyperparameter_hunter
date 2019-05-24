@@ -349,7 +349,7 @@ class ScoringMixIn(object):
                     if _id not in self.metrics.keys():
                         raise KeyError(f"{_d_type} values must be in metrics. '{_id}' is not")
 
-    def evaluate(self, data_type, target, prediction, return_list=False):
+    def evaluate(self, data_type, target, prediction, return_list=False, dry_run=False):
         """Apply metric(s) to the given data to calculate the value of the `prediction`
 
         Parameters
@@ -362,6 +362,11 @@ class ScoringMixIn(object):
             Predicted labels for the data. Should be same shape as `target`
         return_list: Boolean, default=False
             If True, return list of tuples instead of dict. See "Returns" section below for details
+        dry_run: Boolean, default=False
+            If True, the value of :attr:`last_evaluation_results` will not be updated to include
+            the returned `_result`. The core library callbacks operate under the assumption that
+            `last_evaluation_results` will be updated as usual, so restrict usage to debugging or
+            :func:`~hyperparameter_hunter.callbacks.bases.lambda_callback` implementations
 
         Returns
         -------
@@ -391,7 +396,9 @@ class ScoringMixIn(object):
             _result.append((_metric_id, _metric_value))
 
         _result = _result if return_list else OrderedDict(_result)
-        self.last_evaluation_results[data_type] = _result
+
+        if not dry_run:
+            self.last_evaluation_results[data_type] = _result
 
         return _result
 
