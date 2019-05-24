@@ -386,6 +386,8 @@ class ScoringMixIn(object):
         _result = []
 
         for _metric_id in _metric_ids:
+            # TODO: Maybe invoke metrics with `target[target_column]`, `prediction[target_column]`
+            #   Not doing so is screwing with some custom metrics that don't expect DFs
             try:
                 _metric_value = self.metrics[_metric_id](target, prediction)
             except ValueError:
