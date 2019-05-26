@@ -262,7 +262,7 @@ class BaseDataset(BaseDataCore):
 
         try:
             target = data.copy().loc[:, target_column]
-        except (AttributeError, TypeError):
+        except (AttributeError, KeyError, TypeError):
             target = None
 
         #################### Data Chunks ####################
