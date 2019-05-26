@@ -526,8 +526,14 @@ class BaseCVExperiment(BaseExperiment):
         self.data_train.input.fold = self.data_train.input.d.iloc[self.train_index, :].copy()
         self.data_oof.input.fold = self.data_train.input.d.iloc[self.validation_index, :].copy()
 
+        self.data_train.input.T.fold = self.data_train.input.T.d.iloc[self.train_index, :].copy()
+        self.data_oof.input.T.fold = self.data_train.input.T.d.iloc[self.validation_index, :].copy()
+
         self.data_train.target.fold = self.data_train.target.d.iloc[self.train_index].copy()
         self.data_oof.target.fold = self.data_train.target.d.iloc[self.validation_index].copy()
+
+        self.data_train.target.T.fold = self.data_train.target.T.d.iloc[self.train_index].copy()
+        self.data_oof.target.T.fold = self.data_train.target.T.d.iloc[self.validation_index].copy()
 
         #################### Set Fold Copies of Holdout/Test Data ####################
         for data_chunk in [self.data_holdout.input, self.data_holdout.target, self.data_test.input]:
