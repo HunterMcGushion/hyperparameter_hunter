@@ -5,8 +5,8 @@ from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer
 from hyperparameter_hunter.callbacks.recipes import lambda_check_train_targets
 from hyperparameter_hunter.data.data_chunks.target_chunks import (
     TrainTargetChunk,
-    OOFTargetChunk,
-    HoldoutTargetChunk,
+    # OOFTargetChunk,  # TODO: Add tests
+    # HoldoutTargetChunk,  # TODO: Add tests
 )
 
 ##################################################
@@ -19,10 +19,10 @@ import pytest
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.dummy import DummyClassifier
+# from sklearn.dummy import DummyClassifier
 from sklearn.metrics import f1_score
-from sklearn.model_selection import train_test_split, PredefinedSplit
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.model_selection import train_test_split  # , PredefinedSplit
+from sklearn.preprocessing import LabelEncoder  # , OneHotEncoder
 from sklearn.svm import SVC
 
 ##################################################

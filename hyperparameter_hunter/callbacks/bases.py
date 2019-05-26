@@ -31,7 +31,6 @@ from hyperparameter_hunter.settings import G
 ##################################################
 from inspect import signature
 import numpy as np
-import pandas as pd
 from uuid import uuid4 as uuid
 
 

@@ -31,7 +31,6 @@ from hyperparameter_hunter.metrics import get_clean_prediction
 ##################################################
 from copy import deepcopy
 import numpy as np
-import pandas as pd
 from typing import List, Optional
 
 ##################################################
