@@ -434,6 +434,32 @@ class BaseExperiment(ScoringMixIn):
         except Exception as _ex:
             G.log("WARNING: Failed to update model's random_state     {}".format(_ex.__repr__()))
 
+    def _empty_output_like(self, like: pd.DataFrame, index=None, target_column=None):
+        """Make an empty DataFrame of the same shape and with the same index as `like`, intended for
+        use with output :mod:`~hyperparameter_hunter.data.data_chunks`, like descendants of
+        :class:`~hyperparameter_hunter.data.data_chunks.prediction_chunks.BasePredictionChunk` and
+        :class:`~hyperparameter_hunter.data.data_chunks.target_chunks.BaseTargetChunk`
+
+        Parameters
+        ----------
+        like: pd.DataFrame
+            DataFrame to use as the basis for the shape and index of the returned DataFrame. `like`
+            has no bearing on the column names of the returned DataFrame
+        index: Array-like, or None, default=None
+            If None, defaults to `like.index`. Else, defines the index of the returned DataFrame
+        target_column: List[str], or None, default=None
+            If None, defaults to the experiment's :attr:`target_column`. Else, defines the column
+            names of the returned DataFrame
+
+        Returns
+        -------
+        pd.DataFrame
+            Zero-filled DataFrame with index of `index` or `like.index` and column names of
+            `target_column` or :attr:`target_column`"""
+        index = like.index.copy() if index is None else index
+        target_column = self.target_column if target_column is None else target_column
+        return pd.DataFrame(0, index=index, columns=target_column)
+
 
 class BaseCVExperiment(BaseExperiment):
     def __init__(
