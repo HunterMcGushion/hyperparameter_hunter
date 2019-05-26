@@ -283,7 +283,7 @@ class BaseExperiment(ScoringMixIn):
         # TODO: Might be better to initialize `data_oof` with same data as `data_train`
         self.data_oof = OOFDataset(None, **data_kwargs)
         self.data_holdout = HoldoutDataset(self.holdout_dataset, **data_kwargs)
-        self.data_test = TestDataset(self.test_dataset, **data_kwargs)
+        self.data_test = TestDataset(self.test_dataset, feature_selector=self.feature_selector)
 
         #################### Perform Pre-CV Feature Engineering ####################
         self.feature_engineer(
