@@ -371,58 +371,21 @@ def _reshape_aggregates(named_aggregates, agg_shapes, rep, fold, run):
 ##################################################
 # Intermediate Base Callbacks
 ##################################################
-class BasePredictorCallback(BaseCallback):
-    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.predictors` are descendants"""
-
-    # noinspection PyProtectedMember
-    def _format_prediction(self, predictions, index=None, dtype=np.float64):
-        """Organize predictions into a standard format, and one-hot encode predictions as necessary
-
-        Parameters
-        ----------
-        predictions: Array-like
-            A model's predictions for a set of input data
-        index: Array-like, or None, default=None
-            Index to use for the resulting DataFrame. Defaults to `numpy.arange(len(predictions))`
-        dtype: Dtype, or None, default=`numpy.float64`
-            Datatype to force on `predictions`. If None, datatype will be inferred
-
-        Returns
-        -------
-        predictions: `pandas.DataFrame`
-            Formatted DataFrame containing `predictions` that has been one-hot encoded if necessary
-
-        Examples
-        --------
-        >>> predictor_cb = BasePredictorCallback()
-        >>> predictor_cb.target_column = ["y"]
-        >>> predictor_cb._format_prediction(np.array([3.2, 14.5, 6.8]))
-              y
-        0   3.2
-        1  14.5
-        2   6.8
-        >>> predictor_cb._format_prediction(np.array([1, 0, 1]))
-             y
-        0  1.0
-        1  0.0
-        2  1.0
-        >>> predictor_cb.target_column = ["y_0", "y_1", "y_2"]
-        >>> predictor_cb._format_prediction(np.array([2, 1, 0]), dtype=np.int8)
-           y_0  y_1  y_2
-        0    0    0    1
-        1    0    1    0
-        2    1    0    0"""
-        # `target_column` indicates multidimensional output, but predictions are one-dimensional
-        if len(self.target_column) > 1:
-            if (len(predictions.shape) == 1) or (predictions.shape[1] == 1):
-                predictions = pd.get_dummies(predictions).values
-
-        return pd.DataFrame(data=predictions, index=index, columns=self.target_column, dtype=dtype)
-
-
 class BaseWranglerCallback(BaseCallback):
     """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.wranglers` are descendants"""
 
+    pass
+
+
+class BaseInputWranglerCallback(BaseWranglerCallback):
+    pass
+
+
+class BaseTargetWranglerCallback(BaseWranglerCallback):
+    pass
+
+
+class BasePredictorCallback(BaseWranglerCallback):
     pass
 
 
