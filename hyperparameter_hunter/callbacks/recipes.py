@@ -23,6 +23,7 @@ values, which offers greater customization at the cost of slightly more overhead
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import lambda_callback
+from hyperparameter_hunter.data.data_chunks.target_chunks import TrainTargetChunk
 from hyperparameter_hunter.metrics import get_clean_prediction
 
 ##################################################
@@ -31,6 +32,7 @@ from hyperparameter_hunter.metrics import get_clean_prediction
 from copy import deepcopy
 import numpy as np
 import pandas as pd
+from typing import List, Optional
 
 ##################################################
 # Import Learning Assets
@@ -305,6 +307,118 @@ def dataset_recorder():
         return d
 
     return lambda_callback(on_fold_start=_on_fold, agg_name="datasets", method_agg_keys=True)
+
+
+def lambda_check_train_targets(
+    on_experiment_start: Optional[List[TrainTargetChunk]] = None,
+    on_repetition_start: Optional[List[TrainTargetChunk]] = None,
+    on_fold_start: Optional[List[TrainTargetChunk]] = None,
+    on_run_start: Optional[List[TrainTargetChunk]] = None,
+    on_run_end: Optional[List[TrainTargetChunk]] = None,
+    on_fold_end: Optional[List[TrainTargetChunk]] = None,
+    on_repetition_end: Optional[List[TrainTargetChunk]] = None,
+    on_experiment_end: Optional[List[TrainTargetChunk]] = None,
+):
+    """LambdaCallback to check the values of an experiment's `data_train.target` attribute
+
+    The list of :class:`~hyperparameter_hunter.data.data_chunks.target_chunks.TrainTargetChunk`
+    instances given to each parameter represents the expected value of
+    :attr:`hyperparameter_hunter.experiments.CVExperiment.data_train.target` for each call of that
+    particular callback method. In other words, the number of items in each parameter's list should
+    correspond to the number of times that callback method is expected to be invoked.
+
+    This means that `on_experiment_start` and `on_experiment_end` should both contain only a single
+    `TrainTargetChunk` (because they are only ever invoked once by an experiment), and their values
+    should be the expected states of `data_train.target` on experiment start and end, respectively.
+
+    Parameters
+    ----------
+    on_experiment_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets when `on_experiment_start` is invoked. Should contain only
+        a single `TrainTargetChunk` instance
+    on_repetition_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets on each invocation of `on_repetition_start`. Should contain
+        as many `TrainTargetChunk` instances as repetitions will be conducted during the experiment.
+        Should contain only a single value if the number or repetitions is one, or if
+        :attr:`hyperparameter_hunter.environment.Environment.cv_type` is not a repeated CV scheme
+    on_fold_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets on each invocation of `on_fold_start`. The values to
+        provide are not as straight-forward, as they depend on the number of repetitions as well.
+        If only a single repetition will be conducted, then `on_fold_start` should simply contain
+        as many `TrainTargetChunk` instances as folds will be conducted. However, if multiple
+        repetitions will be conducted, then the length of `on_fold_start` should be
+        (<# of reps> * <# of folds>). For example, if performing `RepeatedKFold` cross validation
+        with 2 repetitions, and 3 folds/splits, then `on_fold_start` should contain 6 values
+    on_run_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets on each invocation of `on_run_start`. Similarly to
+        `on_fold_start`, the length/values of `on_run_start` depends on the number of repetitions,
+        as well as the number of folds that will be conducted. The length of `on_run_start` should
+        be (<# of reps> * <# of folds> * <# of runs>). If performing standard, non-repeated
+        `KFold`-like cross validation, with 3 folds, and only a single run, then `on_run_start`
+        should contain 3 values. Just as in the `on_fold_start` description example, if performing
+        `RepeatedKFold` CV with 2 repetitions, and 3 folds, and 1 run, then `on_run_start` should
+        contain 6 values. On the extreme end, if performing `RepeatedKFold` CV with 2 repetitions,
+        and 3 folds, and 4 runs, then `on_run_start` should contain 24 values
+    on_run_end: List[TrainTargetChunk], or None, default=None
+        *See `on_run_start` description*
+    on_fold_end: List[TrainTargetChunk], or None, default=None
+        *See `on_fold_start` description*
+    on_repetition_end: List[TrainTargetChunk], or None, default=None
+        *See `on_repetition_start` description*
+    on_experiment_end: List[TrainTargetChunk], or None, default=None
+        *See `on_experiment_start` description*
+
+    Notes
+    -----
+    As is always the case, `on_run_start` and `on_run_end` will still be invoked even if
+    :attr:`hyperparameter_hunter.environment.Environment.runs` is 1. In this case, they will be
+    invoked as many times as `on_fold_start` and `on_fold_end` are invoked; however, this does not
+    mean that the values of `data_train.target` are identical between fold and run divisions"""
+    on_experiment_start = on_experiment_start if on_experiment_start is not None else []
+    on_repetition_start = on_repetition_start if on_repetition_start is not None else []
+    on_fold_start = on_fold_start if on_fold_start is not None else []
+    on_run_start = on_run_start if on_run_start is not None else []
+    on_run_end = on_run_end if on_run_end is not None else []
+    on_fold_end = on_fold_end if on_fold_end is not None else []
+    on_repetition_end = on_repetition_end if on_repetition_end is not None else []
+    on_experiment_end = on_experiment_end if on_experiment_end is not None else []
+
+    #################### Division Start Points ####################
+    def _on_experiment_start(data_train):
+        assert data_train.target == on_experiment_start[0]
+
+    def _on_repetition_start(data_train, _rep):
+        assert data_train.target == on_repetition_start[_rep]
+
+    def _on_fold_start(data_train, _rep, _fold):
+        assert data_train.target == on_fold_start[((_rep + 1) * (_fold + 1) - 1)]
+
+    def _on_run_start(data_train, _rep, _fold, _run):
+        assert data_train.target == on_run_start[((_rep + 1) * (_fold + 1) * (_run + 1) - 1)]
+
+    #################### Division End Points ####################
+    def _on_run_end(data_train, _rep, _fold, _run):
+        assert data_train.target == on_run_end[((_rep + 1) * (_fold + 1) * (_run + 1) - 1)]
+
+    def _on_fold_end(data_train, _rep, _fold):
+        assert data_train.target == on_fold_end[((_rep + 1) * (_fold + 1) - 1)]
+
+    def _on_repetition_end(data_train, _rep):
+        assert data_train.target == on_repetition_end[_rep]
+
+    def _on_experiment_end(data_train):
+        assert data_train.target == on_experiment_end[0]
+
+    return lambda_callback(
+        on_experiment_start=_on_experiment_start if on_experiment_start else None,
+        on_repetition_start=_on_repetition_start if on_repetition_start else None,
+        on_fold_start=_on_fold_start if on_fold_start else None,
+        on_run_start=_on_run_start if on_run_start else None,
+        on_run_end=_on_run_end if on_run_end else None,
+        on_fold_end=_on_fold_end if on_fold_end else None,
+        on_repetition_end=_on_repetition_end if on_repetition_end else None,
+        on_experiment_end=_on_experiment_end if on_experiment_end else None,
+    )
 
 
 ##################################################
