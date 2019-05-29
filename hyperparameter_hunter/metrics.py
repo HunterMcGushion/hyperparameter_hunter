@@ -22,6 +22,7 @@ from typing import Dict, Iterable, List, Tuple, Union
 # Import Learning Assets
 ##################################################
 from sklearn import metrics as sk_metrics
+from sklearn.utils.multiclass import type_of_target, unique_labels
 
 ##################################################
 # Declare Global Variables
@@ -430,6 +431,15 @@ def _is_int(a):
         return a.dtype == np.int
 
 
+classification_target_types = [
+    "binary",
+    "multiclass",
+    "multiclass-multioutput",
+    "multilabel-indicator",
+    "multilabel-sequences",
+]
+
+
 def get_clean_prediction(target: ArrayLike, prediction: ArrayLike):
     """Create `prediction` that is of a form comparable to `target`
 
@@ -446,6 +456,8 @@ def get_clean_prediction(target: ArrayLike, prediction: ArrayLike):
         If `target` types are ints, and `prediction` types are not, given predicted labels clipped
         between the min, and max of `target`, then rounded to the nearest integer. Else, original
         predicted labels"""
+    target_type = type_of_target(target)
+    prediction_type = type_of_target(prediction)
     # ValueError probably: "Classification metrics can't handle a mix of binary and continuous targets"
     if _is_int(target) and not _is_int(prediction):
         #################### Get Minimum/Maximum ####################
@@ -463,7 +475,58 @@ def get_clean_prediction(target: ArrayLike, prediction: ArrayLike):
         finally:
             prediction = prediction.astype(np.float64)
             prediction = np.rint(prediction)
+    elif target_type in classification_target_types and prediction_type.startswith("continuous"):
+        prediction = classify_output(target, prediction)
+
+    # TODO: One-hot-encoded outputs will be of type "multiclass-multioutput" - Handle it
     return prediction
+
+
+def classify_output(target, prediction):
+    """Force continuous `prediction` into the discrete, classified space of `target`.
+    This is not an output/feature transformer akin to SKLearn's discretization transformers. This
+    function is intended for use in the very specific case of having a `target` that is
+    classification-like ("binary", "multiclass", etc.), with `prediction` that resembles a
+    "continuous" target, despite being made for `target`. The most common reason for this occurrence
+    is that `prediction` is actually the division-averaged predictions collected along the course
+    of a :class:`~hyperparameter_hunter.experiments.CVExperiment`. In this case, the original model
+    predictions should have been classification-like; however, due to disagreement in the division
+    predictions, the resulting average predictions appear to be continuous
+
+    Parameters
+    ----------
+    target: Array-like
+        # TODO: ...
+    prediction: Array-like
+        # TODO: ...
+
+    Returns
+    -------
+    numpy.array
+        # TODO: ...
+
+    Notes
+    -----
+    Target types used by this function are defined by `sklearn.utils.multiclass.type_of_target`.
+
+    If a `prediction` value is exactly between two `target` values, it will assume the lower of the
+    two values. For example, given a single prediction of 1.5 and unique `labels` of [0, 1, 2, 3],
+    the value of that prediction will be 1, rather than 2
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> classify_output(np.array([0, 3, 1, 2]), [0.5, 1.51, 0.66, 4.9])
+    array([0, 2, 1, 3])
+    >>> classify_output(np.array([0, 1, 2, 3]), [0.5, 1.51, 0.66, 4.9])
+    array([0, 2, 1, 3])
+    >>> # TODO: ... Add more examples, including binary classification
+    """
+    # MARK: Might be ignoring 1-dimensional, label encodings, like 2nd case in `test_get_clean_prediction`:
+    #   ([1, 0, 1, 0], [0.9, 0.1, 0.8, 0.2], [1.0, 0.0, 1.0, 0.0])
+    labels = unique_labels(target)  # FLAG: ORIGINAL
+    # labels = unique_labels(*target)  # FLAG: TEST
+    return np.array([labels[(np.abs(labels - _)).argmin()] for _ in prediction])
 
 
 ##################################################
