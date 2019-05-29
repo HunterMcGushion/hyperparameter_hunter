@@ -52,12 +52,12 @@ class OOFTargetChunk(BaseTargetChunk):
 
 class HoldoutTargetChunk(BaseTargetChunk):
     #################### Division Start Points ####################
-    def on_experiment_start(self, *args, **kwargs):
+    def on_experiment_start(self, empty_output_frame, *args, **kwargs):
         # `self.d` and `self.T.d` (pre-CV) set by `BaseExperiment.on_experiment_start`
-        self.T.final = 0
+        self.T.final = empty_output_frame
 
-    def on_repetition_start(self, *args, **kwargs):
-        self.T.rep = 0
+    def on_repetition_start(self, empty_output_frame, *args, **kwargs):
+        self.T.rep = empty_output_frame
 
     def on_fold_start(self, *args, **kwargs):
         ...  # `self.fold` and `self.T.fold` (intra-CV) set by `BaseCVExperiment.on_fold_start`

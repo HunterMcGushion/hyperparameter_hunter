@@ -79,11 +79,15 @@ class WranglerTargetHoldout(BaseTargetWranglerCallback):
 
     #################### Division Start Points ####################
     def on_experiment_start(self):
-        self.data_holdout.target.on_experiment_start()
+        self.data_holdout.target.on_experiment_start(
+            self._empty_output_like(self.data_holdout.target.T.d)
+        )
         super().on_experiment_start()
 
     def on_repetition_start(self):
-        self.data_holdout.target.on_repetition_start()
+        self.data_holdout.target.on_repetition_start(
+            self._empty_output_like(self.data_holdout.target.T.d)
+        )
         super().on_repetition_start()
 
     def on_fold_start(self):
