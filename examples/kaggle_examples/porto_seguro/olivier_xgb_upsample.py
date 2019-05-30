@@ -49,11 +49,13 @@ def gini_c(target, prediction):
 
 
 def gini_normalized_c(target, prediction):
-    target = target["target"]
-    prediction = prediction["target"]
-    # Above changed because targets/predictions passed as DFs to metric functions
-    if prediction.ndim == 2:  # Required for sklearn wrapper
+    # Below changed because targets/predictions passed as 2D arrays to metric functions
+    if prediction.shape[1] == 2:
         prediction = prediction[:, 1]  # If proba array contains both 0 and 1 classes, pick class 1
+    if prediction.ndim == 2:  # Required for sklearn wrapper
+        prediction = prediction[:, 0]
+    if target.ndim == 2:  # Required for sklearn wrapper
+        target = target[:, 0]
     return gini_c(target, prediction) / gini_c(target, target)
 
 
