@@ -106,7 +106,7 @@ A_D, A_I, A_T = ["all_data", "all_inputs", "all_targets"]
 NT_D, NT_I, NT_T = ["non_train_data", "non_train_inputs", "non_train_targets"]
 
 #################### `DatasetNameReport` Scenario #0 ####################
-params_0 = [TR_D, NT_I]
+params_0 = (TR_D, NT_I)
 stage_0 = "pre_cv"
 merged_datasets_0 = [(NT_I,)]
 coupled_datasets_0 = [(TR_D,)]
@@ -114,7 +114,7 @@ leaves_0 = {(NT_I, HO_I): HO_I, (NT_I, TE_I): TE_I, (TR_D, TR_I): TR_I, (TR_D, T
 descendants_0 = {TR_D: {TR_I: None, TR_T: None}, NT_I: {HO_I: None, TE_I: None}}
 
 #################### `DatasetNameReport` Scenario #1 ####################
-params_1 = [TR_D, NT_I]
+params_1 = (TR_D, NT_I)
 stage_1 = "intra_cv"
 merged_datasets_1 = [(NT_I,)]
 coupled_datasets_1 = [(TR_D,)]
@@ -128,7 +128,7 @@ leaves_1 = {
 descendants_1 = {TR_D: {TR_I: None, TR_T: None}, NT_I: {VA_I: None, HO_I: None, TE_I: None}}
 
 #################### `DatasetNameReport` Scenario #2 ####################
-params_2 = [NT_D, A_D]
+params_2 = (NT_D, A_D)
 stage_2 = "pre_cv"
 merged_datasets_2 = [(NT_D,), (A_D,)]
 coupled_datasets_2 = [(NT_D, HO_D), (A_D, TR_D), (A_D, HO_D)]
@@ -146,7 +146,7 @@ descendants_2 = {
 }
 
 #################### `DatasetNameReport` Scenario #3 ####################
-params_3 = [NT_D, A_D]
+params_3 = (NT_D, A_D)
 stage_3 = "intra_cv"
 merged_datasets_3 = [(NT_D,), (A_D,)]
 coupled_datasets_3 = [(NT_D, VA_D), (NT_D, HO_D), (A_D, TR_D), (A_D, VA_D), (A_D, HO_D)]
@@ -172,7 +172,7 @@ descendants_3 = {
 }
 
 #################### `DatasetNameReport` Scenario #4 ####################
-params_4 = [A_T, NT_D, TR_T]
+params_4 = (A_T, NT_D, TR_T)
 stage_4 = "pre_cv"
 merged_datasets_4 = [(A_T,), (NT_D,)]
 coupled_datasets_4 = [(NT_D, HO_D)]
@@ -186,7 +186,7 @@ leaves_4 = {
 descendants_4 = {A_T: {TR_T: None, HO_T: None}, NT_D: {HO_D: {HO_I: None, HO_T: None}}, TR_T: None}
 
 #################### `DatasetNameReport` Scenario #5 ####################
-params_5 = [A_T, NT_D, TR_T]
+params_5 = (A_T, NT_D, TR_T)
 stage_5 = "intra_cv"
 merged_datasets_5 = [(A_T,), (NT_D,)]
 coupled_datasets_5 = [(NT_D, VA_D), (NT_D, HO_D)]
@@ -207,7 +207,7 @@ descendants_5 = {
 }
 
 #################### `DatasetNameReport` Scenario #6 ####################
-params_6 = [A_D, A_T, NT_D, TR_T]
+params_6 = (A_D, A_T, NT_D, TR_T)
 stage_6 = "pre_cv"
 merged_datasets_6 = [(A_D,), (A_T,), (NT_D,)]
 coupled_datasets_6 = [(A_D, TR_D), (A_D, HO_D), (NT_D, HO_D)]
@@ -230,7 +230,7 @@ descendants_6 = {
 }
 
 #################### `DatasetNameReport` Scenario #7 ####################
-params_7 = [A_D, A_T, NT_D, TR_T]
+params_7 = (A_D, A_T, NT_D, TR_T)
 stage_7 = "intra_cv"
 merged_datasets_7 = [(A_D,), (A_T,), (NT_D,)]
 coupled_datasets_7 = [(A_D, TR_D), (A_D, VA_D), (A_D, HO_D), (NT_D, VA_D), (NT_D, HO_D)]
@@ -262,7 +262,7 @@ descendants_7 = {
 }
 
 #################### `DatasetNameReport` Scenario #8 ####################
-params_8 = [A_D, A_T, NT_D, TR_T, NT_I]
+params_8 = (A_D, A_T, NT_D, TR_T, NT_I)
 stage_8 = "pre_cv"
 merged_datasets_8 = [(A_D,), (A_T,), (NT_D,), (NT_I,)]
 coupled_datasets_8 = [(A_D, TR_D), (A_D, HO_D), (NT_D, HO_D)]
@@ -288,7 +288,7 @@ descendants_8 = {
 }
 
 #################### `DatasetNameReport` Scenario #9 ####################
-params_9 = [A_D, A_T, NT_D, TR_T, NT_I]
+params_9 = (A_D, A_T, NT_D, TR_T, NT_I)
 stage_9 = "intra_cv"
 merged_datasets_9 = [(A_D,), (A_T,), (NT_D,), (NT_I,)]
 coupled_datasets_9 = [(A_D, TR_D), (A_D, VA_D), (A_D, HO_D), (NT_D, VA_D), (NT_D, HO_D)]
@@ -354,23 +354,23 @@ def test_dataset_name_report(params, stage, merged_datasets, coupled_datasets, l
 @pytest.mark.parametrize(
     ["params", "stage", "expected"],
     [
-        ([TR_I, HO_I, TE_I], "pre_cv", []),
-        ([TR_I, VA_I, HO_I, TE_I], "intra_cv", []),
-        ([TR_I, NT_I], "pre_cv", [NT_I]),
-        ([TR_I, NT_I], "intra_cv", [NT_I]),
-        ([A_I, A_T], "pre_cv", [A_I, A_T]),
-        ([A_I, A_T], "intra_cv", [A_I, A_T]),
-        ([TR_D, NT_I], "pre_cv", [NT_I]),
-        ([TR_D, NT_I], "intra_cv", [NT_I]),
-        ([TR_D, NT_D], "pre_cv", [NT_D]),
-        ([TR_D, NT_D], "intra_cv", [NT_D]),
+        ((TR_I, HO_I, TE_I), "pre_cv", []),
+        ((TR_I, VA_I, HO_I, TE_I), "intra_cv", []),
+        ((TR_I, NT_I), "pre_cv", [NT_I]),
+        ((TR_I, NT_I), "intra_cv", [NT_I]),
+        ((A_I, A_T), "pre_cv", [A_I, A_T]),
+        ((A_I, A_T), "intra_cv", [A_I, A_T]),
+        ((TR_D, NT_I), "pre_cv", [NT_I]),
+        ((TR_D, NT_I), "intra_cv", [NT_I]),
+        ((TR_D, NT_D), "pre_cv", [NT_D]),
+        ((TR_D, NT_D), "intra_cv", [NT_D]),
     ],
 )
 def test_validate_dataset_names(params, stage, expected):
     assert validate_dataset_names(params, stage) == expected
 
 
-@pytest.mark.parametrize("params", [[A_D, A_T], [A_T, TR_T]])
+@pytest.mark.parametrize("params", [(A_D, A_T), (A_T, TR_T)])
 @pytest.mark.parametrize("stage", ["pre_cv", "intra_cv"])
 def test_validate_dataset_names_value_error(params, stage):
     with pytest.raises(ValueError, match="Requested params include duplicate references to .*"):

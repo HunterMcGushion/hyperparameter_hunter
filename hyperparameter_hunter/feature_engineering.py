@@ -15,7 +15,7 @@ import ast
 from contextlib import suppress
 from inspect import getsource
 import pandas as pd
-from typing import List, Callable, Dict, Union
+from typing import List, Callable, Dict, Union, Tuple
 
 ##################################################
 # Global Variables
@@ -45,12 +45,12 @@ COUPLED_DATASET_CANDIDATES = [
 
 
 class DatasetNameReport:
-    def __init__(self, params: List[str], stage: str):
+    def __init__(self, params: Tuple[str], stage: str):
         """Characterize the relationships between the dataset names `params`
 
         Parameters
         ----------
-        params: List[str]
+        params: Tuple[str]
             Dataset names requested by a feature engineering step callable. Must be a subset of
             {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
             "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
@@ -79,7 +79,7 @@ class DatasetNameReport:
             Nested dict in which all keys are dataset name strings, and all leaf values are `None`.
             Represents the structure of the requested dataset names, traversing over merged and
             coupled datasets (if necessary) in order to reach the standard dataset leaves"""
-        self.params: List[str] = params
+        self.params: Tuple[str] = params
         self.stage: str = stage
 
         self.merged_datasets: List[tuple] = []
@@ -245,13 +245,13 @@ def split_merged_df(merged_df: pd.DataFrame) -> DFDict:
     return dfs
 
 
-def validate_dataset_names(params: List[str], stage: str) -> List[str]:
+def validate_dataset_names(params: Tuple[str], stage: str) -> List[str]:
     """Produce the names of merged datasets in `params` and verify there are no duplicate references
     to any datasets in `params`
 
     Parameters
     ----------
-    params: List[str]
+    params: Tuple[str]
         Dataset names requested by a feature engineering step callable. Must be a subset of
         {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
         "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
@@ -299,7 +299,7 @@ class EngineerStep:
         name: String, or None, default=None
             Identifier for the transformation applied by this engineering step. If None,
             `f.__name__` will be used
-        params: List[str], or None, default=None
+        params: Tuple[str], or None, default=None
             Dataset names requested by feature engineering step callable `f`. If None, will be
             inferred by parsing the abstract syntax tree of `f`. Else, must be a subset of
             {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
@@ -439,7 +439,7 @@ class EngineerStep:
         return self._name
 
     @property
-    def params(self) -> list:
+    def params(self) -> tuple:
         """Dataset names requested by feature engineering step callable :attr:`f`. See documentation
         in :meth:`EngineerStep.__init__` for more information/restrictions"""
         return self._params
@@ -599,13 +599,13 @@ class FeatureEngineer:
 # FLAG: Tally number of columns "transformed" and "added" at each step and report
 
 
-def get_engineering_step_stage(datasets: List[str]) -> str:
+def get_engineering_step_stage(datasets: Tuple[str]) -> str:
     """Determine the stage in which a feature engineering step that requests `datasets` as input
     should be executed
 
     Parameters
     ----------
-    datasets: List[str]
+    datasets: Tuple[str]
         Dataset names requested by a feature engineering step callable
 
     Returns
@@ -635,13 +635,13 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
 
     Examples
     --------
-    >>> get_engineering_step_stage(["train_inputs", "validation_inputs", "holdout_inputs"])
+    >>> get_engineering_step_stage(("train_inputs", "validation_inputs", "holdout_inputs"))
     'intra_cv'
-    >>> get_engineering_step_stage(["all_data"])
+    >>> get_engineering_step_stage(("all_data"))
     'pre_cv'
-    >>> get_engineering_step_stage(["all_inputs", "all_targets"])
+    >>> get_engineering_step_stage(("all_inputs", "all_targets"))
     'pre_cv'
-    >>> get_engineering_step_stage(["train_data", "non_train_data"])
+    >>> get_engineering_step_stage(("train_data", "non_train_data"))
     'intra_cv'"""
     if any(_.startswith("validation_") for _ in datasets):
         return "intra_cv"
@@ -677,7 +677,7 @@ class ParameterParser(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def get_engineering_step_params(f: callable) -> List[str]:
+def get_engineering_step_params(f: callable) -> Tuple[str]:
     """Verify that callable `f` requests valid input parameters, and returns a tuple of the same
     parameters, with the assumption that the parameters are modified by `f`
 
@@ -688,7 +688,7 @@ def get_engineering_step_params(f: callable) -> List[str]:
 
     Returns
     -------
-    List
+    Tuple
         Argument/return value names declared by `f`
 
     Examples
@@ -697,14 +697,14 @@ def get_engineering_step_params(f: callable) -> List[str]:
     ...     all_data.fillna(-1, inplace=True)
     ...     return all_data
     >>> get_engineering_step_params(impute_negative_one)
-    ['all_data']
+    ('all_data',)
     >>> def standard_scale(train_inputs, non_train_inputs):
     ...     scaler = StandardScaler()
     ...     train_inputs[train_inputs.columns] = scaler.fit_transform(train_inputs.values)
     ...     non_train_inputs[train_inputs.columns] = scaler.transform(non_train_inputs.values)
     ...     return train_inputs, non_train_inputs
     >>> get_engineering_step_params(standard_scale)
-    ['train_inputs', 'non_train_inputs']
+    ('train_inputs', 'non_train_inputs')
     >>> def error_invalid_dataset(train_inputs, foo):
     ...     return train_inputs, foo
     >>> get_engineering_step_params(error_invalid_dataset)
@@ -726,7 +726,7 @@ def get_engineering_step_params(f: callable) -> List[str]:
 
     if any(_ not in valid_datasets for _ in parser.args):
         raise ValueError(f"Invalid dataset name in {parser.args}")
-    return parser.args
+    return tuple(parser.args)
 
 
 def _hash_dataset(dataset: pd.DataFrame) -> dict:
