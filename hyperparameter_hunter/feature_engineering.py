@@ -455,6 +455,36 @@ class EngineerStep:
             self._stage = get_engineering_step_stage(self.params)
         return self._stage
 
+    def __eq__(self, other):
+        """Check whether `other` is equal to `self`
+
+        The two are considered equal if `other` has the following attributes and their values
+        are equal to those of `self`: :attr:`name`, :attr:`f`, :attr:`params`, :attr:`stage`, and
+        :attr:`do_validate`. The values of all the aforementioned attributes will have been set on
+        initialization (either explicitly or by inference), and they should never be altered
+
+        Parameters
+        ----------
+        other: Any
+            Object to compare to `self`
+
+        Returns
+        -------
+        Boolean
+            True if `other` is equal to `self`, else False"""
+        return all(
+            [
+                self.name == getattr(other, "name", object()),
+                self.f == getattr(other, "f", object()),
+                self.params == getattr(other, "params", object()),
+                self.stage == getattr(other, "stage", object()),
+                self.do_validate == getattr(other, "do_validate", object()),
+            ]
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.f, self.params, self.stage, self.do_validate))
+
 
 class FeatureEngineer:
     def __init__(self, steps=None, do_validate=False, **datasets: DFDict):
