@@ -23,7 +23,7 @@ from hyperparameter_hunter.utils.boltons_utils import get_path
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from functools import reduce
 from sys import maxsize
 from uuid import uuid4 as uuid
@@ -71,6 +71,10 @@ class Dimension(skopt_space.Dimension, metaclass=ABCMeta):
         else:
             raise ValueError("Dimension's name must be one of: string, tuple, or None.")
 
+    @abstractmethod
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Dimension`, or their defaults"""
+
 
 class Real(Dimension, skopt_space.Real):
     def __init__(self, low, high, prior="uniform", transform="identity", name=None):
@@ -100,6 +104,16 @@ class Real(Dimension, skopt_space.Real):
         except TypeError:
             return False
 
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Real`, or their defaults"""
+        return dict(
+            low=self.low,
+            high=self.high,
+            prior=self.prior,
+            transform=self.transform_,
+            name=self.name,
+        )
+
 
 class Integer(Dimension, skopt_space.Integer):
     def __init__(self, low, high, transform=None, name=None):
@@ -125,6 +139,10 @@ class Integer(Dimension, skopt_space.Integer):
         except TypeError:
             return False
 
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Integer`, or their defaults"""
+        return dict(low=self.low, high=self.high, transform=self.transform_, name=self.name)
+
 
 class Categorical(Dimension, skopt_space.Categorical):
     def __init__(self, categories, prior=None, transform="onehot", name=None):
@@ -144,6 +162,12 @@ class Categorical(Dimension, skopt_space.Categorical):
         name: String, tuple, or None, default=None
             A name associated with the dimension"""
         super().__init__(categories=categories, prior=prior, transform=transform, name=name)
+
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Categorical`, or their defaults"""
+        return dict(
+            categories=self.categories, prior=self.prior, transform=self.transform_, name=self.name
+        )
 
 
 ##################################################
