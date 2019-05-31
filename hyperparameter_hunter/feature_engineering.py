@@ -4,6 +4,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
+from hyperparameter_hunter.space import Categorical
 from hyperparameter_hunter.utils.boltons_utils import remap, default_visit, default_enter
 from hyperparameter_hunter.utils.general_utils import subdict
 
@@ -473,8 +474,16 @@ class FeatureEngineer:
             exception will be raised if any anomalies are found, rather than logging a message. If
             `do_validate` = False, no validation will be performed
         **datasets: DFDict
-            Mapping of datasets necessary to perform feature engineering steps. This is not expected
-            to be provided on initialization and is offered primarily for debugging/testing"""
+            This is not expected to be provided on initialization and is offered primarily for
+            debugging/testing. Mapping of datasets necessary to perform feature engineering steps
+
+        Notes
+        -----
+        If `steps` does include any instances of :class:`hyperparameter_hunter.space.Categorical`,
+        this `FeatureEngineer` instance will not be usable by experiments. It can only be used
+        by Optimization Protocols. Furthermore, the `FeatureEngineer` that the Optimization Protocol
+        actually ends up using will not pass identity checks against the original `FeatureEngineer`
+        that contained `Categorical` steps"""
         self.steps = []
         self.do_validate = do_validate
         self.datasets = datasets or {}
@@ -551,7 +560,7 @@ class FeatureEngineer:
 
     def add_step(
         self,
-        step: Union[Callable, EngineerStep],
+        step: Union[Callable, EngineerStep, Categorical],
         stage: str = None,
         name: str = None,
         before: str = EMPTY_SENTINEL,
@@ -563,10 +572,11 @@ class FeatureEngineer:
 
         Parameters
         ----------
-        step: Callable, or `EngineerStep`
+        step: Callable, or `EngineerStep`, or `Categorical`
             If `EngineerStep` instance, will be added directly to :attr:`steps`. Otherwise, must be
             a feature engineering step callable that requests, modifies, and returns datasets, which
-            will be used to instantiate a :class:`EngineerStep` to add to :attr:`steps`
+            will be used to instantiate a :class:`EngineerStep` to add to :attr:`steps`. If
+            `Categorical`, `categories` should contain `EngineerStep` instances or callables
         stage: String in {"pre_cv", "intra_cv"}, or None, default=None
             Feature engineering stage during which the callable `step` will be executed
         name: String, or None, default=None
