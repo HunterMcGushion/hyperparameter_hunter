@@ -90,12 +90,12 @@ def _update_data_chunk(updates: dict):
 
 @pytest.fixture()
 def data_chunk_fixture(request):
-    return _update_data_chunk(getattr(request, "params", dict()))
+    return _update_data_chunk(getattr(request, "param", dict()))
 
 
 @pytest.fixture()
 def another_data_chunk_fixture(request):
-    return _update_data_chunk(getattr(request, "params", dict()))
+    return _update_data_chunk(getattr(request, "param", dict()))
 
 
 #################### Test Scenario Data ####################

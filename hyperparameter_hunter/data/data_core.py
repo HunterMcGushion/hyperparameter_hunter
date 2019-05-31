@@ -206,6 +206,9 @@ class BaseDataChunk(_BaseDataChunk):
         super().__init__(d=d)
         self.T: _BaseDataChunk = _BaseDataChunk(d=d)
 
+    def __eq__(self, other):
+        return super().__eq__(other) and self.T.__eq__(getattr(other, "T", object()))
+
 
 class NullDataChunk(BaseDataChunk):
     # noinspection PyUnusedLocal
