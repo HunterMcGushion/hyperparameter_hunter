@@ -10,7 +10,11 @@ Related
 # Import Miscellaneous Assets
 ##################################################
 from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
+from numbers import Number
+import numpy as np
 import pandas as pd
+from typing import Dict, List, Optional, Tuple
 
 
 class Leaderboard(metaclass=ABCMeta):
@@ -107,10 +111,7 @@ class GlobalLeaderboard(Leaderboard):
         ]
         entry_columns.extend(identifier_cols)
         for id_col in identifier_cols:
-            val = getattr(experiment, id_col)
-            if id_col in ["hyperparameter_key", "cross_experiment_key"]:
-                val = val.key
-            entry_data.append(val)
+            entry_data.append(str(getattr(experiment, id_col)))
 
         entry_columns.append("experiment_#")
         entry_data.append(self.data.shape[0])
@@ -131,14 +132,19 @@ class GlobalLeaderboard(Leaderboard):
 #     pass
 
 
-def evaluations_to_columns(evaluation):
+def evaluations_to_columns(
+    evaluation: Dict[str, Optional[OrderedDict]], decimals=10
+) -> List[Tuple[str, Number]]:
     """Convert the results of :meth:`metrics.ScoringMixIn.evaluate` to a pd.DataFrame-ready format
 
     Parameters
     ----------
-    evaluation: dict of OrderedDicts
+    evaluation: Dict[str, OrderedDict]
         The result of consecutive calls to :meth:`metrics.ScoringMixIn.evaluate` for all given
         dataset types
+    decimals: Int, default=10
+        Number of decimal places to which to round. If `decimals` is negative, it specifies the
+        number of positions to the left of the decimal point
 
     Returns
     -------
@@ -148,21 +154,20 @@ def evaluations_to_columns(evaluation):
 
     Examples
     --------
-    >>> from collections import OrderedDict
     >>> evaluations_to_columns({
     ...     'in_fold': None,
     ...     'holdout': OrderedDict([('roc_auc_score', 0.9856), ('f1_score', 0.9768)]),
     ...     'oof': OrderedDict([('roc_auc_score', 0.9634)])
     ... })
-    [['oof_roc_auc_score', 0.9634], ['holdout_roc_auc_score', 0.9856], ['holdout_f1_score', 0.9768]]
+    [('oof_roc_auc_score', 0.9634), ('holdout_roc_auc_score', 0.9856), ('holdout_f1_score', 0.9768)]
     """
     data_types = ["oof", "holdout", "in_fold"]
     column_metrics = []
 
     for data_type in data_types:
         if evaluation[data_type] is not None:
-            for metric_key, metric_value in evaluation[data_type].items():
-                column_metrics.append([f"{data_type}_{metric_key}", metric_value])
+            for metric_key, metric_val in evaluation[data_type].items():
+                column_metrics.append((f"{data_type}_{metric_key}", np.round(metric_val, decimals)))
 
     return column_metrics
 
