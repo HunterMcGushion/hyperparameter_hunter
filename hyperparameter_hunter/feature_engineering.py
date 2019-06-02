@@ -703,7 +703,7 @@ class ParameterParser(ast.NodeVisitor):
                 try:
                     self.returns.append(element.id)
                 except AttributeError:  # Straight-up function probably, instead of variable name
-                    self.returns.append(element.attr)
+                    self.returns.append(getattr(element, "attr", element.__class__.__name__))
         self.generic_visit(node)
 
 
