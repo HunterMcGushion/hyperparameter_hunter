@@ -21,6 +21,7 @@ from inspect import Traceback
 import re
 import string
 from textwrap import dedent
+from typing import Any, Callable, Iterable, List, Tuple, Union
 from warnings import warn, simplefilter
 import wrapt
 
@@ -67,7 +68,11 @@ def deep_restricted_update(default_vals, new_vals, iter_attrs=None):
     return remap(default_vals, visit=_visit, enter=extra_enter_attrs(iter_attrs))
 
 
-def extra_enter_attrs(iter_attrs):
+BooleanEnterFunc = Callable[[Tuple[str, ...], Union[str, tuple], Any], bool]
+EnterFunc = Callable[[Tuple[str, ...], Union[str, tuple], Any], Tuple[Any, Iterable]]
+
+
+def extra_enter_attrs(iter_attrs: Union[BooleanEnterFunc, List[BooleanEnterFunc]]) -> EnterFunc:
     """Build an `enter` function intended for use with `boltons_utils.remap` that enables entrance
     into non-standard objects defined by `iter_attrs` and iteration over their attributes as dicts
 
@@ -90,8 +95,11 @@ def extra_enter_attrs(iter_attrs):
         """If any in `iter_attrs` is True, enter `value` as a dict, iterating over non-magic
         attributes. Else, `default_enter`"""
         if any([_(path, key, value) for _ in iter_attrs]):
-            included_attrs = [_ for _ in dir(value) if not _.endswith("__")]
+            included_attrs = [_ for _ in dir(value) if not _.endswith("__")]  # type: List[str]
             # Skips "dunder" methods, but keeps "__hh" attributes
+            included_attrs = sorted(included_attrs, reverse=True)
+            # Reverse to put public attributes before private - Without reversal, `remap` ignores
+            #   `FeatureEngineer.steps` property because the identical `_steps` was already visited
             return dict(), [(_, getattr(value, _)) for _ in included_attrs]
         # TODO: Find better way to avoid entering "__hh_previous_frame" to avoid Traceback added by `tracers.LocationTracer`
         if isinstance(value, Traceback):
