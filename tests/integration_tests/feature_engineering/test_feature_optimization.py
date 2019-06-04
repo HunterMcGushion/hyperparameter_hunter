@@ -137,6 +137,11 @@ class ChoiceMMNormalizeSS:
     engineers = Categorical(
         [EngineerStep(min_max_scale), EngineerStep(normalize), EngineerStep(standard_scale)]
     )
+    o_functions = Categorical([min_max_scale, normalize, standard_scale], optional=True)
+    o_engineers = Categorical(
+        [EngineerStep(min_max_scale), EngineerStep(normalize), EngineerStep(standard_scale)],
+        optional=True,
+    )
 
 
 class ChoiceTarget:
@@ -358,7 +363,24 @@ def test_similar_experiments(env_boston, fe_experiment, fe_optimizer):
 
 @pytest.mark.parametrize(
     ["fe_experiment", "fe_optimizer"],
-    [(None, optional_quantile_transform), ([quantile_transform], optional_quantile_transform)],
+    [
+        (None, optional_quantile_transform),
+        ([quantile_transform], optional_quantile_transform),
+        (None, [ChoiceMMNormalizeSS.o_functions]),
+        (None, [ChoiceMMNormalizeSS.o_engineers]),
+        ([min_max_scale], [ChoiceMMNormalizeSS.o_functions]),
+        ([EngineerStep(min_max_scale)], [ChoiceMMNormalizeSS.o_functions]),
+        ([min_max_scale], [ChoiceMMNormalizeSS.o_engineers]),
+        ([EngineerStep(min_max_scale)], [ChoiceMMNormalizeSS.o_engineers]),
+        ([normalize], [ChoiceMMNormalizeSS.o_functions]),
+        ([EngineerStep(normalize)], [ChoiceMMNormalizeSS.o_functions]),
+        ([normalize], [ChoiceMMNormalizeSS.o_engineers]),
+        ([EngineerStep(normalize)], [ChoiceMMNormalizeSS.o_engineers]),
+        ([standard_scale], [ChoiceMMNormalizeSS.o_functions]),
+        ([EngineerStep(standard_scale)], [ChoiceMMNormalizeSS.o_functions]),
+        ([standard_scale], [ChoiceMMNormalizeSS.o_engineers]),
+        ([EngineerStep(standard_scale)], [ChoiceMMNormalizeSS.o_engineers]),
+    ],
     indirect=["fe_experiment", "fe_optimizer"],
 )
 def test_similar_experiments_optional(env_boston, fe_experiment, fe_optimizer):
