@@ -3,21 +3,15 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer, EngineerStep
-from hyperparameter_hunter import Real, Integer, Categorical, DummySearch, BayesianOptimization
-from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
-from hyperparameter_hunter.utils.optimization_utils import (
-    get_choice_dimensions,
-    visit_feature_engineer,
-)
+from hyperparameter_hunter import Real, Integer, Categorical, BayesianOptimization
+from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 import numpy as np
-from os import makedirs
 import pandas as pd
 import pytest
-from shutil import rmtree
 
 ##################################################
 # Import Learning Assets
