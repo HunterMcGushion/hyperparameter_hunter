@@ -97,15 +97,29 @@ def dummy_engineer_c(train_targets, non_train_targets):
     [
         (
             dict(categories=["a", "b", "c"]),
-            dict(categories=("a", "b", "c"), prior=None, transform="onehot", name=None),
+            dict(
+                categories=("a", "b", "c"),
+                prior=None,
+                transform="onehot",
+                optional=False,
+                name=None,
+            ),
         ),
         (
             dict(categories=["a"], name="Cornelius"),
-            dict(categories=("a",), prior=None, transform="onehot", name="Cornelius"),
+            dict(
+                categories=("a",), prior=None, transform="onehot", optional=False, name="Cornelius"
+            ),
         ),
         (
             dict(categories=[5, 10, 15], prior=[0.6, 0.2, 0.2], transform="identity"),
-            dict(categories=(5, 10, 15), prior=[0.6, 0.2, 0.2], transform="identity", name=None),
+            dict(
+                categories=(5, 10, 15),
+                prior=[0.6, 0.2, 0.2],
+                transform="identity",
+                optional=False,
+                name=None,
+            ),
         ),
         (
             dict(categories=[dummy_engineer_a, dummy_engineer_b]),
@@ -113,6 +127,7 @@ def dummy_engineer_c(train_targets, non_train_targets):
                 categories=(dummy_engineer_a, dummy_engineer_b),
                 prior=None,
                 transform="onehot",
+                optional=False,
                 name=None,
             ),
         ),
@@ -132,6 +147,7 @@ def dummy_engineer_c(train_targets, non_train_targets):
                 ),
                 prior=None,
                 transform="onehot",
+                optional=False,
                 name=None,
             ),
         ),
