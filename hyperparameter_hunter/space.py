@@ -169,7 +169,7 @@ class Integer(Dimension, skopt_space.Integer):
 
 
 class Categorical(Dimension, skopt_space.Categorical):
-    def __init__(self, categories, prior=None, transform="onehot", name=None):
+    def __init__(self, categories, prior=None, transform="onehot", optional=False, name=None):
         """Search space dimension that can assume any categorical value in a given list
 
         Parameters
@@ -183,14 +183,34 @@ class Categorical(Dimension, skopt_space.Categorical):
             Transformation to apply to the original space. If 'identity', the transformed space is
             the same as the original space. If 'onehot', the transformed space is a one-hot encoded
             representation of the original space
+        optional: Boolean, default=False
+            Intended for use by :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`
+            when optimizing an :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`.
+            Specifically, this enables searching through a space in which an `EngineerStep` either
+            may or may not be used. This is contrary to `Categorical`'s usual function of creating
+            a space comprising multiple `categories`. When `optional` = True, the space created will
+            represent any of the values in `categories` either being included in the entire
+            `FeatureEngineer` process, or being skipped entirely. Internally, a value excluded by
+            `optional` is represented by a sentinel value that signals it should be removed from the
+            containing list, so `optional` will not work for choosing between a single value and
+            None, for example
         name: String, tuple, or None, default=None
             A name associated with the dimension"""
+        if optional and RejectedOptional() not in categories:
+            categories.append(RejectedOptional())
+        self.optional = optional
+        # TODO: Test using `optional` with `prior` and `transform`
+
         super().__init__(categories=categories, prior=prior, transform=transform, name=name)
 
     def get_params(self) -> dict:
         """Get dict of parameters used to initialize the `Categorical`, or their defaults"""
         return dict(
-            categories=self.categories, prior=self.prior, transform=self.transform_, name=self.name
+            categories=self.categories,
+            prior=self.prior,
+            transform=self.transform_,
+            optional=self.optional,
+            name=self.name,
         )
 
 
