@@ -31,6 +31,7 @@ from hyperparameter_hunter.exceptions import (
     RepeatedExperimentError,
 )
 from hyperparameter_hunter.experiments import CVExperiment
+from hyperparameter_hunter.feature_engineering import FeatureEngineer
 from hyperparameter_hunter.library_helpers.keras_helper import reinitialize_callbacks
 from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
     keras_prep_workflow,
@@ -40,9 +41,9 @@ from hyperparameter_hunter.metrics import get_formatted_target_metric
 from hyperparameter_hunter.reporting import OptimizationReporter
 from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G, TEMP_MODULES_DIR_PATH
-from hyperparameter_hunter.space import Space, dimension_subset
+from hyperparameter_hunter.space import Space, dimension_subset, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import get_path
-from hyperparameter_hunter.utils.general_utils import deep_restricted_update
+from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict
 from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions
 
 ##################################################
@@ -166,6 +167,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         self.current_init_params = None
         self.current_extra_params = None
+        self.current_feature_engineer = None
 
         #################### Identification Attributes ####################
         self.algorithm_name = None
@@ -178,6 +180,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.dummy_compile_params = dict()
         self.init_iter_attrs = []
         self.extra_iter_attrs = []
+        self.fe_iter_attrs = [lambda p, k, v: isinstance(v, FeatureEngineer)]
 
         self.logger = None
         self._preparation_workflow()
@@ -245,7 +248,9 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             self.model_init_params.update(dict(build_fn=model_init_params))
 
         self.model_extra_params = model_extra_params if model_extra_params is not None else {}
-        self.feature_engineer = feature_engineer if feature_engineer is not None else {}
+        self.feature_engineer = (
+            feature_engineer if feature_engineer is not None else FeatureEngineer()
+        )
         self.feature_selector = feature_selector if feature_selector is not None else []
 
         self.notes = notes
@@ -289,6 +294,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         #################### Collect Choice Dimensions ####################
         init_dim_choices = get_choice_dimensions(self.model_init_params, self.init_iter_attrs)
         extra_dim_choices = get_choice_dimensions(self.model_extra_params, self.extra_iter_attrs)
+        fe_dim_choices = get_choice_dimensions(self.feature_engineer, self.fe_iter_attrs)
 
         for (path, choice) in init_dim_choices:
             choice._name = ("model_init_params",) + path
@@ -296,6 +302,10 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         for (path, choice) in extra_dim_choices:
             choice._name = ("model_extra_params",) + path
+            all_dimension_choices.append(choice)
+
+        for (path, choice) in fe_dim_choices:
+            choice._name = ("feature_engineer",) + path
             all_dimension_choices.append(choice)
 
         self.dimensions = all_dimension_choices
@@ -394,8 +404,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             model_initializer=self.model_initializer,
             model_init_params=self.current_init_params,
             model_extra_params=self.current_extra_params,
-            feature_engineer=self.feature_engineer,
-            feature_selector=self.feature_selector,
+            feature_engineer=self.current_feature_engineer,
+            feature_selector=self.feature_selector,  # TODO: Add `current_feature_selector`
             notes=self.notes,
             do_raise_repeated=self.do_raise_repeated,
             auto_start=False,
@@ -443,7 +453,10 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         extra_params = {
             _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "model_extra_params"
         }
-        # TODO: Replace above two with `general_utils.subdict` call that modifies key to a slice
+        fe_params = {
+            _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "feature_engineer"
+        }
+        # TODO: Add `fs_params` for `current_feature_selector`
 
         # FLAG: At this point, `dummy_layers` shows "kernel_initializer" as `orthogonal` instance with "__hh" attrs
         # FLAG: HOWEVER, the `orthogonal` instance does have `gain` set to the correct dummy value, ...
@@ -455,7 +468,17 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         self.current_extra_params = deep_restricted_update(
             self.model_extra_params, extra_params, iter_attrs=self.extra_iter_attrs
         )
+        self.current_feature_engineer = deep_restricted_update(
+            self.feature_engineer, fe_params, iter_attrs=self.fe_iter_attrs
+        )
+        # TODO: Add `current_feature_selector`
 
+        #################### Initialize `current_feature_engineer` ####################
+        current_fe = subdict(self.current_feature_engineer, keep=["steps", "do_validate"])
+        current_fe["steps"] = [_ for _ in current_fe["steps"] if _ != RejectedOptional()]
+        self.current_feature_engineer = FeatureEngineer(**current_fe)
+
+        #################### Deal with Keras ####################
         if (self.module_name == "keras") and ("callbacks" in self.current_extra_params):
             self.current_extra_params["callbacks"] = reinitialize_callbacks(
                 self.current_extra_params["callbacks"]
