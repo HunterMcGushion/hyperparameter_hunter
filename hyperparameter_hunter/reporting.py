@@ -487,7 +487,13 @@ class OptimizationReporter:
                     values[index], self.sizes[index] + 2, min(self.sizes[index] - 3, 6 - 2)
                 )
             else:
-                content = "{0: >{1}}".format(values[index], self.sizes[index] + 2)
+                try:
+                    content = "{0: >{1}}".format(values[index], self.sizes[index] + 2)
+                except TypeError:  # For `EngineerStep`
+                    try:
+                        content = "{0: >{1}}".format(values[index].name, self.sizes[index] + 2)
+                    except AttributeError:  # For saved `EngineerStep` dicts from descriptions
+                        content = "{0: >{1}}".format(values[index]["name"], self.sizes[index] + 2)
             print(pre + content + post, end=self.end)
 
     def reset_timer(self):
