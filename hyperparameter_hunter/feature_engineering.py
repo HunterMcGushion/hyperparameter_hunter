@@ -472,6 +472,16 @@ class EngineerStep:
         -------
         Boolean
             True if `other` is equal to `self`, else False"""
+        if isinstance(other, dict):
+            return all(
+                [
+                    self.name == other.get("name", object()),
+                    make_hash_sha256(self.f) == other.get("f", object()),
+                    self.params == tuple(other.get("params", object())),
+                    self.stage == other.get("stage", object()),
+                    self.do_validate == other.get("do_validate", object()),
+                ]
+            )
         return all(
             [
                 self.name == getattr(other, "name", object()),
