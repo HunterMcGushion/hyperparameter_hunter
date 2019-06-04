@@ -35,6 +35,30 @@ from sklearn.utils import check_random_state
 from skopt.space import space as skopt_space
 
 
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class RejectedOptional(metaclass=Singleton):
+    """Singleton class to symbolize the rejection of an `optional` `Categorical` value
+
+    This is used as a sentinel, when the value in `Categorical.categories` is not used, to be
+    inserted into a :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`. If
+    :attr:`hyperparameter_hunter.feature_engineering.FeatureEngineer.steps` contains an instance
+    of `RejectedOptional`, it is removed from `steps`"""
+
+    def __str__(self):
+        return "<NONE>"
+
+    def __format__(self, format_spec):
+        return str(self).__format__(format_spec)
+
+
 ##################################################
 # Dimensions
 ##################################################
