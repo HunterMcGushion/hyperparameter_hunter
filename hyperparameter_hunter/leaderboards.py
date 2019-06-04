@@ -68,7 +68,7 @@ class Leaderboard(metaclass=ABCMeta):
             The file to which the Leaderboard instance should be saved
         **kwargs: Dict
             Additional arguments to supply to :meth:`pandas.DataFrame.to_csv`"""
-        self.data.to_csv(path_or_buf=path, index=False, **kwargs)
+        self.data.to_csv(path_or_buf=path, index=False, float_format="%.10f", **kwargs)
 
     def sort(self, by, ascending=False):
         """Sort the rows in :attr:`data` according to the values of a column
