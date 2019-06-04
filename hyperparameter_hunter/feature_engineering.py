@@ -4,7 +4,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
-from hyperparameter_hunter.space import Categorical
+from hyperparameter_hunter.space import Categorical, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import remap, default_visit, default_enter
 from hyperparameter_hunter.utils.general_utils import subdict
 
@@ -618,12 +618,39 @@ class FeatureEngineer:
             ... Experimental...
         number: String, default=EMPTY_SENTINEL
             ... Experimental..."""
-        if isinstance(step, EngineerStep):
-            self._steps.append(step)
+        if isinstance(step, Categorical):
+            cat_params = step.get_params()
+            cat_params["categories"] = [self._to_step(_) for _ in cat_params["categories"]]
+            self._steps.append(Categorical(**cat_params))
         else:
-            self._steps.append(
-                EngineerStep(step, name=name, stage=stage, do_validate=self.do_validate)
-            )
+            self._steps.append(self._to_step(step, stage=stage, name=name))
+
+    def _to_step(self, step: Union[Callable, EngineerStep], stage=None, name=None) -> EngineerStep:
+        """Ensure a candidate `step` is an `EngineerStep` instance, and return it
+
+        Parameters
+        ----------
+        step: Callable, or `EngineerStep`
+            If `EngineerStep` instance, will be added directly to :attr:`steps`. Otherwise, must be
+            a feature engineering step callable that requests, modifies, and returns datasets, which
+            will be used to instantiate a :class:`EngineerStep` to add to :attr:`steps`
+        stage: String in {"pre_cv", "intra_cv"}, or None, default=None
+            Feature engineering stage during which the callable `step` will be executed
+        name: String, or None, default=None
+            Identifier for the transformation applied by this engineering step. If None and `step`
+            is not an `EngineerStep`, will be inferred during :class:`EngineerStep` instantiation
+
+        Returns
+        -------
+        EngineerStep
+            `step` if already an instance of `EngineerStep`. Else an `EngineerStep` initialized
+            using `step`, `name`, and `stage`"""
+        if isinstance(step, EngineerStep):
+            return step
+        elif step == RejectedOptional():
+            return step  # Return as-is - OptimizationProtocol will take care of it
+        else:
+            return EngineerStep(step, name=name, stage=stage, do_validate=self.do_validate)
 
 
 # FLAG: Tally number of columns "transformed" and "added" at each step and report
