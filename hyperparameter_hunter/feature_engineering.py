@@ -285,6 +285,7 @@ def validate_dataset_names(params: Tuple[str], stage: str) -> List[str]:
     return [_[0] if len(_) == 1 else _ for _ in report.merged_datasets]
 
 
+# TODO: Finish `EngineerStep` documentation. Outline proper format of `f`
 class EngineerStep:
     def __init__(self, f: Callable, stage=None, name=None, params=None, do_validate=False):
         """:class:`FeatureEngineer` helper, compartmentalizing functions of singular engineer steps
@@ -504,8 +505,20 @@ class FeatureEngineer:
         Parameters
         ----------
         steps: List, or None, default=None
-            If not None, should be list containing any of the following: :class:`EngineerStep`
-            instances, or callables used to instantiate :class:`EngineerStep`
+            List of arbitrary length, containing any of the following values:
+
+                1. :class:`EngineerStep` instance,
+                2. Function to provide as input to :class:`EngineerStep`, or
+                3. :class:`~hyperparameter_hunter.space.Categorical`, with `categories` comprising
+                   a selection of the previous two `steps` values (optimization only)
+
+            The third value should only be used during optimization. The `feature_engineer` provided
+            to a :class:`~hyperparameter_hunter.experiments.CVExperiment`, for example, may only
+            contain the first two values. To search a space optionally including an `EngineerStep`,
+            use the `optional` kwarg of :class:`~hyperparameter_hunter.space.Categorical`.
+
+            See :meth:`EngineerStep.__init__` for information on properly formatted `EngineerStep`
+            functions. Additional engineering steps may be added via :meth:`add_step`
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
@@ -523,7 +536,48 @@ class FeatureEngineer:
         this `FeatureEngineer` instance will not be usable by experiments. It can only be used
         by Optimization Protocols. Furthermore, the `FeatureEngineer` that the Optimization Protocol
         actually ends up using will not pass identity checks against the original `FeatureEngineer`
-        that contained `Categorical` steps"""
+        that contained `Categorical` steps
+
+        See Also
+        --------
+        :class:`EngineerStep`: For proper formatting of non-`Categorical` values of `steps`
+
+        Examples
+        --------
+        >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler, QuantileTransformer
+
+        >>> def s_scale(train_inputs, non_train_inputs):
+        ...     s = StandardScaler()
+        ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+        ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+        ...     return train_inputs, non_train_inputs
+
+        >>> def mm_scale(train_inputs, non_train_inputs):
+        ...     s = MinMaxScaler()
+        ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+        ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+        ...     return train_inputs, non_train_inputs
+
+        >>> def q_transform(train_targets, non_train_targets):
+        ...     t = QuantileTransformer(output_distribution="normal")
+        ...     train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
+        ...     non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
+        ...     return train_targets, non_train_targets, t
+
+        >>> def sqr_sum(all_inputs):
+        ...     all_inputs["square_sum"] = all_inputs.agg(
+        ...         lambda row: np.sqrt(np.sum([np.square(_) for _ in row])), axis="columns"
+        ...     )
+        ...     return all_inputs
+
+        >>> fe_0 = FeatureEngineer([sqr_sum, s_scale])
+        >>> fe_1 = FeatureEngineer([EngineerStep(sqr_sum), EngineerStep(s_scale)])
+        >>> fe_0.steps == fe_1.steps
+        True
+        >>> fe_2 = FeatureEngineer([sqr_sum, EngineerStep(s_scale), q_transform])
+        >>> fe_3 = FeatureEngineer([sqr_sum, Categorical([s_scale, mm_scale]), q_transform])
+        >>> fe_4 = FeatureEngineer([Categorical([sqr_sum], optional=True), s_scale, q_transform])
+        """
         self.steps = []
         self.do_validate = do_validate
         self.datasets = datasets or {}
