@@ -43,7 +43,6 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "dataclasses;python_version<'3.7'",
         "dill",
         "nbconvert",
         "nbformat",
