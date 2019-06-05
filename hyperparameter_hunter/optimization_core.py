@@ -328,7 +328,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             raise ValueError("Experiment guidelines must be set before starting optimization")
 
         _reporter_params = dict(dict(do_maximize=self.do_maximize), **self.reporter_parameters)
-        self.logger = OptimizationReporter([_.name for _ in self.dimensions], **_reporter_params)
+        self.logger = OptimizationReporter(self.dimensions, **_reporter_params)
 
         self.tested_keys = []
         self._set_hyperparameter_space()
@@ -550,8 +550,6 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         if self.read_experiments is False:
             return
 
-        self.logger.print_saved_results_header()
-
         model_params = dict(
             model_init_params=self.model_init_params,
             model_extra_params=self.model_extra_params,
@@ -575,6 +573,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         )
         experiment_finder.find()
         self.similar_experiments = experiment_finder.similar_experiments
+        self.logger.print_saved_results_header()
 
     def _update_verbosity(self):
         """Update :attr:`environment.Environment.reporting_params` if required by :attr:`verbose`"""
