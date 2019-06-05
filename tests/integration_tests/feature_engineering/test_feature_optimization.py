@@ -3,7 +3,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer, EngineerStep
-from hyperparameter_hunter import Real, Integer, Categorical, BayesianOptimization
+from hyperparameter_hunter import Categorical, BayesianOptimization
 from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions
 
 ##################################################
