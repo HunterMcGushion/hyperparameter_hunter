@@ -23,13 +23,15 @@ values, which offers greater customization at the cost of slightly more overhead
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import lambda_callback
+from hyperparameter_hunter.data.data_chunks.target_chunks import TrainTargetChunk
 from hyperparameter_hunter.metrics import get_clean_prediction
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from copy import deepcopy
 import numpy as np
-import pandas as pd
+from typing import List, Optional
 
 ##################################################
 # Import Learning Assets
@@ -71,16 +73,14 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
     docstrings. It's surprisingly simple"""
 
     # noinspection PyUnusedLocal
-    def _on_run_end(fold_validation_target, run_validation_predictions, **kwargs):
+    def _on_run_end(data_oof, **kwargs):
         """Callback to execute upon ending an Experiment's run. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        fold_validation_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.fold_validation_target`
-        run_validation_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.run_validation_predictions`
+        data_oof: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
         **kwargs: Dict
             If this is given as a parameter to one of `lambda_callback`\'s functions, the entirety
             of the Experiment's attributes will be given as a dict. This can be used for debugging
@@ -88,18 +88,16 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
         Returns
         -------
         Array-like"""
-        return _confusion_matrix(fold_validation_target, run_validation_predictions)
+        return _confusion_matrix(data_oof.target.fold, data_oof.prediction.run)
 
-    def _on_fold_end(fold_validation_target, repetition_oof_predictions, validation_index):
+    def _on_fold_end(data_oof, validation_index):
         """Callback to execute upon ending an Experiment's fold. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        fold_validation_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.fold_validation_target`
-        repetition_oof_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.repetition_oof_predictions`
+        data_oof: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
         validation_index: Array-like
             :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.validation_index`
 
@@ -107,40 +105,42 @@ def confusion_matrix_oof(on_run=True, on_fold=True, on_repetition=True, on_exper
         -------
         Array-like"""
         return _confusion_matrix(
-            fold_validation_target, repetition_oof_predictions.iloc[validation_index]
+            data_oof.target.fold, data_oof.prediction.rep.iloc[validation_index]
         )
 
-    def _on_repetition_end(train_target_data, repetition_oof_predictions):
+    def _on_repetition_end(data_train, data_oof):
         """Callback to execute upon ending an Experiment's repetition. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        train_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.train_target_data`
-        repetition_oof_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.repetition_oof_predictions`
+        data_train: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_train`
+        data_oof: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
 
         Returns
         -------
         Array-like"""
-        return _confusion_matrix(train_target_data, repetition_oof_predictions)
+        # return _confusion_matrix(data_oof.target.final, data_oof.prediction.rep)  # TODO: Should use this when collecting transformed targets
+        return _confusion_matrix(data_train.target.d, data_oof.prediction.rep)  # FLAG: TEMPORARY
 
-    def _on_experiment_end(train_target_data, final_oof_predictions):
+    def _on_experiment_end(data_train, data_oof):
         """Callback to execute upon ending an Experiment. Note that parameters are
         named after Experiment attributes
 
         Parameters
         ----------
-        train_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.train_target_data`
-        final_oof_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.final_oof_predictions`
+        data_train: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_train`
+        data_oof: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_oof`
 
         Returns
         -------
         Array-like"""
-        return _confusion_matrix(train_target_data, final_oof_predictions)
+        # return _confusion_matrix(data_oof.target.final, data_oof.prediction.final)  # TODO: Should use this when collecting transformed targets
+        return _confusion_matrix(data_train.target.d, data_oof.prediction.final)  # FLAG: TEMPORARY
 
     return lambda_callback(
         on_run_end=_on_run_end if on_run else None,
@@ -196,7 +196,7 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`"""
         stat_aggregates["confusion_matrix_holdout"] = dict(runs=[], folds=[], reps=[], final=None)
 
-    def _on_run_end(stat_aggregates, fold_holdout_target, run_holdout_predictions):
+    def _on_run_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment's run. Note that parameters are
         named after Experiment attributes
 
@@ -204,15 +204,13 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        fold_holdout_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_holdout_target`
-        run_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.run_holdout_predictions`"""
+        data_holdout: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["runs"].append(
-            _confusion_matrix(fold_holdout_target, run_holdout_predictions)
+            _confusion_matrix(data_holdout.target.fold, data_holdout.prediction.run)
         )
 
-    def _on_fold_end(stat_aggregates, fold_holdout_target, fold_holdout_predictions):
+    def _on_fold_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment's fold. Note that parameters are
         named after Experiment attributes
 
@@ -220,15 +218,13 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        fold_holdout_target: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.fold_holdout_target`
-        fold_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.fold_holdout_predictions`"""
+        data_holdout: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["folds"].append(
-            _confusion_matrix(fold_holdout_target, fold_holdout_predictions)
+            _confusion_matrix(data_holdout.target.fold, data_holdout.prediction.fold)
         )
 
-    def _on_repetition_end(stat_aggregates, holdout_target_data, repetition_holdout_predictions):
+    def _on_repetition_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment's repetition. Note that parameters are
         named after Experiment attributes
 
@@ -236,15 +232,14 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        holdout_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
-        repetition_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.repetition_holdout_predictions`"""
+        data_holdout: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["reps"].append(
-            _confusion_matrix(holdout_target_data, repetition_holdout_predictions)
+            # _confusion_matrix(data_holdout.target.final, data_holdout.prediction.rep)  # TODO: Should use this when collecting transformed targets
+            _confusion_matrix(data_holdout.target.d, data_holdout.prediction.rep)  # FLAG: TEMPORARY
         )
 
-    def _on_experiment_end(stat_aggregates, holdout_target_data, final_holdout_predictions):
+    def _on_experiment_end(stat_aggregates, data_holdout):
         """Callback to execute upon ending an Experiment. Note that parameters are
         named after Experiment attributes
 
@@ -252,12 +247,12 @@ def confusion_matrix_holdout(on_run=True, on_fold=True, on_repetition=True, on_e
         ----------
         stat_aggregates: Dict
             :attr:`hyperparameter_hunter.experiments.BaseExperiment.stat_aggregates`
-        holdout_target_data: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseExperiment.holdout_target_data`
-        final_holdout_predictions: Array-like
-            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.final_holdout_predictions`"""
+        data_holdout: BaseDataset
+            :attr:`hyperparameter_hunter.experiments.BaseCVExperiment.data_holdout`"""
         stat_aggregates["confusion_matrix_holdout"]["final"] = _confusion_matrix(
-            holdout_target_data, final_holdout_predictions
+            # data_holdout.target.final, data_holdout.prediction.final  # TODO: Should use this when collecting transformed targets
+            data_holdout.target.d,
+            data_holdout.prediction.final,  # FLAG: TEMPORARY
         )
 
     return lambda_callback(
@@ -290,9 +285,9 @@ def _confusion_matrix(targets, predictions):
 ##################################################
 # Excessive Recording Callbacks
 ##################################################
-def dataset_recorder(save_transformed=False):
-    """Build a `LambdaCallback` that records the current state of all datasets `on_fold_start` and
-    `on_fold_end` in order to validate modifications made by
+def dataset_recorder():
+    """Build a `LambdaCallback` that records the current state of all datasets `on_fold_start` in
+    order to validate modifications made by
     :class:`feature_engineering.FeatureEngineer`/:class:`feature_engineering.EngineerStep`
 
     Returns
@@ -301,33 +296,127 @@ def dataset_recorder(save_transformed=False):
         Aggregator-like `LambdaCallback` whose values are aggregated under the name "_datasets" and
         whose keys are named after the corresponding callback methods"""
 
-    def _on_fold(
-        fold_train_input,
-        fold_train_target,
-        fold_validation_input,
-        fold_validation_target,
-        fold_holdout_input,
-        fold_holdout_target,
-        fold_test_input,
-        kwargs,
-    ):
+    def _on_fold(data_train, data_oof, data_holdout, data_test):
         d = dict(
-            fold_train_input=fold_train_input,
-            fold_train_target=fold_train_target,
-            fold_validation_input=fold_validation_input,
-            fold_validation_target=fold_validation_target,
-            fold_holdout_input=fold_holdout_input,
-            fold_holdout_target=fold_holdout_target,
-            fold_test_input=fold_test_input,
+            data_train=deepcopy(data_train),
+            data_oof=deepcopy(data_oof),
+            data_holdout=deepcopy(data_holdout),
+            data_test=deepcopy(data_test),
         )
-        if save_transformed:
-            for k in ["transformed_fold_holdout_target", "transformed_run_validation_target"]:
-                if k in kwargs:
-                    d[k] = kwargs[k]
-        return {k: v if not isinstance(v, pd.DataFrame) else v.copy() for k, v in d.items()}
+        return d
+
+    return lambda_callback(on_fold_start=_on_fold, agg_name="datasets", method_agg_keys=True)
+
+
+def lambda_check_train_targets(
+    on_experiment_start: Optional[List[TrainTargetChunk]] = None,
+    on_repetition_start: Optional[List[TrainTargetChunk]] = None,
+    on_fold_start: Optional[List[TrainTargetChunk]] = None,
+    on_run_start: Optional[List[TrainTargetChunk]] = None,
+    on_run_end: Optional[List[TrainTargetChunk]] = None,
+    on_fold_end: Optional[List[TrainTargetChunk]] = None,
+    on_repetition_end: Optional[List[TrainTargetChunk]] = None,
+    on_experiment_end: Optional[List[TrainTargetChunk]] = None,
+):
+    """LambdaCallback to check the values of an experiment's `data_train.target` attribute
+
+    The list of :class:`~hyperparameter_hunter.data.data_chunks.target_chunks.TrainTargetChunk`
+    instances given to each parameter represents the expected value of
+    :attr:`hyperparameter_hunter.experiments.CVExperiment.data_train.target` for each call of that
+    particular callback method. In other words, the number of items in each parameter's list should
+    correspond to the number of times that callback method is expected to be invoked.
+
+    This means that `on_experiment_start` and `on_experiment_end` should both contain only a single
+    `TrainTargetChunk` (because they are only ever invoked once by an experiment), and their values
+    should be the expected states of `data_train.target` on experiment start and end, respectively.
+
+    Parameters
+    ----------
+    on_experiment_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets when `on_experiment_start` is invoked. Should contain only
+        a single `TrainTargetChunk` instance
+    on_repetition_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets on each invocation of `on_repetition_start`. Should contain
+        as many `TrainTargetChunk` instances as repetitions will be conducted during the experiment.
+        Should contain only a single value if the number or repetitions is one, or if
+        :attr:`hyperparameter_hunter.environment.Environment.cv_type` is not a repeated CV scheme
+    on_fold_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets on each invocation of `on_fold_start`. The values to
+        provide are not as straight-forward, as they depend on the number of repetitions as well.
+        If only a single repetition will be conducted, then `on_fold_start` should simply contain
+        as many `TrainTargetChunk` instances as folds will be conducted. However, if multiple
+        repetitions will be conducted, then the length of `on_fold_start` should be
+        (<# of reps> * <# of folds>). For example, if performing `RepeatedKFold` cross validation
+        with 2 repetitions, and 3 folds/splits, then `on_fold_start` should contain 6 values
+    on_run_start: List[TrainTargetChunk], or None, default=None
+        Expected value of train targets on each invocation of `on_run_start`. Similarly to
+        `on_fold_start`, the length/values of `on_run_start` depends on the number of repetitions,
+        as well as the number of folds that will be conducted. The length of `on_run_start` should
+        be (<# of reps> * <# of folds> * <# of runs>). If performing standard, non-repeated
+        `KFold`-like cross validation, with 3 folds, and only a single run, then `on_run_start`
+        should contain 3 values. Just as in the `on_fold_start` description example, if performing
+        `RepeatedKFold` CV with 2 repetitions, and 3 folds, and 1 run, then `on_run_start` should
+        contain 6 values. On the extreme end, if performing `RepeatedKFold` CV with 2 repetitions,
+        and 3 folds, and 4 runs, then `on_run_start` should contain 24 values
+    on_run_end: List[TrainTargetChunk], or None, default=None
+        *See `on_run_start` description*
+    on_fold_end: List[TrainTargetChunk], or None, default=None
+        *See `on_fold_start` description*
+    on_repetition_end: List[TrainTargetChunk], or None, default=None
+        *See `on_repetition_start` description*
+    on_experiment_end: List[TrainTargetChunk], or None, default=None
+        *See `on_experiment_start` description*
+
+    Notes
+    -----
+    As is always the case, `on_run_start` and `on_run_end` will still be invoked even if
+    :attr:`hyperparameter_hunter.environment.Environment.runs` is 1. In this case, they will be
+    invoked as many times as `on_fold_start` and `on_fold_end` are invoked; however, this does not
+    mean that the values of `data_train.target` are identical between fold and run divisions"""
+    on_experiment_start = on_experiment_start if on_experiment_start is not None else []
+    on_repetition_start = on_repetition_start if on_repetition_start is not None else []
+    on_fold_start = on_fold_start if on_fold_start is not None else []
+    on_run_start = on_run_start if on_run_start is not None else []
+    on_run_end = on_run_end if on_run_end is not None else []
+    on_fold_end = on_fold_end if on_fold_end is not None else []
+    on_repetition_end = on_repetition_end if on_repetition_end is not None else []
+    on_experiment_end = on_experiment_end if on_experiment_end is not None else []
+
+    #################### Division Start Points ####################
+    def _on_experiment_start(data_train):
+        assert data_train.target == on_experiment_start[0]
+
+    def _on_repetition_start(data_train, _rep):
+        assert data_train.target == on_repetition_start[_rep]
+
+    def _on_fold_start(data_train, _rep, _fold):
+        assert data_train.target == on_fold_start[((_rep + 1) * (_fold + 1) - 1)]
+
+    def _on_run_start(data_train, _rep, _fold, _run):
+        assert data_train.target == on_run_start[((_rep + 1) * (_fold + 1) * (_run + 1) - 1)]
+
+    #################### Division End Points ####################
+    def _on_run_end(data_train, _rep, _fold, _run):
+        assert data_train.target == on_run_end[((_rep + 1) * (_fold + 1) * (_run + 1) - 1)]
+
+    def _on_fold_end(data_train, _rep, _fold):
+        assert data_train.target == on_fold_end[((_rep + 1) * (_fold + 1) - 1)]
+
+    def _on_repetition_end(data_train, _rep):
+        assert data_train.target == on_repetition_end[_rep]
+
+    def _on_experiment_end(data_train):
+        assert data_train.target == on_experiment_end[0]
 
     return lambda_callback(
-        on_fold_start=_on_fold, on_fold_end=_on_fold, agg_name="datasets", method_agg_keys=True
+        on_experiment_start=_on_experiment_start if on_experiment_start else None,
+        on_repetition_start=_on_repetition_start if on_repetition_start else None,
+        on_fold_start=_on_fold_start if on_fold_start else None,
+        on_run_start=_on_run_start if on_run_start else None,
+        on_run_end=_on_run_end if on_run_end else None,
+        on_fold_end=_on_fold_end if on_fold_end else None,
+        on_repetition_end=_on_repetition_end if on_repetition_end else None,
+        on_experiment_end=_on_experiment_end if on_experiment_end else None,
     )
 
 

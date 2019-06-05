@@ -348,28 +348,28 @@ def print_tree(start_path, depth=-1, pretty=True):
     ...     print("#" * 50)
     ...     print_tree(f"{d}/root/", pretty=False)
     |-- root/
-    |   |-- file_1.py
     |   |-- file_0.txt
+    |   |-- file_1.py
     |   |-- sub_a/
     |   |   |-- file_2.py
     |   |   |-- sub_b/
-    |   |   |   |-- file_4.py
     |   |   |   |-- file_3.txt
+    |   |   |   |-- file_4.py
     ##################################################
     |-- root/
-    |   |-- file_1.py
     |   |-- file_0.txt
+    |   |-- file_1.py
     |   |-- sub_a/
     |   |   |-- file_2.py
     ##################################################
     root/
-    |-- file_1.py
     |-- file_0.txt
+    |-- file_1.py
     |-- sub_a/
     |   |-- file_2.py
     |   |-- sub_b/
-    |   |   |-- file_4.py
-    |   |   |-- file_3.txt"""
+    |   |   |-- file_3.txt
+    |   |   |-- file_4.py"""
     prefix = 0
 
     if start_path != "/":
@@ -400,7 +400,7 @@ def print_tree(start_path, depth=-1, pretty=True):
                 content = "{}{}".format(sub_indent, real_name(d, root=root))
                 print(content)
 
-        for f in files:
+        for f in sorted(files):
             content = "{}{}".format(sub_indent, real_name(f, root=root))
             print(content)
 

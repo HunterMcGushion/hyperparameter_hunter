@@ -342,9 +342,8 @@ def test_get_formatted_target_metric_value_error(target_metric):
     ],
 )
 def test_get_clean_prediction(target, prediction, expected):
-    assert pd.DataFrame(
-        get_clean_prediction(pd.DataFrame(target), pd.DataFrame(prediction))
-    ).equals(pd.DataFrame(expected))
+    actual = pd.DataFrame(get_clean_prediction(pd.DataFrame(target), pd.DataFrame(prediction)))
+    assert actual.equals(pd.DataFrame(expected))
 
 
 ##################################################

@@ -17,7 +17,7 @@ Related
 Notes
 -----
 As mentioned above, the inner workings of :mod:`experiments` will be very confusing without a grasp
-on whats going on in :mod:`experiment_core`, and its related modules"""
+on what's going on in :mod:`experiment_core`, and its related modules"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -27,13 +27,15 @@ from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
 )
+from hyperparameter_hunter.data import TrainDataset, OOFDataset, HoldoutDataset, TestDataset
 from hyperparameter_hunter.exceptions import (
     EnvironmentInactiveError,
     EnvironmentInvalidError,
     RepeatedExperimentError,
 )
 from hyperparameter_hunter.experiment_core import ExperimentMeta
-from hyperparameter_hunter.keys import HyperparameterKeyMaker
+from hyperparameter_hunter.feature_engineering import FeatureEngineer
+from hyperparameter_hunter.keys.makers import HyperparameterKeyMaker
 from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_metric
 from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList
@@ -47,6 +49,7 @@ from hyperparameter_hunter.utils.general_utils import Deprecated
 # Import Miscellaneous Assets
 ##################################################
 from abc import abstractmethod
+from copy import deepcopy
 from inspect import isclass
 import numpy as np
 import pandas as pd
@@ -110,11 +113,10 @@ class BaseExperiment(ScoringMixIn):
         feature_engineer: `FeatureEngineer`, or None, default=None
             ...  # TODO: Add documentation
         feature_selector: List of str, callable, list of booleans, default=None
-            The value provided when splitting apart the input data for all provided DataFrames.
-            `feature_selector` is provided as the second argument for calls to
-            `pandas.DataFrame.loc` in :meth:`BaseExperiment._initial_preprocessing`. If None,
+            Column names to include as input data for all provided DataFrames. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
-            :attr:`target_column`, and :attr:`id_column`
+            :attr:`target_column`, and :attr:`id_column`. `feature_selector` is provided as the
+            second argument for calls to `pandas.DataFrame.loc` when constructing datasets
         notes: String, or None, default=None
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
@@ -146,7 +148,9 @@ class BaseExperiment(ScoringMixIn):
             self.model_init_params.update(dict(build_fn=model_init_params))
 
         self.model_extra_params = model_extra_params if model_extra_params is not None else {}
-        self.feature_engineer = feature_engineer if feature_engineer is not None else {}
+        self.feature_engineer = (
+            feature_engineer if callable(feature_engineer) else FeatureEngineer()
+        )
         self.feature_selector = feature_selector if feature_selector is not None else []
 
         self.notes = notes
@@ -178,13 +182,13 @@ class BaseExperiment(ScoringMixIn):
         self.result_paths = G.Env.result_paths
         self.cross_experiment_key = G.Env.cross_experiment_key
 
-        #################### Instantiate Other Attributes ####################
-        self.train_input_data = None
-        self.train_target_data = None
-        self.holdout_input_data = None
-        self.holdout_target_data = None
-        self.test_input_data = None
+        #################### Dataset Attributes ####################
+        self.data_train = None
+        self.data_oof = None
+        self.data_holdout = None
+        self.data_test = None
 
+        #################### Other Attributes ####################
         self.model = None
         self.metrics = None  # Set by :class:`metrics.ScoringMixIn`
         self.stat_aggregates = dict()
@@ -231,7 +235,6 @@ class BaseExperiment(ScoringMixIn):
             G.warn("WARNING: Duplicate experiment!")
 
         self._initialize_random_seeds()
-        self._initial_preprocessing()
         self.execute()
 
         #################### Save Experiment Results ####################
@@ -269,37 +272,36 @@ class BaseExperiment(ScoringMixIn):
     ##################################################
     # Data Preprocessing Methods:
     ##################################################
-    def _initial_preprocessing(self):
-        """Perform preprocessing steps prior to executing fitting protocol (usually
-        cross-validation), consisting of: 1) Split train/holdout data into respective train/holdout
-        input and target data attributes, 2) Execute `feature_engineer` to perform "pre_cv"-stage
-        preprocessing, 3) Set datasets to their (modified) counterparts in `feature_engineer`"""
-        self.train_input_data = self.train_dataset.copy().loc[:, self.feature_selector]
-        self.train_target_data = self.train_dataset.copy().loc[:, self.target_column]
+    def on_experiment_start(self):
+        """Prepare data prior to executing fitting protocol (cross-validation), by 1) Initializing
+        formal :mod:`~hyperparameter_hunter.data.datasets` attributes, 2) Invoking
+        `feature_engineer` to perform "pre_cv"-stage preprocessing, and 3) Updating datasets to
+        include their (transformed) counterparts in `feature_engineer`"""
+        #################### Build Datasets ####################
+        data_kwargs = dict(feature_selector=self.feature_selector, target_column=self.target_column)
+        self.data_train = TrainDataset(self.train_dataset, require_data=True, **data_kwargs)
+        # TODO: Might be better to initialize `data_oof` with same data as `data_train`
+        self.data_oof = OOFDataset(None, **data_kwargs)
+        self.data_holdout = HoldoutDataset(self.holdout_dataset, **data_kwargs)
+        self.data_test = TestDataset(self.test_dataset, feature_selector=self.feature_selector)
 
-        if isinstance(self.holdout_dataset, pd.DataFrame):
-            self.holdout_input_data = self.holdout_dataset.copy().loc[:, self.feature_selector]
-            self.holdout_target_data = self.holdout_dataset.copy().loc[:, self.target_column]
-
-        if isinstance(self.test_dataset, pd.DataFrame):
-            self.test_input_data = self.test_dataset.copy().loc[:, self.feature_selector]
-
-        if self.feature_engineer and callable(self.feature_engineer):
-            self.feature_engineer(
-                "pre_cv",
-                train_inputs=self.train_input_data,
-                train_targets=self.train_target_data,
-                holdout_inputs=self.holdout_input_data,
-                holdout_targets=self.holdout_target_data,
-                test_inputs=self.test_input_data,
-            )
-            self.train_input_data = self.feature_engineer.datasets["train_inputs"]
-            self.train_target_data = self.feature_engineer.datasets["train_targets"]
-            self.holdout_input_data = self.feature_engineer.datasets["holdout_inputs"]
-            self.holdout_target_data = self.feature_engineer.datasets["holdout_targets"]
-            self.test_input_data = self.feature_engineer.datasets["test_inputs"]
+        #################### Perform Pre-CV Feature Engineering ####################
+        self.feature_engineer(
+            "pre_cv",
+            train_inputs=deepcopy(self.data_train.input.d),
+            train_targets=deepcopy(self.data_train.target.d),
+            holdout_inputs=deepcopy(self.data_holdout.input.d),
+            holdout_targets=deepcopy(self.data_holdout.target.d),
+            test_inputs=deepcopy(self.data_test.input.d),
+        )
+        self.data_train.input.T.d = self.feature_engineer.datasets["train_inputs"]
+        self.data_train.target.T.d = self.feature_engineer.datasets["train_targets"]
+        self.data_holdout.input.T.d = self.feature_engineer.datasets["holdout_inputs"]
+        self.data_holdout.target.T.d = self.feature_engineer.datasets["holdout_targets"]
+        self.data_test.input.T.d = self.feature_engineer.datasets["test_inputs"]
 
         G.log("Initial preprocessing stage complete", 4)
+        super().on_experiment_start()
 
     ##################################################
     # Supporting Methods:
@@ -432,6 +434,32 @@ class BaseExperiment(ScoringMixIn):
         except Exception as _ex:
             G.log("WARNING: Failed to update model's random_state     {}".format(_ex.__repr__()))
 
+    def _empty_output_like(self, like: pd.DataFrame, index=None, target_column=None):
+        """Make an empty DataFrame of the same shape and with the same index as `like`, intended for
+        use with output :mod:`~hyperparameter_hunter.data.data_chunks`, like descendants of
+        :class:`~hyperparameter_hunter.data.data_chunks.prediction_chunks.BasePredictionChunk` and
+        :class:`~hyperparameter_hunter.data.data_chunks.target_chunks.BaseTargetChunk`
+
+        Parameters
+        ----------
+        like: pd.DataFrame
+            DataFrame to use as the basis for the shape and index of the returned DataFrame. `like`
+            has no bearing on the column names of the returned DataFrame
+        index: Array-like, or None, default=None
+            If None, defaults to `like.index`. Else, defines the index of the returned DataFrame
+        target_column: List[str], or None, default=None
+            If None, defaults to the experiment's :attr:`target_column`. Else, defines the column
+            names of the returned DataFrame
+
+        Returns
+        -------
+        pd.DataFrame
+            Zero-filled DataFrame with index of `index` or `like.index` and column names of
+            `target_column` or :attr:`target_column`"""
+        index = like.index.copy() if index is None else index
+        target_column = self.target_column if target_column is None else target_column
+        return pd.DataFrame(0, index=index, columns=target_column)
+
 
 class BaseCVExperiment(BaseExperiment):
     def __init__(
@@ -458,33 +486,10 @@ class BaseCVExperiment(BaseExperiment):
         self.validation_index = None
         self.folds = None
 
-        self.fold_train_input = None
-        self.fold_validation_input = None
-        self.fold_train_target = None
-        self.fold_validation_target = None
-        self.fold_holdout_input = None
-        self.fold_holdout_target = None
-        self.fold_test_input = None
-
-        self.repetition_oof_predictions = None
-        self.repetition_holdout_predictions = None
-        self.repetition_test_predictions = None
-
-        self.fold_holdout_predictions = None
-        self.fold_test_predictions = None
-
-        self.run_validation_predictions = None
-        self.run_holdout_predictions = None
-        self.run_test_predictions = None
-
         #################### Initialize Result Placeholders ####################
         # self.full_oof_predictions = None  # (n_repeats * runs) intermediate columns
         # self.full_test_predictions = 0  # (n_splits * n_repeats * runs) intermediate columns
         # self.full_holdout_predictions = 0  # (n_splits * n_repeats * runs) intermediate columns
-
-        self.final_oof_predictions = None
-        self.final_test_predictions = 0
-        self.final_holdout_predictions = 0
 
         BaseExperiment.__init__(
             self,
@@ -522,7 +527,7 @@ class BaseCVExperiment(BaseExperiment):
         self.on_experiment_start()
 
         reshaped_indices = get_cv_indices(
-            self.folds, self.cv_params, self.train_input_data, self.train_target_data.iloc[:, 0]
+            self.folds, self.cv_params, self.data_train.input.d, self.data_train.target.d.iloc[:, 0]
         )
 
         for self._rep, rep_indices in enumerate(reshaped_indices):
@@ -544,19 +549,42 @@ class BaseCVExperiment(BaseExperiment):
         consisting of: 1) Split train/validation data, 2) Make copies of holdout/test data for
         current fold (for feature engineering), 3) Log start, 4) Execute original tasks"""
         #################### Split Train and Validation Data ####################
-        self.fold_train_input = self.train_input_data.iloc[self.train_index, :].copy()
-        self.fold_validation_input = self.train_input_data.iloc[self.validation_index, :].copy()
+        self.data_train.input.fold = self.data_train.input.d.iloc[self.train_index, :].copy()
+        self.data_oof.input.fold = self.data_train.input.d.iloc[self.validation_index, :].copy()
 
-        self.fold_train_target = self.train_target_data.iloc[self.train_index].copy()
-        self.fold_validation_target = self.train_target_data.iloc[self.validation_index].copy()
+        self.data_train.input.T.fold = self.data_train.input.T.d.iloc[self.train_index, :].copy()
+        self.data_oof.input.T.fold = self.data_train.input.T.d.iloc[self.validation_index, :].copy()
 
-        #################### Set Fold Copies of Other Data ####################
-        if self.holdout_input_data is not None and self.holdout_target_data is not None:
-            self.fold_holdout_input = self.holdout_input_data.copy()
-            self.fold_holdout_target = self.holdout_target_data.copy()
+        self.data_train.target.fold = self.data_train.target.d.iloc[self.train_index].copy()
+        self.data_oof.target.fold = self.data_train.target.d.iloc[self.validation_index].copy()
 
-        if self.test_input_data is not None:
-            self.fold_test_input = self.test_input_data.copy()
+        self.data_train.target.T.fold = self.data_train.target.T.d.iloc[self.train_index].copy()
+        self.data_oof.target.T.fold = self.data_train.target.T.d.iloc[self.validation_index].copy()
+
+        #################### Set Fold Copies of Holdout/Test Data ####################
+        for data_chunk in [self.data_holdout.input, self.data_holdout.target, self.data_test.input]:
+            if data_chunk.d is not None:
+                data_chunk.fold = data_chunk.d.copy()
+                data_chunk.T.fold = data_chunk.T.d.copy()
+
+        #################### Perform Intra-CV Feature Engineering ####################
+        self.feature_engineer(
+            "intra_cv",
+            train_inputs=self.data_train.input.T.fold,
+            train_targets=self.data_train.target.T.fold,
+            validation_inputs=self.data_oof.input.T.fold,
+            validation_targets=self.data_oof.target.T.fold,
+            holdout_inputs=self.data_holdout.input.T.fold,
+            holdout_targets=self.data_holdout.target.T.fold,
+            test_inputs=self.data_test.input.T.fold,
+        )
+        self.data_train.input.T.fold = self.feature_engineer.datasets["train_inputs"]
+        self.data_train.target.T.fold = self.feature_engineer.datasets["train_targets"]
+        self.data_oof.input.T.fold = self.feature_engineer.datasets["validation_inputs"]
+        self.data_oof.target.T.fold = self.feature_engineer.datasets["validation_targets"]
+        self.data_holdout.input.T.fold = self.feature_engineer.datasets["holdout_inputs"]
+        self.data_holdout.target.T.fold = self.feature_engineer.datasets["holdout_targets"]
+        self.data_test.input.T.fold = self.feature_engineer.datasets["test_inputs"]
 
         super().on_fold_start()
 
@@ -565,26 +593,6 @@ class BaseCVExperiment(BaseExperiment):
         overridden :meth:`on_fold_start` tasks, 2) Perform cv_run_workflow for each run, 3) Execute
         overridden :meth:`on_fold_end` tasks"""
         self.on_fold_start()
-
-        if self.feature_engineer and callable(self.feature_engineer):
-            self.feature_engineer(
-                "intra_cv",
-                train_inputs=self.fold_train_input,
-                train_targets=self.fold_train_target,
-                validation_inputs=self.fold_validation_input,
-                validation_targets=self.fold_validation_target,
-                holdout_inputs=self.fold_holdout_input,
-                holdout_targets=self.fold_holdout_target,
-                test_inputs=self.fold_test_input,
-            )
-            self.fold_train_input = self.feature_engineer.datasets["train_inputs"]
-            self.fold_train_target = self.feature_engineer.datasets["train_targets"]
-            self.fold_validation_input = self.feature_engineer.datasets["validation_inputs"]
-            self.fold_validation_target = self.feature_engineer.datasets["validation_targets"]
-            self.fold_holdout_input = self.feature_engineer.datasets["holdout_inputs"]
-            self.fold_holdout_target = self.feature_engineer.datasets["holdout_targets"]
-            self.fold_test_input = self.feature_engineer.datasets["test_inputs"]
-
         G.log("Intra-CV preprocessing stage complete", 4)
 
         for self._run in range(self.experiment_params.get("runs", 1)):
@@ -611,10 +619,10 @@ class BaseCVExperiment(BaseExperiment):
             self.model_initializer,
             self.model_init_params,
             self.model_extra_params,
-            train_input=self.fold_train_input,
-            train_target=self.fold_train_target,
-            validation_input=self.fold_validation_input,
-            validation_target=self.fold_validation_target,
+            train_input=self.data_train.input.T.fold,
+            train_target=self.data_train.target.T.fold,
+            validation_input=self.data_oof.input.T.fold,
+            validation_target=self.data_oof.target.T.fold,
             do_predict_proba=self.do_predict_proba,
             target_metric=self.target_metric,
             metrics=self.metrics,

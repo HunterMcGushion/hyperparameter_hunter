@@ -3,6 +3,7 @@
 ##################################################
 from hyperparameter_hunter import exceptions
 from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.space import Categorical
 from hyperparameter_hunter.utils.general_utils import now_time, expand_mins_secs
 
 ##################################################
@@ -14,6 +15,7 @@ import inspect
 import logging
 import os.path
 import sys
+from typing import List
 
 
 class ReportingHandler(object):
@@ -301,14 +303,58 @@ class _Color:
     STOP = "\033[0m"
 
 
+def clean_parameter_names(parameter_names: list) -> List[str]:
+    """Remove unnecessary prefixes or characters from the names of search space dimensions
+
+    Parameters
+    ----------
+    parameter_names: List
+        Names of the dimensions in a hyperparameter search `Space` object. Values are usually tuples
+
+    Returns
+    -------
+    names: List[str]
+        Cleaned `parameter_names`, containing stringified values to facilitate logging"""
+    original_parameter_names = parameter_names.copy()
+    skip = ("model_init_params", "model_extra_params", "feature_engineer", "feature_selector")
+    names = [_[1:] if _[0] in skip else _ for _ in original_parameter_names]
+    names = [_[1:] if _[0] == "params" else _ for _ in names]  # This is for Keras
+    names = [_[0] if len(_) == 1 else str(_).replace("'", "").replace('"', "") for _ in names]
+    # If a value in `names` is a 1-tuple, its single item is returned
+    # If a tuple with multiple items, the tuple is stringified, and quotation marks are removed
+    return names
+
+
+def get_param_column_sizes(space: list, names: List[str]) -> List[int]:
+    """Determine maximum column sizes for displaying values of each hyperparameter in `space`
+
+    Parameters
+    ----------
+    space: List
+        Hyperparameter search space dimensions for the current Optimization Protocol
+    names: List[str]
+        Cleaned hyperparameter dimension names
+
+    Returns
+    -------
+    sizes: List[int]
+        Column sizes for each of the hyperparameters in `names`"""
+    sizes = [max(len(_), 7) for _ in names]
+    for i, dim in enumerate(space):
+        if isinstance(dim, Categorical):
+            str_categories = [getattr(_, "name", str(_)) for _ in dim.categories]
+            sizes[i] = max(sizes[i], *[len(_) for _ in str_categories])
+    return sizes
+
+
 class OptimizationReporter:
-    def __init__(self, parameter_names, verbose=1, show_experiment_id=8, do_maximize=True):
+    def __init__(self, space: list, verbose=1, show_experiment_id=8, do_maximize=True):
         """A MixIn class for reporting the results of hyperparameter optimization rounds
 
         Parameters
         ----------
-        parameter_names: List
-            The names of the hyperparameters being evaluated and optimized
+        space: List
+            Hyperparameter search space dimensions for the current Optimization Protocol
         verbose: Int in [0, 1, 2], default=1
             If 0, all but critical logging is silenced. If 1, normal logging is performed. If 2,
             detailed logging is performed
@@ -319,7 +365,7 @@ class OptimizationReporter:
         do_maximize: Boolean, default=True
             If False, smaller metric values will be considered preferred and will be highlighted to
             stand out. Else larger metric values will be treated as preferred"""
-        self.original_parameter_names = parameter_names
+        self.original_parameter_names = [_.name for _ in space]
         self.verbose = verbose
         self.show_experiment_id = (
             36 if (show_experiment_id is True or show_experiment_id > 36) else show_experiment_id
@@ -334,15 +380,8 @@ class OptimizationReporter:
         self.start_time = datetime.now()
         self.last_round = datetime.now()
 
-        skip = ("model_init_params", "model_extra_params", "feature_engineer", "feature_selector")
-        self.parameter_names = [_[1:] if _[0] in skip else _ for _ in self.original_parameter_names]
-        self.parameter_names = [_[1:] if _[0] == "params" else _ for _ in self.parameter_names]
-        self.parameter_names = [
-            _[0] if len(_) == 1 else str(_).replace("'", "").replace('"', "")
-            for _ in self.parameter_names
-        ]
-
-        self.sizes = [max(len(_), 7) for _ in self.parameter_names]
+        self.parameter_names = clean_parameter_names(self.original_parameter_names)
+        self.sizes = get_param_column_sizes(space, self.parameter_names)
         self.sorted_indexes = sorted(
             range(len(self.parameter_names)), key=self.parameter_names.__getitem__
         )
@@ -487,7 +526,13 @@ class OptimizationReporter:
                     values[index], self.sizes[index] + 2, min(self.sizes[index] - 3, 6 - 2)
                 )
             else:
-                content = "{0: >{1}}".format(values[index], self.sizes[index] + 2)
+                try:
+                    content = "{0: >{1}}".format(values[index], self.sizes[index] + 2)
+                except TypeError:  # For `EngineerStep`
+                    try:
+                        content = "{0: >{1}}".format(values[index].name, self.sizes[index] + 2)
+                    except AttributeError:  # For saved `EngineerStep` dicts from descriptions
+                        content = "{0: >{1}}".format(values[index]["name"], self.sizes[index] + 2)
             print(pre + content + post, end=self.end)
 
     def reset_timer(self):

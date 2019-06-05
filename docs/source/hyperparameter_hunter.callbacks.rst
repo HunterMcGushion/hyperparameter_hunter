@@ -52,6 +52,14 @@ hyperparameter\_hunter.callbacks.recipes module
     :undoc-members:
     :show-inheritance:
 
+hyperparameter\_hunter.callbacks.wranglers module
+-------------------------------------------------
+
+.. automodule:: hyperparameter_hunter.callbacks.wranglers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

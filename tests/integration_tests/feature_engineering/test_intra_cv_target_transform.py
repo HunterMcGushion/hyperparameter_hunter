@@ -46,38 +46,26 @@ boston_head_data = [
     # [0.06905, 0.0, 2.18, 0.0, 0.458, 7.147, 54.2, 6.0622, 3.0, 222.0, 18.7, 396.90, 5.33, 36.2],
 ]
 boston_head = pd.DataFrame(data=boston_head_data, columns=boston_cols)
-boston_head_inputs = boston_head.copy().drop(["DIS"], axis=1)
-boston_head_targets = boston_head.copy().loc[:, ["DIS"]]
+b_inputs = boston_head.copy().drop(["DIS"], axis=1)
+b_targets = boston_head.copy().loc[:, ["DIS"]]
 
-normal_train_inputs = [
-    boston_head_inputs.iloc[[1, 2], :],
-    boston_head_inputs.iloc[[0, 2], :],
-    boston_head_inputs.iloc[[0, 1], :],
-]
+normal_train_inputs = [b_inputs.iloc[[1, 2], :], b_inputs.iloc[[0, 2], :], b_inputs.iloc[[0, 1], :]]
 normal_train_targets = [
-    boston_head_targets.iloc[[1, 2], :],
-    boston_head_targets.iloc[[0, 2], :],
-    boston_head_targets.iloc[[0, 1], :],
+    b_targets.iloc[[1, 2], :],
+    b_targets.iloc[[0, 2], :],
+    b_targets.iloc[[0, 1], :],
 ]
-normal_validation_inputs = [
-    boston_head_inputs.iloc[[0], :],
-    boston_head_inputs.iloc[[1], :],
-    boston_head_inputs.iloc[[2], :],
-]
-normal_validation_targets = [
-    boston_head_targets.iloc[[0], :],
-    boston_head_targets.iloc[[1], :],
-    boston_head_targets.iloc[[2], :],
-]
-normal_holdout_inputs = [boston_head_inputs.iloc[[3], :]] * 3
-normal_holdout_targets = [boston_head_targets.iloc[[3], :]] * 3
+normal_oof_inputs = [b_inputs.iloc[[0], :], b_inputs.iloc[[1], :], b_inputs.iloc[[2], :]]
+normal_oof_targets = [b_targets.iloc[[0], :], b_targets.iloc[[1], :], b_targets.iloc[[2], :]]
+normal_holdout_inputs = [b_inputs.iloc[[3], :]] * 3
+normal_holdout_targets = [b_targets.iloc[[3], :]] * 3
 
 engineered_train_targets = [
     pd.DataFrame(dict(DIS=[0.0, 0.0])),
     pd.DataFrame(dict(DIS=[0.0, 0.999999])),
     pd.DataFrame(dict(DIS=[0.0, 0.999999])),
 ]
-engineered_validation_targets = [
+engineered_oof_targets = [
     pd.DataFrame(dict(DIS=[0.0])),
     pd.DataFrame(dict(DIS=[1.0])),
     pd.DataFrame(dict(DIS=[1.0])),
@@ -102,7 +90,7 @@ def my_quantile_transform(train_targets, non_train_targets):
 
 
 @pytest.fixture
-def boston_head_env_fixture():
+def boston_env():
     return Environment(
         train_dataset=boston_head,
         holdout_dataset=holdout_last_row,
@@ -110,12 +98,13 @@ def boston_head_env_fixture():
         metrics=["r2_score", "median_absolute_error"],
         cv_type="KFold",
         cv_params=dict(n_splits=3, random_state=1),
-        experiment_callbacks=[dataset_recorder(save_transformed=True)],
+        experiment_callbacks=[dataset_recorder()],
     )
 
 
 @pytest.fixture
-def intra_cv_experiment_fixture(request):
+def engineer_experiment(request):
+    """`CVExperiment` fixture that supports provision of a `feature_engineer` through `request`"""
     feature_engineer = FeatureEngineer(steps=request.param)
     experiment = CVExperiment(
         model_initializer=Ridge, model_init_params=dict(), feature_engineer=feature_engineer
@@ -124,40 +113,36 @@ def intra_cv_experiment_fixture(request):
 
 
 @pytest.mark.parametrize(
-    ["intra_cv_experiment_fixture", "end_data"],
+    ["engineer_experiment", "exp_train", "exp_oof", "exp_holdout"],
     [
         [
             None,
-            [
-                normal_train_inputs,
-                normal_train_targets,
-                normal_validation_inputs,
-                normal_validation_targets,
-                normal_holdout_inputs,
-                normal_holdout_targets,
-            ],
+            [(normal_train_inputs,) * 2, (normal_train_targets,) * 2],
+            [(normal_oof_inputs,) * 2, (normal_oof_targets,) * 2],
+            [(normal_holdout_inputs,) * 2, (normal_holdout_targets,) * 2],
         ],
         [
             [my_quantile_transform],
             [
-                normal_train_inputs,
-                engineered_train_targets,
-                normal_validation_inputs,
-                engineered_validation_targets,
-                normal_holdout_inputs,
-                engineered_holdout_targets,
+                (normal_train_inputs, normal_train_inputs),
+                (normal_train_targets, engineered_train_targets),
+            ],
+            [(normal_oof_inputs, normal_oof_inputs), (normal_oof_targets, engineered_oof_targets)],
+            [
+                (normal_holdout_inputs, normal_holdout_inputs),
+                (normal_holdout_targets, engineered_holdout_targets),
             ],
         ],
     ],
-    indirect=["intra_cv_experiment_fixture"],
+    indirect=["engineer_experiment"],
 )
-def test_all_wrangled_targets(boston_head_env_fixture, intra_cv_experiment_fixture, end_data):
-    agg_datasets = intra_cv_experiment_fixture.stat_aggregates["_datasets"]
+def test_all_wrangled_targets(boston_env, engineer_experiment, exp_train, exp_oof, exp_holdout):
+    agg_datasets = engineer_experiment.stat_aggregates["_datasets"]
+    d_pairs = [("data_train", exp_train), ("data_oof", exp_oof), ("data_holdout", exp_holdout)]
 
-    for f, datasets in enumerate(agg_datasets["on_fold_end"]):
-        assert_array_almost_equal(datasets["fold_train_input"], end_data[0][f])
-        assert_array_almost_equal(datasets["fold_train_target"], end_data[1][f])
-        assert_array_almost_equal(datasets["fold_validation_input"], end_data[2][f])
-        assert_array_almost_equal(datasets["fold_validation_target"], end_data[3][f])
-        assert_array_almost_equal(datasets["fold_holdout_input"], end_data[4][f])
-        assert_array_almost_equal(datasets["fold_holdout_target"], end_data[5][f])
+    for f, data in enumerate(agg_datasets["on_fold_start"]):
+        for (actual, expected) in d_pairs:
+            assert_array_almost_equal(data[actual].input.fold, expected[0][0][f])
+            assert_array_almost_equal(data[actual].target.fold, expected[1][0][f])
+            assert_array_almost_equal(data[actual].input.T.fold, expected[0][1][f])
+            assert_array_almost_equal(data[actual].target.T.fold, expected[1][1][f])

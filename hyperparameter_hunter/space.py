@@ -23,7 +23,7 @@ from hyperparameter_hunter.utils.boltons_utils import get_path
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from functools import reduce
 from sys import maxsize
 from uuid import uuid4 as uuid
@@ -33,6 +33,30 @@ from uuid import uuid4 as uuid
 ##################################################
 from sklearn.utils import check_random_state
 from skopt.space import space as skopt_space
+
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class RejectedOptional(metaclass=Singleton):
+    """Singleton class to symbolize the rejection of an `optional` `Categorical` value
+
+    This is used as a sentinel, when the value in `Categorical.categories` is not used, to be
+    inserted into a :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`. If
+    :attr:`hyperparameter_hunter.feature_engineering.FeatureEngineer.steps` contains an instance
+    of `RejectedOptional`, it is removed from `steps`"""
+
+    def __str__(self):
+        return "<NONE>"
+
+    def __format__(self, format_spec):
+        return str(self).__format__(format_spec)
 
 
 ##################################################
@@ -71,6 +95,10 @@ class Dimension(skopt_space.Dimension, metaclass=ABCMeta):
         else:
             raise ValueError("Dimension's name must be one of: string, tuple, or None.")
 
+    @abstractmethod
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Dimension`, or their defaults"""
+
 
 class Real(Dimension, skopt_space.Real):
     def __init__(self, low, high, prior="uniform", transform="identity", name=None):
@@ -100,6 +128,16 @@ class Real(Dimension, skopt_space.Real):
         except TypeError:
             return False
 
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Real`, or their defaults"""
+        return dict(
+            low=self.low,
+            high=self.high,
+            prior=self.prior,
+            transform=self.transform_,
+            name=self.name,
+        )
+
 
 class Integer(Dimension, skopt_space.Integer):
     def __init__(self, low, high, transform=None, name=None):
@@ -125,9 +163,13 @@ class Integer(Dimension, skopt_space.Integer):
         except TypeError:
             return False
 
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Integer`, or their defaults"""
+        return dict(low=self.low, high=self.high, transform=self.transform_, name=self.name)
+
 
 class Categorical(Dimension, skopt_space.Categorical):
-    def __init__(self, categories, prior=None, transform="onehot", name=None):
+    def __init__(self, categories, prior=None, transform="onehot", optional=False, name=None):
         """Search space dimension that can assume any categorical value in a given list
 
         Parameters
@@ -141,9 +183,35 @@ class Categorical(Dimension, skopt_space.Categorical):
             Transformation to apply to the original space. If 'identity', the transformed space is
             the same as the original space. If 'onehot', the transformed space is a one-hot encoded
             representation of the original space
+        optional: Boolean, default=False
+            Intended for use by :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`
+            when optimizing an :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`.
+            Specifically, this enables searching through a space in which an `EngineerStep` either
+            may or may not be used. This is contrary to `Categorical`'s usual function of creating
+            a space comprising multiple `categories`. When `optional` = True, the space created will
+            represent any of the values in `categories` either being included in the entire
+            `FeatureEngineer` process, or being skipped entirely. Internally, a value excluded by
+            `optional` is represented by a sentinel value that signals it should be removed from the
+            containing list, so `optional` will not work for choosing between a single value and
+            None, for example
         name: String, tuple, or None, default=None
             A name associated with the dimension"""
+        if optional and RejectedOptional() not in categories:
+            categories.append(RejectedOptional())
+        self.optional = optional
+        # TODO: Test using `optional` with `prior` and `transform`
+
         super().__init__(categories=categories, prior=prior, transform=transform, name=name)
+
+    def get_params(self) -> dict:
+        """Get dict of parameters used to initialize the `Categorical`, or their defaults"""
+        return dict(
+            categories=self.categories,
+            prior=self.prior,
+            transform=self.transform_,
+            optional=self.optional,
+            name=self.name,
+        )
 
 
 ##################################################
@@ -306,8 +374,7 @@ def dimension_subset(hyperparameters, dimensions):
     -------
     List of hyperparameter values"""
     dimensions = [("model_init_params", _) if isinstance(_, str) else _ for _ in dimensions]
-    values = [get_path(hyperparameters, _, default=None) for _ in dimensions]
-    # FLAG: Might need to set `default`=<some sentinel str> in above `get_path` call - In case `None` is an accepted value
+    values = [get_path(hyperparameters, _, default=RejectedOptional()) for _ in dimensions]
     return values
 
 

@@ -4,6 +4,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
+from hyperparameter_hunter.space import Categorical, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import remap, default_visit, default_enter
 from hyperparameter_hunter.utils.general_utils import subdict
 
@@ -14,7 +15,7 @@ import ast
 from contextlib import suppress
 from inspect import getsource
 import pandas as pd
-from typing import List, Callable, Dict, Union
+from typing import List, Callable, Dict, Union, Tuple
 
 ##################################################
 # Global Variables
@@ -44,12 +45,12 @@ COUPLED_DATASET_CANDIDATES = [
 
 
 class DatasetNameReport:
-    def __init__(self, params: List[str], stage: str):
+    def __init__(self, params: Tuple[str], stage: str):
         """Characterize the relationships between the dataset names `params`
 
         Parameters
         ----------
-        params: List[str]
+        params: Tuple[str]
             Dataset names requested by a feature engineering step callable. Must be a subset of
             {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
             "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
@@ -78,7 +79,7 @@ class DatasetNameReport:
             Nested dict in which all keys are dataset name strings, and all leaf values are `None`.
             Represents the structure of the requested dataset names, traversing over merged and
             coupled datasets (if necessary) in order to reach the standard dataset leaves"""
-        self.params: List[str] = params
+        self.params: Tuple[str] = params
         self.stage: str = stage
 
         self.merged_datasets: List[tuple] = []
@@ -213,7 +214,7 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
     --------
     names_for_merge: Describes how `stage` values differ"""
     df_names = names_for_merge(merge_to, stage)
-    df_names = [_ for _ in df_names if dfs.get(_, None) is not None]
+    df_names = [_ for _ in df_names if isinstance(dfs.get(_, None), pd.DataFrame)]
     try:
         merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
     except ValueError as _ex:
@@ -244,13 +245,13 @@ def split_merged_df(merged_df: pd.DataFrame) -> DFDict:
     return dfs
 
 
-def validate_dataset_names(params: List[str], stage: str) -> List[str]:
+def validate_dataset_names(params: Tuple[str], stage: str) -> List[str]:
     """Produce the names of merged datasets in `params` and verify there are no duplicate references
     to any datasets in `params`
 
     Parameters
     ----------
-    params: List[str]
+    params: Tuple[str]
         Dataset names requested by a feature engineering step callable. Must be a subset of
         {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
         "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
@@ -284,6 +285,7 @@ def validate_dataset_names(params: List[str], stage: str) -> List[str]:
     return [_[0] if len(_) == 1 else _ for _ in report.merged_datasets]
 
 
+# TODO: Finish `EngineerStep` documentation. Outline proper format of `f`
 class EngineerStep:
     def __init__(self, f: Callable, stage=None, name=None, params=None, do_validate=False):
         """:class:`FeatureEngineer` helper, compartmentalizing functions of singular engineer steps
@@ -298,7 +300,7 @@ class EngineerStep:
         name: String, or None, default=None
             Identifier for the transformation applied by this engineering step. If None,
             `f.__name__` will be used
-        params: List[str], or None, default=None
+        params: Tuple[str], or None, default=None
             Dataset names requested by feature engineering step callable `f`. If None, will be
             inferred by parsing the abstract syntax tree of `f`. Else, must be a subset of
             {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
@@ -309,15 +311,16 @@ class EngineerStep:
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
             hashes of the new datasets will be compared to those of the originals to ensure they
-            were actually modified. Results will be logged. If `do_validate`="strict", an exception
-            will be raised if any anomalies are found, rather than logging a message. If
-            `do_validate`=False, no validation will be performed"""
+            were actually modified. Results will be logged. If `do_validate` = "strict", an
+            exception will be raised if any anomalies are found, rather than logging a message. If
+            `do_validate` = False, no validation will be performed"""
         self._f = f
         self._name = name
         self.params = params
         self._stage = stage
         self.do_validate = do_validate
 
+        self.inversion = None
         self.merged_datasets = []
         self.original_hashes = dict()
         self.updated_hashes = dict()
@@ -345,6 +348,9 @@ class EngineerStep:
         step_result = self.f(**datasets_for_f)
         step_result = (step_result,) if not isinstance(step_result, tuple) else step_result
 
+        if len(step_result) == len(self.params) + 1:
+            self.inversion, step_result = step_result[-1], step_result[:-1]
+
         new_datasets = dict(zip(self.params, step_result))
         for dataset_name, dataset_value in new_datasets.items():
             if dataset_name in self.merged_datasets:
@@ -354,6 +360,29 @@ class EngineerStep:
         self.updated_hashes = hash_datasets(new_datasets)
         # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
         return new_datasets
+
+    def inverse_transform(self, data):
+        """Perform the inverse transformation for this engineer step (if it exists)
+
+        Parameters
+        ----------
+        data: Array-like
+            Data to inverse transform with :attr:`inversion` or :attr:`inversion.inverse_transform`
+
+        Returns
+        -------
+        Array-like
+            If :attr:`inversion` is None, return `data` unmodified. Else, return the result of
+            :attr:`inversion` or :attr:`inversion.inverse_transform`, given `data`"""
+        if not self.inversion:
+            return data
+        elif callable(getattr(self.inversion, "inverse_transform", None)):
+            return self.inversion.inverse_transform(data)
+        elif callable(self.inversion):
+            return self.inversion(data)
+        raise TypeError(
+            f"`inversion` must be callable, or class with `inverse_transform`, not {self.inversion}"
+        )
 
     def get_datasets_for_f(self, datasets: DFDict) -> DFDict:
         """Produce a dict of DataFrames containing only the merged datasets and standard datasets
@@ -411,7 +440,7 @@ class EngineerStep:
         return self._name
 
     @property
-    def params(self) -> list:
+    def params(self) -> tuple:
         """Dataset names requested by feature engineering step callable :attr:`f`. See documentation
         in :meth:`EngineerStep.__init__` for more information/restrictions"""
         return self._params
@@ -427,6 +456,46 @@ class EngineerStep:
             self._stage = get_engineering_step_stage(self.params)
         return self._stage
 
+    def __eq__(self, other):
+        """Check whether `other` is equal to `self`
+
+        The two are considered equal if `other` has the following attributes and their values
+        are equal to those of `self`: :attr:`name`, :attr:`f`, :attr:`params`, :attr:`stage`, and
+        :attr:`do_validate`. The values of all the aforementioned attributes will have been set on
+        initialization (either explicitly or by inference), and they should never be altered
+
+        Parameters
+        ----------
+        other: Any
+            Object to compare to `self`
+
+        Returns
+        -------
+        Boolean
+            True if `other` is equal to `self`, else False"""
+        if isinstance(other, dict):
+            return all(
+                [
+                    self.name == other.get("name", object()),
+                    make_hash_sha256(self.f) == other.get("f", object()),
+                    self.params == tuple(other.get("params", object())),
+                    self.stage == other.get("stage", object()),
+                    self.do_validate == other.get("do_validate", object()),
+                ]
+            )
+        return all(
+            [
+                self.name == getattr(other, "name", object()),
+                self.f == getattr(other, "f", object()),
+                self.params == getattr(other, "params", object()),
+                self.stage == getattr(other, "stage", object()),
+                self.do_validate == getattr(other, "do_validate", object()),
+            ]
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.f, self.params, self.stage, self.do_validate))
+
 
 class FeatureEngineer:
     def __init__(self, steps=None, do_validate=False, **datasets: DFDict):
@@ -436,18 +505,79 @@ class FeatureEngineer:
         Parameters
         ----------
         steps: List, or None, default=None
-            If not None, should be list containing any of the following: :class:`EngineerStep`
-            instances, or callables used to instantiate :class:`EngineerStep`
+            List of arbitrary length, containing any of the following values:
+
+                1. :class:`EngineerStep` instance,
+                2. Function to provide as input to :class:`EngineerStep`, or
+                3. :class:`~hyperparameter_hunter.space.Categorical`, with `categories` comprising
+                   a selection of the previous two `steps` values (optimization only)
+
+            The third value should only be used during optimization. The `feature_engineer` provided
+            to a :class:`~hyperparameter_hunter.experiments.CVExperiment`, for example, may only
+            contain the first two values. To search a space optionally including an `EngineerStep`,
+            use the `optional` kwarg of :class:`~hyperparameter_hunter.space.Categorical`.
+
+            See :meth:`EngineerStep.__init__` for information on properly formatted `EngineerStep`
+            functions. Additional engineering steps may be added via :meth:`add_step`
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
             hashes of the new datasets will be compared to those of the originals to ensure they
-            were actually modified. Results will be logged. If `do_validate`="strict", an exception
-            will be raised if any anomalies are found, rather than logging a message. If
-            `do_validate`=False, no validation will be performed
+            were actually modified. Results will be logged. If `do_validate` = "strict", an
+            exception will be raised if any anomalies are found, rather than logging a message. If
+            `do_validate` = False, no validation will be performed
         **datasets: DFDict
-            Mapping of datasets necessary to perform feature engineering steps. This is not expected
-            to be provided on initialization and is offered primarily for debugging/testing"""
+            This is not expected to be provided on initialization and is offered primarily for
+            debugging/testing. Mapping of datasets necessary to perform feature engineering steps
+
+        Notes
+        -----
+        If `steps` does include any instances of :class:`hyperparameter_hunter.space.Categorical`,
+        this `FeatureEngineer` instance will not be usable by experiments. It can only be used
+        by Optimization Protocols. Furthermore, the `FeatureEngineer` that the Optimization Protocol
+        actually ends up using will not pass identity checks against the original `FeatureEngineer`
+        that contained `Categorical` steps
+
+        See Also
+        --------
+        :class:`EngineerStep`: For proper formatting of non-`Categorical` values of `steps`
+
+        Examples
+        --------
+        >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler, QuantileTransformer
+
+        >>> def s_scale(train_inputs, non_train_inputs):
+        ...     s = StandardScaler()
+        ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+        ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+        ...     return train_inputs, non_train_inputs
+
+        >>> def mm_scale(train_inputs, non_train_inputs):
+        ...     s = MinMaxScaler()
+        ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+        ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+        ...     return train_inputs, non_train_inputs
+
+        >>> def q_transform(train_targets, non_train_targets):
+        ...     t = QuantileTransformer(output_distribution="normal")
+        ...     train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
+        ...     non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
+        ...     return train_targets, non_train_targets, t
+
+        >>> def sqr_sum(all_inputs):
+        ...     all_inputs["square_sum"] = all_inputs.agg(
+        ...         lambda row: np.sqrt(np.sum([np.square(_) for _ in row])), axis="columns"
+        ...     )
+        ...     return all_inputs
+
+        >>> fe_0 = FeatureEngineer([sqr_sum, s_scale])
+        >>> fe_1 = FeatureEngineer([EngineerStep(sqr_sum), EngineerStep(s_scale)])
+        >>> fe_0.steps == fe_1.steps
+        True
+        >>> fe_2 = FeatureEngineer([sqr_sum, EngineerStep(s_scale), q_transform])
+        >>> fe_3 = FeatureEngineer([sqr_sum, Categorical([s_scale, mm_scale]), q_transform])
+        >>> fe_4 = FeatureEngineer([Categorical([sqr_sum], optional=True), s_scale, q_transform])
+        """
         self.steps = []
         self.do_validate = do_validate
         self.datasets = datasets or {}
@@ -474,9 +604,32 @@ class FeatureEngineer:
             if step.stage == stage:
                 self.datasets = step(**self.datasets)
 
+    def inverse_transform(self, data):
+        """Perform the inverse transformation for all engineer steps in :attr:`steps` in sequence
+        on `data`
+
+        Parameters
+        ----------
+        data: Array-like
+            Data to inverse transform with any inversions present in :attr:`steps`
+
+        Returns
+        -------
+        Array-like
+            Result of sequentially calling inverse transformations in :attr:`steps` on `data`. If
+            any step has :attr:`EngineerStep.inversion` = None, `data` is unmodified for that step,
+            and proceeds to next engineer step inversion"""
+        inverted_data = data
+
+        # TODO: Make sure "pre_cv"-stage steps are inverted first, then "intra_cv"-stage
+        for i, step in enumerate(self.steps):
+            inverted_data = step.inverse_transform(inverted_data)
+
+        return inverted_data
+
     @property
     def steps(self) -> List[EngineerStep]:
-        """Feature engineering steps to execute in sequence on :meth:`FeatureEngineer.__call__"""
+        """Feature engineering steps to execute in sequence on :meth:`FeatureEngineer.__call__`"""
         return self._steps
 
     @steps.setter
@@ -492,14 +645,14 @@ class FeatureEngineer:
         Dict
             Important attributes describing this :class:`FeatureEngineer` instance"""
         return dict(
-            steps=[_.get_key_data() for _ in self.steps],
+            steps=[_.get_key_data() if isinstance(_, EngineerStep) else _ for _ in self.steps],
             do_validate=self.do_validate,
             datasets=self.datasets,
         )
 
     def add_step(
         self,
-        step: Union[Callable, EngineerStep],
+        step: Union[Callable, EngineerStep, Categorical],
         stage: str = None,
         name: str = None,
         before: str = EMPTY_SENTINEL,
@@ -508,6 +661,34 @@ class FeatureEngineer:
     ):
         """Add an engineering step to :attr:`steps` to be executed with the other contents of
         :attr:`steps` on :meth:`FeatureEngineer.__call__`
+
+        Parameters
+        ----------
+        step: Callable, or `EngineerStep`, or `Categorical`
+            If `EngineerStep` instance, will be added directly to :attr:`steps`. Otherwise, must be
+            a feature engineering step callable that requests, modifies, and returns datasets, which
+            will be used to instantiate a :class:`EngineerStep` to add to :attr:`steps`. If
+            `Categorical`, `categories` should contain `EngineerStep` instances or callables
+        stage: String in {"pre_cv", "intra_cv"}, or None, default=None
+            Feature engineering stage during which the callable `step` will be executed
+        name: String, or None, default=None
+            Identifier for the transformation applied by this engineering step. If None and `step`
+            is not an `EngineerStep`, will be inferred during :class:`EngineerStep` instantiation
+        before: String, default=EMPTY_SENTINEL
+            ... Experimental...
+        after: String, default=EMPTY_SENTINEL
+            ... Experimental...
+        number: String, default=EMPTY_SENTINEL
+            ... Experimental..."""
+        if isinstance(step, Categorical):
+            cat_params = step.get_params()
+            cat_params["categories"] = [self._to_step(_) for _ in cat_params["categories"]]
+            self._steps.append(Categorical(**cat_params))
+        else:
+            self._steps.append(self._to_step(step, stage=stage, name=name))
+
+    def _to_step(self, step: Union[Callable, EngineerStep], stage=None, name=None) -> EngineerStep:
+        """Ensure a candidate `step` is an `EngineerStep` instance, and return it
 
         Parameters
         ----------
@@ -520,30 +701,30 @@ class FeatureEngineer:
         name: String, or None, default=None
             Identifier for the transformation applied by this engineering step. If None and `step`
             is not an `EngineerStep`, will be inferred during :class:`EngineerStep` instantiation
-        before: String, default=EMPTY_SENTINEL
-            ... Experimental...
-        after: String, default=EMPTY_SENTINEL
-            ... Experimental...
-        number: String, default=EMPTY_SENTINEL
-            ... Experimental..."""
+
+        Returns
+        -------
+        EngineerStep
+            `step` if already an instance of `EngineerStep`. Else an `EngineerStep` initialized
+            using `step`, `name`, and `stage`"""
         if isinstance(step, EngineerStep):
-            self._steps.append(step)
+            return step
+        elif step == RejectedOptional():
+            return step  # Return as-is - OptimizationProtocol will take care of it
         else:
-            self._steps.append(
-                EngineerStep(step, name=name, stage=stage, do_validate=self.do_validate)
-            )
+            return EngineerStep(step, name=name, stage=stage, do_validate=self.do_validate)
 
 
 # FLAG: Tally number of columns "transformed" and "added" at each step and report
 
 
-def get_engineering_step_stage(datasets: List[str]) -> str:
+def get_engineering_step_stage(datasets: Tuple[str]) -> str:
     """Determine the stage in which a feature engineering step that requests `datasets` as input
     should be executed
 
     Parameters
     ----------
-    datasets: List[str]
+    datasets: Tuple[str]
         Dataset names requested by a feature engineering step callable
 
     Returns
@@ -551,8 +732,8 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
     stage: {"pre_cv", "intra_cv"}
         "pre_cv" if a step processing the given `datasets` should be executed in the
         pre-cross-validation stage. "intra_cv" if the step should be executed for each
-        cross-validation split. If any of the elements in `datasets` is prefixed with "validation_"
-        or "non_train_", `stage` will be "intra_cv". Otherwise, it will be "pre_cv"
+        cross-validation split. If any of the elements in `datasets` is prefixed with "validation"
+        or "non_train", `stage` will be "intra_cv". Otherwise, it will be "pre_cv"
 
     Notes
     -----
@@ -564,7 +745,7 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
     rows should be performed "intra_cv" in order to recalculate the final values of the datasets for
     each cross validation split and avoid information leakage
 
-    Technically, the inference of `stage="intra_cv"` due to the existence of a "non_train_"-prefixed
+    Technically, the inference of `stage="intra_cv"` due to the existence of a "non_train"-prefixed
     value in `datasets` could unnecessarily force steps to be executed "intra_cv" if, for example,
     there is no validation data. However, this is safer than the alternative of executing these
     steps "pre_cv", in which validation data would be a subset of train data, probably introducing
@@ -573,13 +754,13 @@ def get_engineering_step_stage(datasets: List[str]) -> str:
 
     Examples
     --------
-    >>> get_engineering_step_stage(["train_inputs", "validation_inputs", "holdout_inputs"])
+    >>> get_engineering_step_stage(("train_inputs", "validation_inputs", "holdout_inputs"))
     'intra_cv'
-    >>> get_engineering_step_stage(["all_data"])
+    >>> get_engineering_step_stage(("all_data"))
     'pre_cv'
-    >>> get_engineering_step_stage(["all_inputs", "all_targets"])
+    >>> get_engineering_step_stage(("all_inputs", "all_targets"))
     'pre_cv'
-    >>> get_engineering_step_stage(["train_data", "non_train_data"])
+    >>> get_engineering_step_stage(("train_data", "non_train_data"))
     'intra_cv'"""
     if any(_.startswith("validation_") for _ in datasets):
         return "intra_cv"
@@ -608,11 +789,14 @@ class ParameterParser(ast.NodeVisitor):
             self.returns.append(node.value.id)
         except AttributeError:
             for element in node.value.elts:
-                self.returns.append(element.id)
+                try:
+                    self.returns.append(element.id)
+                except AttributeError:  # Straight-up function probably, instead of variable name
+                    self.returns.append(getattr(element, "attr", element.__class__.__name__))
         self.generic_visit(node)
 
 
-def get_engineering_step_params(f: callable) -> List[str]:
+def get_engineering_step_params(f: callable) -> Tuple[str]:
     """Verify that callable `f` requests valid input parameters, and returns a tuple of the same
     parameters, with the assumption that the parameters are modified by `f`
 
@@ -623,7 +807,7 @@ def get_engineering_step_params(f: callable) -> List[str]:
 
     Returns
     -------
-    List
+    Tuple
         Argument/return value names declared by `f`
 
     Examples
@@ -632,20 +816,14 @@ def get_engineering_step_params(f: callable) -> List[str]:
     ...     all_data.fillna(-1, inplace=True)
     ...     return all_data
     >>> get_engineering_step_params(impute_negative_one)
-    ['all_data']
+    ('all_data',)
     >>> def standard_scale(train_inputs, non_train_inputs):
     ...     scaler = StandardScaler()
     ...     train_inputs[train_inputs.columns] = scaler.fit_transform(train_inputs.values)
     ...     non_train_inputs[train_inputs.columns] = scaler.transform(non_train_inputs.values)
     ...     return train_inputs, non_train_inputs
     >>> get_engineering_step_params(standard_scale)
-    ['train_inputs', 'non_train_inputs']
-    >>> def error_mismatch(train_inputs, non_train_inputs):
-    ...     return validation_inputs, holdout_inputs
-    >>> get_engineering_step_params(error_mismatch)
-    Traceback (most recent call last):
-        File "feature_engineering.py", line ?, in get_engineering_step_params
-    ValueError: Mismatched `f` inputs (['train_inputs', 'non_train_inputs']), and returns (['validation_inputs', 'holdout_inputs'])
+    ('train_inputs', 'non_train_inputs')
     >>> def error_invalid_dataset(train_inputs, foo):
     ...     return train_inputs, foo
     >>> get_engineering_step_params(error_invalid_dataset)
@@ -665,11 +843,9 @@ def get_engineering_step_params(f: callable) -> List[str]:
     parser = ParameterParser()
     parser.visit(tree)
 
-    if parser.args != parser.returns:
-        raise ValueError(f"Mismatched `f` inputs ({parser.args}), and returns ({parser.returns})")
-    elif any(_ not in valid_datasets for _ in parser.args):
+    if any(_ not in valid_datasets for _ in parser.args):
         raise ValueError(f"Invalid dataset name in {parser.args}")
-    return parser.args
+    return tuple(parser.args)
 
 
 def _hash_dataset(dataset: pd.DataFrame) -> dict:
@@ -709,7 +885,7 @@ def _hash_dataset(dataset: pd.DataFrame) -> dict:
     ... }
     >>> _hash_dataset(None)
     {'dataset': None, 'column_names': None, 'column_values': None}"""
-    if dataset is None:
+    if (not isinstance(dataset, pd.DataFrame)) and (dataset is None or dataset == 0):
         return dict(dataset=None, column_names=None, column_values=None)
     return dict(
         dataset=make_hash_sha256(dataset),

@@ -33,13 +33,34 @@ the future"""
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.aggregators import AggregatorEvaluations, AggregatorTimes
-from hyperparameter_hunter.callbacks.bases import BaseCallback, BaseWranglerCallback
-from hyperparameter_hunter.callbacks.bases import BasePredictorCallback, BaseEvaluatorCallback
-from hyperparameter_hunter.callbacks.bases import BaseAggregatorCallback, BaseLoggerCallback
+from hyperparameter_hunter.callbacks.bases import (
+    BaseCallback,
+    BaseInputWranglerCallback,
+    BaseTargetWranglerCallback,
+    BasePredictorCallback,
+    BaseWranglerCallback,
+    BaseEvaluatorCallback,
+    BaseAggregatorCallback,
+    BaseLoggerCallback,
+)
 from hyperparameter_hunter.callbacks.evaluators import EvaluatorOOF, EvaluatorHoldout
 from hyperparameter_hunter.callbacks.loggers import LoggerFitStatus
-from hyperparameter_hunter.callbacks.predictors import PredictorOOF, PredictorHoldout, PredictorTest
-from hyperparameter_hunter.callbacks.wranglers import WranglerTargetOOF, WranglerTargetHoldout
+from hyperparameter_hunter.callbacks.wranglers.input_wranglers import (
+    WranglerInputTrain,
+    WranglerInputOOF,
+    WranglerInputHoldout,
+    WranglerInputTest,
+)
+from hyperparameter_hunter.callbacks.wranglers.predictors import (
+    PredictorOOF,
+    PredictorHoldout,
+    PredictorTest,
+)
+from hyperparameter_hunter.callbacks.wranglers.target_wranglers import (
+    WranglerTargetTrain,
+    WranglerTargetOOF,
+    WranglerTargetHoldout,
+)
 from hyperparameter_hunter.settings import G
 
 ##################################################
@@ -60,7 +81,11 @@ class ExperimentMeta(type):
         those that are provided on an instance-wide basis. This is done in order to preserve the
         intended MRO of the original base classes, after adding and sorting new bases"""
         namespace = dict(
-            __original_bases=bases, __class_wide_bases=[], __instance_bases=[], source_script=None
+            __original_bases=bases,
+            __class_wide_bases=[],
+            __instance_bases=[],
+            __priority_callback_bases=[],
+            source_script=None,
         )
 
         return namespace
@@ -71,7 +96,12 @@ class ExperimentMeta(type):
         class_obj = super().__new__(mcs, name, bases, namespace)
 
         # Add cross-validation-related bases to inheritance tree
+        namespace["__class_wide_bases"].append(WranglerInputTrain)
+        namespace["__class_wide_bases"].append(WranglerTargetTrain)
+
         if name != "NoValidationExperiment":
+            namespace["__class_wide_bases"].append(WranglerInputOOF)
+            namespace["__class_wide_bases"].append(WranglerTargetOOF)
             namespace["__class_wide_bases"].append(PredictorOOF)
             namespace["__class_wide_bases"].append(EvaluatorOOF)
 
@@ -94,25 +124,22 @@ class ExperimentMeta(type):
         # Get source_script for use by Experiment later
         setattr(cls, "source_script", abspath(getframeinfo(currentframe().f_back)[0]))
 
-        current_engineer = kwargs.get("feature_engineer", None)
+        # TODO: Should target wranglers addition be contingent on `kwargs["feature_engineer"].steps
 
         # Add callbacks explicitly supplied on class initialization
         if kwargs.get("callbacks", None) is not None:
             for callback in kwargs["callbacks"]:
                 instance_bases.append(callback)
 
-        if current_engineer and current_engineer.steps:
-            instance_bases.append(WranglerTargetOOF)
-
         # Infer necessary callbacks based on class initialization inputs
         if G.Env.holdout_dataset is not None:
+            instance_bases.append(WranglerInputHoldout)
+            instance_bases.append(WranglerTargetHoldout)
             instance_bases.append(PredictorHoldout)
             instance_bases.append(EvaluatorHoldout)
 
-            if current_engineer and current_engineer.steps:
-                instance_bases.append(WranglerTargetHoldout)
-
         if G.Env.test_dataset is not None:
+            instance_bases.append(WranglerInputTest)
             instance_bases.append(PredictorTest)
 
         # Add callbacks explicitly provided to the Environment
@@ -129,7 +156,8 @@ class ExperimentMeta(type):
         # FLAG: Add ability to record full_predictions, then provide callback to check on experiment end...
         # FLAG: ... to determine whether full_predictions should actually be saved - Like checking final score/std > threshold
 
-        cls.__bases__ = original_bases + auxiliary_bases
+        setattr(cls, "__priority_callback_bases", list(G.priority_callbacks))
+        cls.__bases__ = G.priority_callbacks + original_bases + auxiliary_bases
 
         return super().__call__(*args, **kwargs)
 
@@ -207,6 +235,8 @@ def base_callback_class_sorter(auxiliary_bases, parent_class_order=None):
     """
     if parent_class_order is None:
         parent_class_order = [
+            BaseInputWranglerCallback,
+            BaseTargetWranglerCallback,
             BasePredictorCallback,
             BaseWranglerCallback,
             BaseEvaluatorCallback,

@@ -9,6 +9,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.data import OOFDataset, HoldoutDataset, TestDataset
 from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
@@ -283,12 +284,16 @@ prediction_requirements = [
 
 class PredictionsHoldoutRecorder(BaseRecorder):
     result_path_key = "predictions_holdout"
-    required_attributes = ["final_holdout_predictions", "holdout_dataset"] + prediction_requirements
+    required_attributes = ["data_holdout", "holdout_dataset"] + prediction_requirements
+    data_holdout: HoldoutDataset
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_holdout_predictions, self.holdout_dataset, self.target_column, self.id_column
+            self.data_holdout.prediction.final,
+            self.holdout_dataset,
+            self.target_column,
+            self.id_column,
         )
 
     @RetryMakeDirs()
@@ -299,12 +304,13 @@ class PredictionsHoldoutRecorder(BaseRecorder):
 
 class PredictionsOOFRecorder(BaseRecorder):
     result_path_key = "predictions_oof"
-    required_attributes = ["final_oof_predictions", "train_dataset"] + prediction_requirements
+    required_attributes = ["data_oof", "train_dataset"] + prediction_requirements
+    data_oof: OOFDataset
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_oof_predictions, self.train_dataset, self.target_column, self.id_column
+            self.data_oof.prediction.final, self.train_dataset, self.target_column, self.id_column
         )
 
     @RetryMakeDirs()
@@ -315,12 +321,13 @@ class PredictionsOOFRecorder(BaseRecorder):
 
 class PredictionsTestRecorder(BaseRecorder):
     result_path_key = "predictions_test"
-    required_attributes = ["final_test_predictions", "test_dataset"] + prediction_requirements
+    required_attributes = ["data_test", "test_dataset"] + prediction_requirements
+    data_test: TestDataset
 
     def format_result(self):
         """Format predictions according to the callable :attr:`prediction_formatter`"""
         self.result = self.prediction_formatter(
-            self.final_test_predictions, self.test_dataset, self.target_column, self.id_column
+            self.data_test.prediction.final, self.test_dataset, self.target_column, self.id_column
         )
 
     @RetryMakeDirs()

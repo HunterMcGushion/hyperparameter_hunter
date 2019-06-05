@@ -119,7 +119,7 @@ class Model(object):
         do_predict_proba: Boolean, or int, default=False
             * If False, :meth:`.models.Model.fit` will call :meth:`models.Model.model.predict`
             * If True, it will call :meth:`models.Model.model.predict_proba`, and the values in all
-             columns will be used as the actual prediction values
+              columns will be used as the actual prediction values
             * If `do_predict_proba` is an int, :meth:`.models.Model.fit` will call
               :meth:`models.Model.model.predict_proba`, as is the case when `do_predict_proba` is
               True, but the int supplied as `do_predict_proba` declares the column index to use as
@@ -198,7 +198,12 @@ class Model(object):
         ----------
         input_data: Array-like
             Data containing the same number of features as were trained on, for which the model will
-            predict output values"""
+            predict output values
+
+        Returns
+        -------
+        prediction: Array-like
+            Output predictions made by the model, using `input_data`"""
         # NOTE: There are a couple places in this method that use the frowned-upon pattern of
         # ... `type(<variable>) == <type>`, instead of the preferred use of `isinstance`.
         # ... This is because booleans are subclasses of integers in Python; however, this method

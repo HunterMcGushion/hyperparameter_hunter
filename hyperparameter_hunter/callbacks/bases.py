@@ -370,15 +370,21 @@ def _reshape_aggregates(named_aggregates, agg_shapes, rep, fold, run):
 ##################################################
 # Intermediate Base Callbacks
 ##################################################
-class BasePredictorCallback(BaseCallback):
-    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.predictors` are descendants"""
+class BaseWranglerCallback(BaseCallback):
+    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.wranglers` are descendants"""
 
     pass
 
 
-class BaseWranglerCallback(BaseCallback):
-    """Base class from which all callbacks in :mod:`hyperparameter_hunter.callbacks.wranglers` are descendants"""
+class BaseInputWranglerCallback(BaseWranglerCallback):
+    pass
 
+
+class BaseTargetWranglerCallback(BaseWranglerCallback):
+    pass
+
+
+class BasePredictorCallback(BaseWranglerCallback):
     pass
 
 
