@@ -1,5 +1,27 @@
-"""This module is still in an experimental stage and should not be assumed to be "reliable", or
-"useful", or anything else that might be expected of a normal module"""
+"""This module organizes and executes feature engineering/preprocessing step functions. The central
+components of the module are :class:`FeatureEngineer` and :class:`EngineerStep` - everything else
+is built to support those two classes. This module works with a very broad definition of
+"feature engineering". The following is a non-exhaustive list of transformations that are
+considered valid for `FeatureEngineer` step functions:
+
+* Manual feature creation
+* Input data scaling/normalization/standardization
+* Target data transformation
+* Re-sampling
+* Data imputation
+* Feature selection/elimination
+* Encoding (one-hot, label, etc.)
+* Binarization/binning/discretization
+* Feature extraction (as for NLP/image recognition tasks)
+* Feature shuffling
+
+Related
+-------
+:mod:`hyperparameter_hunter.space`
+    Only related when optimizing `FeatureEngineer` steps within an Optimization Protocol, but
+    defines :class:`~hyperparameter_hunter.space.Categorical`, which is the mechanism for defining a
+    feature engineer step search space, and :class:`~hyperparameter_hunter.space.RejectedOptional`,
+    which is used to represent the absence of a feature engineer step, when labeled as `optional`"""
 ##################################################
 # Import Own Assets
 ##################################################
