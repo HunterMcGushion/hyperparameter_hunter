@@ -1,6 +1,13 @@
 hyperparameter\_hunter.callbacks package
 ========================================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    hyperparameter_hunter.callbacks.wranglers
+
 Submodules
 ----------
 
@@ -36,26 +43,10 @@ hyperparameter\_hunter.callbacks.loggers module
     :undoc-members:
     :show-inheritance:
 
-hyperparameter\_hunter.callbacks.predictors module
---------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.callbacks.predictors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 hyperparameter\_hunter.callbacks.recipes module
 -----------------------------------------------
 
 .. automodule:: hyperparameter_hunter.callbacks.recipes
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.callbacks.wranglers module
--------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.callbacks.wranglers
     :members:
     :undoc-members:
     :show-inheritance:
