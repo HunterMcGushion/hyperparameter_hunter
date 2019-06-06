@@ -14,6 +14,7 @@ from hyperparameter_hunter.utils.general_utils import subdict
 import ast
 from contextlib import suppress
 from inspect import getsource
+import numpy as np
 import pandas as pd
 from typing import List, Callable, Dict, Union, Tuple
 
@@ -539,43 +540,51 @@ class FeatureEngineer:
 
         See Also
         --------
-        :class:`EngineerStep`: For proper formatting of non-`Categorical` values of `steps`
+        :class:`EngineerStep`
+            For proper formatting of non-`Categorical` values of `steps`
 
         Examples
         --------
         >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler, QuantileTransformer
-
+        >>> # Define some engineer step functions to play with
         >>> def s_scale(train_inputs, non_train_inputs):
         ...     s = StandardScaler()
         ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
         ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
         ...     return train_inputs, non_train_inputs
-
         >>> def mm_scale(train_inputs, non_train_inputs):
         ...     s = MinMaxScaler()
         ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
         ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
         ...     return train_inputs, non_train_inputs
-
         >>> def q_transform(train_targets, non_train_targets):
         ...     t = QuantileTransformer(output_distribution="normal")
         ...     train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
         ...     non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
         ...     return train_targets, non_train_targets, t
-
         >>> def sqr_sum(all_inputs):
         ...     all_inputs["square_sum"] = all_inputs.agg(
         ...         lambda row: np.sqrt(np.sum([np.square(_) for _ in row])), axis="columns"
         ...     )
         ...     return all_inputs
 
+        >>> # FeatureEngineer steps wrapped by `EngineerStep` == raw function steps
+        >>> #   ... As long as the `EngineerStep` is using the default parameters
         >>> fe_0 = FeatureEngineer([sqr_sum, s_scale])
         >>> fe_1 = FeatureEngineer([EngineerStep(sqr_sum), EngineerStep(s_scale)])
         >>> fe_0.steps == fe_1.steps
         True
         >>> fe_2 = FeatureEngineer([sqr_sum, EngineerStep(s_scale), q_transform])
+        >>> # `Categorical` can be used during optimization and placed anywhere in `steps`
+        >>> #   `Categorical` can also handle either `EngineerStep` categories or raw functions
+        >>> #   Use the `optional` kwarg of `Categorical` to test some questionable steps
         >>> fe_3 = FeatureEngineer([sqr_sum, Categorical([s_scale, mm_scale]), q_transform])
         >>> fe_4 = FeatureEngineer([Categorical([sqr_sum], optional=True), s_scale, q_transform])
+        >>> fe_5 = FeatureEngineer([
+        ...     Categorical([sqr_sum], optional=True),
+        ...     Categorical([EngineerStep(s_scale), mm_scale]),
+        ...     q_transform
+        ... ])
         """
         self.steps = []
         self.do_validate = do_validate
