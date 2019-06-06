@@ -278,7 +278,7 @@ def validate_dataset_names(params: Tuple[str], stage: str) -> List[str]:
     for leaf_name, leaf_paths in reverse_multidict.items():
         if len(leaf_paths) > 1:
             err_str = f"Requested params include duplicate references to `{leaf_name}` by way of:"
-            err_str += "".join([f"\n   - {a_path}" for a_path in leaf_paths])
+            err_str += "".join([f"\n   - {a_path}" for a_path in sorted(leaf_paths)])
             err_str += "\nEach dataset may only be requested by a single param for each function"
             raise ValueError(err_str)
 
@@ -321,7 +321,7 @@ class EngineerStep:
         self.do_validate = do_validate
 
         self.inversion = None
-        self.merged_datasets = []
+        self.merged_datasets: List[str] = validate_dataset_names(self.params, self.stage)
         self.original_hashes = dict()
         self.updated_hashes = dict()
 
@@ -401,7 +401,6 @@ class EngineerStep:
         DFDict
             Updated version of `datasets`, in which unnecessary datasets have been filtered out, and
             the requested merged datasets have been added"""
-        self.merged_datasets: List[str] = validate_dataset_names(self.params, self.stage)
         datasets_for_f = datasets
 
         for _dataset_name in self.merged_datasets:
