@@ -517,7 +517,7 @@ class FeatureEngineer:
             contain the first two values. To search a space optionally including an `EngineerStep`,
             use the `optional` kwarg of :class:`~hyperparameter_hunter.space.Categorical`.
 
-            See :meth:`EngineerStep.__init__` for information on properly formatted `EngineerStep`
+            See :class:`EngineerStep` for information on properly formatted `EngineerStep`
             functions. Additional engineering steps may be added via :meth:`add_step`
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
@@ -530,6 +530,11 @@ class FeatureEngineer:
             This is not expected to be provided on initialization and is offered primarily for
             debugging/testing. Mapping of datasets necessary to perform feature engineering steps
 
+        See Also
+        --------
+        :class:`EngineerStep`
+            For proper formatting of non-`Categorical` values of `steps`
+
         Notes
         -----
         If `steps` does include any instances of :class:`hyperparameter_hunter.space.Categorical`,
@@ -537,11 +542,6 @@ class FeatureEngineer:
         by Optimization Protocols. Furthermore, the `FeatureEngineer` that the Optimization Protocol
         actually ends up using will not pass identity checks against the original `FeatureEngineer`
         that contained `Categorical` steps
-
-        See Also
-        --------
-        :class:`EngineerStep`
-            For proper formatting of non-`Categorical` values of `steps`
 
         Examples
         --------
@@ -568,6 +568,9 @@ class FeatureEngineer:
         ...     )
         ...     return all_inputs
 
+        *FeatureEngineer steps wrapped by `EngineerStep` == raw function steps - as long as the
+        `EngineerStep` is using the default parameters*
+
         >>> # FeatureEngineer steps wrapped by `EngineerStep` == raw function steps
         >>> #   ... As long as the `EngineerStep` is using the default parameters
         >>> fe_0 = FeatureEngineer([sqr_sum, s_scale])
@@ -575,9 +578,11 @@ class FeatureEngineer:
         >>> fe_0.steps == fe_1.steps
         True
         >>> fe_2 = FeatureEngineer([sqr_sum, EngineerStep(s_scale), q_transform])
-        >>> # `Categorical` can be used during optimization and placed anywhere in `steps`
-        >>> #   `Categorical` can also handle either `EngineerStep` categories or raw functions
-        >>> #   Use the `optional` kwarg of `Categorical` to test some questionable steps
+
+        *`Categorical` can be used during optimization and placed anywhere in `steps`. `Categorical`
+        can also handle either `EngineerStep` categories or raw functions. Use the `optional` kwarg
+        of `Categorical` to test some questionable steps*
+
         >>> fe_3 = FeatureEngineer([sqr_sum, Categorical([s_scale, mm_scale]), q_transform])
         >>> fe_4 = FeatureEngineer([Categorical([sqr_sum], optional=True), s_scale, q_transform])
         >>> fe_5 = FeatureEngineer([
