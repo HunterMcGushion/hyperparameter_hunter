@@ -308,7 +308,6 @@ def validate_dataset_names(params: Tuple[str], stage: str) -> List[str]:
     return [_[0] if len(_) == 1 else _ for _ in report.merged_datasets]
 
 
-# TODO: Finish `EngineerStep` documentation. Outline proper format of `f`
 class EngineerStep:
     def __init__(self, f: Callable, stage=None, name=None, params=None, do_validate=False):
         """Container for individual :class:`FeatureEngineer` step functions
