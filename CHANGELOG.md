@@ -108,7 +108,7 @@ You're a glorious peacock, and we just wanna let you fly.
     * Features can, of course, be optimized alongside standard model hyperparameters 
         
     ```python
-  from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical, FeatureEngineer, EngineerStep
+  from hyperparameter_hunter import GBRT, Real, Integer, Categorical, FeatureEngineer, EngineerStep
   import numpy as np
   import pandas as pd
   from sklearn.linear_model import Ridge
@@ -128,7 +128,7 @@ You're a glorious peacock, and we just wanna let you fly.
   
   # Pretend we already set up our `Environment` and we want to optimize the our scaler
   # We'll also throw in some standard hyperparameter optimization - This is HyperparameterHunter, after all
-  optimizer_0 = BayesianOptimization()
+  optimizer_0 = GBRT()
   optimizer_0.set_experiment_guidelines(
       Ridge, 
       dict(alpha=Real(0.5, 1.0), max_iter=Integer(500, 2000), solver="svd"), 
@@ -150,7 +150,7 @@ You're a glorious peacock, and we just wanna let you fly.
       all_targets = np.log1p(all_targets)
       return all_targets, np.expm1
   
-  optimizer_1 = BayesianOptimization()
+  optimizer_1 = GBRT()
   optimizer_1.set_experiment_guidelines(
       Ridge, {}, feature_engineer=FeatureEngineer([
           Categorical([standard_scale, min_max_scale]),
@@ -170,7 +170,7 @@ You're a glorious peacock, and we just wanna let you fly.
     * Brief example:
     
     ```python
-  from hyperparameter_hunter import BayesianOptimization, Categorical, FeatureEngineer, EngineerStep
+  from hyperparameter_hunter import DummySearch, Categorical, FeatureEngineer, EngineerStep
   from sklearn.linear_model import Ridge
 
   def standard_scale(train_inputs, non_train_inputs):
@@ -182,14 +182,14 @@ You're a glorious peacock, and we just wanna let you fly.
       return train_inputs, non_train_inputs
   
   # Pretend we already set up our `Environment` and we want to optimize the our scaler
-  optimizer_0 = BayesianOptimization()
+  optimizer_0 = DummySearch()
   optimizer_0.set_experiment_guidelines(
       Ridge, {}, feature_engineer=FeatureEngineer([
           Categorical([standard_scale, min_max_scale])
       ])
   )
   # `optimizer_0` above will try each of our scaler functions, but what if we shouldn't use either?
-  optimizer_1 = BayesianOptimization()
+  optimizer_1 = DummySearch()
   optimizer_1.set_experiment_guidelines(
       Ridge, {}, feature_engineer=FeatureEngineer([
           Categorical([standard_scale, min_max_scale], optional=True)
