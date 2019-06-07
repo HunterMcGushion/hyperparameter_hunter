@@ -711,19 +711,6 @@ def get_cv_indices(folds, cv_params, input_data, target_data):
         yield (next(indices) for _ in range(cv_params["n_splits"]))
 
 
-##################################################
-# Other Experiment Classes:
-##################################################
-@Deprecated(
-    v_deprecate="2.0.1",
-    v_remove="2.3.0",
-    v_current=__version__,
-    details="Renamed to `CVExperiment`",
-)
-class CrossValidationExperiment(CVExperiment):
-    pass
-
-
 # class NoValidationExperiment(BaseExperiment):
 #     pass
 

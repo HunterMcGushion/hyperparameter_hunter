@@ -12,7 +12,7 @@ __temp_files/
 __temp_model_builder.py
 foo_checkpoint
 MNIST_data/
-examples/kaggle_examples/porto_seguro/data/
+examples/feature_engineering_examples/data/
 
 # Documentation
 _build

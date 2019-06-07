@@ -27,7 +27,7 @@ except Exception:
 # Set __all__
 ##################################################
 from .environment import Environment
-from .experiments import CVExperiment, CrossValidationExperiment
+from .experiments import CVExperiment
 from .optimization import BayesianOptimization
 from .optimization import GradientBoostedRegressionTreeOptimization, GBRT
 from .optimization import RandomForestOptimization, RF
@@ -45,7 +45,6 @@ __all__ = [
     "Environment",
     #################### Experimentation ####################
     "CVExperiment",
-    "CrossValidationExperiment",
     #################### Hyperparameter Optimization ####################
     "BayesianOptimization",
     "GradientBoostedRegressionTreeOptimization",

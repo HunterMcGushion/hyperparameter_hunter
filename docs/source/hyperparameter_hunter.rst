@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     hyperparameter_hunter.callbacks
+    hyperparameter_hunter.data
     hyperparameter_hunter.keys
     hyperparameter_hunter.library_helpers
     hyperparameter_hunter.utils
@@ -18,14 +19,6 @@ hyperparameter\_hunter.algorithm\_handlers module
 -------------------------------------------------
 
 .. automodule:: hyperparameter_hunter.algorithm_handlers
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.datasets module
---------------------------------------
-
-.. automodule:: hyperparameter_hunter.datasets
     :members:
     :undoc-members:
     :show-inheritance:

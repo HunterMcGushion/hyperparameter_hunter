@@ -2,7 +2,10 @@
 
 1. [Beginner Examples](#beginner-examples): Simple examples to get started with HyperparameterHunter
 2. [Library Examples](#library-examples): Examples using particular machine learning libraries
-3. [Advanced Examples](#advanced-examples): Examples demonstrating advanced HyperparameterHunter functionality
+3. [Feature Engineering Examples](#feature-engineering-examples): Examples using 
+   [`FeatureEngineer`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.FeatureEngineer) 
+   and [`EngineerStep`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.EngineerStep)
+4. [Advanced Examples](#advanced-examples): Examples demonstrating advanced HyperparameterHunter functionality
 
 ----
 
@@ -140,6 +143,32 @@
             <a href="xgboost_examples/regression.py">Script</a>
         </td>
         <td>Optimizing model extra params</td>
+    </tr>
+</table>
+
+## Feature Engineering Examples
+
+<a name="feature-engineering-examples"/>
+
+<table>
+    <tr>
+        <th nowrap>Example (A-Z)</th>
+        <th nowrap>Link</th>
+        <th nowrap>Description</th>
+    </tr>
+    <tr>
+        <th nowrap>olivier_porto_seguro_kaggle</th>
+        <td nowrap>
+            <a href="feature_engineering_examples/olivier_porto_seguro_kaggle.py">Script</a>
+        </td>
+        <td>Upsampling, feature combinations, noisy target encoding, custom metrics</td>
+    </tr>
+    <tr>
+        <th nowrap>target_transform_inverse_example</th>
+        <td nowrap>
+            <a href="feature_engineering_examples/target_transform_inverse_example.py">Script</a>
+        </td>
+        <td>Target transformation and inversion (quantile/log), input scaling, feature creation</td>
     </tr>
 </table>
 

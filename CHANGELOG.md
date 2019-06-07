@@ -1,11 +1,237 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+<a name="3.0.0alpha0"></a>
+## [3.0.0alpha0] (2019-06-07)
+This is the most significant release since the birth of HyperparameterHunter, adding not only 
+feature engineering, but also feature optimization. The goal of feature engineering in 
+HyperparameterHunter is to enable you to manipulate your data however you need to, without imposing 
+restrictions on what's allowed - all while seamlessly keeping track of your feature engineering 
+steps so they can be learned from and optimized. In that spirit, feature engineering steps are 
+defined by your very own functions. That may sound a bit silly at first, but it affords maximal
+freedom and customization, with only the minimal requirement that you tell your function what data 
+you want from HyperparameterHunter, and you give it back when you're done playing with it. 
+
+The best way to really understand feature engineering in HyperparameterHunter is to dive into some
+code and check out the "examples/feature_engineering_examples" directory. In no time at all, you'll 
+be ready to spread your wings by experimenting with the creative feature engineering steps only you 
+can build. Let your faithful assistant, HyperparameterHunter, meticulously and lovingly record them 
+for you, so you can optimize your custom feature functions just like normal hyperparameters.
+
+You're a glorious peacock, and we just wanna let you fly.
+
+### Features
+* Feature engineering via `FeatureEngineer` and `EngineerStep`
+    * This will be a "brief" summary of the new features. For more detail, see the aforementioned
+      "examples/feature_engineering_examples" directory or the extensively documented 
+      [`FeatureEngineer`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.FeatureEngineer) 
+      and [`EngineerStep`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.EngineerStep)
+      classes 
+    * `FeatureEngineer` can be passed as the `feature_engineer` kwarg to either: 
+        1. Instantiate a [`CVExperiment`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.experiments.BaseExperiment), or
+        2. Call the [`set_experiment_guidelines`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.set_experiment_guidelines)
+           method of any Optimization Protocol
+    * `FeatureEngineer` is just a container for `EngineerStep`s
+        * Instantiate it with a simple list of `EngineerStep`s, or functions to construct `EngineerStep`s
+    * Most important `EngineerStep` parameter is a function you define to perform your data transformation (whatever that is)
+        * This function is often creatively referred to as a "step function"
+    * Step function definitions have only two requirements:
+        1. Name the data you want to transform in the signature's input parameters
+            * 16 different parameter names, documented in 
+              [`EngineerStep`'s `params` kwarg](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.EngineerStep)
+        2. Return the data when you're done with it
+    * Step functions may be given directly to `FeatureEngineer`, or wrapped in an `EngineerStep` for greater customization
+    * Here are just a few step functions you might want to make:
+    
+    ```python
+  from hyperparameter_hunter import CVExperiment, FeatureEngineer, EngineerStep
+  import numpy as np
+  import pandas as pd
+  from sklearn.preprocessing import QuantileTransformer, StandardScaler
+  from sklearn.impute import SimpleImputer
+
+  def standard_scale(train_inputs, non_train_inputs):
+      s = StandardScaler()
+      train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+      non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+      return train_inputs, non_train_inputs
+  
+  def quantile_transform(train_targets, non_train_targets):
+      t = QuantileTransformer(output_distribution="normal")
+      train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
+      non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
+      return train_targets, non_train_targets, t
+  
+  def set_nan(all_inputs):
+      cols = [1, 2, 3, 4, 5]
+      all_inputs.iloc[:, cols] = all_inputs.iloc[:, cols].replace(0, np.NaN)
+      return all_inputs
+  
+  def impute_negative_one(all_inputs):
+      all_inputs.fillna(-1, inplace=True)
+      return all_inputs
+  
+  def impute_mean(train_inputs, non_train_inputs):
+      imputer = SimpleImputer()
+      train_inputs[train_inputs.columns] = imputer.fit_transform(train_inputs.values)
+      non_train_inputs[train_inputs.columns] = imputer.transform(non_train_inputs.values)
+      return train_inputs, non_train_inputs
+  
+  def sqr_sum_feature(all_inputs):
+      all_inputs["my_sqr_sum_feature"] = all_inputs.agg(
+          lambda row: np.sqrt(np.sum([np.square(_) for _ in row])),
+          axis="columns",
+      )
+      return all_inputs
+    
+  def upsample_train_data(train_inputs, train_targets):
+      pos = pd.Series(train_targets["target"] == 1)
+      train_inputs = pd.concat([train_inputs, train_inputs.loc[pos]], axis=0)
+      train_targets = pd.concat([train_targets, train_targets.loc[pos]], axis=0)
+      return train_inputs, train_targets
+  
+  # Any of the above can be wrapped by `EngineerStep`, or added directly to a `FeatureEngineer`'s `steps`
+  # Below, assume we have already activated an `Environment`
+  exp_0 = CVExperiment(
+      model_initializer=..., 
+      model_init_params={},
+      feature_engineer=FeatureEngineer([
+          set_nan,
+          EngineerStep(standard_scale),
+          quantile_transform,
+          EngineerStep(upsample_train_data, stage="intra_cv"),
+      ]),
+  )
+    ```
+
+* Feature optimization
+    * `Categorical` can be used to optimize feature engineering steps, either as `EngineerStep` 
+      instances or raw functions of the form expected by `EngineerStep`
+    * Just throw your `Categorical` in with the rest of your `FeatureEngineer.steps` 
+    * Features can, of course, be optimized alongside standard model hyperparameters 
+        
+    ```python
+  from hyperparameter_hunter import GBRT, Real, Integer, Categorical, FeatureEngineer, EngineerStep
+  import numpy as np
+  import pandas as pd
+  from sklearn.linear_model import Ridge
+  from sklearn.preprocessing import MinMaxScaler, QuantileTransformer, StandardScaler
+  
+  def standard_scale(train_inputs, non_train_inputs):
+      s = StandardScaler()
+      train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+      non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+      return train_inputs, non_train_inputs
+  
+  def min_max_scale(train_inputs, non_train_inputs):
+      s = MinMaxScaler()
+      train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+      non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+      return train_inputs, non_train_inputs
+  
+  # Pretend we already set up our `Environment` and we want to optimize the our scaler
+  # We'll also throw in some standard hyperparameter optimization - This is HyperparameterHunter, after all
+  optimizer_0 = GBRT()
+  optimizer_0.set_experiment_guidelines(
+      Ridge, 
+      dict(alpha=Real(0.5, 1.0), max_iter=Integer(500, 2000), solver="svd"), 
+      feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale])])
+  )
+  
+  # Then we remembered we should probably transform our target, too
+  # OH NO! After transforming our targets, we'll need to `inverse_transform` the predictions!
+  # OH YES! HyperparameterHunter will gladly accept a fitted transformer as an extra return value, 
+  #   and save it to call `inverse_transform` on predictions 
+  def quantile_transform(train_targets, non_train_targets):
+      t = QuantileTransformer(output_distribution="normal")
+      train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
+      non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
+      return train_targets, non_train_targets, t
+  
+  # We can also tell HyperparameterHunter to invert predictions using a callable, rather than a fitted transformer
+  def log_transform(all_targets):
+      all_targets = np.log1p(all_targets)
+      return all_targets, np.expm1
+  
+  optimizer_1 = GBRT()
+  optimizer_1.set_experiment_guidelines(
+      Ridge, {}, feature_engineer=FeatureEngineer([
+          Categorical([standard_scale, min_max_scale]),
+          Categorical([quantile_transform, log_transform]),
+      ])
+  )
+    ``` 
+    
+* [`Categorical.optional`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.space.Categorical)
+    * As `Categorical` is the means of optimizing `EngineerStep`s in simple lists, it became 
+      necessary to answer the question of whether that crazy new feature you've been cooking up in 
+      the lab should even be included at all
+    * So the `optional` kwarg was added to `Categorical` to appease the mad scientist in us all
+    * If True (default=False), the search space will include not only the `categories` you explicitly
+      provide, but also the omission of the current `EngineerStep` entirely
+    * `optional` is only intended for use in optimizing `EngineerStep`s. Don't expect it to work elsewhere
+    * Brief example:
+    
+    ```python
+  from hyperparameter_hunter import DummySearch, Categorical, FeatureEngineer, EngineerStep
+  from sklearn.linear_model import Ridge
+
+  def standard_scale(train_inputs, non_train_inputs):
+      """Pretend this function scales data using SKLearn's `StandardScaler`"""
+      return train_inputs, non_train_inputs
+  
+  def min_max_scale(train_inputs, non_train_inputs):
+      """Pretend this function scales data using SKLearn's `MinMaxScaler`"""
+      return train_inputs, non_train_inputs
+  
+  # Pretend we already set up our `Environment` and we want to optimize the our scaler
+  optimizer_0 = DummySearch()
+  optimizer_0.set_experiment_guidelines(
+      Ridge, {}, feature_engineer=FeatureEngineer([
+          Categorical([standard_scale, min_max_scale])
+      ])
+  )
+  # `optimizer_0` above will try each of our scaler functions, but what if we shouldn't use either?
+  optimizer_1 = DummySearch()
+  optimizer_1.set_experiment_guidelines(
+      Ridge, {}, feature_engineer=FeatureEngineer([
+          Categorical([standard_scale, min_max_scale], optional=True)
+      ])
+  )
+  # `optimizer_1`, using `Categorical.optional`, will search the same points as `optimizer_0`, plus
+  #   a `FeatureEngineer` where the step is skipped completely, which would be the equivalent of
+  #   no `FeatureEngineer` at all in this example
+    ``` 
+
 ### Bug-Fixes
 * Fix bug causing descendants of `SKOptimizationProtocol` to break when given non-string `base_estimator`s
 * Fix bug causing `ScoringMixIn` to incorrectly keep track of the metrics to record for different dataset types
 * Fix bug preventing `get_clean_predictions` from working with multi-output datasets
+* Fix incorrect leaderboard sorting when evaluations are tied (again)
 
+### Changes
+* Metrics are now always invoked with NumPy arrays
+    * Note that this is unlike `EngineerStep` functions, which always receive Pandas DataFrames as
+      input and should always return DataFrames
+* `DatasetSentinel` functions in `Environment` now retrieve data transformed by feature engineering
+* `data`
+    * Rather than being haphazardly stored in an assortment of experiment attributes, datasets are 
+      now managed by both :mod:`data` and the overhauled :mod:`callbacks.wranglers` module
+    * Affects custom user callbacks that used experiment datasets. See the next section for details
+
+### Breaking Changes
+* Any custom callbacks (`lambda_callback` or otherwise) that accessed the experiment’s datasets will 
+need to be updated to access their new locations. The new syntax is described in detail in 
+:mod:`data.data_core`, but the general idea is as follows:
+	1. Experiments have four dataset attributes: `data_train`, `data_oof`, `data_holdout`, `data_test`
+	2. Each dataset has three `data_chunks`: `input`, `target`, `prediction`
+	3. Each data_chunk has six attributes. The first five pertain to the experiment division for 
+	   which the data is collected: `d` (initial data), `run` , `fold` , `rep`, and `final`
+    4. The sixth attribute of each data_chunk is `T` , which contains the transformed states of the 
+       five attributes described in step 3
+       * Transformations are applied by feature engineering
+       * Inversions of those transformations (if applicable) are stored in the five normal data_chunk 
+         attributes from step 3
 
 <a name="2.2.0"></a>
 ## [2.2.0] (2019-02-10)
@@ -432,7 +658,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha0...HEAD
+[3.0.0alpha0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...v3.0.0alpha0
 [2.2.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...v2.1.0

@@ -1,5 +1,27 @@
-"""This module is still in an experimental stage and should not be assumed to be "reliable", or
-"useful", or anything else that might be expected of a normal module"""
+"""This module organizes and executes feature engineering/preprocessing step functions. The central
+components of the module are :class:`FeatureEngineer` and :class:`EngineerStep` - everything else
+is built to support those two classes. This module works with a very broad definition of
+"feature engineering". The following is a non-exhaustive list of transformations that are
+considered valid for `FeatureEngineer` step functions:
+
+* Manual feature creation
+* Input data scaling/normalization/standardization
+* Target data transformation
+* Re-sampling
+* Data imputation
+* Feature selection/elimination
+* Encoding (one-hot, label, etc.)
+* Binarization/binning/discretization
+* Feature extraction (as for NLP/image recognition tasks)
+* Feature shuffling
+
+Related
+-------
+:mod:`hyperparameter_hunter.space`
+    Only related when optimizing `FeatureEngineer` steps within an Optimization Protocol, but
+    defines :class:`~hyperparameter_hunter.space.Categorical`, which is the mechanism for defining a
+    feature engineer step search space, and :class:`~hyperparameter_hunter.space.RejectedOptional`,
+    which is used to represent the absence of a feature engineer step, when labeled as `optional`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -14,6 +36,7 @@ from hyperparameter_hunter.utils.general_utils import subdict
 import ast
 from contextlib import suppress
 from inspect import getsource
+import numpy as np
 import pandas as pd
 from typing import List, Callable, Dict, Union, Tuple
 
@@ -278,42 +301,220 @@ def validate_dataset_names(params: Tuple[str], stage: str) -> List[str]:
     for leaf_name, leaf_paths in reverse_multidict.items():
         if len(leaf_paths) > 1:
             err_str = f"Requested params include duplicate references to `{leaf_name}` by way of:"
-            err_str += "".join([f"\n   - {a_path}" for a_path in leaf_paths])
+            err_str += "".join([f"\n   - {a_path}" for a_path in sorted(leaf_paths)])
             err_str += "\nEach dataset may only be requested by a single param for each function"
             raise ValueError(err_str)
 
     return [_[0] if len(_) == 1 else _ for _ in report.merged_datasets]
 
 
-# TODO: Finish `EngineerStep` documentation. Outline proper format of `f`
 class EngineerStep:
     def __init__(self, f: Callable, stage=None, name=None, params=None, do_validate=False):
-        """:class:`FeatureEngineer` helper, compartmentalizing functions of singular engineer steps
+        """Container for individual :class:`FeatureEngineer` step functions
+
+        Compartmentalizes functions of singular engineer steps and allows for greater customization
+        than a raw engineer step function
 
         Parameters
         ----------
         f: Callable
             Feature engineering step function that requests, modifies, and returns datasets `params`
+
+            Step functions should follow these guidelines:
+
+                1. Request as input a subset of the 16 data strings listed in `params`
+                2. Do whatever you want to the DataFrames given as input
+                3. Return new DataFrame values of the input parameters in same order as requested
+
+            If performing a task like target transformation, causing predictions to be transformed,
+            it is often desirable to inverse-transform the predictions to be of the expected form.
+            This can easily be done by returning an extra value from `f` (after the datasets) that
+            is either a callable, or a transformer class that was fitted during the execution of `f`
+            and implements an `inverse_transform` method. This is the only instance in which it is
+            acceptable for `f` to return values that don't mimic its input parameters. See the
+            engineer function definition using SKLearn's `QuantileTransformer` in the Examples
+            section below for an actual inverse-transformation-compatible implementation
         stage: String in {"pre_cv", "intra_cv"}, or None, default=None
             Feature engineering stage during which the callable `f` will be given the datasets
-            `params` to modify and return. If None, will be inferred based on `params`
+            `params` to modify and return. If None, will be inferred based on `params`.
+
+                * "pre_cv" functions are applied only once in the experiment: when it starts
+                * "intra_cv" functions are reapplied for each fold in the cross-validation splits
+
+            If `stage` is left to be inferred, "pre_cv" will *usually* be selected. However, if
+            any `params` (or parameters in the signature of `f`) are prefixed with "validation..."
+            or "non_train...", then `stage` will inferred as "intra_cv". See the Notes section
+            below for suggestions on the `stage` to use for different functions
         name: String, or None, default=None
             Identifier for the transformation applied by this engineering step. If None,
             `f.__name__` will be used
         params: Tuple[str], or None, default=None
             Dataset names requested by feature engineering step callable `f`. If None, will be
-            inferred by parsing the abstract syntax tree of `f`. Else, must be a subset of
-            {"train_data", "train_inputs", "train_targets", "validation_data", "validation_inputs",
-            "validation_targets", "holdout_data", "holdout_inputs", "holdout_targets",
-            "test_inputs", "all_data", "all_inputs", "all_targets", "non_train_data",
-            "non_train_inputs", "non_train_targets"}
+            inferred by parsing the signature of `f`. Must be a subset of the following 16 strings:
+
+            Train Dataset
+
+            1. "train_inputs"
+            2. "train_targets"
+            3. "train_data"
+               ``("train_inputs" + "train_targets")``
+
+            Validation/OOF Dataset
+
+            4. "validation_inputs"
+            5. "validation_targets"
+            6. "validation_data"
+               ``("validation_inputs" + "validation_targets")``
+
+            Holdout Dataset
+
+            7. "holdout_inputs"
+            8. "holdout_targets"
+            9. "holdout_data"
+               ``("holdout_inputs" + "holdout_targets")``
+
+            Test Dataset
+
+            10. "test_inputs"
+
+            Merged Dataset: All
+
+            11. "all_inputs"
+                ``("train_inputs" + ["validation_inputs"] + "holdout_inputs" + "test_inputs")``
+            12. "all_targets"
+                ``("train_targets" + ["validation_targets"] + "holdout_targets")``
+            13. "all_data"
+                ``("all_inputs" - "test_inputs" + "all_targets")``
+
+            Merged Dataset: Non-Train
+
+            14. "non_train_inputs"
+                ``(["validation_inputs"] + "holdout_inputs" + "test_inputs")``
+            15. "non_train_targets"
+                ``(["validation_targets"] + "holdout_targets")``
+            16. "non_train_data"
+                ``("non_train_inputs" - "test_inputs" + "non_train_targets")``
+
+            Inference of "validation" `params` is affected by `stage`. During the "pre_cv" stage,
+            the validation dataset has not yet been created and is still a part of the train
+            dataset. During the "intra_cv" stage, the validation dataset is created by removing a
+            portion of the train dataset, and their values passed to `f` reflect this fact. This
+            also means that the values of the merged ("all"/"non_train"-prefixed) datasets may or
+            may not contain "validation" data depending on the `stage`; however, this is all handled
+            internally, so you probably don't need to worry about it.
+
+            `params` may not include multiple references to the same dataset, either directly or
+            indirectly. This means `("train_inputs", "train_inputs")` is invalid due to duplicate
+            direct references. Less obviously, `("train_inputs", "train_data")` is invalid because
+            "train_data" includes "train_inputs". Similarly, `("train_inputs", "all_inputs")`
+            because "all_inputs" includes "train_inputs"
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
             hashes of the new datasets will be compared to those of the originals to ensure they
             were actually modified. Results will be logged. If `do_validate` = "strict", an
             exception will be raised if any anomalies are found, rather than logging a message. If
-            `do_validate` = False, no validation will be performed"""
+            `do_validate` = False, no validation will be performed
+
+        See Also
+        --------
+        :class:`FeatureEngineer`
+            The container for `EngineerStep` instances - `EngineerStep`s should always be provided
+            to HyperparameterHunter through a `FeatureEngineer`
+        :class:`~hyperparameter_hunter.space.Categorical`
+            Can be used during optimization to search through a group of `EngineerStep`s given as
+            `categories`. The `optional` kwarg of `Categorical` designates a `FeatureEngineer` step
+            that may be one of the `EngineerStep`s in `categories`, or may be omitted entirely
+        :func:`get_engineering_step_stage`
+            More information on `stage` inference and situations where overriding it may be prudent
+
+        Notes
+        -----
+        `stage`: Generally, feature engineering conducted in the "pre_cv" stage should regard each
+        sample/row as independent entities. For example, steps like converting a string day of the
+        week to one-hot encoded columns, or imputing missing values by replacement with -1 might be
+        conducted "pre_cv", since they are unlikely to introduce an information leakage. Conversely,
+        steps like scaling/normalization, whose results for the data in one row are affected by the
+        data in other rows should be performed "intra_cv" in order to recalculate the final values
+        of the datasets for each cross validation split and avoid information leakage.
+
+        `params`: In the list of the 16 valid `params` strings, "test_inputs" is notably missing the
+        "..._targets" and "..._data" counterparts accompanying the other three datasets. The
+        "targets" suffix is missing because test data targets are never given. The "data" suffix is
+        missing because it signals the presence of both inputs and targets, which is not possible
+        for the test dataset.
+
+        Additionally, "test_inputs" is excluded from both "all_data" and "non_train_data" once again
+        because the test dataset is target-less. However, "test_inputs" is still included in both
+        "all_inputs" and "non_train_inputs"
+
+        Examples
+        --------
+        >>> from sklearn.preprocessing import StandardScaler, QuantileTransformer
+        >>> def s_scale(train_inputs, non_train_inputs):
+        ...     s = StandardScaler()
+        ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+        ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+        ...     return train_inputs, non_train_inputs
+        >>> # Sensible parameter defaults inferred based on `f`
+        >>> es_0 = EngineerStep(s_scale)
+        >>> es_0.stage
+        'intra_cv'
+        >>> es_0.name
+        's_scale'
+        >>> es_0.params
+        ('train_inputs', 'non_train_inputs')
+        >>> # Override `stage` if you want to fit your scaler on OOF data like a crazy person
+        >>> es_1 = EngineerStep(s_scale, stage="pre_cv")
+        >>> es_1.stage
+        'pre_cv'
+
+        *Watch out for multiple requests to the same data*
+
+        >>> es_2 = EngineerStep(s_scale, params=("train_inputs", "all_inputs"))
+        Traceback (most recent call last):
+            File "feature_engineering.py", line ? in validate_dataset_names
+        ValueError: Requested params include duplicate references to `train_inputs` by way of:
+           - ('all_inputs', 'train_inputs')
+           - ('train_inputs',)
+        Each dataset may only be requested by a single param for each function
+
+        *Error is the same if `(train_inputs, all_inputs)` is in the actual function signature*
+
+        *EngineerStep functions aren't just limited to transformations. Make your own features!*
+
+        >>> def sqr_sum(all_inputs):
+        ...     all_inputs["square_sum"] = all_inputs.agg(
+        ...         lambda row: np.sqrt(np.sum([np.square(_) for _ in row])), axis="columns"
+        ...     )
+        ...     return all_inputs
+        >>> es_3 = EngineerStep(sqr_sum)
+        >>> es_3.stage
+        'pre_cv'
+        >>> es_3.name
+        'sqr_sum'
+        >>> es_3.params
+        ('all_inputs',)
+
+        *Inverse-transformation Implementation:*
+
+        >>> def q_transform(train_targets, non_train_targets):
+        ...     t = QuantileTransformer(output_distribution="normal")
+        ...     train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
+        ...     non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
+        ...     return train_targets, non_train_targets, t
+        >>> # Note that `train_targets` and `non_train_targets` must still be returned in order,
+        >>> #   but they are followed by `t`, an instance of `QuantileTransformer` we just fitted,
+        >>> #   whose `inverse_transform` method will be called on predictions
+        >>> es_4 = EngineerStep(q_transform)
+        >>> es_4.stage
+        'intra_cv'
+        >>> es_4.name
+        'q_transform'
+        >>> es_4.params
+        ('train_targets', 'non_train_targets')
+        >>> # `params` does not include any returned transformers - Only data requested as input
+        """
         self._f = f
         self._name = name
         self.params = params
@@ -321,7 +522,7 @@ class EngineerStep:
         self.do_validate = do_validate
 
         self.inversion = None
-        self.merged_datasets = []
+        self.merged_datasets: List[str] = validate_dataset_names(self.params, self.stage)
         self.original_hashes = dict()
         self.updated_hashes = dict()
 
@@ -401,7 +602,6 @@ class EngineerStep:
         DFDict
             Updated version of `datasets`, in which unnecessary datasets have been filtered out, and
             the requested merged datasets have been added"""
-        self.merged_datasets: List[str] = validate_dataset_names(self.params, self.stage)
         datasets_for_f = datasets
 
         for _dataset_name in self.merged_datasets:
@@ -517,7 +717,7 @@ class FeatureEngineer:
             contain the first two values. To search a space optionally including an `EngineerStep`,
             use the `optional` kwarg of :class:`~hyperparameter_hunter.space.Categorical`.
 
-            See :meth:`EngineerStep.__init__` for information on properly formatted `EngineerStep`
+            See :class:`EngineerStep` for information on properly formatted `EngineerStep`
             functions. Additional engineering steps may be added via :meth:`add_step`
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
@@ -530,6 +730,11 @@ class FeatureEngineer:
             This is not expected to be provided on initialization and is offered primarily for
             debugging/testing. Mapping of datasets necessary to perform feature engineering steps
 
+        See Also
+        --------
+        :class:`EngineerStep`
+            For proper formatting of non-`Categorical` values of `steps`
+
         Notes
         -----
         If `steps` does include any instances of :class:`hyperparameter_hunter.space.Categorical`,
@@ -538,45 +743,53 @@ class FeatureEngineer:
         actually ends up using will not pass identity checks against the original `FeatureEngineer`
         that contained `Categorical` steps
 
-        See Also
-        --------
-        :class:`EngineerStep`: For proper formatting of non-`Categorical` values of `steps`
-
         Examples
         --------
         >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler, QuantileTransformer
-
+        >>> # Define some engineer step functions to play with
         >>> def s_scale(train_inputs, non_train_inputs):
         ...     s = StandardScaler()
         ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
         ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
         ...     return train_inputs, non_train_inputs
-
         >>> def mm_scale(train_inputs, non_train_inputs):
         ...     s = MinMaxScaler()
         ...     train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
         ...     non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
         ...     return train_inputs, non_train_inputs
-
         >>> def q_transform(train_targets, non_train_targets):
         ...     t = QuantileTransformer(output_distribution="normal")
         ...     train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
         ...     non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
         ...     return train_targets, non_train_targets, t
-
         >>> def sqr_sum(all_inputs):
         ...     all_inputs["square_sum"] = all_inputs.agg(
         ...         lambda row: np.sqrt(np.sum([np.square(_) for _ in row])), axis="columns"
         ...     )
         ...     return all_inputs
 
+        *FeatureEngineer steps wrapped by `EngineerStep` == raw function steps - as long as the
+        `EngineerStep` is using the default parameters*
+
+        >>> # FeatureEngineer steps wrapped by `EngineerStep` == raw function steps
+        >>> #   ... As long as the `EngineerStep` is using the default parameters
         >>> fe_0 = FeatureEngineer([sqr_sum, s_scale])
         >>> fe_1 = FeatureEngineer([EngineerStep(sqr_sum), EngineerStep(s_scale)])
         >>> fe_0.steps == fe_1.steps
         True
         >>> fe_2 = FeatureEngineer([sqr_sum, EngineerStep(s_scale), q_transform])
+
+        *`Categorical` can be used during optimization and placed anywhere in `steps`. `Categorical`
+        can also handle either `EngineerStep` categories or raw functions. Use the `optional` kwarg
+        of `Categorical` to test some questionable steps*
+
         >>> fe_3 = FeatureEngineer([sqr_sum, Categorical([s_scale, mm_scale]), q_transform])
         >>> fe_4 = FeatureEngineer([Categorical([sqr_sum], optional=True), s_scale, q_transform])
+        >>> fe_5 = FeatureEngineer([
+        ...     Categorical([sqr_sum], optional=True),
+        ...     Categorical([EngineerStep(s_scale), mm_scale]),
+        ...     q_transform
+        ... ])
         """
         self.steps = []
         self.do_validate = do_validate
