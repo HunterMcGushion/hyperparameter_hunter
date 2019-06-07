@@ -10,23 +10,101 @@ freedom and customization, with only the minimal requirement that you tell your 
 you want from HyperparameterHunter, and you give it back when you're done playing with it. 
 
 The best way to really understand feature engineering in HyperparameterHunter is to dive into some
-code and check out the examples listed in the README. In no time at all, you'll be ready to spread 
-your wings by experimenting with the creative feature engineering steps only you can build. Let your
-faithful assistant, HyperparameterHunter, meticulously and lovingly record them for you, so you can 
-optimize your custom feature functions just like normal hyperparameters.
+code and check out the "examples/feature_engineering_examples" directory. In no time at all, you'll 
+be ready to spread your wings by experimenting with the creative feature engineering steps only you 
+can build. Let your faithful assistant, HyperparameterHunter, meticulously and lovingly record them 
+for you, so you can optimize your custom feature functions just like normal hyperparameters.
 
 You're a glorious peacock, and we just wanna let you fly.
 
 ### Features
 * Feature engineering via `FeatureEngineer` and `EngineerStep`
-    * This will be a "brief" summary of the new features. For greater detail, see the aforementioned
-      feature engineering examples or the extensively documented 
+    * This will be a "brief" summary of the new features. For more detail, see the aforementioned
+      "examples/feature_engineering_examples" directory or the extensively documented 
       [`FeatureEngineer`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.FeatureEngineer) 
       and [`EngineerStep`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.EngineerStep)
-      classes
+      classes 
+    * `FeatureEngineer` can be passed as the `feature_engineer` kwarg to either: 
+        1. Instantiate a [`CVExperiment`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.experiments.BaseExperiment), or
+        2. Call the [`set_experiment_guidelines`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.set_experiment_guidelines)
+           method of any Optimization Protocol
+    * `FeatureEngineer` is just a container for `EngineerStep`s
+        * Instantiate it with a simple list of `EngineerStep`s, or functions to construct `EngineerStep`s
+    * Most important `EngineerStep` parameter is a function you define to perform your data transformation (whatever that is)
+        * This function is often creatively referred to as a "step function"
+    * Step function definitions have only two requirements:
+        1. Name the data you want to transform in the signature's input parameters
+            * 16 different parameter names, documented in 
+              [`EngineerStep`'s `params` kwarg](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.feature_engineering.EngineerStep)
+        2. Return the data when you're done with it
+    * Step functions may be given directly to `FeatureEngineer`, or wrapped in an `EngineerStep` for greater customization
+    * Here are just a few step functions you might want to make:
+    
+    ```python
+  from hyperparameter_hunter import CVExperiment, FeatureEngineer, EngineerStep
+  import numpy as np
+  import pandas as pd
+  from sklearn.preprocessing import QuantileTransformer, StandardScaler
+  from sklearn.impute import SimpleImputer
+
+  def standard_scale(train_inputs, non_train_inputs):
+      s = StandardScaler()
+      train_inputs[train_inputs.columns] = s.fit_transform(train_inputs.values)
+      non_train_inputs[train_inputs.columns] = s.transform(non_train_inputs.values)
+      return train_inputs, non_train_inputs
+  
+  def quantile_transform(train_targets, non_train_targets):
+      t = QuantileTransformer(output_distribution="normal")
+      train_targets[train_targets.columns] = t.fit_transform(train_targets.values)
+      non_train_targets[train_targets.columns] = t.transform(non_train_targets.values)
+      return train_targets, non_train_targets, t
+  
+  def set_nan(all_inputs):
+      cols = [1, 2, 3, 4, 5]
+      all_inputs.iloc[:, cols] = all_inputs.iloc[:, cols].replace(0, np.NaN)
+      return all_inputs
+  
+  def impute_negative_one(all_inputs):
+      all_inputs.fillna(-1, inplace=True)
+      return all_inputs
+  
+  def impute_mean(train_inputs, non_train_inputs):
+      imputer = SimpleImputer()
+      train_inputs[train_inputs.columns] = imputer.fit_transform(train_inputs.values)
+      non_train_inputs[train_inputs.columns] = imputer.transform(non_train_inputs.values)
+      return train_inputs, non_train_inputs
+  
+  def sqr_sum_feature(all_inputs):
+      all_inputs["my_sqr_sum_feature"] = all_inputs.agg(
+          lambda row: np.sqrt(np.sum([np.square(_) for _ in row])),
+          axis="columns",
+      )
+      return all_inputs
+    
+  def upsample_train_data(train_inputs, train_targets):
+      pos = pd.Series(train_targets["target"] == 1)
+      train_inputs = pd.concat([train_inputs, train_inputs.loc[pos]], axis=0)
+      train_targets = pd.concat([train_targets, train_targets.loc[pos]], axis=0)
+      return train_inputs, train_targets
+  
+  # Any of the above can be wrapped by `EngineerStep`, or added directly to a `FeatureEngineer`'s `steps`
+  # Below, assume we have already activated an `Environment`
+  exp_0 = CVExperiment(
+      model_initializer=..., 
+      model_init_params={},
+      feature_engineer=FeatureEngineer([
+          set_nan,
+          EngineerStep(standard_scale),
+          quantile_transform,
+          EngineerStep(upsample_train_data, stage="intra_cv"),
+      ]),
+  )
+    ```
+
 * Feature optimization
     * `Categorical` can be used to optimize feature engineering steps, either as `EngineerStep` 
       instances or raw functions of the form expected by `EngineerStep`
+    * Just throw your `Categorical` in with the rest of your `FeatureEngineer.steps` 
     * Features can, of course, be optimized alongside standard model hyperparameters 
         
     ```python
