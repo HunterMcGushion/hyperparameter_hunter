@@ -1,5 +1,8 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
+
+<a name="3.0.0alpha0"></a>
+## [3.0.0alpha0] (2019-06-07)
 This is the most significant release since the birth of HyperparameterHunter, adding not only 
 feature engineering, but also feature optimization. The goal of feature engineering in 
 HyperparameterHunter is to enable you to manipulate your data however you need to, without imposing 
@@ -655,7 +658,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha0...HEAD
+[3.0.0alpha0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...v3.0.0alpha0
 [2.2.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.0.1...v2.1.0
