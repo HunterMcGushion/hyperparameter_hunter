@@ -7,7 +7,7 @@ import pandas as pd
 ###############################################
 # Import Learning Assets
 ###############################################
-from sklearn.datasets import load_breast_cancer, make_classification, load_diabetes
+from sklearn.datasets import load_boston, load_breast_cancer, load_diabetes, make_classification
 
 
 ##################################################
@@ -74,6 +74,35 @@ def get_pima_indians_data(target="class"):
         "https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv",
         names=(input_cols + [target]),
     )
+    return df
+
+
+def get_boston_data():
+    """Get SKLearn's Boston House Prices regression dataset
+
+    Returns
+    -------
+    df: `pandas.DataFrame`
+        The Boston House Prices dataset of shape (506, 13 + 1)
+
+    Notes
+    -----
+    The intended target column in this dataset is "MEDV"; however, the weighted distances
+    column "DIS" can also be used as the target column
+
+    Examples
+    --------
+    >>> get_boston_data().head()
+          CRIM    ZN  INDUS  CHAS    NOX     RM   AGE     DIS  RAD    TAX  PTRATIO       B  LSTAT  MEDV
+    0  0.00632  18.0   2.31   0.0  0.538  6.575  65.2  4.0900  1.0  296.0     15.3  396.90   4.98  24.0
+    1  0.02731   0.0   7.07   0.0  0.469  6.421  78.9  4.9671  2.0  242.0     17.8  396.90   9.14  21.6
+    2  0.02729   0.0   7.07   0.0  0.469  7.185  61.1  4.9671  2.0  242.0     17.8  392.83   4.03  34.7
+    3  0.03237   0.0   2.18   0.0  0.458  6.998  45.8  6.0622  3.0  222.0     18.7  394.63   2.94  33.4
+    4  0.06905   0.0   2.18   0.0  0.458  7.147  54.2  6.0622  3.0  222.0     18.7  396.90   5.33  36.2
+    """
+    data = load_boston()
+    df = pd.DataFrame(data=data.data, columns=data.feature_names)
+    df["MEDV"] = data.target
     return df
 
 
