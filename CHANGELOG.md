@@ -1,6 +1,14 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+
+<a name="3.0.0alpha1"></a>
+## [3.0.0alpha1] (2019-06-07)
+
+### Bug Fixes
+* Fix bug causing :mod:`data.data_chunks` to be excluded from installation
+
+
 <a name="3.0.0alpha0"></a>
 ## [3.0.0alpha0] (2019-06-07)
 This is the most significant release since the birth of HyperparameterHunter, adding not only 
@@ -232,6 +240,7 @@ need to be updated to access their new locations. The new syntax is described in
        * Transformations are applied by feature engineering
        * Inversions of those transformations (if applicable) are stored in the five normal data_chunk 
          attributes from step 3
+
 
 <a name="2.2.0"></a>
 ## [2.2.0] (2019-02-10)
@@ -502,6 +511,7 @@ utility/documentation files
 * `experiment_core` no longer applies a callback to record epochs elapsed for Keras NNs by default. 
 For this functionality, use `callbacks.recipes.aggregator_epochs_elapsed`
 
+
 <a name="1.0.2"></a>
 ## [1.0.2] (2018-08-26)
 
@@ -547,11 +557,13 @@ present working directory (#54)
 * Fixed :meth:`models.XGBoostModel.fit` using `eval_set` by default with introduction of :class:`sentinels.DatasetSentinel`,
 allowing users to define `eval_set` only if they want to (#22)
 
+
 <a name="1.0.1"></a>
 ## [1.0.1] (2018-08-19)
 
 ### Bug-Fixes
 * Fixed bug where `nbconvert`, and `nbformat` were required even when not using an iPython notebook
+
 
 <a name="1.0.0"></a>
 ## [1.0.0] (2018-08-19)
@@ -651,6 +663,7 @@ allowing users to define `eval_set` only if they want to (#22)
         ```
 * Lots of other new features and bug-fixes
 
+
 <a name="0.0.1"></a>
 ## 0.0.1 (2018-06-14)
 
@@ -658,7 +671,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha1...HEAD
+[3.0.0alpha1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha0...v3.0.0alpha1
 [3.0.0alpha0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...v3.0.0alpha0
 [2.2.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.0...v2.1.1

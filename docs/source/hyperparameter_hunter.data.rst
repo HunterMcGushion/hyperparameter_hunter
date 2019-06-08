@@ -1,6 +1,13 @@
 hyperparameter\_hunter.data package
 ===================================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    hyperparameter_hunter.data.data_chunks
+
 Submodules
 ----------
 
