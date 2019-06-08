@@ -931,7 +931,7 @@ class FeatureEngineer:
 # FLAG: Tally number of columns "transformed" and "added" at each step and report
 
 
-def get_engineering_step_stage(datasets: Tuple[str]) -> str:
+def get_engineering_step_stage(datasets: Tuple[str, ...]) -> str:
     """Determine the stage in which a feature engineering step that requests `datasets` as input
     should be executed
 
