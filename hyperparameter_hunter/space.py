@@ -38,6 +38,11 @@ from skopt.space import space as skopt_space
 class Singleton(type):
     _instances = {}
 
+    def __new__(mcs, name, bases, namespace):
+        namespace["__copy__"] = lambda self, *args: self
+        namespace["__deepcopy__"] = lambda self, *args: self
+        return super().__new__(mcs, name, bases, namespace)
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
