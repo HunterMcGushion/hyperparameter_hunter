@@ -21,7 +21,7 @@ See PR #139 (https://github.com/HunterMcGushion/hyperparameter_hunter/pull/139)"
 # Import Own Assets
 ##################################################
 # noinspection PyProtectedMember
-from hyperparameter_hunter import Environment, FeatureEngineer, __version__
+from hyperparameter_hunter import Environment, FeatureEngineer, EngineerStep, __version__
 from hyperparameter_hunter import Real, Integer, Categorical, BayesianOptimization, DummySearch
 from hyperparameter_hunter.utils.learning_utils import get_boston_data
 
@@ -125,3 +125,73 @@ def test_saved_engineer_step_update_1(env_boston, protocol_0, protocol_1):
     instead of `DummySearch` as the second protocol - This should trigger the bug"""
     opt_0 = opt_pro(protocol_0)  # First Optimization Execution
     opt_1 = opt_pro(protocol_1)  # Second (Informed) Execution
+
+
+##################################################
+# `EngineerStep.honorary_step_from_dict` Tests
+##################################################
+@pytest.mark.parametrize(
+    ["step_dict", "dimension", "expected"],
+    [
+        (
+            dict(
+                name="nothing_transform",
+                f="2jDrngAKAWUo9OtZOL7VNfoJBj7XXy340dsgNjVj7AE=",
+                params=["train_targets", "non_train_targets"],
+                stage="intra_cv",
+                do_validate=False,
+            ),
+            Categorical([EngineerStep(nothing_transform)], optional=True),
+            EngineerStep(nothing_transform),
+        ),
+        (
+            dict(
+                name="nothing_transform",
+                f="2jDrngAKAWUo9OtZOL7VNfoJBj7XXy340dsgNjVj7AE=",
+                params=["train_targets", "non_train_targets"],
+                stage="pre_cv",
+                do_validate=False,
+            ),
+            Categorical(
+                [EngineerStep(nothing_transform), EngineerStep(nothing_transform, stage="pre_cv")]
+            ),
+            EngineerStep(nothing_transform, stage="pre_cv"),
+        ),
+    ],
+)
+def test_honorary_step_from_dict(step_dict, dimension, expected):
+    actual = EngineerStep.honorary_step_from_dict(step_dict, dimension)
+    assert isinstance(actual, EngineerStep)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    ["step_dict", "dimension"],
+    [
+        (
+            dict(
+                name="nothing_transform",
+                f="2jDrngAKAWUo9OtZOL7VNfoJBj7XXy340dsgNjVj7AE=",
+                params=["train_targets", "non_train_targets"],
+                stage="pre_cv",
+                do_validate=False,
+            ),
+            Categorical([EngineerStep(nothing_transform)], optional=True),
+        ),
+        (
+            dict(
+                name="foo",
+                f="2jDrngAKAWUo9OtZOL7VNfoJBj7XXy340dsgNjVj7AE=",
+                params=["train_targets", "non_train_targets"],
+                stage="pre_cv",
+                do_validate=False,
+            ),
+            Categorical(
+                [EngineerStep(nothing_transform), EngineerStep(nothing_transform, stage="pre_cv")]
+            ),
+        ),
+    ],
+)
+def test_honorary_step_from_dict_value_error(step_dict, dimension):
+    with pytest.raises(ValueError, match="`step_dict` could not be found in `dimension`"):
+        actual = EngineerStep.honorary_step_from_dict(step_dict, dimension)
