@@ -1,6 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.feature_engineering import EngineerStep
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,
     keras_initializer_to_dict,
@@ -121,6 +122,8 @@ class ResultFinder:
                 self._filter_by_guidelines()
         else:
             self._filter_by_guidelines()
+
+        self.similar_experiments = self._reinitialize_exp_params()
         G.debug_(f"Experiments matching current guidelines: {len(self.similar_experiments)}")
 
     def _get_ids(self):
@@ -210,6 +213,25 @@ class ResultFinder:
             )
         else:
             raise ValueError("Received unhandled location: {}".format(location))
+
+    def _reinitialize_exp_params(self):
+        # TODO: Add documentation
+        step_dim_names = [_ for _ in self.space.names() if _[0] == "feature_engineer"]
+        if not step_dim_names:
+            return self.similar_experiments
+
+        new_similar_experiments = []
+        for (exp_params, exp_score, exp_id) in self.similar_experiments:
+            engineer_steps = get_path(exp_params, ("feature_engineer", "steps"))  # type: List[dict]
+            for i, step in enumerate(engineer_steps):
+                dimension = self.space.get_by_name(("feature_engineer", "steps", i), default=None)
+
+                if dimension is not None:
+                    new_step = EngineerStep.honorary_step_from_dict(step, dimension)
+                    exp_params["feature_engineer"]["steps"][i] = new_step
+
+            new_similar_experiments.append((exp_params, exp_score, exp_id))
+        return new_similar_experiments
 
 
 class KerasResultFinder(ResultFinder):
