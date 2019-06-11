@@ -35,6 +35,9 @@ from sklearn.utils import check_random_state
 from skopt.space import space as skopt_space
 
 
+NONE = object()
+
+
 class Singleton(type):
     _instances = {}
 
@@ -302,6 +305,34 @@ class Space(skopt_space.Space):
             else:
                 names.append(dimension.name)
         return names
+
+    def get_by_name(self, name, use_location=True, default=NONE):
+        """Retrieve a single dimension by its name
+
+        Parameters
+        ----------
+        name: Tuple, or str
+            Name of the dimension in :attr:`dimensions` to return
+        use_location: Boolean, default=True
+            If True and a dimension has a non-null attribute called "location", its value will be
+            used instead of that dimension's "name"
+        default: Any (optional)
+            If given and `name` is not found, `default` will be returned. Otherwise, `KeyError` will
+            be raised when `name` is not found
+
+        Returns
+        -------
+        Dimension
+            Dimension subclass in :attr:`dimensions`, whose "name" attribute is equal to `name`"""
+        for dimension in self.dimensions:
+            if use_location and getattr(dimension, "location", None) == name:
+                return dimension
+            elif dimension.name == name:
+                return dimension
+
+        if default != NONE:
+            return default
+        raise KeyError(f"{name} not found in dimensions")
 
 
 ##################################################
