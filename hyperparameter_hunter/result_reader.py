@@ -20,6 +20,7 @@ from hyperparameter_hunter.utils.optimization_utils import (
 ##################################################
 from copy import deepcopy
 from pathlib import Path
+from typing import List
 
 
 def finder_selector(module_name):
