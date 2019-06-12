@@ -202,3 +202,67 @@ def test_categorical_get_params(given_params, expected_params):
 def test_categorical_not_get_params(given_params, unexpected_params):
     """Silly sanity tests ensuring `Categorical` doesn't think two similar things are the same"""
     assert Categorical(**given_params).get_params() != unexpected_params
+
+
+##################################################
+# `Space.get_by_name` Tests
+##################################################
+GBN_DEFAULT = object()
+
+
+def space_gbn_0():
+    return Space([Real(0.1, 0.9, name="foo"), Integer(3, 15, name="bar")])
+
+
+def space_gbn_1():
+    return Space([Real(0.1, 0.9, name=("i am", "foo")), Integer(3, 15, name=("i am", "bar"))])
+
+
+@pytest.mark.parametrize(
+    ["space", "name", "expected"],
+    [
+        (space_gbn_0(), "bar", Integer(3, 15, name="bar")),
+        (space_gbn_1(), ("i am", "bar"), Integer(3, 15, name=("i am", "bar"))),
+    ],
+)
+def test_get_by_name(space, name, expected):
+    actual = space.get_by_name(name)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(["space", "name"], [(space_gbn_0(), "does_not_exist")])
+def test_get_by_name_key_error(space, name):
+    with pytest.raises(KeyError, match=f"{name} not found in dimensions"):
+        space.get_by_name(name)
+
+
+@pytest.mark.parametrize(
+    ["space", "name", "default", "expected"],
+    [
+        (space_gbn_0(), "does not exist", GBN_DEFAULT, GBN_DEFAULT),
+        (space_gbn_1(), ("does", "not", "exist"), GBN_DEFAULT, GBN_DEFAULT),
+        (space_gbn_0(), "bar", GBN_DEFAULT, Integer(3, 15, name="bar")),
+        (space_gbn_1(), ("i am", "bar"), GBN_DEFAULT, Integer(3, 15, name=("i am", "bar"))),
+    ],
+)
+def test_get_by_name_default(space, name, default, expected):
+    actual = space.get_by_name(name, default=default)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    ["space", "name", "expected"],
+    [
+        (space_gbn_0(), ("some", "loc", "bar"), Integer(3, 15, name="bar")),
+        (space_gbn_1(), ("some", "loc", "i am", "bar"), Integer(3, 15, name=("i am", "bar"))),
+    ],
+)
+def test_get_by_name_use_location(space, name, expected):
+    for dim in space.dimensions:
+        if isinstance(dim.name, str):
+            setattr(dim, "location", ("some", "loc", dim.name))
+        else:
+            setattr(dim, "location", ("some", "loc") + dim.name)
+
+    actual = space.get_by_name(name, use_location=True)
+    assert actual == expected
