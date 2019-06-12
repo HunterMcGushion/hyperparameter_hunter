@@ -44,6 +44,11 @@ class BasePredictionChunk(BaseDataChunk):
         self.T.run = deepcopy(prediction)
         self.run = deepcopy(prediction)
 
+        self.run = _format_prediction(self.run, target_column)
+        # `self.run` must be same shape as data transformed by `feature_engineer` prior to inversion
+        # TODO: Make sure this doesn't screw up when no `inverse_transform` call
+        #  Because then it'll just be two consecutive calls to `_format_predictions` with `self.run`
+
         with suppress(AttributeError):  # TODO: Drop `suppress` - Was for `feature_engineer={}`
             # NOTE: How does `FeatureEngineer` know these are predictions to invert, not inputs?
             #   Probably need to make an assumption for now, albeit a fairly safe one
@@ -60,6 +65,7 @@ class BasePredictionChunk(BaseDataChunk):
         #   Might be able to use transformed `data_holdout.target` to figure it out - Not pretty
 
     def on_fold_end(self, runs: int, *args, **kwargs):
+        # TODO: For all `/=` ops herein, conditionally do floor div if `self.run` is non-continuous?
         self.fold /= runs
         self.rep += self.fold
         self.T.fold /= runs
