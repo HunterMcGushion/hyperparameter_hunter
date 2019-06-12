@@ -1,6 +1,16 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Bug Fixes
+* Fix bug causing Informed Optimization Protocols to break after the tenth optimization round when 
+  attempting to fit `optimizer` with `EngineerStep` dicts, rather than proper instances
+    * This was caused by the `EngineerStep`s stored in saved experiment descriptions not being 
+      reinitialized in order to be compatible with the current search space
+    * See [PR #139](https://github.com/HunterMcGushion/hyperparameter_hunter/pull/139) or 
+      "tests/integration_tests/feature_engineering/test_saved_engineer_step.py" for details
+* Fix incorrect "source_script" recorded in `CVExperiment` description files when executed within
+  an Optimization Protocol
+
 
 <a name="3.0.0alpha1"></a>
 ## [3.0.0alpha1] (2019-06-07)
