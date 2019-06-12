@@ -726,8 +726,7 @@ class EngineerStep:
         for category in dimension.categories:
             if category == step_dict:
                 return category
-        else:
-            raise ValueError("`step_dict` could not be found in `dimension`")
+        raise ValueError("`step_dict` could not be found in `dimension`")
 
 
 class FeatureEngineer:
