@@ -1,6 +1,10 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+
+<a name="3.0.0alpha2"></a>
+## [3.0.0alpha2] (2019-06-12)
+
 ### Bug Fixes
 * Fix bug causing Informed Optimization Protocols to break after the tenth optimization round when 
   attempting to fit `optimizer` with `EngineerStep` dicts, rather than proper instances
@@ -683,7 +687,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha1...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha2...HEAD
+[3.0.0alpha2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha1...v3.0.0alpha2
 [3.0.0alpha1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha0...v3.0.0alpha1
 [3.0.0alpha0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...v3.0.0alpha0
 [2.2.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.1.1...v2.2.0
