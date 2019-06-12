@@ -1,6 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.feature_engineering import EngineerStep
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,
     keras_initializer_to_dict,
@@ -18,7 +19,9 @@ from hyperparameter_hunter.utils.optimization_utils import (
 # Import Miscellaneous Assets
 ##################################################
 from copy import deepcopy
+from numbers import Number
 from pathlib import Path
+from typing import List, Tuple
 
 
 def finder_selector(module_name):
@@ -121,6 +124,9 @@ class ResultFinder:
                 self._filter_by_guidelines()
         else:
             self._filter_by_guidelines()
+
+        #################### Post-Process Similar Experiments ####################
+        self._reinitialize_similar_experiments()
         G.debug_(f"Experiments matching current guidelines: {len(self.similar_experiments)}")
 
     def _get_ids(self):
@@ -210,6 +216,46 @@ class ResultFinder:
             )
         else:
             raise ValueError("Received unhandled location: {}".format(location))
+
+    def _reinitialize_similar_experiments(self):
+        """Update :attr:`similar_experiments` to reinitialize any `EngineerStep`-like dicts in the
+        experiment's parameters to :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`
+        instances. Content of `similar_experiments` is otherwise unchanged"""
+        if not any(_[0] == "feature_engineer" for _ in self.space.names()):
+            return
+        self.similar_experiments = [self._get_initialized_exp(_) for _ in self.similar_experiments]
+
+    def _get_initialized_exp(self, exp: Tuple[dict, Number, str]) -> Tuple[dict, Number, str]:
+        """Initialize :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`s for a single
+        :attr:`similar_experiments` result entry
+
+        Parameters
+        ----------
+        exp: Tuple[dict, Number, str]
+            Tuple of (<parameters>, <evaluation>, <ID>), whose parameters dict will be searched for
+            `EngineerStep`-like dicts
+
+        Returns
+        -------
+        Dict
+            Experiment parameters dict, in which any `EngineerStep`-like dicts have been initialized
+            to `EngineerStep` instances. All other key/value pairs are unchanged
+        Number
+            Unchanged target evaluation result of `exp`
+        String
+            Unchanged experiment ID of `exp`"""
+        (exp_params, exp_score, exp_id) = exp
+        engineer_steps = get_path(exp_params, ("feature_engineer", "steps"))  # type: List[dict]
+
+        for i, step in enumerate(engineer_steps):
+            # TODO: Requires consistent `EngineerStep` order - Update this if unordered steps added
+            dimension = self.space.get_by_name(("feature_engineer", "steps", i), default=None)
+
+            if dimension is not None:
+                new_step = EngineerStep.honorary_step_from_dict(step, dimension)
+                exp_params["feature_engineer"]["steps"][i] = new_step
+
+        return (exp_params, exp_score, exp_id)
 
 
 class KerasResultFinder(ResultFinder):

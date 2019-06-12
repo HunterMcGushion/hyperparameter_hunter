@@ -696,6 +696,38 @@ class EngineerStep:
     def __hash__(self):
         return hash((self.name, self.f, self.params, self.stage, self.do_validate))
 
+    @classmethod
+    def honorary_step_from_dict(cls, step_dict: dict, dimension: Categorical):
+        """Get an `EngineerStep` from `dimension` that is equal to its dict form, `step_dict`
+
+        Parameters
+        ----------
+        step_dict: Dict
+            Dict of form saved in experiment description files for `EngineerStep`s. Expected to
+            have following keys, with values of the given types:
+            * "name": String
+            * "f": String (SHA256 hash)
+            * "params": List[str], or Tuple[str, ...]
+            * "stage": String in {"pre_cv", "intra_cv"}
+            * "do_validate": Boolean
+        dimension: Categorical
+            `Categorical` instance expected to contain the `EngineerStep` equivalent of `step_dict`
+            in its categories
+
+        Returns
+        -------
+        EngineerStep
+            From `dimension.categories` if it is the `EngineerStep` equivalent of `step_dict`
+
+        Raises
+        ------
+        ValueError
+            If `dimension.categories` does not contain an `EngineerStep` matching `step_dict`"""
+        for category in dimension.categories:
+            if category == step_dict:
+                return category
+        raise ValueError("`step_dict` could not be found in `dimension`")
+
 
 class FeatureEngineer:
     def __init__(self, steps=None, do_validate=False, **datasets: DFDict):

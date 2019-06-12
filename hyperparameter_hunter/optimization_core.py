@@ -54,6 +54,7 @@ from datetime import datetime
 from inspect import currentframe, getframeinfo
 from os import walk, remove, rmdir
 from os.path import abspath
+from typing import Any, Dict
 
 ##################################################
 # Import Learning Assets
@@ -94,6 +95,8 @@ class MergedOptimizationMeta(OptimizationProtocolMeta, ABCMeta):
 
 
 class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
+    source_script: str
+
     def __init__(
         self,
         target_metric=None,
@@ -399,6 +402,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         check for duplicated keys"""
         self._update_current_hyperparameters()
 
+        #################### Initialize Experiment (Without Running) ####################
         self.current_experiment = CVExperiment(
             # model=None,  # TODO: May need to pass `model` from `set_experiment_guidelines`
             model_initializer=self.model_initializer,
@@ -410,7 +414,10 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             do_raise_repeated=self.do_raise_repeated,
             auto_start=False,
         )
+        # Fix `current_experiment.source_script`
+        self.current_experiment.source_script = self.source_script
 
+        #################### Run Experiment ####################
         self.current_experiment.preparation_workflow()
 
         # Future Hunter, if multi-cross_experiment_keys ever supported, this will be a problem. Should've fixed it earlier, dummy
@@ -442,20 +449,35 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         if self.module_name == "keras":
             K.clear_session()
 
+    @staticmethod
+    def _select_params(param_prefix: str, current_params: Dict[tuple, Any]):
+        """Retrieve sub-dict of `current_params` whose keys start with `param_prefix`
+
+        Parameters
+        ----------
+        param_prefix: {"model_init_params", "model_extra_params", "feature_engineer"}
+            Target to filter keys of `current_params`. Only key/value pairs in `current_params`
+            whose keys start with `param_prefix` are returned. `param_prefix` is dropped from the
+            keys in the returned dict
+        current_params: Dict[tuple, Any]
+            Dict from which to return the subset whose keys start with `param_prefix`
+
+        Returns
+        -------
+        Dict[tuple, Any]
+            Contents of `current_params`, whose keys started with `param_prefix` - with
+            `param_prefix` dropped from the resulting keys"""
+        return {k[1:]: v for k, v in current_params if k[0] == param_prefix}
+
     def _update_current_hyperparameters(self):
         """Update :attr:`current_init_params`, and :attr:`current_extra_params` according to the
         upcoming set of hyperparameters to be searched"""
         current_hyperparameters = self._get_current_hyperparameters().items()
 
-        init_params = {
-            _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "model_init_params"
-        }
-        extra_params = {
-            _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "model_extra_params"
-        }
-        fe_params = {
-            _k[1:]: _v for _k, _v in current_hyperparameters if _k[0] == "feature_engineer"
-        }
+        init_params = self._select_params("model_init_params", current_hyperparameters)
+        extra_params = self._select_params("model_extra_params", current_hyperparameters)
+        fe_params = self._select_params("feature_engineer", current_hyperparameters)
+
         # TODO: Add `fs_params` for `current_feature_selector`
 
         # FLAG: At this point, `dummy_layers` shows "kernel_initializer" as `orthogonal` instance with "__hh" attrs
