@@ -95,6 +95,8 @@ class MergedOptimizationMeta(OptimizationProtocolMeta, ABCMeta):
 
 
 class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
+    source_script: str
+
     def __init__(
         self,
         target_metric=None,
@@ -400,6 +402,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         check for duplicated keys"""
         self._update_current_hyperparameters()
 
+        #################### Initialize Experiment (Without Running) ####################
         self.current_experiment = CVExperiment(
             # model=None,  # TODO: May need to pass `model` from `set_experiment_guidelines`
             model_initializer=self.model_initializer,
@@ -411,7 +414,10 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             do_raise_repeated=self.do_raise_repeated,
             auto_start=False,
         )
+        # Fix `current_experiment.source_script`
+        self.current_experiment.source_script = self.source_script
 
+        #################### Run Experiment ####################
         self.current_experiment.preparation_workflow()
 
         # Future Hunter, if multi-cross_experiment_keys ever supported, this will be a problem. Should've fixed it earlier, dummy
