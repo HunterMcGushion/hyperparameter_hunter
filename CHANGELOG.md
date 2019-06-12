@@ -8,6 +8,8 @@
       reinitialized in order to be compatible with the current search space
     * See [PR #139](https://github.com/HunterMcGushion/hyperparameter_hunter/pull/139) or 
       "tests/integration_tests/feature_engineering/test_saved_engineer_step.py" for details
+* Fix broken inverse target transformation of LightGBM predictions
+    * See [PR #140](https://github.com/HunterMcGushion/hyperparameter_hunter/pull/140) for details
 * Fix incorrect "source_script" recorded in `CVExperiment` description files when executed within
   an Optimization Protocol
 
