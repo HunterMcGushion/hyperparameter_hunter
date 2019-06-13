@@ -40,8 +40,6 @@ from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_met
 from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
-
-# from hyperparameter_hunter.tracers import TranslateTrace  # TODO: Add when tested with `Mirror`
 from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
 from hyperparameter_hunter.utils.general_utils import Deprecated
 
@@ -73,14 +71,9 @@ np.random.seed(32)
 
 
 class BaseExperiment(ScoringMixIn):
-    # @TranslateTrace("model", ("model_initializer", "model_init_params"))  # TODO: Add when tested with `Mirror`
     def __init__(
         # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
         self,
-        # model=None,
-        # model_initializer=None,
-        # model_init_params=None,
-        # TODO: Convert below 2 to above 3 lines for `TranslateTrace`
         model_initializer,
         model_init_params,
         model_extra_params=None,
@@ -91,10 +84,6 @@ class BaseExperiment(ScoringMixIn):
         auto_start=True,
         target_metric=None,
     ):
-        # TODO: When `TranslateTrace` added document `model` below with expectation that if `model`
-        # TODO: ... given, (`model_initializer`, `model_init_params`) should not be, and vice versa
-        # TODO: `model` (Class instance, default=None);
-        # TODO: `model_initializer`/`model_init_params` docstring types += "default=None"
         """Base class for :class:`BaseCVExperiment`
 
         Parameters
@@ -139,7 +128,6 @@ class BaseExperiment(ScoringMixIn):
             :func:`metrics.get_formatted_target_metric` for more info. Any values returned by, or
             used as the `target_metric` input to this function are acceptable values for
             :attr:`BaseExperiment.target_metric`"""
-        # self._model_original = model  # TODO: Add for `TranslateTrace`
         self.model_initializer = model_initializer
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
         try:
@@ -464,10 +452,6 @@ class BaseExperiment(ScoringMixIn):
 class BaseCVExperiment(BaseExperiment):
     def __init__(
         self,
-        # model=None,
-        # model_initializer=None,
-        # model_init_params=None,
-        # TODO: Convert below 2 to above 3 lines for `TranslateTrace`
         model_initializer,
         model_init_params,
         model_extra_params=None,
@@ -493,10 +477,6 @@ class BaseCVExperiment(BaseExperiment):
 
         BaseExperiment.__init__(
             self,
-            # model=model,
-            # model_initializer=model_initializer,
-            # model_init_params=model_init_params,
-            # TODO: Convert below 2 to above 3 lines for `TranslateTrace`
             model_initializer,
             model_init_params,
             model_extra_params=model_extra_params,
@@ -637,10 +617,6 @@ class BaseCVExperiment(BaseExperiment):
 class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
         self,
-        # model=None,
-        # model_initializer=None,
-        # model_init_params=None,
-        # TODO: Convert below 2 to above 3 lines for `TranslateTrace`
         model_initializer,
         model_init_params,
         model_extra_params=None,
@@ -653,10 +629,6 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     ):
         BaseCVExperiment.__init__(
             self,
-            # model=model,
-            # model_initializer=model_initializer,
-            # model_init_params=model_init_params,
-            # TODO: Convert below 2 to above 3 lines for `TranslateTrace`
             model_initializer,
             model_init_params,
             model_extra_params=model_extra_params,
