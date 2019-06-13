@@ -41,7 +41,7 @@ from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 import dill  # TODO: Figure out if this can be safely removed
 from functools import partial
-from inspect import getsourcelines, isclass, getsource
+from inspect import isclass, getsource
 from os import listdir
 import os.path
 import pandas as pd
@@ -180,16 +180,8 @@ class KeyMaker(metaclass=ABCMeta):
                 return (key, keras_initializer_to_dict(value))
             if isinstance(value, Sentinel):
                 return (key, value.sentinel)
-            # from hyperparameter_hunter.feature_engineering import FeatureEngineer, EngineerStep
-            # if isinstance(value, EngineerStep):
-            #     return (key, value.get_key_data())
-            # if isinstance(value, FeatureEngineer):
-            #     return (key, value.get_key_data())
             elif callable(value) or isinstance(value, pd.DataFrame):
-                # TODO: Check here if callable, and using a `Trace`d model/model_initializer
-                # TODO: If so, pass extra kwargs to below `make_hash_sha256`, which are eventually given to `hash_callable`
-                # TODO: Notably, `ignore_source_lines=True` should be included
-                # FLAG: Also, look into adding package version number to hashed attributes
+                # FLAG: Look into adding package version number to hashed attributes
                 hashed_value = make_hash_sha256(value)
 
                 if isinstance(value, pd.DataFrame):
@@ -230,15 +222,7 @@ class KeyMaker(metaclass=ABCMeta):
 
             with shelve.open(lookup_path(f"{key}"), flag="c") as s:
                 # NOTE: When reading from shelve file, DO NOT add the ".db" file extension
-                try:
-                    s[hashed_value] = value
-                except PicklingError:
-                    # "is not the same object" error can be raised due to `Mirror`/`TranslateTrace`
-                    # Instead of saving the object that raised the error, save `getsourcelines`
-                    # Source lines of traced object are identical to those of its un-traced original
-                    s[hashed_value] = getsourcelines(value)
-                except Exception:
-                    raise
+                s[hashed_value] = value
         elif isinstance(value, pd.DataFrame):
             make_dirs(lookup_path(key), exist_ok=True)
             value.to_csv(lookup_path(key, f"{hashed_value}.csv"), index=False)
