@@ -1,11 +1,5 @@
 """This module defines assorted general-use utilities used throughout the library. The contents are
-primarily small functions that perform oft-repeated tasks. This module also defines deprecation
-utilities, namely :class:`Deprecated`, which is used to deprecate callables
-
-Related
--------
-:mod:`hyperparameter_hunter.exceptions`
-    Defines the deprecation warnings issued by :class:`Deprecated`"""
+primarily small functions that perform oft-repeated tasks"""
 ##################################################
 # Import Own Assets
 ##################################################
