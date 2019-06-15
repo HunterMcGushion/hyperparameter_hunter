@@ -1,4 +1,9 @@
 ##################################################
+# Import Own Assets
+##################################################
+from hyperparameter_hunter.settings import G
+
+##################################################
 # Import Miscellaneous Assets
 ##################################################
 import base64
@@ -6,6 +11,7 @@ from functools import partial
 import hashlib
 from inspect import getsourcelines
 import re
+import sys
 
 
 def make_hash_sha256(obj, **kwargs):
@@ -108,8 +114,20 @@ def hash_callable(
 
     #################### Format Source Code Lines ####################
     if not ignore_source_lines:
-        # TODO: Only works on modified Keras `build_fn` in optimization if temp file still exists
-        source_lines = getsourcelines(obj)[0]
+        # TODO: Below only works on modified Keras `build_fn` during optimization if temp file still exists
+        # FLAG: May need to wrap below in try/except TypeError to handle "built-in class" errors during mirroring
+        # FLAG: ... Reference `settings.G.mirror_registry` for approval and its `original_sys_module_entry` attribute
+        try:
+            source_lines = getsourcelines(obj)[0]
+        except TypeError as _ex:
+            for a_mirror in G.mirror_registry:
+                if obj.__name__ == a_mirror.import_name:
+                    # TODO: Also, check `a_mirror.original_full_path` somehow, or object equality
+                    source_lines = a_mirror.asset_source_lines[0]
+                    break
+            else:
+                raise _ex.with_traceback(sys.exc_traceback)
+        # TODO: Above only works on modified Keras `build_fn` during optimization if temp file still exists
 
         if ignore_line_comments:
             source_lines = [_ for _ in source_lines if not is_line_comment(_)]
