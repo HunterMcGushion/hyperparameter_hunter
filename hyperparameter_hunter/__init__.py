@@ -63,4 +63,6 @@ __all__ = [
     #################### Feature Engineering ####################
     "FeatureEngineer",
     "EngineerStep",
+    #################### Miscellaneous ####################
+    "__version__",
 ]
