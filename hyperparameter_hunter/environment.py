@@ -668,6 +668,38 @@ class Environment:
         G.debug = reporting_handler.debug
         G.warn = reporting_handler.warn
 
+    # @property
+    # def initialized_model(self):
+    #     """Sentinel for use with meta-estimators, such as those in SKLearn's `multioutput` module
+    #
+    #     When declaring `model_init_params` for the meta-estimator during `CVExperiment`
+    #     or optimization protocol setup, provide this property as input to the meta-estimator's
+    #     `estimator`/`base_estimator` parameter.
+    #
+    #     This property is actually a placeholder for the initialized model created by whatever model
+    #     is at the index following the current index. For example, assuming a properly initialized
+    #     `Environment`, to use a Support Vector Regression in a multi-regression problem...
+    #     >>> from hyperparameter_hunter import CVExperiment
+    #     >>> from sklearn.multioutput import MultiOutputRegressor
+    #     >>> from sklearn.svm import SVR
+    #     >>> env = Environment(...)
+    #     >>> experiment = CVExperiment(
+    #     ...     model_initializer=(MultiOutputRegressor, SVR),
+    #     ...     model_init_params=(  # Dict of parameters for each `model_initializer`
+    #     ...         dict(estimator=env.initialized_model),  # References model following current model (`SVR` at index 1)
+    #     ...         dict(kernel="linear", C=10.0),
+    #     ...     )
+    #     ... )
+    #     What happens behind the scenes is that because the first set of `model_init_params` contains
+    #     the sentinel for another initialized model, its initialization is delayed until the others
+    #     have been initialized.
+    #     So the `SVR` is initialized with `dict(kernel="linear", C=10.0)`. Then the initialized SVR
+    #     is provided as input to the model that preceded it and declared the initialized SVR as
+    #     input: the `MultiOutputRegressor`. The end result is a model that can be parameterized by
+    #     HyperparameterHunter that mirrors the following:
+    #     >>> MultiOutputRegressor(estimator=SVR(kernel="linear", C=10.0))
+    #     """
+
     ##################################################
     # Dataset Sentinels for Use as Extra Parameters
     ##################################################
