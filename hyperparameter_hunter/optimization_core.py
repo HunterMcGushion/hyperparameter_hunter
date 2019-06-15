@@ -192,6 +192,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
     ##################################################
     # Core Methods:
     ##################################################
+    # TODO: Add `model` here, with a `TranslateTrace` decorator, and document it below
     def set_experiment_guidelines(
         self,
         model_initializer,
@@ -403,6 +404,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         #################### Initialize Experiment (Without Running) ####################
         self.current_experiment = CVExperiment(
+            # model=None,  # TODO: May need to pass `model` from `set_experiment_guidelines`
             model_initializer=self.model_initializer,
             model_init_params=self.current_init_params,
             model_extra_params=self.current_extra_params,
