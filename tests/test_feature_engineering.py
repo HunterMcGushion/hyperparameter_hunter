@@ -1,3 +1,7 @@
+"""This module only tests utilities defined in :mod:`~hyperparameter_hunter.feature_engineering`.
+Tests for :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer` and
+:class:`~hyperparameter_hunter.feature_engineering.EngineerStep` and integration with Experiments
+and Optimization Protocols are contained in `tests.integration_tests.feature_engineering`"""
 ##################################################
 # Import Own Assets
 ##################################################
