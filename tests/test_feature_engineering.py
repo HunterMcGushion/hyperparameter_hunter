@@ -1,8 +1,13 @@
+"""This module only tests utilities defined in :mod:`~hyperparameter_hunter.feature_engineering`.
+Tests for :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer` and
+:class:`~hyperparameter_hunter.feature_engineering.EngineerStep` and integration with Experiments
+and Optimization Protocols are contained in `tests.integration_tests.feature_engineering`"""
 ##################################################
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.feature_engineering import merge_dfs, split_merged_df
 from hyperparameter_hunter.feature_engineering import DatasetNameReport, validate_dataset_names
+from hyperparameter_hunter.feature_engineering import get_engineering_step_params
 
 ##################################################
 # Import Miscellaneous Assets
@@ -375,3 +380,41 @@ def test_validate_dataset_names(params, stage, expected):
 def test_validate_dataset_names_value_error(params, stage):
     with pytest.raises(ValueError, match="Requested params include duplicate references to .*"):
         validate_dataset_names(params, stage)
+
+
+##################################################
+# `get_engineering_step_params` Scenarios
+##################################################
+def _err_param_train_data(train_data):
+    return train_data
+
+
+def _err_param_validation_data(validation_data):
+    return validation_data
+
+
+def _err_param_holdout_data(holdout_data):
+    return holdout_data
+
+
+def _err_param_all_data(all_data):
+    return all_data
+
+
+def _err_param_non_train_data(non_train_data):
+    return non_train_data
+
+
+@pytest.mark.parametrize(
+    "f",
+    [
+        _err_param_train_data,
+        _err_param_validation_data,
+        _err_param_holdout_data,
+        _err_param_all_data,
+        _err_param_non_train_data,
+    ],
+)
+def test_get_engineering_step_params_value_error(f):
+    with pytest.raises(ValueError, match="Sorry, 'data'-suffixed parameters like .*"):
+        get_engineering_step_params(f)

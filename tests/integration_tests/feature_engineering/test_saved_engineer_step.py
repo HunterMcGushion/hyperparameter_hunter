@@ -77,13 +77,13 @@ def env_boston():
 
 
 def opt_pro(optimization_protocol):
-    opt = optimization_protocol(iterations=11)
+    opt = optimization_protocol(iterations=11, random_state=32)
     opt.set_experiment_guidelines(
         model_initializer=XGBRegressor,
         model_init_params=dict(
-            max_depth=Integer(2, 20),
-            n_estimators=Integer(50, 900),
-            learning_rate=Real(0.0001, 0.9),
+            max_depth=Integer(2, 10),
+            n_estimators=Integer(50, 300),
+            learning_rate=Real(0.1, 0.9),
             subsample=0.5,
             booster=Categorical(["gbtree", "gblinear"]),
         ),

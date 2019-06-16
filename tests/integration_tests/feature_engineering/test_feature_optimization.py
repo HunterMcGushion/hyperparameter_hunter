@@ -4,6 +4,7 @@
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer, EngineerStep
 from hyperparameter_hunter import Categorical, BayesianOptimization
+from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions
 
 ##################################################
@@ -12,6 +13,7 @@ from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions
 import numpy as np
 import pandas as pd
 import pytest
+import sys
 
 ##################################################
 # Import Learning Assets
@@ -20,6 +22,11 @@ from sklearn.datasets import load_boston
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, Normalizer, QuantileTransformer, StandardScaler
+
+try:
+    from xgboost import XGBClassifier
+except ImportError:
+    pass
 
 ##################################################
 # Global Settings
@@ -33,14 +40,14 @@ assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 ##################################################
 #################### Target Transformers ####################
 def quantile_transform(train_targets, non_train_targets):
-    transformer = QuantileTransformer(output_distribution="normal")
+    transformer = QuantileTransformer(output_distribution="normal", n_quantiles=100)
     train_targets[train_targets.columns] = transformer.fit_transform(train_targets.values)
     non_train_targets[train_targets.columns] = transformer.transform(non_train_targets.values)
     return train_targets, non_train_targets, transformer
 
 
 def quantile_transform_no_invert(train_targets, non_train_targets):
-    transformer = QuantileTransformer(output_distribution="normal")
+    transformer = QuantileTransformer(output_distribution="normal", n_quantiles=100)
     train_targets[train_targets.columns] = transformer.fit_transform(train_targets.values)
     non_train_targets[train_targets.columns] = transformer.transform(non_train_targets.values)
     return train_targets, non_train_targets
@@ -381,3 +388,46 @@ def test_similar_experiments_optional(env_boston, fe_experiment, fe_optimizer):
     """Very much like `test_similar_experiments`, except the indirect parameters to `fe_optimizer`
     make use of the `optional` kwarg of :class:`hyperparameter_hunter.space.Categorical`"""
     assert fe_experiment.experiment_id in [_[2] for _ in fe_optimizer.similar_experiments]
+
+
+# noinspection PyUnusedLocal
+# TODO: Add `condition="__version__ < '...'"` to `xfail` when supported
+@pytest.mark.xfail(reason="`EngineerStep` matching is index-sensitive")
+@pytest.mark.skipif("xgboost" not in sys.modules, reason="Requires `XGBoost` library")
+def test_similar_experiments_unordered():
+    """Check that an experiment with a single `EngineerStep` is considered "similar" by an
+    Optimization Protocol, with two `optional` `EngineerStep`s, where the second step is identical
+    to the single step used by the standalone experiment. As of v3.0.0alpha2, this is expected to
+    fail because the otherwise identical engineer steps occur at different indexes in
+    `FeatureEngineer.steps` for the experiment and the OptPro. The experiment has `sqr_sum_feature`
+    at index=0, while the same step in the OptPro is at index=1. Note that the step index in OptPro
+    is still 1 despite the fact that the other step immediately preceding it is `optional`"""
+    env = Environment(
+        train_dataset=get_breast_cancer_data(),
+        results_path=assets_dir,
+        target_column="diagnosis",
+        metrics=["roc_auc_score"],
+        cv_type="StratifiedKFold",
+        cv_params=dict(n_splits=5, shuffle=True, random_state=32),
+    )
+
+    exp = CVExperiment(
+        model_initializer=XGBClassifier,
+        model_init_params=dict(objective="reg:linear", subsample=0.5, max_depth=3),
+        feature_engineer=FeatureEngineer([EngineerStep(sqr_sum_feature)]),
+    )
+
+    opt = BayesianOptimization(iterations=1)
+    opt.set_experiment_guidelines(
+        model_initializer=XGBClassifier,
+        model_init_params=dict(objective="reg:linear", subsample=0.5, max_depth=3),
+        feature_engineer=FeatureEngineer(
+            [
+                Categorical([standard_scale, normalize, min_max_scale], optional=True),
+                Categorical([sqr_sum_feature], optional=True),
+            ]
+        ),
+    )
+    opt.go()
+
+    assert exp.experiment_id in [_[2] for _ in opt.similar_experiments]

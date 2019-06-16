@@ -322,7 +322,7 @@ class EngineerStep:
 
             Step functions should follow these guidelines:
 
-                1. Request as input a subset of the 16 data strings listed in `params`
+                1. Request as input a subset of the 11 data strings listed in `params`
                 2. Do whatever you want to the DataFrames given as input
                 3. Return new DataFrame values of the input parameters in same order as requested
 
@@ -350,50 +350,33 @@ class EngineerStep:
             `f.__name__` will be used
         params: Tuple[str], or None, default=None
             Dataset names requested by feature engineering step callable `f`. If None, will be
-            inferred by parsing the signature of `f`. Must be a subset of the following 16 strings:
+            inferred by parsing the signature of `f`. Must be a subset of the following 11 strings:
 
-            Train Dataset
+            Input Data
 
             1. "train_inputs"
-            2. "train_targets"
-            3. "train_data"
-               ``("train_inputs" + "train_targets")``
-
-            Validation/OOF Dataset
-
-            4. "validation_inputs"
-            5. "validation_targets"
-            6. "validation_data"
-               ``("validation_inputs" + "validation_targets")``
-
-            Holdout Dataset
-
-            7. "holdout_inputs"
-            8. "holdout_targets"
-            9. "holdout_data"
-               ``("holdout_inputs" + "holdout_targets")``
-
-            Test Dataset
-
-            10. "test_inputs"
-
-            Merged Dataset: All
-
-            11. "all_inputs"
+            2. "validation_inputs"
+            3. "holdout_inputs"
+            4. "test_inputs"
+            5. "all_inputs"
                 ``("train_inputs" + ["validation_inputs"] + "holdout_inputs" + "test_inputs")``
-            12. "all_targets"
-                ``("train_targets" + ["validation_targets"] + "holdout_targets")``
-            13. "all_data"
-                ``("all_inputs" - "test_inputs" + "all_targets")``
-
-            Merged Dataset: Non-Train
-
-            14. "non_train_inputs"
+            6. "non_train_inputs"
                 ``(["validation_inputs"] + "holdout_inputs" + "test_inputs")``
-            15. "non_train_targets"
+
+            Target Data
+
+            7. "train_targets"
+            8. "validation_targets"
+            9. "holdout_targets"
+            10. "all_targets"
+                ``("train_targets" + ["validation_targets"] + "holdout_targets")``
+            11. "non_train_targets"
                 ``(["validation_targets"] + "holdout_targets")``
-            16. "non_train_data"
-                ``("non_train_inputs" - "test_inputs" + "non_train_targets")``
+
+            As an alternative to the above list, just remember that the first half of all parameter
+            names should be one of {"train", "validation", "holdout", "test", "all", "non_train"},
+            and the second half should be either "inputs" or "targets". The only exception to this
+            rule is "test_targets", which doesn't exist.
 
             Inference of "validation" `params` is affected by `stage`. During the "pre_cv" stage,
             the validation dataset has not yet been created and is still a part of the train
@@ -405,9 +388,8 @@ class EngineerStep:
 
             `params` may not include multiple references to the same dataset, either directly or
             indirectly. This means `("train_inputs", "train_inputs")` is invalid due to duplicate
-            direct references. Less obviously, `("train_inputs", "train_data")` is invalid because
-            "train_data" includes "train_inputs". Similarly, `("train_inputs", "all_inputs")`
-            because "all_inputs" includes "train_inputs"
+            direct references. Less obviously, `("train_inputs", "all_inputs")` is invalid because
+            "all_inputs" includes "train_inputs"
         do_validate: Boolean, or "strict", default=False
             ... Experimental...
             Whether to validate the datasets resulting from feature engineering steps. If True,
@@ -438,15 +420,12 @@ class EngineerStep:
         data in other rows should be performed "intra_cv" in order to recalculate the final values
         of the datasets for each cross validation split and avoid information leakage.
 
-        `params`: In the list of the 16 valid `params` strings, "test_inputs" is notably missing the
-        "..._targets" and "..._data" counterparts accompanying the other three datasets. The
-        "targets" suffix is missing because test data targets are never given. The "data" suffix is
-        missing because it signals the presence of both inputs and targets, which is not possible
-        for the test dataset.
-
-        Additionally, "test_inputs" is excluded from both "all_data" and "non_train_data" once again
-        because the test dataset is target-less. However, "test_inputs" is still included in both
-        "all_inputs" and "non_train_inputs"
+        `params`: In the list of the 11 valid `params` strings, "test_inputs" is notably missing the
+        "..._targets" counterpart accompanying the other datasets. The "targets" suffix is missing
+        because test data targets are never given. Note that although "test_inputs" is still
+        included in both "all_inputs" and "non_train_inputs", its lack of a target column means that
+        "all_targets" and "non_train_targets" may have different lengths than their
+        "inputs"-suffixed counterparts
 
         Examples
         --------
@@ -543,7 +522,8 @@ class EngineerStep:
             Dict of datasets, which have been updated by :attr:`f`. Any datasets that may have been
             merged prior to being given to :attr:`f` have been split back into the original
             datasets, with the updates made by :attr:`f`"""
-        self.original_hashes = hash_datasets(datasets)
+        if self.do_validate:
+            self.original_hashes = hash_datasets(datasets)
 
         datasets_for_f = self.get_datasets_for_f(datasets)
         step_result = self.f(**datasets_for_f)
@@ -558,7 +538,8 @@ class EngineerStep:
                 new_datasets = dict(new_datasets, **split_merged_df(dataset_value))
         new_datasets = dict(datasets, **new_datasets)
 
-        self.updated_hashes = hash_datasets(new_datasets)
+        if self.do_validate:
+            self.updated_hashes = hash_datasets(new_datasets)
         # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
         return new_datasets
 
@@ -1057,11 +1038,11 @@ def get_engineering_step_params(f: callable) -> Tuple[str]:
 
     Examples
     --------
-    >>> def impute_negative_one(all_data):
-    ...     all_data.fillna(-1, inplace=True)
-    ...     return all_data
+    >>> def impute_negative_one(all_inputs):
+    ...     all_inputs.fillna(-1, inplace=True)
+    ...     return all_inputs
     >>> get_engineering_step_params(impute_negative_one)
-    ('all_data',)
+    ('all_inputs',)
     >>> def standard_scale(train_inputs, non_train_inputs):
     ...     scaler = StandardScaler()
     ...     train_inputs[train_inputs.columns] = scaler.fit_transform(train_inputs.values)
@@ -1074,7 +1055,7 @@ def get_engineering_step_params(f: callable) -> Tuple[str]:
     >>> get_engineering_step_params(error_invalid_dataset)
     Traceback (most recent call last):
         File "feature_engineering.py", line ?, in get_engineering_step_params
-    ValueError: Invalid dataset name in ['train_inputs', 'foo']"""
+    ValueError: Invalid dataset name: 'foo'"""
     valid_datasets = MERGED_DATASET_NAMES + STANDARD_DATASET_NAMES
     source_code = getsource(f)
     tree = ast.parse(source_code)
@@ -1088,8 +1069,15 @@ def get_engineering_step_params(f: callable) -> Tuple[str]:
     parser = ParameterParser()
     parser.visit(tree)
 
-    if any(_ not in valid_datasets for _ in parser.args):
-        raise ValueError(f"Invalid dataset name in {parser.args}")
+    for name in parser.args:
+        if name not in valid_datasets:
+            raise ValueError(f"Invalid dataset name: {name!r}")
+        if name.endswith("_data"):
+            raise ValueError(
+                f"Sorry, 'data'-suffixed parameters like {name!r} are not supported yet. "
+                "Try using both the 'inputs' and 'targets' params for this dataset, instead!"
+            )
+
     return tuple(parser.args)
 
 
