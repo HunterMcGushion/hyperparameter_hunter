@@ -543,7 +543,8 @@ class EngineerStep:
             Dict of datasets, which have been updated by :attr:`f`. Any datasets that may have been
             merged prior to being given to :attr:`f` have been split back into the original
             datasets, with the updates made by :attr:`f`"""
-        self.original_hashes = hash_datasets(datasets)
+        if self.do_validate:
+            self.original_hashes = hash_datasets(datasets)
 
         datasets_for_f = self.get_datasets_for_f(datasets)
         step_result = self.f(**datasets_for_f)
@@ -558,7 +559,8 @@ class EngineerStep:
                 new_datasets = dict(new_datasets, **split_merged_df(dataset_value))
         new_datasets = dict(datasets, **new_datasets)
 
-        self.updated_hashes = hash_datasets(new_datasets)
+        if self.do_validate:
+            self.updated_hashes = hash_datasets(new_datasets)
         # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
         return new_datasets
 
