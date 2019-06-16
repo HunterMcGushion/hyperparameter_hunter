@@ -157,6 +157,13 @@
         <th nowrap>Description</th>
     </tr>
     <tr>
+        <th nowrap>imblearn_resampling_example</th>
+        <td nowrap>
+            <a href="feature_engineering_examples/imblearn_resampling_example.py">Script</a>
+        </td>
+        <td>Optimization with 18 different `imblearn` techniques</td>
+    </tr>
+    <tr>
         <th nowrap>olivier_porto_seguro_kaggle</th>
         <td nowrap>
             <a href="feature_engineering_examples/olivier_porto_seguro_kaggle.py">Script</a>
