@@ -72,10 +72,9 @@ np.random.seed(32)
 
 class BaseExperiment(ScoringMixIn):
     def __init__(
-        # TODO: Make `model_init_params` an optional kwarg - If not given, algorithm defaults used
         self,
         model_initializer,
-        model_init_params,
+        model_init_params=None,
         model_extra_params=None,
         feature_engineer=None,
         feature_selector=None,
@@ -90,10 +89,9 @@ class BaseExperiment(ScoringMixIn):
         ----------
         model_initializer: Class, or functools.partial, or class instance
             The algorithm class being used to initialize a model
-        model_init_params: Dict, or object
-            The dictionary of arguments given when creating a model instance with
-            `model_initializer` via the `__init__` method of :class:`models.Model`. Any kwargs that
-            are considered valid by the `__init__` method of `model_initializer` are valid in
+        model_init_params: Dict, or None, default=None
+            Dictionary of arguments given to create an instance of `model_initializer`. Any kwargs
+            that are considered valid by the `__init__` method of `model_initializer` are valid in
             `model_init_params`
         model_extra_params: Dict, or None, default=None
             A dictionary of extra parameters passed to :class:`models.Model`. This is used to
@@ -130,6 +128,7 @@ class BaseExperiment(ScoringMixIn):
             :attr:`BaseExperiment.target_metric`"""
         self.model_initializer = model_initializer
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
+        model_init_params = model_init_params if model_init_params is not None else {}
         try:
             self.model_init_params.update(model_init_params)
         except TypeError:
@@ -453,7 +452,7 @@ class BaseCVExperiment(BaseExperiment):
     def __init__(
         self,
         model_initializer,
-        model_init_params,
+        model_init_params=None,
         model_extra_params=None,
         feature_engineer=None,
         feature_selector=None,
@@ -478,7 +477,7 @@ class BaseCVExperiment(BaseExperiment):
         BaseExperiment.__init__(
             self,
             model_initializer,
-            model_init_params,
+            model_init_params=model_init_params,
             model_extra_params=model_extra_params,
             feature_engineer=feature_engineer,
             feature_selector=feature_selector,
@@ -618,7 +617,7 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
     def __init__(
         self,
         model_initializer,
-        model_init_params,
+        model_init_params=None,
         model_extra_params=None,
         feature_engineer=None,
         feature_selector=None,
@@ -630,7 +629,7 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         BaseCVExperiment.__init__(
             self,
             model_initializer,
-            model_init_params,
+            model_init_params=model_init_params,
             model_extra_params=model_extra_params,
             feature_engineer=feature_engineer,
             feature_selector=feature_selector,
