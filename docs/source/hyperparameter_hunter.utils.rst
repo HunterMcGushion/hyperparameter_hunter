@@ -60,6 +60,14 @@ hyperparameter\_hunter.utils.result\_utils module
     :undoc-members:
     :show-inheritance:
 
+hyperparameter\_hunter.utils.version\_utils module
+--------------------------------------------------
+
+.. automodule:: hyperparameter_hunter.utils.version_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
