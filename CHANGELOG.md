@@ -1,6 +1,10 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Changes
+* `model_init_params` kwarg of `CVExperiment` is now optional. If not given, it will be evaluated 
+  as the default initialization parameters to `model_initializer`
+
 
 <a name="3.0.0alpha2"></a>
 ## [3.0.0alpha2] (2019-06-12)
