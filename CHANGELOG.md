@@ -5,6 +5,18 @@
 * `model_init_params` kwarg of `CVExperiment` is now optional. If not given, it will be evaluated 
   as the default initialization parameters to `model_initializer`
 
+### Deprecations
+* `lambda_callback` kwargs dealing with "experiment" and "repetition" time steps have been shortened
+    * These four kwargs have been changed to the following values:
+        * `on_experiment_start` -> `on_exp_start`
+        * `on_experiment_end` -> `on_exp_end`
+        * `on_repetition_start` -> `on_rep_start`
+        * `on_repetition_end` -> `on_rep_end`
+    * In summary, "experiment" is shortened to "exp", and "repetition" is shortened to "rep"
+    * The originals will continue to be available until their removal in v3.2.0
+    * This deprecation will break any custom callbacks created by subclassing `BaseCallback` (which 
+      is not the officially supported method), rather than using `lambda_callback`
+        * To fix such callbacks, simply rename the above methods
 
 <a name="3.0.0alpha2"></a>
 ## [3.0.0alpha2] (2019-06-12)
