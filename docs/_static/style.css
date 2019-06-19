@@ -17,3 +17,9 @@ ul.simple {
 /*div.related {*/
     /*background-color: #a80b00;*/
 /*}*/
+
+div.warning, div.deprecated {
+    color: #b94a48;
+    background-color: #F3E5E5;
+    border: 1px solid #eed3d7;
+}
