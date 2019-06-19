@@ -262,16 +262,16 @@ def prepped_experiment(request):
 
     1. :meth:`~hyperparameter_hunter.experiments.BaseExperiment.preparation_workflow`,
     2. :meth:`~hyperparameter_hunter.experiments.BaseExperiment._initialize_random_seeds`, and
-    3. :meth:`~hyperparameter_hunter.experiments.BaseExperiment.on_experiment_start`, which
-       initializes the four :mod:`~hyperparameter_hunter.data.datasets` classes, then performs
-       pre-CV feature engineering
+    3. :meth:`~hyperparameter_hunter.experiments.BaseExperiment.on_exp_start`, which initializes the
+       four :mod:`~hyperparameter_hunter.data.datasets` classes, then performs pre-CV feature
+       engineering
 
     Notes
     -----
-    Directly calling `on_experiment_start` is ok in this test because after calling
+    Directly calling `on_exp_start` is ok in this test because after calling
     `_initialize_random_seeds`, `BaseExperiment` calls `execute`, which is implemented by
     `BaseCVExperiment`, and only calls `cross_validation_workflow`, whose first task is to call
-    `on_experiment_start`. So nothing gets skipped in between"""
+    `on_exp_start`. So nothing gets skipped in between"""
     #################### Build `feature_engineer` ####################
     feature_engineer = FeatureEngineer(steps=request.param)
 
@@ -285,7 +285,7 @@ def prepped_experiment(request):
     experiment.preparation_workflow()
     # noinspection PyProtectedMember
     experiment._initialize_random_seeds()
-    experiment.on_experiment_start()
+    experiment.on_exp_start()
 
     return experiment
 

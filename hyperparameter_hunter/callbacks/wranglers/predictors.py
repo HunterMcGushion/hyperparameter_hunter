@@ -47,13 +47,13 @@ class PredictorOOF(BasePredictorCallback):
     data_oof: OOFDataset
 
     #################### Division Start Points ####################
-    def on_experiment_start(self):
-        self.data_oof.prediction.on_experiment_start(self._empty_output_like(self.train_dataset))
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_oof.prediction.on_exp_start(self._empty_output_like(self.train_dataset))
+        super().on_exp_start()
 
-    def on_repetition_start(self):
-        self.data_oof.prediction.on_repetition_start(self._empty_output_like(self.train_dataset))
-        super().on_repetition_start()
+    def on_rep_start(self):
+        self.data_oof.prediction.on_rep_start(self._empty_output_like(self.train_dataset))
+        super().on_rep_start()
 
     def on_fold_start(self):  # Nothing
         self.data_oof.prediction.on_fold_start()
@@ -75,26 +75,26 @@ class PredictorOOF(BasePredictorCallback):
         self.data_oof.prediction.on_fold_end(self.validation_index, self.experiment_params["runs"])
         super().on_fold_end()
 
-    def on_repetition_end(self):
-        self.data_oof.prediction.on_repetition_end()
-        super().on_repetition_end()
+    def on_rep_end(self):
+        self.data_oof.prediction.on_rep_end()
+        super().on_rep_end()
 
-    def on_experiment_end(self):
-        self.data_oof.prediction.on_experiment_end(self.cv_params.get("n_repeats", 1))
-        super().on_experiment_end()
+    def on_exp_end(self):
+        self.data_oof.prediction.on_exp_end(self.cv_params.get("n_repeats", 1))
+        super().on_exp_end()
 
 
 class PredictorHoldout(BasePredictorCallback):
     data_holdout: HoldoutDataset
 
     #################### Division Start Points ####################
-    def on_experiment_start(self):
-        self.data_holdout.prediction.on_experiment_start()
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_holdout.prediction.on_exp_start()
+        super().on_exp_start()
 
-    def on_repetition_start(self):
-        self.data_holdout.prediction.on_repetition_start()
-        super().on_repetition_start()
+    def on_rep_start(self):
+        self.data_holdout.prediction.on_rep_start()
+        super().on_rep_start()
 
     def on_fold_start(self):
         self.data_holdout.prediction.on_fold_start()
@@ -116,26 +116,26 @@ class PredictorHoldout(BasePredictorCallback):
         self.data_holdout.prediction.on_fold_end(self.experiment_params["runs"])
         super().on_fold_end()
 
-    def on_repetition_end(self):
-        self.data_holdout.prediction.on_repetition_end(self.cv_params["n_splits"])
-        super().on_repetition_end()
+    def on_rep_end(self):
+        self.data_holdout.prediction.on_rep_end(self.cv_params["n_splits"])
+        super().on_rep_end()
 
-    def on_experiment_end(self):
-        self.data_holdout.prediction.on_experiment_end(self.cv_params.get("n_repeats", 1))
-        super().on_experiment_end()
+    def on_exp_end(self):
+        self.data_holdout.prediction.on_exp_end(self.cv_params.get("n_repeats", 1))
+        super().on_exp_end()
 
 
 class PredictorTest(BasePredictorCallback):
     data_test: TestDataset
 
     #################### Division Start Points ####################
-    def on_experiment_start(self):
-        self.data_test.prediction.on_experiment_start()
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_test.prediction.on_exp_start()
+        super().on_exp_start()
 
-    def on_repetition_start(self):
-        self.data_test.prediction.on_repetition_start()
-        super().on_repetition_start()
+    def on_rep_start(self):
+        self.data_test.prediction.on_rep_start()
+        super().on_rep_start()
 
     def on_fold_start(self):
         self.data_test.prediction.on_fold_start()
@@ -155,10 +155,10 @@ class PredictorTest(BasePredictorCallback):
         self.data_test.prediction.on_fold_end(self.experiment_params["runs"])
         super().on_fold_end()
 
-    def on_repetition_end(self):
-        self.data_test.prediction.on_repetition_end(self.cv_params["n_splits"])
-        super().on_repetition_end()
+    def on_rep_end(self):
+        self.data_test.prediction.on_rep_end(self.cv_params["n_splits"])
+        super().on_rep_end()
 
-    def on_experiment_end(self):
-        self.data_test.prediction.on_experiment_end(self.cv_params.get("n_repeats", 1))
-        super().on_experiment_end()
+    def on_exp_end(self):
+        self.data_test.prediction.on_exp_end(self.cv_params.get("n_repeats", 1))
+        super().on_exp_end()

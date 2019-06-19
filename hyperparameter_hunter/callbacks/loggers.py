@@ -29,14 +29,14 @@ class LoggerFitStatus(BaseLoggerCallback):
     log_separator = "  |  "
     # FLAG: Add means of updating float_format to "G.Env.reporting_params['float_format']"
 
-    def on_experiment_start(self):
+    def on_exp_start(self):
         G.log("", previous_frame=inspect.currentframe().f_back)
-        super().on_experiment_start()
+        super().on_exp_start()
 
-    def on_repetition_start(self):
+    def on_rep_start(self):
         if G.Env.verbose >= 3 and G.Env.cv_params.get("n_repeats", 1) > 1:
             G.log("", previous_frame=inspect.currentframe().f_back)
-        super().on_repetition_start()
+        super().on_rep_start()
 
     def on_fold_start(self):
         if G.Env.verbose >= 4 and G.Env.runs > 1:
@@ -80,7 +80,7 @@ class LoggerFitStatus(BaseLoggerCallback):
             G.debug(content, previous_frame=inspect.currentframe().f_back, add_time=False)
         super().on_fold_end()
 
-    def on_repetition_end(self):
+    def on_rep_end(self):
         content = format_fold_run(rep=self._rep, fold="-", run="-")
         content += self.log_separator if not content.endswith(" ") else ""
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
@@ -91,9 +91,9 @@ class LoggerFitStatus(BaseLoggerCallback):
             G.log(content, previous_frame=inspect.currentframe().f_back)
         else:
             G.debug(content, previous_frame=inspect.currentframe().f_back)
-        super().on_repetition_end()
+        super().on_rep_end()
 
-    def on_experiment_end(self):
+    def on_exp_end(self):
         content = "FINAL:    "
 
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
@@ -102,7 +102,7 @@ class LoggerFitStatus(BaseLoggerCallback):
 
         G.log("")
         G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
-        super().on_experiment_end()
+        super().on_exp_end()
 
     def __elapsed_helper(self, period):
         times = self.stat_aggregates["times"]

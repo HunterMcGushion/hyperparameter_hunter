@@ -30,9 +30,9 @@ from hyperparameter_hunter.data import TrainDataset, OOFDataset, HoldoutDataset,
 class WranglerInputTrain(BaseInputWranglerCallback):
     data_train: TrainDataset
 
-    def on_experiment_start(self):
-        self.data_train.input.on_experiment_start()
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_train.input.on_exp_start()
+        super().on_exp_start()
 
     def on_fold_start(self):
         self.data_train.input.on_fold_start()
@@ -42,9 +42,9 @@ class WranglerInputTrain(BaseInputWranglerCallback):
 class WranglerInputOOF(BaseInputWranglerCallback):
     data_oof: OOFDataset
 
-    def on_experiment_start(self):
-        self.data_oof.input.on_experiment_start()
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_oof.input.on_exp_start()
+        super().on_exp_start()
 
     def on_fold_start(self):
         self.data_oof.input.on_fold_start()
@@ -58,9 +58,9 @@ class WranglerInputHoldout(BaseInputWranglerCallback):
 
     data_holdout: HoldoutDataset
 
-    def on_experiment_start(self):
-        self.data_holdout.input.on_experiment_start()
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_holdout.input.on_exp_start()
+        super().on_exp_start()
 
     def on_fold_start(self):
         self.data_holdout.input.on_fold_start()
@@ -70,9 +70,9 @@ class WranglerInputHoldout(BaseInputWranglerCallback):
 class WranglerInputTest(BaseInputWranglerCallback):
     data_test: TestDataset
 
-    def on_experiment_start(self):
-        self.data_test.input.on_experiment_start()
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_test.input.on_exp_start()
+        super().on_exp_start()
 
     def on_fold_start(self):
         self.data_test.input.on_fold_start()

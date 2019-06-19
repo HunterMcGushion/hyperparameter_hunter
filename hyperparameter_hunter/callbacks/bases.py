@@ -24,6 +24,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.exceptions import DeprecatedWarning
 from hyperparameter_hunter.settings import G
 
 ##################################################
@@ -32,12 +33,16 @@ from hyperparameter_hunter.settings import G
 from inspect import signature
 import numpy as np
 from uuid import uuid4 as uuid
+from warnings import warn
+
+
+DEPRECATED = object()
 
 
 class BaseCallback(object):
     """The base class from which all callbacks and all intermediate base callbacks are descendants.
     Callback classes' :meth:`__init__` will not be called, so any tasks that must be performed at
-    the onset of an experiment should be placed in :meth:`on_experiment_start`
+    the onset of an experiment should be placed in :meth:`on_exp_start`
 
     Notes
     -----
@@ -68,21 +73,21 @@ class BaseCallback(object):
     #     if key == 'stat_aggregates':
     #         self.__dict__[key] = value
 
-    def on_experiment_start(self):
+    def on_exp_start(self):
         """Perform tasks when an Experiment is started"""
-        G.debug("BaseCallback.on_experiment_start()")
+        G.debug("BaseCallback.on_exp_start()")
 
-    def on_experiment_end(self):
+    def on_exp_end(self):
         """Perform tasks when an Experiment ends"""
-        G.debug("BaseCallback.on_experiment_end()")
+        G.debug("BaseCallback.on_exp_end()")
 
-    def on_repetition_start(self):
+    def on_rep_start(self):
         """Perform tasks on repetition start in an Experiment's repeated cross-validation scheme"""
-        G.debug("BaseCallback.on_repetition_start()")
+        G.debug("BaseCallback.on_rep_start()")
 
-    def on_repetition_end(self):
+    def on_rep_end(self):
         """Perform tasks on repetition end in an Experiment's repeated cross-validation scheme"""
-        G.debug("BaseCallback.on_repetition_end()")
+        G.debug("BaseCallback.on_rep_end()")
 
     def on_fold_start(self):
         """Perform tasks on fold start in an Experiment's cross-validation scheme"""
@@ -105,10 +110,10 @@ class BaseCallback(object):
 # LambdaCallback
 ##################################################
 def lambda_callback(
-    on_experiment_start=None,
-    on_experiment_end=None,
-    on_repetition_start=None,
-    on_repetition_end=None,
+    on_exp_start=None,
+    on_exp_end=None,
+    on_rep_start=None,
+    on_rep_end=None,
     on_fold_start=None,
     on_fold_end=None,
     on_run_start=None,
@@ -116,6 +121,10 @@ def lambda_callback(
     agg_name=None,
     do_reshape_aggs=True,
     method_agg_keys=False,
+    on_experiment_start=DEPRECATED,
+    on_experiment_end=DEPRECATED,
+    on_repetition_start=DEPRECATED,
+    on_repetition_end=DEPRECATED,
 ):
     """Utility for creating custom callbacks to be declared by :class:`Environment` and used by
     Experiments. The callable "on_<...>_<start/end>" parameters provided will receive as input
@@ -127,13 +136,13 @@ def lambda_callback(
 
     Parameters
     ----------
-    on_experiment_start: Callable, or None, default=None
+    on_exp_start: Callable, or None, default=None
         Callable that receives Experiment's values for parameters in the signature at Experiment start
-    on_experiment_end: Callable, or None, default=None
+    on_exp_end: Callable, or None, default=None
         Callable that receives Experiment's values for parameters in the signature at Experiment end
-    on_repetition_start: Callable, or None, default=None
+    on_rep_start: Callable, or None, default=None
         Callable that receives Experiment's values for parameters in the signature at repetition start
-    on_repetition_end: Callable, or None, default=None
+    on_rep_end: Callable, or None, default=None
         Callable that receives Experiment's values for parameters in the signature at repetition end
     on_fold_start: Callable, or None, default=None
         Callable that receives Experiment's values for parameters in the signature at fold start
@@ -161,6 +170,18 @@ def lambda_callback(
         other words, the pool of all possible aggregate keys goes from ["runs", "folds", "reps",
         "final"] to the names of the eight "on_<...>_<start/end>" kwargs of :func:`lambda_callback`.
         See the "Notes" section below for further details and a rough outline
+    on_experiment_start: ...
+        .. deprecated:: 3.0.0
+            Renamed to `on_exp_start`. Will be removed in 3.2.0
+    on_experiment_end: ...
+        .. deprecated:: 3.0.0
+            Renamed to `on_exp_end`. Will be removed in 3.2.0
+    on_repetition_start: ...
+        .. deprecated:: 3.0.0
+            Renamed to `on_rep_start`. Will be removed in 3.2.0
+    on_repetition_end: ...
+        .. deprecated:: 3.0.0
+            Renamed to `on_rep_end`. Will be removed in 3.2.0
 
     Returns
     -------
@@ -187,8 +208,8 @@ def lambda_callback(
             - This new dict can have up to four keys: "runs" (list), "folds" (list), "reps" (list), and "final" (object)
 
         - If "f" is an "on_run..." function, the returned value is appended to the "runs" list in the new dict
-        - Similarly, if "f" is an "on_fold..." or "on_repetition..." function, the returned value is appended to the "folds", or "reps" list, respectively
-        - If "f" is an "on_experiment..." function, the "final" key in the new dict is set to the returned value
+        - Similarly, if "f" is an "on_fold..." or "on_rep..." function, the returned value is appended to the "folds", or "reps" list, respectively
+        - If "f" is an "on_exp..." function, the "final" key in the new dict is set to the returned value
         - If values were aggregated in the aforementioned manner, the lists of collected values will be reshaped according to runs/folds/reps on Experiment end
         - The aggregated values will be saved in the Experiment's description file
 
@@ -213,14 +234,14 @@ def lambda_callback(
     In the above outline, the actual `agg_key`s included in the dict at `agg_name` depend on which
     "on_<...>_<start/end>" callables are behaving like aggregators. For example, if neither
     `on_run_start` nor `on_run_end` explicitly returns something, then the "runs" `agg_key` is not
-    included in the `agg_name` dict. Similarly, if, for example, neither `on_experiment_start` nor
-    `on_experiment_end` is provided, then the "final" `agg_key` is not included. If
-    `method_agg_keys=True`, then the agg keys used in the dict are modified to be named after the
-    method called. For example, if `method_agg_keys=True` and `on_fold_start` and `on_fold_end` are
-    both callables returning values to be aggregated, then the `agg_key`s used for each will be
-    "on_fold_start" and "on_fold_end", respectively. In this example, if `method_agg_keys=False`
-    (default) and `do_reshape_aggs=False`, then the single "folds" `agg_key` would contain the
-    combined contents returned by both methods in the order in which they were returned
+    included in the `agg_name` dict. Similarly, if, for example, neither `on_exp_start` nor
+    `on_exp_end` is provided, then the "final" `agg_key` is not included. If `method_agg_keys=True`,
+    then the agg keys used in the dict are modified to be named after the method called. For
+    example, if `method_agg_keys=True` and `on_fold_start` and `on_fold_end` are both callables
+    returning values to be aggregated, then the `agg_key`s used for each will be "on_fold_start"
+    and "on_fold_end", respectively. In this example, if `method_agg_keys=False` (default) and
+    `do_reshape_aggs=False`, then the single "folds" `agg_key` would contain the combined contents
+    returned by both methods in the order in which they were returned
 
     For examples using `lambda_callback` to create custom callbacks, see
     :mod:`hyperparameter_hunter.callbacks.recipes`
@@ -231,8 +252,8 @@ def lambda_callback(
     >>> def printer_helper(_rep, _fold, _run, last_evaluation_results):
     ...     print(f"{_rep}.{_fold}.{_run}   {last_evaluation_results}")
     >>> my_lambda_callback = lambda_callback(
-    ...     on_experiment_end=printer_helper,
-    ...     on_repetition_end=printer_helper,
+    ...     on_exp_end=printer_helper,
+    ...     on_rep_end=printer_helper,
     ...     on_fold_end=printer_helper,
     ...     on_run_end=printer_helper,
     ... )
@@ -246,15 +267,28 @@ def lambda_callback(
 
     See :mod:`hyperparameter_hunter.examples.lambda_callback_example` for more information"""
 
+    if on_experiment_start != DEPRECATED:
+        on_exp_start = on_experiment_start
+        warn(DeprecatedWarning("on_experiment_start", "3.0.0", "3.2.0", "Use `on_exp_start`"))
+    if on_experiment_end != DEPRECATED:
+        on_exp_end = on_experiment_end
+        warn(DeprecatedWarning("on_experiment_end", "3.0.0", "3.2.0", "Use `on_exp_end`"))
+    if on_repetition_start != DEPRECATED:
+        on_rep_start = on_repetition_start
+        warn(DeprecatedWarning("on_repetition_start", "3.0.0", "3.2.0", "Use `on_rep_start`"))
+    if on_repetition_end != DEPRECATED:
+        on_rep_end = on_repetition_end
+        warn(DeprecatedWarning("on_repetition_end", "3.0.0", "3.2.0", "Use `on_rep_end`"))
+
     methods = [
-        ("on_experiment_start", on_experiment_start, "final"),
-        ("on_repetition_start", on_repetition_start, "reps"),
+        ("on_exp_start", on_exp_start, "final"),
+        ("on_rep_start", on_rep_start, "reps"),
         ("on_fold_start", on_fold_start, "folds"),
         ("on_run_start", on_run_start, "runs"),
         ("on_run_end", on_run_end, "runs"),
         ("on_fold_end", on_fold_end, "folds"),
-        ("on_repetition_end", on_repetition_end, "reps"),
-        ("on_experiment_end", on_experiment_end, "final"),
+        ("on_rep_end", on_rep_end, "reps"),
+        ("on_exp_end", on_exp_end, "final"),
     ]
 
     LambdaCallback = type("LambdaCallback", (BaseCallback,), dict())
@@ -288,7 +322,7 @@ def lambda_callback(
                     does_aggregate = True
                     self.stat_aggregates.setdefault(agg_name, dict())
 
-                    if _agg_key in ("final", "on_experiment_start", "on_experiment_end"):
+                    if _agg_key in ("final", "on_exp_start", "on_exp_end"):
                         self.stat_aggregates[agg_name][_agg_key] = return_value
                     else:
                         self.stat_aggregates[agg_name].setdefault(_agg_key, []).append(return_value)
@@ -296,7 +330,7 @@ def lambda_callback(
                         agg_shapes[_agg_key] = np.shape(return_value)
 
                 #################### Reshape Aggregated Values ####################
-                if _meth_name == "on_experiment_end" and does_aggregate and do_reshape_aggs:
+                if _meth_name == "on_exp_end" and does_aggregate and do_reshape_aggs:
                     self.stat_aggregates[agg_name] = _reshape_aggregates(
                         self.stat_aggregates[agg_name], agg_shapes, self._rep, self._fold, self._run
                     )

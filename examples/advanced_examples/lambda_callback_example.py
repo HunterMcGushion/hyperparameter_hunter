@@ -16,10 +16,10 @@ def printer_callback():
         print(f"{_rep}.{_fold}.{_run}   {last_evaluation_results}")
 
     return lambda_callback(
-        on_experiment_start=printer_helper,
-        on_experiment_end=printer_helper,
-        on_repetition_start=printer_helper,
-        on_repetition_end=printer_helper,
+        on_exp_start=printer_helper,
+        on_exp_end=printer_helper,
+        on_rep_start=printer_helper,
+        on_rep_end=printer_helper,
         on_fold_start=printer_helper,
         on_fold_end=printer_helper,
         on_run_start=printer_helper,

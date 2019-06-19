@@ -36,21 +36,21 @@ class EvaluatorOOF(BaseEvaluatorCallback):
             self.evaluate("oof", self.data_oof.target.fold, self.data_oof.prediction.fold)
         super().on_fold_end()
 
-    def on_repetition_end(self):
+    def on_rep_end(self):
         """Evaluate (run-averaged) out-of-fold predictions for the repetition"""
         if G.save_transformed_metrics:
             self.evaluate("oof", self.data_oof.target.T.rep, self.data_oof.prediction.T.rep)
         else:
             self.evaluate("oof", self.data_oof.target.rep, self.data_oof.prediction.rep)
-        super().on_repetition_end()
+        super().on_rep_end()
 
-    def on_experiment_end(self):
+    def on_exp_end(self):
         """Evaluate final (run/repetition-averaged) out-of-fold predictions"""
         if G.save_transformed_metrics:
             self.evaluate("oof", self.data_oof.target.T.final, self.data_oof.prediction.T.final)
         else:
             self.evaluate("oof", self.data_oof.target.final, self.data_oof.prediction.final)
-        super().on_experiment_end()
+        super().on_exp_end()
 
 
 class EvaluatorHoldout(BaseEvaluatorCallback):
@@ -78,7 +78,7 @@ class EvaluatorHoldout(BaseEvaluatorCallback):
             )
         super().on_fold_end()
 
-    def on_repetition_end(self):
+    def on_rep_end(self):
         """Evaluate (run-averaged) holdout predictions for the repetition"""
         if G.save_transformed_metrics:
             self.evaluate(
@@ -86,9 +86,9 @@ class EvaluatorHoldout(BaseEvaluatorCallback):
             )
         else:
             self.evaluate("holdout", self.data_holdout.target.rep, self.data_holdout.prediction.rep)
-        super().on_repetition_end()
+        super().on_rep_end()
 
-    def on_experiment_end(self):
+    def on_exp_end(self):
         """Evaluate final (run/repetition-averaged) holdout predictions"""
         if G.save_transformed_metrics:
             self.evaluate(
@@ -98,4 +98,4 @@ class EvaluatorHoldout(BaseEvaluatorCallback):
             self.evaluate(
                 "holdout", self.data_holdout.target.final, self.data_holdout.prediction.final
             )
-        super().on_experiment_end()
+        super().on_exp_end()

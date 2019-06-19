@@ -18,11 +18,11 @@ import pandas as pd
 ##################################################
 class BasePredictionChunk(BaseDataChunk):
     #################### Division Start Points ####################
-    def on_experiment_start(self, *args, **kwargs):
+    def on_exp_start(self, *args, **kwargs):
         self.final = 0
         self.T.final = 0
 
-    def on_repetition_start(self, *args, **kwargs):
+    def on_rep_start(self, *args, **kwargs):
         self.rep = 0
         self.T.rep = 0
 
@@ -71,24 +71,24 @@ class BasePredictionChunk(BaseDataChunk):
         self.T.fold /= runs
         self.T.rep += self.T.fold
 
-    def on_repetition_end(self, n_splits: int, *args, **kwargs):
+    def on_rep_end(self, n_splits: int, *args, **kwargs):
         self.rep /= n_splits
         self.final += self.rep
         self.T.rep /= n_splits
         self.T.final += self.T.rep
 
-    def on_experiment_end(self, n_repeats: int):
+    def on_exp_end(self, n_repeats: int):
         self.final /= n_repeats
         self.T.final /= n_repeats
 
 
 class OOFPredictionChunk(BasePredictionChunk):
     #################### Division Start Points ####################
-    def on_experiment_start(self, zero_predictions, *args, **kwargs):
+    def on_exp_start(self, zero_predictions, *args, **kwargs):
         self.final = deepcopy(zero_predictions)
         self.T.final = deepcopy(zero_predictions)
 
-    def on_repetition_start(self, zero_predictions, *args, **kwargs):
+    def on_rep_start(self, zero_predictions, *args, **kwargs):
         self.rep = deepcopy(zero_predictions)
         self.T.rep = deepcopy(zero_predictions)
 
@@ -100,7 +100,7 @@ class OOFPredictionChunk(BasePredictionChunk):
         self.T.fold /= runs
         self.T.rep.iloc[validation_index] += self.T.fold.values
 
-    def on_repetition_end(self, *args, **kwargs):
+    def on_rep_end(self, *args, **kwargs):
         self.final += self.rep
         self.T.final += self.T.rep
 

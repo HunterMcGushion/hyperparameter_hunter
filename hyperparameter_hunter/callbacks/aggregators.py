@@ -16,17 +16,17 @@ class AggregatorTimes(BaseAggregatorCallback):
     _fold: int
     _run: int
 
-    def on_experiment_start(self):
+    def on_exp_start(self):
         self.stat_aggregates.setdefault(
             "times", dict(runs=[], folds=[], reps=[], total_elapsed=None, start=None, end=None)
         )
         self.stat_aggregates["times"]["start"] = str(datetime.now())
         self.stat_aggregates["times"]["total_elapsed"] = datetime.now()
-        super().on_experiment_start()
+        super().on_exp_start()
 
-    def on_repetition_start(self):
+    def on_rep_start(self):
         self.stat_aggregates["times"]["reps"].append(datetime.now())
-        super().on_repetition_start()
+        super().on_rep_start()
 
     def on_fold_start(self):
         self.stat_aggregates["times"]["folds"].append(datetime.now())
@@ -44,11 +44,11 @@ class AggregatorTimes(BaseAggregatorCallback):
         self.__to_elapsed("folds")
         super().on_fold_end()
 
-    def on_repetition_end(self):
+    def on_rep_end(self):
         self.__to_elapsed("reps")
-        super().on_repetition_end()
+        super().on_rep_end()
 
-    def on_experiment_end(self):
+    def on_exp_end(self):
         #################### Reshape Run/Fold Aggregates to be of Proper Dimensions ####################
         runs_shape = (self._rep + 1, self._fold + 1, self._run + 1)
         folds_shape = (self._rep + 1, self._fold + 1)
@@ -59,7 +59,7 @@ class AggregatorTimes(BaseAggregatorCallback):
 
         self.stat_aggregates["times"]["end"] = str(datetime.now())
         self.__to_elapsed("total_elapsed")
-        super().on_experiment_end()
+        super().on_exp_end()
 
     def __to_elapsed(self, agg_key):
         # TODO: Add documentation
@@ -103,12 +103,12 @@ class AggregatorEvaluations(BaseAggregatorCallback):
             agg_val["folds"].append(self.__loop_helper(agg_key))
         super().on_fold_end()
 
-    def on_repetition_end(self):
+    def on_rep_end(self):
         for agg_key, agg_val in self.stat_aggregates["evaluations"].items():
             agg_val["reps"].append(self.__loop_helper(agg_key))
-        super().on_repetition_end()
+        super().on_rep_end()
 
-    def on_experiment_end(self):
+    def on_exp_end(self):
         for agg_key, agg_val in self.stat_aggregates["evaluations"].items():
             agg_val["final"] = self.__loop_helper(agg_key)
 
@@ -117,7 +117,7 @@ class AggregatorEvaluations(BaseAggregatorCallback):
             agg_val["runs"] = np.reshape(agg_val["runs"], runs_shape).tolist()
             agg_val["folds"] = np.reshape(agg_val["folds"], runs_shape[:-1]).tolist()
 
-        super().on_experiment_end()
+        super().on_exp_end()
 
     def __loop_helper(self, agg_key):
         # TODO: Add documentation

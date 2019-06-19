@@ -44,14 +44,14 @@ class DummyExperimentPredictorHoldout(BaseCallback):
 
         self.__assert_prediction_is_none(["final", "rep", "fold", "run"])
 
-    def on_experiment_start(self):
-        super().on_experiment_start()
+    def on_exp_start(self):
+        super().on_exp_start()
 
         self.__assert_prediction_is_zero(["final"])
         self.__assert_prediction_is_none(["rep", "fold", "run"])
 
-    def on_repetition_start(self):
-        super().on_repetition_start()
+    def on_rep_start(self):
+        super().on_rep_start()
 
         self.__assert_about_prediction(["final"], lambda _: _ is not None)
         self.__assert_prediction_is_zero(["rep"])
@@ -86,11 +86,11 @@ class DummyExperimentPredictorHoldout(BaseCallback):
         assert self.data_holdout.prediction.fold.equals(expected_fold_prediction)
         assert self.data_holdout.prediction.rep.equals(expected_rep_prediction)
 
-    def on_repetition_end(self):
+    def on_rep_end(self):
         initial_rep_prediction = deepcopy(self.data_holdout.prediction.rep)
         initial_final_prediction = deepcopy(self.data_holdout.prediction.final)
 
-        super().on_repetition_end()
+        super().on_rep_end()
 
         self.__assert_prediction_is_df(["final", "rep", "fold", "run"])
         expected_rep_prediction = initial_rep_prediction / self.cv_params["n_splits"]
@@ -98,10 +98,10 @@ class DummyExperimentPredictorHoldout(BaseCallback):
         assert self.data_holdout.prediction.rep.equals(expected_rep_prediction)
         assert self.data_holdout.prediction.final.equals(expected_final_prediction)
 
-    def on_experiment_end(self):
+    def on_exp_end(self):
         initial_final_prediction = deepcopy(self.data_holdout.prediction.final)
 
-        super().on_experiment_end()
+        super().on_exp_end()
 
         self.__assert_prediction_is_df(["final", "rep", "fold", "run"])
         expected_final_prediction = initial_final_prediction / self.cv_params.get("n_repeats", 1)
