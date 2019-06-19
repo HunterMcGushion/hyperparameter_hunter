@@ -17,6 +17,20 @@
     * This deprecation will break any custom callbacks created by subclassing `BaseCallback` (which 
       is not the officially supported method), rather than using `lambda_callback`
         * To fix such callbacks, simply rename the above methods
+* Optimization Protocols in :mod:`hyperparameter_hunter.optimization` renamed to use "OptPro"
+    * This change affects the following optimization protocol classes:
+        * `BayesianOptimization` -> `BayesianOptPro`
+        * `GradientBoostedRegressionTreeOptimization` -> `GradientBoostedRegressionTreeOptPro`
+            * `GBRT` alias unchanged
+        * `RandomForestOptimization` -> `RandomForestOptPro`
+            * `RF` alias unchanged
+        * `ExtraTreesOptimization` -> `ExtraTreesOptPro`
+            * `ET` alias unchanged
+        * `DummySearch` -> `DummyOptPro`
+    * This change also affects the base classes for optimization protocols defined in 
+      :mod:`hyperparameter_hunter.optimization_core` that are not available in the package namespace
+    * The original names will continue to be available until their removal in v3.2.0
+
 
 <a name="3.0.0alpha2"></a>
 ## [3.0.0alpha2] (2019-06-12)
