@@ -21,7 +21,6 @@ on what's going on in :mod:`experiment_core`, and its related modules"""
 ##################################################
 # Import Own Assets
 ##################################################
-# noinspection PyProtectedMember
 from hyperparameter_hunter import __version__
 from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
@@ -41,8 +40,6 @@ from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
-
-# from hyperparameter_hunter.utils.general_utils import Deprecated
 
 ##################################################
 # Import Miscellaneous Assets
