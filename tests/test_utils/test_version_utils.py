@@ -2,13 +2,14 @@
 # Import Own Assets
 ##################################################
 import hyperparameter_hunter as hh
-from hyperparameter_hunter.utils.version_utils import HHVersion
+from hyperparameter_hunter.utils.version_utils import HHVersion, Deprecated
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 import pytest
 import re
+import warnings
 
 
 ##################################################
@@ -116,3 +117,115 @@ def test_raises_compare():
 
 def test_version_repr():
     assert f"{HHVersion('3.0.0alpha2')!r}" == "HHVersion(3.0.0alpha2)"
+
+
+##################################################
+# `Deprecated` Tests
+##################################################
+def test_deprecated_type_error():
+    with pytest.raises(TypeError, match="Cannot set `v_remove` without also setting `v_deprecate`"):
+        Deprecated(v_remove="0.0.1", details="Nice try, buddy. Gotta deprecate before removal")
+
+
+#################### Deprecated Class Tests ####################
+class OKClass:
+    def __init__(self, a="a", b="b"):
+        """Some class to test deprecations
+
+        Parameters
+        ----------
+        a: String
+            Some parameter `a`
+        b: String
+            Some other parameter `b`
+
+        Notes
+        -----
+        Look at me! I'm a note!"""
+        self.a = a
+        self.b = b
+
+
+@Deprecated(
+    v_deprecate="2.0.1", v_remove="2.3.0", v_current="2.2.0", details="Renamed to `OKClass`"
+)
+class DeprecatedClass(OKClass):
+    ...
+
+
+@Deprecated(
+    v_deprecate="2.0.1", v_remove="2.3.0", v_current=hh.__version__, details="Renamed to `OKClass`"
+)
+class UnsupportedClass(OKClass):
+    ...
+
+
+@Deprecated(
+    v_deprecate="2.0.1", v_remove="2.3.0", v_current="2.0.0", details="Renamed to `OKClass`"
+)
+class NotDeprecatedClass(OKClass):
+    ...
+
+
+@pytest.mark.parametrize("cls", [DeprecatedClass, UnsupportedClass])
+def test_deprecated_classes(cls):
+    with pytest.deprecated_call():
+        cls()
+    doc = cls.__init__.__doc__
+    assert doc.endswith(".. deprecated:: 2.0.1\n\tWill be removed in 2.3.0. Renamed to `OKClass`")
+
+
+def test_not_deprecated_class(recwarn):
+    warnings.simplefilter("always")
+    NotDeprecatedClass()
+    assert len(recwarn) == 0
+    assert NotDeprecatedClass.__init__.__doc__ == OKClass.__init__.__doc__
+
+
+#################### Deprecated Function Tests ####################
+def ok_func(a="a", b="b"):
+    """Some function to test deprecations
+
+    Parameters
+    ----------
+    a: String
+        Some parameter `a`
+    b: String
+        Some other parameter `b`
+
+    Notes
+    -----
+    Look at me! I'm a note!"""
+    return a + b
+
+
+deprecated_func_0 = Deprecated(
+    v_deprecate="2.0.1", v_remove="2.3.0", v_current="2.2.0", details="Renamed to `ok_func`"
+)(ok_func)
+
+deprecated_func_1 = Deprecated(
+    v_deprecate="2.0.1", v_remove="2.3.0", details="Renamed to `ok_func`"
+)(ok_func)
+
+unsupported_func = Deprecated(
+    v_deprecate="2.0.1", v_remove="2.3.0", v_current=hh.__version__, details="Renamed to `ok_func`"
+)(ok_func)
+
+not_deprecated_func = Deprecated(
+    v_deprecate="2.0.1", v_remove="2.3.0", v_current="2.0.0", details="Renamed to `ok_func`"
+)(ok_func)
+
+
+@pytest.mark.parametrize("func", [deprecated_func_0, deprecated_func_1, unsupported_func])
+def test_deprecated_functions(func):
+    with pytest.deprecated_call():
+        func()
+    doc = func.__doc__
+    assert doc.endswith(".. deprecated:: 2.0.1\n\tWill be removed in 2.3.0. Renamed to `ok_func`")
+
+
+def test_not_deprecated_func(recwarn):
+    warnings.simplefilter("always")
+    not_deprecated_func()
+    assert len(recwarn) == 0
+    assert not_deprecated_func.__doc__ == ok_func.__doc__
