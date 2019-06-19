@@ -1,16 +1,24 @@
-"""This module defines utilities for comparing versions of the library, as well as deprecation
-utilities, namely :class:`Deprecated`
+"""This module defines utilities for comparing versions of the library (:class:`HHVersion`), as well
+as deprecation utilities, namely :class:`Deprecated`
 
 Related
 -------
 :mod:`hyperparameter_hunter.exceptions`
     Defines the deprecation warnings issued by :class:`Deprecated`"""
 ##################################################
+# Import Own Assets
+##################################################
+from hyperparameter_hunter.exceptions import DeprecatedWarning, UnsupportedWarning
+
+##################################################
 # Import Miscellaneous Assets
 ##################################################
+from functools import wraps
 import re
 from six import string_types
+from textwrap import dedent
 from typing import Union
+from warnings import warn, simplefilter
 
 
 ##################################################
@@ -229,4 +237,179 @@ class HHVersion:
 ##################################################
 # Deprecation Utilities
 ##################################################
-# TODO: Move `Deprecated`, `split_version` and `MESSAGE_LOCATION` from `general_utils.py`
+MESSAGE_LOCATION = "bottom"
+
+
+# TODO: Add `parameter: str` kwarg, which, if given, signals that input parameter to the decorated
+#   callable is deprecated - Might help to piggyback off of `general_utils.Alias`
+class Deprecated(object):
+    def __init__(self, v_deprecate=None, v_remove=None, v_current=None, details=""):
+        """Decorator to mark a function or class as deprecated. Issue warning when the function is
+        called or the class is instantiated, and add a warning to the docstring. The optional
+        `details` argument will be appended to the deprecation message and the docstring
+
+        Parameters
+        ----------
+        v_deprecate: String, default=None
+            Version in which the decorated callable is considered deprecated. This will usually
+            be the next version to be released when the decorator is added. If None, deprecation
+            will be immediate, and the `v_remove` and `v_current` arguments are ignored
+        v_remove: String, default=None
+            Version in which the decorated callable will be removed. If None, the callable is not
+            currently planned to be removed. Cannot be set if `v_deprecate` = None
+        v_current: String, default=None
+            Source of version information for currently running code. When `v_current` = None, the
+            ability to determine whether the wrapped callable is actually in a period of deprecation
+            or time for removal fails, raising a :class:`DeprecatedWarning` in all cases
+        details: String, default=""
+            Extra details added to callable docstring/warning, such as a suggested replacement
+
+        Notes
+        -----
+        Thank you to the ingenious [Brian Curtin](https://github.com/briancurtin), author of the
+        excellent [`deprecation` library](https://github.com/briancurtin/deprecation). He generously
+        gave his permission to adapt his code for use here. Brian Curtin: his magnanimity is
+        surpassed only by his intelligence and imitability"""
+        self.v_deprecate = v_deprecate
+        self.v_remove = v_remove
+        self.v_current = v_current
+        self.details = details
+
+        if self.v_deprecate is None and self.v_remove is not None:
+            raise TypeError("Cannot set `v_remove` without also setting `v_deprecate`")
+
+        #################### Determine Deprecation Status ####################
+        self.is_deprecated = False
+        self.is_unsupported = False
+
+        if self.v_current:
+            self.v_current = HHVersion(self.v_current)
+
+            if self.v_remove and self.v_current >= HHVersion(self.v_remove):
+                self.is_unsupported = True
+            elif self.v_deprecate and self.v_current >= HHVersion(self.v_deprecate):
+                self.is_deprecated = True
+        else:
+            self.is_deprecated = True
+
+        self.do_warn = any([self.is_deprecated, self.is_unsupported])
+        self.warning = None
+
+    def __call__(self, obj):
+        """Call method on callable `obj` to deprecate
+
+        Parameters
+        ----------
+        obj: Object
+            The callable being decorated as deprecated
+
+        Object
+            Callable result of either: 1) :meth:`_decorate_class` if `obj` is a class, or
+            2) :meth:`_decorate_function` if `obj` is a function/method"""
+        #################### Log Deprecation Warning ####################
+        if self.do_warn:
+            warn_cls = UnsupportedWarning if self.is_unsupported else DeprecatedWarning
+            self.warning = warn_cls(obj.__name__, self.v_deprecate, self.v_remove, self.details)
+            warn(self.warning, category=DeprecationWarning, stacklevel=2)
+
+        #################### Decorate and Return Callable ####################
+        if isinstance(obj, type):
+            return self._decorate_class(obj)
+        else:
+            return self._decorate_function(obj)
+
+    def _decorate_class(self, cls):
+        """Helper method to handle wrapping of class callables
+
+        Parameters
+        ----------
+        cls: Class
+            The class to be wrapped with a deprecation warning, and an updated docstring
+
+        Returns
+        -------
+        cls: Class
+            Updated `cls` that raises a deprecation warning before being called, and contains
+            an updated docstring"""
+        init = cls.__init__
+
+        def wrapped(*args, **kwargs):
+            self._verbose_warning()
+            return init(*args, **kwargs)
+
+        cls.__init__ = wrapped
+        wrapped.__name__ = "__init__"
+        wrapped.__doc__ = self._update_doc(init.__doc__)
+        wrapped.deprecated_original = init
+        return cls
+
+    def _decorate_function(self, f):
+        """Helper method to handle wrapping of function/method callables
+
+        Parameters
+        ----------
+        f: Function
+            The function to be wrapped with a deprecation warning, and an updated docstring
+
+        Returns
+        -------
+        wrapped: Function
+            Updated `f` that raises a deprecation warning before being called, and contains
+            an updated docstring"""
+
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            self._verbose_warning()
+            return f(*args, **kwargs)
+
+        wrapped.__doc__ = self._update_doc(wrapped.__doc__)
+        wrapped.__wrapped__ = f
+        return wrapped
+
+    def _update_doc(self, old_doc):
+        """Create a docstring containing the old docstring, in addition to a deprecation warning
+
+        Parameters
+        ----------
+        old_doc: String
+            Original docstring for the callable being deprecated, to which a warning will be added
+
+        Returns
+        -------
+        String
+            A new docstring with both the original docstring and a deprecation warning"""
+        if not self.do_warn:
+            return old_doc
+
+        old_doc = old_doc or ""
+
+        parts = dict(
+            v_deprecate=" {}".format(self.v_deprecate) if self.v_deprecate else "",
+            v_remove="\n\tWill be removed in {}.".format(self.v_remove) if self.v_remove else "",
+            details=" {}".format(self.details) if self.details else "",
+        )
+
+        deprecation_note = ".. deprecated::{v_deprecate}{v_remove}{details}".format(**parts)
+        loc = 1
+        string_list = old_doc.split("\n", 1)
+
+        if len(string_list) > 1:
+            string_list[1] = dedent(string_list[1])
+            string_list.insert(loc, "\n")
+
+            if MESSAGE_LOCATION != "top":
+                loc = 3
+
+        string_list.insert(loc, deprecation_note)
+        string_list.insert(loc, "\n\n")
+
+        return "".join(string_list)
+
+    def _verbose_warning(self):
+        """Issue :attr:`warning`, bypassing the standard filter that silences DeprecationWarnings"""
+        if self.do_warn:
+            simplefilter("always", DeprecatedWarning)
+            simplefilter("always", UnsupportedWarning)
+            warn(self.warning, category=DeprecationWarning, stacklevel=4)
+            simplefilter("default", DeprecatedWarning)
+            simplefilter("default", UnsupportedWarning)
