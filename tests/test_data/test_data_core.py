@@ -31,7 +31,7 @@ def base_dataset_fixture():
 ##################################################
 @mock.patch("hyperparameter_hunter.data.data_core.NullDataChunk._on_call_default")
 @pytest.mark.parametrize("point", ["start", "end"])
-@pytest.mark.parametrize("division", ["experiment", "repetition", "fold", "run"])
+@pytest.mark.parametrize("division", ["exp", "rep", "fold", "run"])
 def test_callback_method_invocation(mock_on_call_default, point, division, null_chunk_fixture):
     """Test that calling any primary callback methods of :class:`data.data_core.NullDataChunk`
     results in a call to :meth:`data.data_core.BaseDataCore._on_call_default` with the appropriate
@@ -42,7 +42,7 @@ def test_callback_method_invocation(mock_on_call_default, point, division, null_
 
 
 @pytest.mark.parametrize("point", ["start", "end"])
-@pytest.mark.parametrize("division", ["experiment", "repetition", "fold", "run"])
+@pytest.mark.parametrize("division", ["exp", "rep", "fold", "run"])
 def test_do_something_invocation(point, division, null_chunk_fixture):
     """Test that calling :meth:`data.data_core.NullDataChunk._do_something` results in the invocation
     of the proper primary callback method as specified by `division` and `point`. Using
@@ -57,7 +57,7 @@ def test_do_something_invocation(point, division, null_chunk_fixture):
 
 
 @pytest.mark.parametrize("point", ["start", "end"])
-@pytest.mark.parametrize("division", ["experiment", "repetition", "fold", "run"])
+@pytest.mark.parametrize("division", ["exp", "rep", "fold", "run"])
 def test_kind_chunk_invocation(point, division, base_dataset_fixture):
     """Test that calling :meth:`data.data_core.BaseDataset._do_something` results in the invocation
     of the proper callback method of :class:`data.data_core.BaseDataChunk` three times (once for

@@ -24,10 +24,10 @@ class TrainTargetChunk(BaseTargetChunk):
 
 class OOFTargetChunk(BaseTargetChunk):
     #################### Division Start Points ####################
-    def on_experiment_start(self, empty_output_frame, *args, **kwargs):
+    def on_exp_start(self, empty_output_frame, *args, **kwargs):
         self.T.final = empty_output_frame
 
-    def on_repetition_start(self, empty_output_frame, *args, **kwargs):
+    def on_rep_start(self, empty_output_frame, *args, **kwargs):
         self.T.rep = empty_output_frame
 
     def on_fold_start(self, *args, **kwargs):
@@ -43,20 +43,20 @@ class OOFTargetChunk(BaseTargetChunk):
     def on_fold_end(self, validation_index, *args, **kwargs):
         self.T.rep.iloc[validation_index] += self.T.fold
 
-    def on_repetition_end(self, n_splits: int, *args, **kwargs):
+    def on_rep_end(self, n_splits: int, *args, **kwargs):
         self.T.final += self.T.rep
 
-    def on_experiment_end(self, n_repeats: int, *args, **kwargs):
+    def on_exp_end(self, n_repeats: int, *args, **kwargs):
         self.T.final /= n_repeats
 
 
 class HoldoutTargetChunk(BaseTargetChunk):
     #################### Division Start Points ####################
-    def on_experiment_start(self, empty_output_frame, *args, **kwargs):
-        # `self.d` and `self.T.d` (pre-CV) set by `BaseExperiment.on_experiment_start`
+    def on_exp_start(self, empty_output_frame, *args, **kwargs):
+        # `self.d` and `self.T.d` (pre-CV) set by `BaseExperiment.on_exp_start`
         self.T.final = empty_output_frame
 
-    def on_repetition_start(self, empty_output_frame, *args, **kwargs):
+    def on_rep_start(self, empty_output_frame, *args, **kwargs):
         self.T.rep = empty_output_frame
 
     def on_fold_start(self, *args, **kwargs):
@@ -72,9 +72,9 @@ class HoldoutTargetChunk(BaseTargetChunk):
     def on_fold_end(self, *args, **kwargs):
         self.T.rep += self.T.fold
 
-    def on_repetition_end(self, n_splits: int, *args, **kwargs):
+    def on_rep_end(self, n_splits: int, *args, **kwargs):
         self.T.rep /= n_splits
         self.T.final += self.T.rep
 
-    def on_experiment_end(self, n_repeats: int, *args, **kwargs):
+    def on_exp_end(self, n_repeats: int, *args, **kwargs):
         self.T.final /= n_repeats

@@ -35,18 +35,14 @@ class WranglerTargetOOF(BaseTargetWranglerCallback):
     data_oof: OOFDataset
 
     #################### Division Start Points ####################
-    def on_experiment_start(self):
+    def on_exp_start(self):
         # NOTE: Mirror train targets index, but drop columns because they might change intra-CV
-        self.data_oof.target.on_experiment_start(
-            self._empty_output_like(self.data_train.target.T.d)
-        )
-        super().on_experiment_start()
+        self.data_oof.target.on_exp_start(self._empty_output_like(self.data_train.target.T.d))
+        super().on_exp_start()
 
-    def on_repetition_start(self):
-        self.data_oof.target.on_repetition_start(
-            self._empty_output_like(self.data_train.target.T.d)
-        )
-        super().on_repetition_start()
+    def on_rep_start(self):
+        self.data_oof.target.on_rep_start(self._empty_output_like(self.data_train.target.T.d))
+        super().on_rep_start()
 
     def on_fold_start(self):
         self.data_oof.target.on_fold_start()
@@ -65,30 +61,26 @@ class WranglerTargetOOF(BaseTargetWranglerCallback):
         self.data_oof.target.on_fold_end(self.validation_index)
         super().on_fold_end()
 
-    def on_repetition_end(self):
-        self.data_oof.target.on_repetition_end(self.cv_params["n_splits"])
-        super().on_repetition_end()
+    def on_rep_end(self):
+        self.data_oof.target.on_rep_end(self.cv_params["n_splits"])
+        super().on_rep_end()
 
-    def on_experiment_end(self):
-        self.data_oof.target.on_experiment_end(self.cv_params.get("n_repeats", 1))
-        super().on_experiment_end()
+    def on_exp_end(self):
+        self.data_oof.target.on_exp_end(self.cv_params.get("n_repeats", 1))
+        super().on_exp_end()
 
 
 class WranglerTargetHoldout(BaseTargetWranglerCallback):
     data_holdout: HoldoutDataset
 
     #################### Division Start Points ####################
-    def on_experiment_start(self):
-        self.data_holdout.target.on_experiment_start(
-            self._empty_output_like(self.data_holdout.target.T.d)
-        )
-        super().on_experiment_start()
+    def on_exp_start(self):
+        self.data_holdout.target.on_exp_start(self._empty_output_like(self.data_holdout.target.T.d))
+        super().on_exp_start()
 
-    def on_repetition_start(self):
-        self.data_holdout.target.on_repetition_start(
-            self._empty_output_like(self.data_holdout.target.T.d)
-        )
-        super().on_repetition_start()
+    def on_rep_start(self):
+        self.data_holdout.target.on_rep_start(self._empty_output_like(self.data_holdout.target.T.d))
+        super().on_rep_start()
 
     def on_fold_start(self):
         self.data_holdout.target.on_fold_start()
@@ -107,10 +99,10 @@ class WranglerTargetHoldout(BaseTargetWranglerCallback):
         self.data_holdout.target.on_fold_end()
         super().on_fold_end()
 
-    def on_repetition_end(self):
-        self.data_holdout.target.on_repetition_end(self.cv_params["n_splits"])
-        super().on_repetition_end()
+    def on_rep_end(self):
+        self.data_holdout.target.on_rep_end(self.cv_params["n_splits"])
+        super().on_rep_end()
 
-    def on_experiment_end(self):
-        self.data_holdout.target.on_experiment_end(self.cv_params.get("n_repeats", 1))
-        super().on_experiment_end()
+    def on_exp_end(self):
+        self.data_holdout.target.on_exp_end(self.cv_params.get("n_repeats", 1))
+        super().on_exp_end()

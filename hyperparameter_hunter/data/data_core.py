@@ -89,11 +89,11 @@ class BaseDataCore:
         * :meth:`BaseDataCore._do_something` calls the appropriate core callback method"""
 
     #################### Primary Callback Methods ####################
-    def on_experiment_start(self, *args, **kwargs):
-        self._on_call_default("experiment", "start", *args, **kwargs)
+    def on_exp_start(self, *args, **kwargs):
+        self._on_call_default("exp", "start", *args, **kwargs)
 
-    def on_repetition_start(self, *args, **kwargs):
-        self._on_call_default("repetition", "start", *args, **kwargs)
+    def on_rep_start(self, *args, **kwargs):
+        self._on_call_default("rep", "start", *args, **kwargs)
 
     def on_fold_start(self, *args, **kwargs):
         self._on_call_default("fold", "start", *args, **kwargs)
@@ -107,11 +107,11 @@ class BaseDataCore:
     def on_fold_end(self, *args, **kwargs):
         self._on_call_default("fold", "end", *args, **kwargs)
 
-    def on_repetition_end(self, *args, **kwargs):
-        self._on_call_default("repetition", "end", *args, **kwargs)
+    def on_rep_end(self, *args, **kwargs):
+        self._on_call_default("rep", "end", *args, **kwargs)
 
-    def on_experiment_end(self, *args, **kwargs):
-        self._on_call_default("experiment", "end", *args, **kwargs)
+    def on_exp_end(self, *args, **kwargs):
+        self._on_call_default("exp", "end", *args, **kwargs)
 
     #################### Internal Methods ####################
     def _on_call_default(self, division: str, point: str, *args, **kwargs):
@@ -119,7 +119,7 @@ class BaseDataCore:
 
         Parameters
         ----------
-        division: {"experiment", "repetition", "fold", "run"}
+        division: {"exp", "rep", "fold", "run"}
             Time span division identifier of the primary callback method to be invoked
         point: {"start", "end"}
             Time span point identifier in `division` of the primary callback method to be invoked
@@ -144,7 +144,7 @@ class BaseDataCore:
 
         Parameters
         ----------
-        division: {"experiment", "repetition", "fold", "run"}
+        division: {"exp", "rep", "fold", "run"}
             Time span division identifier of the primary callback method to be invoked
         point: {"start", "end"}
             Time span point identifier in `division` of the primary callback method to be invoked

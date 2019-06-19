@@ -41,7 +41,8 @@ from hyperparameter_hunter.models import model_selector
 from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
-from hyperparameter_hunter.utils.general_utils import Deprecated
+
+# from hyperparameter_hunter.utils.general_utils import Deprecated
 
 ##################################################
 # Import Miscellaneous Assets
@@ -259,7 +260,7 @@ class BaseExperiment(ScoringMixIn):
     ##################################################
     # Data Preprocessing Methods:
     ##################################################
-    def on_experiment_start(self):
+    def on_exp_start(self):
         """Prepare data prior to executing fitting protocol (cross-validation), by 1) Initializing
         formal :mod:`~hyperparameter_hunter.data.datasets` attributes, 2) Invoking
         `feature_engineer` to perform "pre_cv"-stage preprocessing, and 3) Updating datasets to
@@ -288,7 +289,7 @@ class BaseExperiment(ScoringMixIn):
         self.data_test.input.T.d = self.feature_engineer.datasets["test_inputs"]
 
         G.log("Initial preprocessing stage complete", 4)
-        super().on_experiment_start()
+        super().on_exp_start()
 
     ##################################################
     # Supporting Methods:
@@ -503,20 +504,20 @@ class BaseCVExperiment(BaseExperiment):
         1) Create train and validation split indices for all folds, 2) Iterate through folds,
         performing `cv_fold_workflow` for each, 3) Average accumulated predictions over fold
         splits, 4) Evaluate final predictions, 5) Format final predictions to prepare for saving"""
-        self.on_experiment_start()
+        self.on_exp_start()
 
         reshaped_indices = get_cv_indices(
             self.folds, self.cv_params, self.data_train.input.d, self.data_train.target.d.iloc[:, 0]
         )
 
         for self._rep, rep_indices in enumerate(reshaped_indices):
-            self.on_repetition_start()
+            self.on_rep_start()
 
             for self._fold, (self.train_index, self.validation_index) in enumerate(rep_indices):
                 self.cv_fold_workflow()
 
-            self.on_repetition_end()
-        self.on_experiment_end()
+            self.on_rep_end()
+        self.on_exp_end()
 
         G.log("")
 
