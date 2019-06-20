@@ -184,7 +184,7 @@ def build_fn(input_shape):
     )
     return model
 
-optimizer = opt.RandomForestOptimization(iterations=7)
+optimizer = opt.RandomForestOptPro(iterations=7)
 optimizer.set_experiment_guidelines(
     model_initializer=KerasClassifier,
     model_init_params=build_fn,
@@ -203,7 +203,7 @@ optimizer.go()
 <summary>SKLearn</summary>
 
 ```python
-optimizer = opt.DummySearch(iterations=42)
+optimizer = opt.DummyOptPro(iterations=42)
 optimizer.set_experiment_guidelines(
     model_initializer=AdaBoostClassifier,  # (Or any of the dozens of other SKLearn algorithms)
     model_init_params=dict(
@@ -220,7 +220,7 @@ optimizer.go()
 <summary>XGBoost</summary>
 
 ```python
-optimizer = opt.BayesianOptimization(iterations=10)
+optimizer = opt.BayesianOptPro(iterations=10)
 optimizer.set_experiment_guidelines(
     model_initializer=XGBClassifier,
     model_init_params=dict(
@@ -239,7 +239,7 @@ optimizer.go()
 <summary>LightGBM</summary>
 
 ```python
-optimizer = opt.BayesianOptimization(iterations=100)
+optimizer = opt.BayesianOptPro(iterations=100)
 optimizer.set_experiment_guidelines(
     model_initializer=LGBMClassifier,
     model_init_params=dict(
@@ -258,7 +258,7 @@ optimizer.go()
 <summary>CatBoost</summary>
 
 ```python
-optimizer = opt.GradientBoostedRegressionTreeOptimization(iterations=32)
+optimizer = opt.GradientBoostedRegressionTreeOptPro(iterations=32)
 optimizer.set_experiment_guidelines(
     model_initializer=CatBoostClassifier,
     model_init_params=dict(
@@ -277,7 +277,7 @@ optimizer.go()
 <summary>RGF</summary>
 
 ```python
-optimizer = opt.ExtraTreesOptimization(iterations=10)
+optimizer = opt.ExtraTreesOptPro(iterations=10)
 optimizer.set_experiment_guidelines(
     model_initializer=RGFClassifier,
     model_init_params=dict(
@@ -350,7 +350,7 @@ I Still Don't Get It
 That's ok. Don't feel bad. It's a bit weird to wrap your head around. Here's an example that illustrates how everything is related:
 
 ```python
-from hyperparameter_hunter import Environment, CVExperiment, BayesianOptimization, Integer
+from hyperparameter_hunter import Environment, CVExperiment, BayesianOptPro, Integer
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from xgboost import XGBClassifier
 
@@ -374,10 +374,10 @@ experiment = CVExperiment(
 )
 
 # That's it. No annoying boilerplate code to fit models and record results
-results_path
+# Now, the `Environment`'s `results_path` directory will contain new files describing the Experiment just conducted
 
-# Time for the fun part. We'll set up some hyperparameter optimization by first defining the `OptimizationProtocol` we want
-optimizer = BayesianOptimization(verbose=1)
+# Time for the fun part. We'll set up some hyperparameter optimization by first defining the `OptPro` (Optimization Protocol) we want
+optimizer = BayesianOptPro(verbose=1)
 
 # Now we're going to say which hyperparameters we want to optimize.
 # Notice how this looks just like our `experiment` above
@@ -429,9 +429,9 @@ Gotchas/FAQs
 These are some things that might "getcha"
 
 ### General:
-- **Can't provide initial search points to `OptimizationProtocol`?**
-   - This is intentional. If you want your optimization rounds to start with specific search points (that you haven't recorded yet), simply perform a `CVExperiment` before initializing your `OptimizationProtocol`
-   - Assuming the two have the same guideline hyperparameters and the `Experiment` fits within the search space defined by your `OptimizationProtocol`, the optimizer will locate and read in the results of the `Experiment`
+- **Can't provide initial search points to `OptPro`?**
+   - This is intentional. If you want your optimization rounds to start with specific search points (that you haven't recorded yet), simply perform a `CVExperiment` before initializing your `OptPro`
+   - Assuming the two have the same guideline hyperparameters and the `Experiment` fits within the search space defined by your `OptPro`, the optimizer will locate and read in the results of the `Experiment`
    - Keep in mind, you'll probably want to remove the `Experiment` after you've done it once, as the results have been saved. Leaving it there will just execute the same `Experiment` over and over again
 - **After changing things in my "HyperparameterHunterAssets" directory, everything stopped working**
    - Yeah, don't do that. Especially not with "Descriptions", "Leaderboards", or "TestedKeys"
