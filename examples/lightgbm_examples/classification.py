@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
-from hyperparameter_hunter import RandomForestOptimization, Real, Integer, Categorical
+from hyperparameter_hunter import RandomForestOptPro, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import fetch_covtype
 from sklearn.metrics import f1_score
@@ -37,7 +37,7 @@ experiment = CVExperiment(
 
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
-optimizer = RandomForestOptimization(iterations=10, random_state=32)
+optimizer = RandomForestOptPro(iterations=10, random_state=32)
 optimizer.set_experiment_guidelines(
     model_initializer=LGBMClassifier,
     model_init_params=dict(

@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
-from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical
+from hyperparameter_hunter import BayesianOptPro, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
@@ -39,7 +39,7 @@ experiment = CVExperiment(
 
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
-optimizer = BayesianOptimization(iterations=30, random_state=1337)
+optimizer = BayesianOptPro(iterations=30, random_state=1337)
 optimizer.set_experiment_guidelines(
     model_initializer=XGBClassifier,
     model_init_params=dict(

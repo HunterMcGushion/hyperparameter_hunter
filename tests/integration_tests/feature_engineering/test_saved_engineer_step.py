@@ -22,7 +22,7 @@ See PR #139 (https://github.com/HunterMcGushion/hyperparameter_hunter/pull/139)"
 ##################################################
 # noinspection PyProtectedMember
 from hyperparameter_hunter import Environment, FeatureEngineer, EngineerStep, __version__
-from hyperparameter_hunter import Real, Integer, Categorical, BayesianOptimization, DummySearch
+from hyperparameter_hunter import Real, Integer, Categorical, BayesianOptPro, DummyOptPro
 from hyperparameter_hunter.utils.learning_utils import get_boston_data
 
 ##################################################
@@ -105,7 +105,7 @@ def nothing_transform(train_targets, non_train_targets):
 # Regression Tests: Saved Engineer Step Optimization
 ##################################################
 @pytest.mark.parametrize(
-    ["protocol_0", "protocol_1"], [(DummySearch, DummySearch), (BayesianOptimization, DummySearch)]
+    ["protocol_0", "protocol_1"], [(DummyOptPro, DummyOptPro), (BayesianOptPro, DummyOptPro)]
 )
 def test_saved_engineer_step_update_0(env_boston, protocol_0, protocol_1):
     """This test would not trigger the bug tested by this module, but it is an interesting
@@ -117,12 +117,11 @@ def test_saved_engineer_step_update_0(env_boston, protocol_0, protocol_1):
 
 @pytest.mark.xfail(condition="__version__ < '3.0.0alpha2'")
 @pytest.mark.parametrize(
-    ["protocol_0", "protocol_1"],
-    [(DummySearch, BayesianOptimization), (BayesianOptimization, BayesianOptimization)],
+    ["protocol_0", "protocol_1"], [(DummyOptPro, BayesianOptPro), (BayesianOptPro, BayesianOptPro)]
 )
 def test_saved_engineer_step_update_1(env_boston, protocol_0, protocol_1):
     """This test is exactly the same as the previous tests, except it uses an informed protocol,
-    instead of `DummySearch` as the second protocol - This should trigger the bug"""
+    instead of `DummyOptPro` as the second protocol - This should trigger the bug"""
     opt_0 = opt_pro(protocol_0)  # First Optimization Execution
     opt_1 = opt_pro(protocol_1)  # Second (Informed) Execution
 

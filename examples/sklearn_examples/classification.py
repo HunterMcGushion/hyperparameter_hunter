@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
-from hyperparameter_hunter import RandomForestOptimization, Real, Integer, Categorical
+from hyperparameter_hunter import RandomForestOptPro, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.neighbors import KNeighborsClassifier
@@ -56,7 +56,7 @@ experiment_11 = CVExperiment(MLPClassifier, {})
 # Notice below that `optimizer` correctly identifies `experiment_6` as being the only saved
 # ... experiment it can learn from because it's optimizing `AdaBoostClassifier`.
 
-optimizer = RandomForestOptimization(iterations=12, random_state=42)
+optimizer = RandomForestOptPro(iterations=12, random_state=42)
 optimizer.set_experiment_guidelines(
     model_initializer=AdaBoostClassifier,
     model_init_params=dict(

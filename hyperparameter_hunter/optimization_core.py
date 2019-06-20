@@ -7,17 +7,17 @@ Related
 :mod:`hyperparameter_hunter.optimization`
     Defines the optimization classes that are intended for direct use. All classes defined in
     :mod:`hyperparameter_hunter.optimization` should be descendants of
-    :class:`optimization_core.BaseOptimizationProtocol`
+    :class:`optimization_core.BaseOptPro`
 :mod:`hyperparameter_hunter.result_reader`
     Used to locate result files for Experiments that are similar to the current optimization
-    constraints, and produce data to learn from in the case of :class:`SKOptimizationProtocol`
+    constraints, and produce data to learn from in the case of :class:`SKOptPro`
 :mod:`hyperparameter_hunter.space`
     Defines the child classes of `hyperparameter_hunter.space.Dimension`, which are used to define
     the hyperparameters to optimize
 :mod:`hyperparameter_hunter.utils.optimization_utils`:
     Provides utility functions for locating saved Experiments that fit within the constraints
     currently being optimized, as well as :class:`AskingOptimizer`, which guides the search of
-    :class:`optimization_core.SKOptimizationProtocol`"""
+    :class:`optimization_core.SKOptPro`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -70,7 +70,7 @@ except ImportError:
     K = None
 
 
-class OptimizationProtocolMeta(type):
+class OptProMeta(type):
     """Metaclass to accurately set :attr:`source_script` for its descendants even if the original
     call was the product of scripts calling other scripts that eventually instantiated an
     optimization protocol"""
@@ -88,13 +88,13 @@ class OptimizationProtocolMeta(type):
         return super().__call__(*args, **kwargs)
 
 
-class MergedOptimizationMeta(OptimizationProtocolMeta, ABCMeta):
-    """Metaclass to combine :class:`OptimizationProtocolMeta`, and `ABCMeta`"""
+class MergedOptProMeta(OptProMeta, ABCMeta):
+    """Metaclass to combine :class:`OptProMeta`, and `ABCMeta`"""
 
     pass
 
 
-class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
+class BaseOptPro(metaclass=MergedOptProMeta):
     source_script: str
 
     def __init__(
@@ -116,7 +116,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
             supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
             :func:`metrics.get_formatted_target_metric` for more info. Any values returned by, or
             given as the `target_metric` input to, :func:`metrics.get_formatted_target_metric` are
-            acceptable values for :attr:`BaseOptimizationProtocol.target_metric`
+            acceptable values for :attr:`BaseOptPro.target_metric`
         iterations: Int, default=1
             The number of distinct experiments to execute
         verbose: Int 0, 1, or 2, default=1
@@ -136,9 +136,8 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         Notes
         -----
         By default, 'script_backup' for Experiments is blacklisted when executed within
-        :class:`BaseOptimizationProtocol` since it would just repeatedly create copies of the same,
-        unchanged file (this file). So don't expect any script_backup files for Experiments executed
-        during optimization rounds"""
+        :class:`BaseOptPro` since it would just repeatedly create copies of the same, unchanged
+        file. So don't expect any script_backup files for Experiments executed by OptPros"""
         #################### Optimization Protocol Parameters ####################
         self.target_metric = target_metric
         self.iterations = iterations
@@ -236,11 +235,11 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         Notes
         -----
-        The `auto_start` kwarg is not available here because
-        :meth:`BaseOptimizationProtocol._execute_experiment` sets it to False in order to check for
-        duplicated keys before running the whole Experiment. This and `target_metric` being moved to
-        :meth:`BaseOptimizationProtocol.__init__` are the most notable differences between calling
-        :meth:`set_experiment_guidelines` and instantiating :class:`experiments.CVExperiment`"""
+        The `auto_start` kwarg is not available here because :meth:`BaseOptPro._execute_experiment`
+        sets it to False in order to check for duplicated keys before running the whole Experiment.
+        This and `target_metric` being moved to :meth:`BaseOptPro.__init__` are the most notable
+        differences between calling :meth:`set_experiment_guidelines` and instantiating
+        :class:`~hyperparameter_hunter.experiments.CVExperiment`"""
         self.model_initializer = model_initializer
 
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
@@ -324,7 +323,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         """Begin hyperparameter optimization process after experiment guidelines have been set and
         search dimensions are in place. This process includes the following: setting the
         hyperparameter space; locating similar experiments to be used as learning material for
-        :class:`SKOptimizationProtocol` s; and executing :meth:`_optimization_loop`, which
+        :class:`SKOptPro` s; and executing :meth:`_optimization_loop`, which
         actually sets off the Experiment execution process"""
         if self.model_initializer is None:
             raise ValueError("Experiment guidelines must be set before starting optimization")
@@ -396,7 +395,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
 
         Notes
         -----
-        As described in the Notes of :meth:`BaseOptimizationProtocol.set_experiment_guidelines`, the
+        As described in the Notes of :meth:`BaseOptPro.set_experiment_guidelines`, the
         `auto_start` kwarg of :meth:`experiments.CVExperiment.__init__` is set to False in order to
         check for duplicated keys"""
         self._update_current_hyperparameters()
@@ -605,7 +604,7 @@ class BaseOptimizationProtocol(metaclass=MergedOptimizationMeta):
         G.Env.result_paths["script_backup"] = None
 
 
-class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
+class SKOptPro(BaseOptPro, metaclass=ABCMeta):
     def __init__(
         self,
         target_metric=None,
@@ -638,7 +637,7 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
             supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
             :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or
             used as the `target_metric` input to this function are acceptable values for
-            :attr:`BaseOptimizationProtocol.target_metric`
+            :attr:`BaseOptPro.target_metric`
         iterations: Int, default=1
             The number of distinct experiments to execute
         verbose: Int 0, 1, or 2, default=1
@@ -693,7 +692,7 @@ class SKOptimizationProtocol(BaseOptimizationProtocol, metaclass=ABCMeta):
         to instantiating an Optimization Protocol. The results of these Experiments will
         automatically be detected and cherished by the optimizer.
 
-        :class:`.SKOptimizationProtocol` and its children in :mod:`.optimization` rely heavily
+        :class:`.SKOptPro` and its children in :mod:`.optimization` rely heavily
         on the utilities provided by the `Scikit-Optimize` library, so thank you to the creators and
         contributors for their excellent work."""
         # TODO: Add 'EIps', and 'PIps' to the allowable `acquisition_function` values - Will need to return execution times

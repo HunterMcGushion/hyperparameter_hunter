@@ -27,14 +27,14 @@ def env():
 # Test Parametrization
 ##################################################
 scenario_pairs = dict(
-    bo=dict(est=["GP", GaussianProcessRegressor()], opt=[hh_opt.BayesianOptimization]),
+    bo=dict(est=["GP", GaussianProcessRegressor()], opt=[hh_opt.BayesianOptPro]),
     gbrt=dict(
         est=["GBRT", GradientBoostingQuantileRegressor()],
-        opt=[hh_opt.GradientBoostedRegressionTreeOptimization, hh_opt.GBRT],
+        opt=[hh_opt.GradientBoostedRegressionTreeOptPro, hh_opt.GBRT],
     ),
-    rf=dict(est=["RF", RandomForestRegressor()], opt=[hh_opt.RandomForestOptimization, hh_opt.RF]),
-    et=dict(est=["ET", ExtraTreesRegressor()], opt=[hh_opt.ExtraTreesOptimization, hh_opt.ET]),
-    dummy=dict(est=["DUMMY"], opt=[hh_opt.DummySearch]),
+    rf=dict(est=["RF", RandomForestRegressor()], opt=[hh_opt.RandomForestOptPro, hh_opt.RF]),
+    et=dict(est=["ET", ExtraTreesRegressor()], opt=[hh_opt.ExtraTreesOptPro, hh_opt.ET]),
+    dummy=dict(est=["DUMMY"], opt=[hh_opt.DummyOptPro]),
 )
 
 
@@ -74,3 +74,21 @@ def test_valid(est, opt):
 def test_invalid(est, opt):
     with pytest.raises(TypeError, match="Expected `base_estimator` in .*"):
         opt(base_estimator=est)
+
+
+##################################################
+# Deprecation Tests
+##################################################
+@pytest.mark.parametrize(
+    "opt_pro",
+    [
+        hh_opt.BayesianOptimization,
+        hh_opt.GradientBoostedRegressionTreeOptimization,
+        hh_opt.RandomForestOptimization,
+        hh_opt.ExtraTreesOptimization,
+        hh_opt.DummySearch,
+    ],
+)
+def test_opt_pro_deprecations(opt_pro):
+    with pytest.deprecated_call():
+        opt_pro()

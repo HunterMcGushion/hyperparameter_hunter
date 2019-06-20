@@ -7,7 +7,7 @@ the target transformations therein to be used with HyperparameterHunter"""
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer
-from hyperparameter_hunter import DummySearch, Categorical
+from hyperparameter_hunter import DummyOptPro, Categorical
 from hyperparameter_hunter.utils.learning_utils import get_boston_data
 
 ##################################################
@@ -91,7 +91,7 @@ def execute():
     #################### Optimization ####################
     # `opt_0` recognizes `exp_0`'s `feature_engineer` and its results as valid learning material
     # This is because `opt_0` marks the engineer step functions omitted by `exp_0` as `optional=True`
-    opt_0 = DummySearch(iterations=10)
+    opt_0 = DummyOptPro(iterations=10)
     opt_0.set_experiment_guidelines(
         model_initializer=Ridge,
         model_init_params=dict(),

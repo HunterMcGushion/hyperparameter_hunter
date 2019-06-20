@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, Real, Integer, Categorical, BayesianOptimization
+from hyperparameter_hunter import Environment, Real, Integer, Categorical, BayesianOptPro
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from sklearn.model_selection import StratifiedKFold
 from xgboost import XGBClassifier
@@ -15,7 +15,7 @@ def _execute():
         runs=2,
     )
 
-    optimizer = BayesianOptimization(iterations=10, read_experiments=True, random_state=None)
+    optimizer = BayesianOptPro(iterations=10, read_experiments=True, random_state=None)
 
     optimizer.set_experiment_guidelines(
         model_initializer=XGBClassifier,

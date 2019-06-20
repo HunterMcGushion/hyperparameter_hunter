@@ -3,7 +3,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer, EngineerStep
-from hyperparameter_hunter import Categorical, BayesianOptimization
+from hyperparameter_hunter import Categorical, BayesianOptPro
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions
 
@@ -310,7 +310,7 @@ def fe_experiment(request):
 def fe_optimizer(request):
     if request.param is not None:
         request.param = FeatureEngineer(request.param)
-    opt = BayesianOptimization()
+    opt = BayesianOptPro()
     opt.set_experiment_guidelines(
         model_initializer=Ridge, model_init_params={}, feature_engineer=request.param
     )
@@ -348,12 +348,11 @@ def test_similar_experiments(env_boston, fe_experiment, fe_optimizer):
     fe_experiment: CVExperiment
         Indirectly parametrized `CVExperiment` that expects as input either None, or a list of
         `steps` given to its :class:`hyperparameter_hunter.feature_engineering.FeatureEngineer`
-    fe_optimizer: BaseOptimizationProtocol
-        Indirectly parametrized subclass of
-        :class:`~hyperparameter_hunter.optimization_core.BaseOptimizationProtocol` that expects as
-        input either None, or a list of `steps` (some of which should be `Categorical`) given to its
-        :class:`hyperparameter_hunter.FeatureEngineer`. `fe_optimizer` is expected to contain the
-        `experiment_id` of `fe_experiment` in its `similar_experiments`
+    fe_optimizer: BaseOptPro
+        Indirectly parametrized :class:`~hyperparameter_hunter.optimization_core.BaseOptPro`
+        subclass that expects as input either None, or a list of `steps` (some of which should be
+        `Categorical`) given to its :class:`hyperparameter_hunter.FeatureEngineer`. `fe_optimizer`
+        is expected to contain the `experiment_id` of `fe_experiment` in its `similar_experiments`
 
     Notes
     -----
@@ -417,7 +416,7 @@ def test_similar_experiments_unordered():
         feature_engineer=FeatureEngineer([EngineerStep(sqr_sum_feature)]),
     )
 
-    opt = BayesianOptimization(iterations=1)
+    opt = BayesianOptPro(iterations=1)
     opt.set_experiment_guidelines(
         model_initializer=XGBClassifier,
         model_init_params=dict(objective="reg:linear", subsample=0.5, max_depth=3),

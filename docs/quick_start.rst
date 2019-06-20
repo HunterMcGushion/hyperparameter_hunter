@@ -40,9 +40,9 @@ Hyperparameter Optimization
 
 .. code-block:: python
 
-    from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical
+    from hyperparameter_hunter import BayesianOptPro, Real, Integer, Categorical
 
-    optimizer = BayesianOptimization(iterations=10, read_experiments=True)
+    optimizer = BayesianOptPro(iterations=10, read_experiments=True)
 
     optimizer.set_experiment_guidelines(
         model_initializer=XGBClassifier,

@@ -1,5 +1,5 @@
-"""This module defines the Optimization Protocol classes that are intended for direct use. All
-classes defined herein should be descendants of one of the base classes defined in
+"""This module defines the OptPro (Optimization Protocol) classes that are intended for direct use.
+All classes defined herein should be descendants of one of the base classes defined in
 :mod:`hyperparameter_hunter.optimization_core`
 
 Related
@@ -10,12 +10,15 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.optimization_core import SKOptimizationProtocol
+from hyperparameter_hunter import __version__
+from hyperparameter_hunter.optimization_core import SKOptPro
 from hyperparameter_hunter.space import normalize_dimensions
+from hyperparameter_hunter.utils.version_utils import Deprecated
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from functools import partial
 from typing import Optional, Type, Union
 
 ##################################################
@@ -44,7 +47,7 @@ def _validate_estimator(estimator: EstTypes, *valid_values: EstTypes) -> Optiona
 ##################################################
 # SKOpt-Based Optimization Protocols
 ##################################################
-class BayesianOptimization(SKOptimizationProtocol):
+class BayesianOptPro(SKOptPro):
     """Bayesian optimization with Gaussian Processes"""
 
     def __init__(
@@ -92,7 +95,7 @@ class BayesianOptimization(SKOptimizationProtocol):
         super().go()
 
 
-class GradientBoostedRegressionTreeOptimization(SKOptimizationProtocol):
+class GradientBoostedRegressionTreeOptPro(SKOptPro):
     """Sequential optimization with gradient boosted regression trees"""
 
     def __init__(
@@ -135,7 +138,7 @@ class GradientBoostedRegressionTreeOptimization(SKOptimizationProtocol):
         )
 
 
-class RandomForestOptimization(SKOptimizationProtocol):
+class RandomForestOptPro(SKOptPro):
     """Sequential optimization with random forest regressor decision trees"""
 
     def __init__(
@@ -178,7 +181,7 @@ class RandomForestOptimization(SKOptimizationProtocol):
         )
 
 
-class ExtraTreesOptimization(SKOptimizationProtocol):
+class ExtraTreesOptPro(SKOptPro):
     """Sequential optimization with extra trees regressor decision trees"""
 
     def __init__(
@@ -221,7 +224,7 @@ class ExtraTreesOptimization(SKOptimizationProtocol):
         )
 
 
-class DummySearch(SKOptimizationProtocol):
+class DummyOptPro(SKOptPro):
     """Random search by uniform sampling"""
 
     def __init__(
@@ -267,27 +270,60 @@ class DummySearch(SKOptimizationProtocol):
 ##################################################
 # Optimization Protocol Aliases
 ##################################################
-GBRT = GradientBoostedRegressionTreeOptimization
-RF = RandomForestOptimization
-ET = ExtraTreesOptimization
+GBRT = GradientBoostedRegressionTreeOptPro
+RF = RandomForestOptPro
+ET = ExtraTreesOptPro
+
+##################################################
+# Deprecated Optimization Protocols
+##################################################
+# Below classes have been renamed to the primary classes above. Scheduled to be removed in 3.2.0
+_DeprecatedOptPro = partial(
+    Deprecated, v_deprecate="3.0.0a2", v_remove="3.2.0", v_current=__version__
+)
+
+
+@_DeprecatedOptPro(details="Renamed to `BayesianOptPro`")
+class BayesianOptimization(BayesianOptPro):
+    ...
+
+
+@_DeprecatedOptPro(details="Renamed to `GradientBoostedRegressionTreeOptPro`")
+class GradientBoostedRegressionTreeOptimization(GradientBoostedRegressionTreeOptPro):
+    ...
+
+
+@_DeprecatedOptPro(details="Renamed to `RandomForestOptPro`")
+class RandomForestOptimization(RandomForestOptPro):
+    ...
+
+
+@_DeprecatedOptPro(details="Renamed to `ExtraTreesOptPro`")
+class ExtraTreesOptimization(ExtraTreesOptPro):
+    ...
+
+
+@_DeprecatedOptPro(details="Renamed to `DummyOptPro`")
+class DummySearch(DummyOptPro):
+    ...
 
 
 ##################################################
 # Unimplemented Optimization Protocols
 ##################################################
-class TreeStructuredParzenEstimatorsOptimization(SKOptimizationProtocol):
-    # FLAG: http://neupy.com/2016/12/17/hyperparameter_optimization_for_neural_networks.html#id24
-    pass
+# class TreeStructuredParzenEstimatorsOptPro(SKOptPro):
+#     # FLAG: http://neupy.com/2016/12/17/hyperparameter_optimization_for_neural_networks.html#id24
+#     pass
 
 
-class EvolutionaryOptimization(SKOptimizationProtocol):
-    # FLAG: See TPOT's Genetic Programming approach
-    pass
+# class EvolutionaryOptPro(SKOptPro):
+#     # FLAG: See TPOT's Genetic Programming approach
+#     pass
 
 
-class ParticleSwarmOptimization(SKOptimizationProtocol):
-    # FLAG: ...
-    pass
+# class ParticleSwarmOptPro(SKOptPro):
+#     # FLAG: ...
+#     pass
 
 
 if __name__ == "__main__":

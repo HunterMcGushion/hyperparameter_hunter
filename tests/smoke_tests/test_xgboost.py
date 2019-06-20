@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
-from hyperparameter_hunter import RandomForestOptimization
+from hyperparameter_hunter import RandomForestOptPro
 from hyperparameter_hunter.result_reader import has_experiment_result_file
 from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data
 
@@ -57,7 +57,7 @@ def exp_xgb_0():
 ##################################################
 @pytest.fixture(scope="function", autouse=False)
 def opt_xgb_0():
-    optimizer = RandomForestOptimization(iterations=2, random_state=1337)
+    optimizer = RandomForestOptPro(iterations=2, random_state=1337)
     optimizer.set_experiment_guidelines(
         model_initializer=XGBClassifier,
         model_init_params=dict(

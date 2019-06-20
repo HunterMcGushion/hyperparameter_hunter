@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
-from hyperparameter_hunter import ExtraTreesOptimization, Real, Integer, Categorical
+from hyperparameter_hunter import ExtraTreesOptPro, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_boston
 from sklearn.metrics import r2_score
@@ -30,7 +30,7 @@ experiment = CVExperiment(
 
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
-optimizer = ExtraTreesOptimization(iterations=12, random_state=1337)
+optimizer = ExtraTreesOptPro(iterations=12, random_state=1337)
 optimizer.set_experiment_guidelines(
     model_initializer=LGBMRegressor,
     model_init_params=dict(

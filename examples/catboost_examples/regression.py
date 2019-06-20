@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
-from hyperparameter_hunter import DummySearch, Real, Integer, Categorical
+from hyperparameter_hunter import DummyOptPro, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import make_regression
 from sklearn.metrics import explained_variance_score
@@ -58,7 +58,7 @@ experiment = CVExperiment(
 #################### 2. Hyperparameter Optimization ####################
 # Notice below that `optimizer` still recognizes the results of `experiment` as valid learning material even
 # ... though their `verbose` values differ. This is because it knows that `verbose` has no effect on actual results.
-optimizer = DummySearch(iterations=10, random_state=777)
+optimizer = DummyOptPro(iterations=10, random_state=777)
 optimizer.set_experiment_guidelines(
     model_initializer=CatBoostRegressor,
     model_init_params=dict(

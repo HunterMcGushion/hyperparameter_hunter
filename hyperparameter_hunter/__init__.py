@@ -28,11 +28,11 @@ except Exception:
 ##################################################
 from .environment import Environment
 from .experiments import CVExperiment
-from .optimization import BayesianOptimization
-from .optimization import GradientBoostedRegressionTreeOptimization, GBRT
-from .optimization import RandomForestOptimization, RF
-from .optimization import ExtraTreesOptimization, ET
-from .optimization import DummySearch
+from .optimization import BayesianOptPro
+from .optimization import GradientBoostedRegressionTreeOptPro, GBRT
+from .optimization import RandomForestOptPro, RF
+from .optimization import ExtraTreesOptPro, ET
+from .optimization import DummyOptPro
 from .space import Real
 from .space import Integer
 from .space import Categorical
@@ -40,20 +40,27 @@ from .callbacks.bases import lambda_callback
 from .feature_engineering import FeatureEngineer
 from .feature_engineering import EngineerStep
 
+#################### Deprecated OptPros - Remove in 3.2.0 ####################
+from .optimization import BayesianOptimization
+from .optimization import GradientBoostedRegressionTreeOptimization
+from .optimization import RandomForestOptimization
+from .optimization import ExtraTreesOptimization
+from .optimization import DummySearch
+
 __all__ = [
     #################### Environment ####################
     "Environment",
     #################### Experimentation ####################
     "CVExperiment",
     #################### Hyperparameter Optimization ####################
-    "BayesianOptimization",
-    "GradientBoostedRegressionTreeOptimization",
+    "BayesianOptPro",
+    "GradientBoostedRegressionTreeOptPro",
     "GBRT",
-    "RandomForestOptimization",
+    "RandomForestOptPro",
     "RF",
-    "ExtraTreesOptimization",
+    "ExtraTreesOptPro",
     "ET",
-    "DummySearch",
+    "DummyOptPro",
     #################### Search Space ####################
     "Real",
     "Integer",
@@ -65,4 +72,10 @@ __all__ = [
     "EngineerStep",
     #################### Miscellaneous ####################
     "__version__",
+    #################### Deprecated OptPros - Remove in 3.2.0 ####################
+    "BayesianOptimization",
+    "GradientBoostedRegressionTreeOptimization",
+    "RandomForestOptimization",
+    "ExtraTreesOptimization",
+    "DummySearch",
 ]

@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import Environment, Real, Integer, Categorical, DummySearch
+from hyperparameter_hunter import Environment, Real, Integer, Categorical, DummyOptPro
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data, get_diabetes_data
 
 ##################################################
@@ -76,7 +76,7 @@ def _build_fn_regressor(input_shape):
 
 @pytest.fixture(scope="function", autouse=False)
 def opt_regressor():
-    optimizer = DummySearch(iterations=1)
+    optimizer = DummyOptPro(iterations=1)
     optimizer.set_experiment_guidelines(
         model_initializer=KerasRegressor,
         model_init_params=_build_fn_regressor,
@@ -104,7 +104,7 @@ def in_similar_experiment_ids(opt_0, opt_1):
 
 
 def run_initialization_matching_optimization_0(build_fn):
-    optimizer = DummySearch(iterations=1)
+    optimizer = DummyOptPro(iterations=1)
     optimizer.set_experiment_guidelines(
         model_initializer=KerasClassifier,
         model_init_params=dict(build_fn=build_fn),
