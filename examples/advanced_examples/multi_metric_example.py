@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
-from hyperparameter_hunter import BayesianOptimization, Real, Integer, Categorical
+from hyperparameter_hunter import BayesianOptPro, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.metrics import f1_score
@@ -69,7 +69,7 @@ OPT_MODEL_INIT_PARAMS = dict(
     verbose=-1,
 )
 
-optimizer_0 = BayesianOptimization(iterations=2, random_state=32)
+optimizer_0 = BayesianOptPro(iterations=2, random_state=32)
 optimizer_0.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_0.go()
 
@@ -79,13 +79,13 @@ optimizer_0.go()
 # ... score as its `target_metric` to optimize, because that is the final "roc_auc" value reported by `experiment_0`.
 
 #################### 5. Changing Target Metrics ####################
-# Suppose we now want to perform additional rounds of `BayesianOptimization` using our "f1_micro"
+# Suppose we now want to perform additional rounds of `BayesianOptPro` using our "f1_micro"
 # ... metric as the optimized `target_metric`, instead. We would need to start all over from scratch,
 # ... right? WRONG! HyperparameterHunter recorded all four of the metrics we declared in `env` for
 # ... all experiments executed during optimization, as well!
 
 # Even better, telling HyperparameterHunter to switch `target_metric`s is easy! Here's how to do it:
-optimizer_1 = BayesianOptimization(target_metric="f1_micro", iterations=2, random_state=32)
+optimizer_1 = BayesianOptPro(target_metric="f1_micro", iterations=2, random_state=32)
 optimizer_1.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_1.go()
 
@@ -103,19 +103,19 @@ optimizer_1.go()
 #################### 6. I Can't Make Up My Mind ####################
 # What if we now decide that we actually want to optimize using our normal "f1" metric, instead of
 # ... either "roc_auc" or "f1_micro"? Easy!
-optimizer_2 = BayesianOptimization(target_metric="f1", iterations=2, random_state=32)
+optimizer_2 = BayesianOptPro(target_metric="f1", iterations=2, random_state=32)
 optimizer_2.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_2.go()
 
 # Just like that, `optimizer_2` is reporting our "f1" scores! Let's finish by optimizing with the last of our four metrics.
-optimizer_3 = BayesianOptimization(target_metric="f1_macro", iterations=2, random_state=32)
+optimizer_3 = BayesianOptPro(target_metric="f1_macro", iterations=2, random_state=32)
 optimizer_3.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_3.go()
 
 #################### 7. Bonus Exercises ####################
 # If you've been reading the documentation as you should be, you may have noticed the `target_metric`
-# ... argument of all children of `BaseOptimizationProtocol` is usually a tuple. The `BayesianOptimization`
-# ... class we used above is just one of the descendants of `BaseOptimizationProtocol`, but we were
+# ... argument of all children of `BaseOptPro` is usually a tuple. The `BayesianOptPro`
+# ... class we used above is just one of the descendants of `BaseOptPro`, but we were
 # ... passing `target_metric` values of strings.
 
 # As the documentation notes, all `target_metric` values are cast to tuples, in which the first value

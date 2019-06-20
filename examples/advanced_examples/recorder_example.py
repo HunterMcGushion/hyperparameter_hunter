@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, BayesianOptimization, Real, Integer, Categorical
+from hyperparameter_hunter import Environment, BayesianOptPro, Real, Integer, Categorical
 from hyperparameter_hunter.recorders import UnsortedIDLeaderboardRecorder, BaseRecorder
 from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
 import pandas as pd
@@ -29,7 +29,7 @@ env_kwargs = dict(
 #################### Hyperparameter Optimization ####################
 # We'll set up a helper function, so we can easily re-run optimization with different Environments
 def do_optimization():
-    optimizer = BayesianOptimization(iterations=5, random_state=1337)
+    optimizer = BayesianOptPro(iterations=5, random_state=1337)
     optimizer.set_experiment_guidelines(
         model_initializer=XGBClassifier,
         model_init_params=dict(

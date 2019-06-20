@@ -1,4 +1,4 @@
-from hyperparameter_hunter import Environment, CVExperiment, BayesianOptimization
+from hyperparameter_hunter import Environment, CVExperiment, BayesianOptPro
 from hyperparameter_hunter import Real, Integer, Categorical
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 import os.path
@@ -59,7 +59,7 @@ def _execute():
     )
 
     #################### Optimization ####################
-    optimizer = BayesianOptimization(iterations=10)
+    optimizer = BayesianOptPro(iterations=10)
     optimizer.set_experiment_guidelines(
         model_initializer=KerasClassifier,
         model_init_params=dict(build_fn=_build_fn_optimization),

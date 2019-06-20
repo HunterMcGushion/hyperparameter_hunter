@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
-from hyperparameter_hunter import BayesianOptimization, ExtraTreesOptimization, lambda_callback
+from hyperparameter_hunter import BayesianOptPro, ExtraTreesOptPro, lambda_callback
 from hyperparameter_hunter.callbacks.recipes import confusion_matrix_oof, confusion_matrix_holdout
 from hyperparameter_hunter.recorders import YAMLDescriptionRecorder, UnsortedIDLeaderboardRecorder
 from hyperparameter_hunter.result_reader import has_experiment_result_file
@@ -185,7 +185,7 @@ def exp_svc_0():
 #################### SVC Optimization Protocols ####################
 @pytest.fixture(scope="function", autouse=False, params=[None, "f1_micro", "f1", "f1_macro"])
 def opt_svc_0(request):
-    optimizer = BayesianOptimization(target_metric=request.param, iterations=2, random_state=32)
+    optimizer = BayesianOptPro(target_metric=request.param, iterations=2, random_state=32)
     optimizer.set_experiment_guidelines(
         model_initializer=SVC,
         model_init_params=dict(
@@ -209,7 +209,7 @@ def opt_svc_0(request):
 #################### DecisionTreeClassifier Optimization Protocols ####################
 @pytest.fixture(scope="function", autouse=False)
 def opt_dtc_0():
-    optimizer = ExtraTreesOptimization(iterations=2, random_state=1337)
+    optimizer = ExtraTreesOptPro(iterations=2, random_state=1337)
     optimizer.set_experiment_guidelines(
         model_initializer=DecisionTreeClassifier,
         model_init_params=dict(

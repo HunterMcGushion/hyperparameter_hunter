@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, CVExperiment
-from hyperparameter_hunter import ExtraTreesOptimization, Real, Integer, Categorical
+from hyperparameter_hunter import ExtraTreesOptPro, Real, Integer, Categorical
 import pandas as pd
 from sklearn.datasets import load_diabetes
 from sklearn.metrics import mean_squared_log_error
@@ -30,7 +30,7 @@ experiment = CVExperiment(
 
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
-optimizer = ExtraTreesOptimization(iterations=30, random_state=42)
+optimizer = ExtraTreesOptPro(iterations=30, random_state=42)
 optimizer.set_experiment_guidelines(
     model_initializer=RGFRegressor,
     model_init_params=dict(

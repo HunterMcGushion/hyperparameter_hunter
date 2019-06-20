@@ -1,10 +1,4 @@
-from hyperparameter_hunter import (
-    Environment,
-    CVExperiment,
-    BayesianOptimization,
-    Categorical,
-    Integer,
-)
+from hyperparameter_hunter import Environment, CVExperiment, BayesianOptPro, Categorical, Integer
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 from xgboost import XGBClassifier
 
@@ -32,7 +26,7 @@ def execute():
     # Now, the `Environment`'s `results_path` directory will contain new files describing the Experiment just conducted
 
     # Time for the fun part. We'll set up some hyperparameter optimization by first defining the `OptimizationProtocol` we want
-    optimizer = BayesianOptimization(verbose=1)
+    optimizer = BayesianOptPro(verbose=1)
 
     # Now we're going to say which hyperparameters we want to optimize.
     # Notice how this looks just like our `experiment` above

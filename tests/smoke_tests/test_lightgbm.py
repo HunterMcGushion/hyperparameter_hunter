@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
-from hyperparameter_hunter import BayesianOptimization
+from hyperparameter_hunter import BayesianOptPro
 from hyperparameter_hunter.result_reader import has_experiment_result_file
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 
@@ -74,7 +74,7 @@ def exp_lgb_0():
 ##################################################
 @pytest.fixture(scope="function", autouse=False, params=[None, "f1_micro", "f1", "f1_macro"])
 def opt_lgb_0(request):
-    optimizer = BayesianOptimization(target_metric=request.param, iterations=2, random_state=32)
+    optimizer = BayesianOptPro(target_metric=request.param, iterations=2, random_state=32)
     optimizer.set_experiment_guidelines(
         model_initializer=LGBMClassifier,
         model_init_params=dict(

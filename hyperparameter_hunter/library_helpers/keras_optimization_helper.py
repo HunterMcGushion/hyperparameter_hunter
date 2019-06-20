@@ -61,10 +61,9 @@ except ModuleNotFoundError:
 def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script):
     """Conduct preparation steps necessary before hyperparameter optimization on a `Keras` model.
     Such steps include parsing and modifying `build_fn` to be of the form used by
-    :class:`hyperparameter_hunter.optimization_core.BaseOptimizationProtocol`, compiling a dummy
-    model to identify universal locations of given hyperparameter choices, and creating a simplified
-    characterization of the models to be built during optimization in order to enable collection of
-    similar Experiments
+    :class:`hyperparameter_hunter.optimization_core.BaseOptPro`, compiling a dummy model to identify
+    universal locations of given hyperparameter choices, and creating a simplified characterization
+    of the models to be built during optimization in order to enable similar Experiment collection
 
     Parameters
     ----------

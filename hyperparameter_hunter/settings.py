@@ -163,7 +163,7 @@ class G(object):
         :meth:`reporting.ReportingHandler.warn`"""
         warnings.warn(content, *args, **kwargs)
 
-    #################### Optimization Logging Set by :class:`optimization_core.BaseOptimizationProtocol` ####################
+    #################### Optimization Logging Set by :class:`optimization_core.BaseOptPro` ####################
     log_ = print
     debug_ = print
     warn_ = warnings.warn
