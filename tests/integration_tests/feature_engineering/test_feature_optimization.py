@@ -3,22 +3,25 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer, EngineerStep
-from hyperparameter_hunter import Categorical, BayesianOptPro
-from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
+from hyperparameter_hunter import Categorical, Integer, BayesianOptPro, GBRT, RF, ET, DummyOptPro
+from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data, get_boston_data
 from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 import numpy as np
+from os import makedirs
 import pandas as pd
 import pytest
+from shutil import rmtree
 import sys
 
 ##################################################
 # Import Learning Assets
 ##################################################
 from sklearn.datasets import load_boston
+from sklearn.ensemble import AdaBoostRegressor
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, Normalizer, QuantileTransformer, StandardScaler
@@ -430,3 +433,170 @@ def test_similar_experiments_unordered():
     opt.go()
 
     assert exp.experiment_id in [_[2] for _ in opt.similar_experiments]
+
+
+##################################################
+# Regression Tests: `Categorical`/`FeatureEngineer`-Only `BayesianOptPro`
+##################################################
+#################### Fixtures ####################
+@pytest.fixture()
+def env_boston_regression():
+    env = Environment(
+        train_dataset=get_boston_data(),
+        results_path=assets_dir,
+        target_column="DIS",
+        metrics=["median_absolute_error"],
+        cv_type="KFold",
+        cv_params=dict(n_splits=3, random_state=1),
+    )
+    return env
+
+
+@pytest.fixture(scope="function", autouse=False)
+def hh_assets():
+    """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
+    of the tests contained in each function, before it and its contents are deleted"""
+    temp_assets_path = assets_dir
+    try:
+        makedirs(temp_assets_path)
+    except FileExistsError:
+        rmtree(temp_assets_path)
+        makedirs(temp_assets_path)
+    yield
+
+
+#################### Layout of Tests in Section ####################
+# All tests herein alternate between including/excluding three different dimensions in search:
+#   1. `FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])])`: `feature_engineer`
+#   2. `loss=Categorical(["linear", "square", "exponential"])` in `model_init_params`
+#   3. `n_estimators=Integer(10, 40)` in `model_init_params`
+# Above dimensions will be abbreviated as "D1", "D2", and "D3", respectively in illustration below
+#
+# | function                                 | D1? | D2? | D3? | Result                  |
+# |------------------------------------------|-----|-----|-----|-------------------------|
+# | test_reg_engineer                        |  Y  |     |     | `BayesianOptPro` breaks |
+# | test_reg_engineer_integer_ok             |  Y  |     |  Y  | All good                |
+# | test_reg_engineer_categorical            |  Y  |  Y  |     | `BayesianOptPro` breaks |
+# | test_reg_engineer_categorical_integer_ok |  Y  |  Y  |  Y  | All good                |
+# | test_reg_categorical_ok                  |     |  Y  |     | All good (sanity check) |
+# | test_reg_categorical_integer_ok          |     |  Y  |  Y  | All good (sanity check) |
+# | test_reg_integer_ok                      |     |     |  Y  | All good (sanity check) |
+#
+# Conditions to summon bug (assume a blood offering has already been made):
+#   1. Use `BayesianOptPro`
+#   2. Use exclusively `Categorical` dimensions
+#   3. At least one of the `Categorical` dimensions must be in `FeatureEngineer`
+
+
+#################### Actual Tests ####################
+@pytest.mark.parametrize(
+    "opt_pro",
+    [
+        DummyOptPro,
+        ET,
+        GBRT,
+        RF,
+        pytest.param(
+            BayesianOptPro,
+            marks=pytest.mark.xfail(reason="BayesianOptPro hates Engineer/Categorical-only space"),
+        ),
+    ],
+)
+def test_reg_engineer(env_boston_regression, hh_assets, opt_pro):
+    """Demonstrate problem with `BayesianOptPro` specifically - same configuration is fine with all
+    other `OptPro`s"""
+    opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
+    opt.set_experiment_guidelines(
+        model_initializer=AdaBoostRegressor,
+        model_init_params=dict(),
+        feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])]),
+    )
+    opt.go()
+
+
+@pytest.mark.parametrize("opt_pro", [DummyOptPro, ET, GBRT, RF, BayesianOptPro])
+def test_reg_engineer_integer_ok(env_boston_regression, hh_assets, opt_pro):
+    """Identical to `test_reg_engineer`, except `Integer` dimension added to show that everything is
+    fine now. Problem limited to not only `BayesianOptPro`, but also exclusively `Categorical`
+    search spaces"""
+    opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
+    opt.set_experiment_guidelines(
+        model_initializer=AdaBoostRegressor,
+        model_init_params=dict(n_estimators=Integer(10, 40)),
+        feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])]),
+    )
+    opt.go()
+
+
+@pytest.mark.parametrize(
+    "opt_pro",
+    [
+        DummyOptPro,
+        ET,
+        GBRT,
+        RF,
+        pytest.param(
+            BayesianOptPro,
+            marks=pytest.mark.xfail(reason="BayesianOptPro hates Engineer/Categorical-only space"),
+        ),
+    ],
+)
+def test_reg_engineer_categorical(env_boston_regression, hh_assets, opt_pro):
+    """Demonstrate that `BayesianOptPro` breaks with multiple `Categorical`s when `FeatureEngineer`
+    is included in the dimensions"""
+    opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
+    opt.set_experiment_guidelines(
+        model_initializer=AdaBoostRegressor,
+        model_init_params=dict(loss=Categorical(["linear", "square", "exponential"])),
+        feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])]),
+    )
+    opt.go()
+
+
+@pytest.mark.parametrize("opt_pro", [DummyOptPro, ET, GBRT, RF, BayesianOptPro])
+def test_reg_engineer_categorical_integer_ok(env_boston_regression, hh_assets, opt_pro):
+    """Identical to `test_reg_engineer_categorical`, except `Integer` added to demonstrate that all
+    `OptPro`s can optimize with `FeatureEngineer` if space is not exclusively `Categorical`"""
+    opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
+    opt.set_experiment_guidelines(
+        model_initializer=AdaBoostRegressor,
+        model_init_params=dict(
+            loss=Categorical(["linear", "square", "exponential"]), n_estimators=Integer(10, 40)
+        ),
+        feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])]),
+    )
+    opt.go()
+
+
+@pytest.mark.parametrize("opt_pro", [DummyOptPro, ET, GBRT, RF, BayesianOptPro])
+def test_reg_categorical_ok(env_boston_regression, hh_assets, opt_pro):
+    """Demonstrate that all `OptPro`s are fine with exclusively-`Categorical` space that doesn't
+    include `FeatureEngineer`"""
+    opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
+    opt.set_experiment_guidelines(
+        model_initializer=AdaBoostRegressor,
+        model_init_params=dict(loss=Categorical(["linear", "square", "exponential"])),
+    )
+    opt.go()
+
+
+@pytest.mark.parametrize("opt_pro", [DummyOptPro, ET, GBRT, RF, BayesianOptPro])
+def test_reg_categorical_integer_ok(env_boston_regression, hh_assets, opt_pro):
+    """Identical to `test_reg_categorical_ok`, except `Integer` added to show cooperation"""
+    opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
+    opt.set_experiment_guidelines(
+        model_initializer=AdaBoostRegressor,
+        model_init_params=dict(
+            loss=Categorical(["linear", "square", "exponential"]), n_estimators=Integer(10, 40)
+        ),
+    )
+    opt.go()
+
+
+@pytest.mark.parametrize("opt_pro", [DummyOptPro, ET, GBRT, RF, BayesianOptPro])
+def test_reg_integer_ok(env_boston_regression, hh_assets, opt_pro):
+    opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
+    opt.set_experiment_guidelines(
+        model_initializer=AdaBoostRegressor, model_init_params=dict(n_estimators=Integer(10, 40))
+    )
+    opt.go()
