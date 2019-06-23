@@ -20,7 +20,6 @@ import sys
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.datasets import load_boston
 from sklearn.ensemble import AdaBoostRegressor
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
@@ -272,13 +271,6 @@ def test_not_in_target_space(space_item):
 ##################################################
 # Similar Experiment Description Scenarios
 ##################################################
-def get_boston_data():
-    data = load_boston()
-    df = pd.DataFrame(data=data.data, columns=data.feature_names)
-    df["median_value"] = data.target
-    return df
-
-
 # noinspection PyUnusedLocal
 def get_holdout_data(train, target_column):
     train_data, holdout_data = train_test_split(train, random_state=1)
