@@ -14,8 +14,8 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.optimization.backends.skopt.space import Real, Integer, Categorical
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.space import Real, Integer, Categorical
 
 ##################################################
 # Import Miscellaneous Assets

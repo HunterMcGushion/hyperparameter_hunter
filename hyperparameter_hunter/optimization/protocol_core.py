@@ -38,10 +38,14 @@ from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
     link_choice_ids,
 )
 from hyperparameter_hunter.metrics import get_formatted_target_metric
+from hyperparameter_hunter.optimization.backends.skopt.space import (
+    Space,
+    dimension_subset,
+    RejectedOptional,
+)
 from hyperparameter_hunter.reporting import OptimizationReporter
 from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G, TEMP_MODULES_DIR_PATH
-from hyperparameter_hunter.space import Space, dimension_subset, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import get_path
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict
 from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions

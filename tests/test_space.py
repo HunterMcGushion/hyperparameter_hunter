@@ -1,8 +1,9 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter import Real, Categorical, Integer
 from hyperparameter_hunter.feature_engineering import EngineerStep
-from hyperparameter_hunter.space import Real, Categorical, Integer, Space
+from hyperparameter_hunter.optimization.backends.skopt.space import Space
 
 ##################################################
 # Import Miscellaneous Assets

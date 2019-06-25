@@ -26,7 +26,7 @@ Related
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
-from hyperparameter_hunter.space import Categorical, RejectedOptional
+from hyperparameter_hunter.optimization.backends.skopt.space import Categorical, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import remap, default_visit, default_enter
 from hyperparameter_hunter.utils.general_utils import subdict
 

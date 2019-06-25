@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.reporting import get_param_column_sizes
-from hyperparameter_hunter.space import Real, Integer, Categorical
+from hyperparameter_hunter import Real, Integer, Categorical
 from tests.integration_tests.feature_engineering.test_feature_optimization import (
     ChoiceMMNormalizeSS,
     ChoiceUpsample,

@@ -19,7 +19,14 @@ contributors of SKOpt deserve all the credit for their excellent work"""
 ##################################################
 from hyperparameter_hunter.exceptions import ContinueRemap
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
-from hyperparameter_hunter.space import dimension_subset, Space, Real, Integer, Categorical
+from hyperparameter_hunter.optimization.backends.skopt.space import (
+    dimension_subset,
+    Space,
+    Real,
+    Integer,
+    Categorical,
+    normalize_dimensions,
+)
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
 from hyperparameter_hunter.utils.file_utils import read_json
 from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
@@ -51,8 +58,6 @@ from sklearn.utils import check_random_state
 # noinspection PyProtectedMember
 from skopt.acquisition import gaussian_acquisition_1D
 from skopt.learning import GaussianProcessRegressor
-from hyperparameter_hunter.space import Space, Categorical
-from hyperparameter_hunter.space import normalize_dimensions
 
 # noinspection PyProtectedMember
 from skopt.utils import cook_estimator, create_result, has_gradients, is_listlike, is_2Dlistlike

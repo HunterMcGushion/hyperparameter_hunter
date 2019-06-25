@@ -22,7 +22,7 @@ Related
 ##################################################
 from hyperparameter_hunter.settings import G, TEMP_MODULES_DOT_PATH, TEMP_MODULES_DIR_PATH
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
-from hyperparameter_hunter.space import Real, Integer, Categorical
+from hyperparameter_hunter.optimization.backends.skopt.space import Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict
 from hyperparameter_hunter.utils.parsing_utils import (

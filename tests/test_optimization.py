@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment
-from hyperparameter_hunter import optimization as hh_opt
+from hyperparameter_hunter.optimization.backends.skopt import protocols as hh_opt
 from hyperparameter_hunter.utils.general_utils import flatten, subdict
 
 ##################################################
