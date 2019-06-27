@@ -10,9 +10,12 @@ Notes
 What follows is a record of the first few commits to this file in order to clearly define what code
 was taken from the original Scikit-Optimize source, and how it was modified thereafter.
 
-* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
+* 81a70ddfa0270495f0ed39127adbac4eb1f4fa59:
   The content of this module (less module docstring) is identical to SKOpt's module
   `skopt.optimizer.optimizer` at the time of SKOpt commit 6740876a6f9ad92c732d394e8534a5236a8d3f84
+* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
+  Add SKOpt's `skopt.utils.cook_estimator` at the time of the above SKOpt commit, as well as the
+  original import statements required by the function
 """
 import sys
 import warnings
@@ -41,6 +44,20 @@ from ..utils import has_gradients
 from ..utils import is_listlike
 from ..utils import is_2Dlistlike
 from ..utils import normalize_dimensions
+
+
+import numpy as np
+
+from sklearn.base import is_regressor
+from sklearn.ensemble import GradientBoostingRegressor
+
+from .learning import ExtraTreesRegressor
+from .learning import GaussianProcessRegressor
+from .learning import GradientBoostingQuantileRegressor
+from .learning import RandomForestRegressor
+from .learning.gaussian_process.kernels import ConstantKernel
+from .learning.gaussian_process.kernels import HammingKernel
+from .learning.gaussian_process.kernels import Matern
 
 
 class Optimizer(object):
@@ -602,3 +619,81 @@ class Optimizer(object):
 
         return create_result(self.Xi, self.yi, self.space, self.rng,
                              models=self.models)
+
+
+from .space import Space
+
+
+def cook_estimator(base_estimator, space=None, **kwargs):
+    """
+    Cook a default estimator.
+
+    For the special base_estimator called "DUMMY" the return value is None.
+    This corresponds to sampling points at random, hence there is no need
+    for an estimator.
+
+    Parameters
+    ----------
+    * `base_estimator` ["GP", "RF", "ET", "GBRT", "DUMMY"
+                        or sklearn regressor, default="GP"]:
+        Should inherit from `sklearn.base.RegressorMixin`.
+        In addition the `predict` method should have an optional `return_std`
+        argument, which returns `std(Y | x)`` along with `E[Y | x]`.
+        If base_estimator is one of ["GP", "RF", "ET", "GBRT", "DUMMY"], a
+        surrogate model corresponding to the relevant `X_minimize` function
+        is created.
+
+    * `space` [Space instance]:
+        Has to be provided if the base_estimator is a gaussian process.
+        Ignored otherwise.
+
+    * `kwargs` [dict]:
+        Extra parameters provided to the base_estimator at init time.
+    """
+    if isinstance(base_estimator, str):
+        base_estimator = base_estimator.upper()
+        if base_estimator not in ["GP", "ET", "RF", "GBRT", "DUMMY"]:
+            raise ValueError("Valid strings for the base_estimator parameter "
+                             " are: 'RF', 'ET', 'GP', 'GBRT' or 'DUMMY' not "
+                             "%s." % base_estimator)
+    elif not is_regressor(base_estimator):
+        raise ValueError("base_estimator has to be a regressor.")
+
+    if base_estimator == "GP":
+        if space is not None:
+            space = Space(space)
+            space = Space(normalize_dimensions(space.dimensions))
+            n_dims = space.transformed_n_dims
+            is_cat = space.is_categorical
+
+        else:
+            raise ValueError("Expected a Space instance, not None.")
+
+        cov_amplitude = ConstantKernel(1.0, (0.01, 1000.0))
+        # only special if *all* dimensions are categorical
+        if is_cat:
+            other_kernel = HammingKernel(length_scale=np.ones(n_dims))
+        else:
+            other_kernel = Matern(
+                length_scale=np.ones(n_dims),
+                length_scale_bounds=[(0.01, 100)] * n_dims, nu=2.5)
+
+        base_estimator = GaussianProcessRegressor(
+            kernel=cov_amplitude * other_kernel,
+            normalize_y=True, noise="gaussian",
+            n_restarts_optimizer=2)
+    elif base_estimator == "RF":
+        base_estimator = RandomForestRegressor(n_estimators=100,
+                                               min_samples_leaf=3)
+    elif base_estimator == "ET":
+        base_estimator = ExtraTreesRegressor(n_estimators=100,
+                                             min_samples_leaf=3)
+    elif base_estimator == "GBRT":
+        gbrt = GradientBoostingRegressor(n_estimators=30, loss="quantile")
+        base_estimator = GradientBoostingQuantileRegressor(base_estimator=gbrt)
+
+    elif base_estimator == "DUMMY":
+        return None
+
+    base_estimator.set_params(**kwargs)
+    return base_estimator
