@@ -33,9 +33,9 @@ from .optimization.backends.skopt.protocols import GradientBoostedRegressionTree
 from .optimization.backends.skopt.protocols import RandomForestOptPro, RF
 from .optimization.backends.skopt.protocols import ExtraTreesOptPro, ET
 from .optimization.backends.skopt.protocols import DummyOptPro
-from .optimization.backends.skopt.space import Real
-from .optimization.backends.skopt.space import Integer
-from .optimization.backends.skopt.space import Categorical
+from .space.dimensions import Real
+from .space.dimensions import Integer
+from .space.dimensions import Categorical
 from .callbacks.bases import lambda_callback
 from .feature_engineering import FeatureEngineer
 from .feature_engineering import EngineerStep

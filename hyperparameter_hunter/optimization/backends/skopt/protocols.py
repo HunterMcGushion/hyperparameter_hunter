@@ -12,7 +12,7 @@ Related
 ##################################################
 from hyperparameter_hunter import __version__
 from hyperparameter_hunter.optimization.protocol_core import SKOptPro
-from hyperparameter_hunter.optimization.backends.skopt.space import normalize_dimensions
+from hyperparameter_hunter.space.space_core import normalize_dimensions
 from hyperparameter_hunter.utils.version_utils import Deprecated
 
 ##################################################

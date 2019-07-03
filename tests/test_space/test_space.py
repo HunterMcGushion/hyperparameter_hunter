@@ -3,7 +3,7 @@
 ##################################################
 from hyperparameter_hunter import Real, Categorical, Integer
 from hyperparameter_hunter.feature_engineering import EngineerStep
-from hyperparameter_hunter.optimization.backends.skopt.space import Space
+from hyperparameter_hunter.space.space_core import Space
 
 ##################################################
 # Import Miscellaneous Assets

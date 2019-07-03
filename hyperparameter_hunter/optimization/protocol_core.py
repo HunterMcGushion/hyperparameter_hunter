@@ -1,13 +1,13 @@
 """This module defines the base Optimization Protocol classes. The classes defined herein are not
 intended for direct use, but are rather parent classes to those defined in
-:mod:`hyperparameter_hunter.optimization`
+:mod:`hyperparameter_hunter.optimization.backends.skopt.protocols`
 
 Related
 -------
-:mod:`hyperparameter_hunter.optimization`
+:mod:`hyperparameter_hunter.optimization.backends.skopt.protocols`
     Defines the optimization classes that are intended for direct use. All classes defined in
-    :mod:`hyperparameter_hunter.optimization` should be descendants of
-    :class:`optimization_core.BaseOptPro`
+    :mod:`hyperparameter_hunter.optimization.backends.skopt.protocols` should be descendants of
+    :class:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro`
 :mod:`hyperparameter_hunter.result_reader`
     Used to locate result files for Experiments that are similar to the current optimization
     constraints, and produce data to learn from in the case of :class:`SKOptPro`
@@ -16,8 +16,7 @@ Related
     the hyperparameters to optimize
 :mod:`hyperparameter_hunter.utils.optimization_utils`:
     Provides utility functions for locating saved Experiments that fit within the constraints
-    currently being optimized, as well as :class:`AskingOptimizer`, which guides the search of
-    :class:`optimization_core.SKOptPro`"""
+    currently being optimized"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -38,17 +37,15 @@ from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
     link_choice_ids,
 )
 from hyperparameter_hunter.metrics import get_formatted_target_metric
-from hyperparameter_hunter.optimization.backends.skopt.space import (
-    Space,
-    dimension_subset,
-    RejectedOptional,
-)
+from hyperparameter_hunter.optimization.backends.skopt.engine import Optimizer, cook_estimator
 from hyperparameter_hunter.reporting import OptimizationReporter
 from hyperparameter_hunter.result_reader import finder_selector
 from hyperparameter_hunter.settings import G, TEMP_MODULES_DIR_PATH
+from hyperparameter_hunter.space.dimensions import RejectedOptional
+from hyperparameter_hunter.space.space_core import Space
 from hyperparameter_hunter.utils.boltons_utils import get_path
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict
-from hyperparameter_hunter.utils.optimization_utils import AskingOptimizer, get_choice_dimensions
+from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions, dimension_subset
 
 ##################################################
 # Import Miscellaneous Assets
@@ -66,7 +63,7 @@ from typing import Any, Dict
 from skopt.callbacks import check_callback
 
 # noinspection PyProtectedMember
-from skopt.utils import cook_estimator, eval_callbacks
+from skopt.utils import eval_callbacks
 
 try:
     from keras import backend as K
@@ -171,6 +168,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         self.tested_keys = []
         self._search_space_size = None
 
+        #################### Incumbent Hyperparameters ####################
         self.current_init_params = None
         self.current_extra_params = None
         self.current_feature_engineer = None
@@ -184,6 +182,8 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         #################### Keras-Specific Attributes ####################
         self.dummy_layers = []
         self.dummy_compile_params = dict()
+
+        #################### Secret Sauce ####################
         self.init_iter_attrs = []
         self.extra_iter_attrs = []
         self.fe_iter_attrs = [lambda p, k, v: isinstance(v, FeatureEngineer)]
@@ -415,7 +415,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             do_raise_repeated=self.do_raise_repeated,
             auto_start=False,
         )
-        # Fix `current_experiment.source_script`
+        # Fix `current_experiment.source_script` - Probably saying "protocol_core", which is a lie
         self.current_experiment.source_script = self.source_script
 
         #################### Run Experiment ####################
@@ -751,7 +751,7 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
         """Set :attr:`optimizer` to the optimizing class used to both estimate the utility of sets
         of hyperparameters by learning from executed Experiments, and suggest points at which the
         objective should be evaluated"""
-        self.optimizer = AskingOptimizer(
+        self.optimizer = Optimizer(
             dimensions=self.space,
             base_estimator=self.base_estimator,
             n_initial_points=self.n_initial_points,
