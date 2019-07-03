@@ -20,12 +20,9 @@ import pytest
 # Import Learning Assets
 ##################################################
 from scipy.optimize import OptimizeResult
-
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils.testing import assert_array_equal
-
-from skopt import gp_minimize
-from skopt.benchmarks import bench1, bench1_with_time, branin
+from skopt.benchmarks import bench1, bench1_with_time
 from skopt.learning import ExtraTreesRegressor, RandomForestRegressor
 from skopt.learning import GradientBoostingQuantileRegressor
 

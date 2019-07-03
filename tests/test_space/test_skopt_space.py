@@ -16,7 +16,6 @@ from hyperparameter_hunter.space.space_core import Space, check_dimension, norma
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
-from copy import deepcopy
 import numbers
 import numpy as np
 import pytest

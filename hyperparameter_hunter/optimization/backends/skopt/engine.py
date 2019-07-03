@@ -28,7 +28,6 @@ was taken from the original Scikit-Optimize source, and how it was modified ther
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.space.dimensions import Categorical
 from hyperparameter_hunter.space.space_core import Space, normalize_dimensions
 
 ##################################################
