@@ -681,6 +681,11 @@ class Categorical(Dimension):
         rng = check_random_state(random_state)
         choices = self.distribution.rvs(size=n_samples, random_state=rng)
 
+        # `self.distribution.rvs` returns a list of a single value for `n_samples`=1, so grab the
+        #   value in this case. Seems to be contrary to behavior of other `rv_generic` subclasses
+        if n_samples == 1 and not isinstance(choices, Integral):
+            choices = choices[0]
+
         # Index `categories`, instead of using `transformer.inverse_transform` because
         #   `distribution` is of all indices, not actual `categories`
         if isinstance(choices, Integral):
