@@ -77,7 +77,7 @@ def env_boston():
 
 
 def opt_pro(optimization_protocol):
-    opt = optimization_protocol(iterations=11, random_state=32)
+    opt = optimization_protocol(iterations=3, random_state=32, n_initial_points=1)
     opt.set_experiment_guidelines(
         model_initializer=XGBRegressor,
         model_init_params=dict(
@@ -112,7 +112,7 @@ def test_saved_engineer_step_update_0(env_boston, protocol_0, protocol_1):
     exception, and it should never be a problem, so it makes sense to test it"""
     opt_0 = opt_pro(protocol_0)  # First Optimization Execution
     opt_1 = opt_pro(protocol_1)  # Second (Uninformed) Execution
-    assert len(opt_1.similar_experiments) == 11
+    assert len(opt_1.similar_experiments) == 3  # From `opt_pro`'s `iterations`
 
 
 @pytest.mark.xfail(condition="__version__ < '3.0.0alpha2'")
