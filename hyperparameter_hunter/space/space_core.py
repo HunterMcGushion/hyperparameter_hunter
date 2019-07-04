@@ -183,7 +183,6 @@ class Space:
         ----------
         n_samples: Int, default=1
             Number of samples to be drawn from the space
-
         random_state: Int, RandomState, or None, default=None
             Set random state to something other than None for reproducible results
 

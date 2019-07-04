@@ -112,7 +112,6 @@ class Dimension(ABC):
         ----------
         n_samples: Int, default=1
             Number of samples to be drawn
-
         random_state: Int, RandomState, or None, default=None
             Set random state to something other than None for reproducible results
 
@@ -547,6 +546,8 @@ class Integer(NumericalDimension):
             Samples transformed back to original space. Will be shape (<# samples>, :attr:`size`)"""
         # Concatenation of all transformed dimensions makes `data_t` of type float,
         #   hence the required cast back to int
+        # TODO: This breaks if `Integer.rvs` called with `n_samples`=None - Raises TypeError
+        #   when calling `astype` on result of `inverse_transform`, which is Python int, not NumPy
         return super().inverse_transform(data_t).astype(np.int)
 
     #################### Functional Properties ####################
@@ -662,15 +663,14 @@ class Categorical(Dimension):
         self.distribution = None
         self.transformer = None
 
-    def rvs(self, n_samples=1, random_state=None):
+    def rvs(self, n_samples=None, random_state=None):  # TODO: Make default `n_samples`=1
         """Draw random samples. Samples are in the original (untransformed) space. They must be
         transformed before being passed to a model or minimizer via :meth:`transform`
 
         Parameters
         ----------
-        n_samples: Int, default=1
-            Number of samples to be drawn
-
+        n_samples: Int (optional)
+            Number of samples to be drawn. If not given, a single sample will be returned
         random_state: Int, RandomState, or None, default=None
             Set random state to something other than None for reproducible results
 
@@ -680,11 +680,6 @@ class Categorical(Dimension):
             Randomly drawn samples from the original space"""
         rng = check_random_state(random_state)
         choices = self.distribution.rvs(size=n_samples, random_state=rng)
-
-        # `self.distribution.rvs` returns a list of a single value for `n_samples`=1, so grab the
-        #   value in this case. Seems to be contrary to behavior of other `rv_generic` subclasses
-        if n_samples == 1 and not isinstance(choices, Integral):
-            choices = choices[0]
 
         # Index `categories`, instead of using `transformer.inverse_transform` because
         #   `distribution` is of all indices, not actual `categories`

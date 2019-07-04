@@ -62,8 +62,9 @@ def test_categorical_dimension_equality(categories):
         (Real(1, 4), 2.251066014107722),
         (Integer(1, 4), 2),
         (Integer(1.0, 4.0), 2),
-        (Categorical(["a", "b", "c", "d"]), "b"),
         (Categorical([1.0, 2.0, 3.0, 4.0]), 2.0),
+        (Categorical(["a", "b", "c", "d"]), "b"),
+        (Categorical(["foo", "bar", "baz"]), "bar"),
     ],
 )
 def test_dimension_rvs(dimension, random_val):
