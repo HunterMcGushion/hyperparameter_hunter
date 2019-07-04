@@ -1,2 +1,5 @@
 include README.md
 include hyperparameter_hunter/VERSION
+include LICENSE
+include hyperparameter_hunter/optimization/backends/skopt/LICENSE
+include hyperparameter_hunter/optimization/backends/skopt/README.md

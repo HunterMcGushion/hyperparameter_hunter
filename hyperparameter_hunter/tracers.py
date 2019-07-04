@@ -15,7 +15,7 @@ Related
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.space import Real, Integer, Categorical
+from hyperparameter_hunter.space.dimensions import Real, Integer, Categorical
 
 ##################################################
 # Import Miscellaneous Assets

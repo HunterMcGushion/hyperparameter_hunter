@@ -315,6 +315,59 @@ def set_default_attr(obj, name, value):
     return value
 
 
+class _Ellipsis:
+    """Helper class to be able to print [1, ..., 4] instead of [1, "...", 4]
+
+    Notes
+    -----
+    From the superb [Scikit-Optimize](https://github.com/scikit-optimize/scikit-optimize) library.
+    See :mod:`hyperparameter_hunter.optimization.backends.skopt` for a copy of SKOpt's license"""
+
+    def __repr__(self):
+        return "..."
+
+
+def short_repr(values: Union[tuple, None], affix_size=3) -> Union[tuple, None]:
+    """Make a shortened representation of an iterable, replacing the midsection with an ellipsis
+
+    Parameters
+    ----------
+    values: Tuple, list, or None
+        Iterable to shorten if necessary. If None, None will be returned
+    affix_size: Int, default=3
+        Number of elements in `values` to include at the beginning and at the end of the shortened
+        representation. This is not the total number of values to include. An `affix_size` of 3
+        includes the first 3 elements in `values`, followed by an ellipsis, then the last 3 elements
+        in `values`. The length of the returned representation will be (2 * `affix_size` + 1). If
+        length of `values` is less than or equal to (2 * `affix_size` + 1), it is returned unchanged
+
+    Returns
+    -------
+    Tuple, list, or None
+        Shortened representation of `values` if necessary. Otherwise, unchanged `values`
+
+    Examples
+    --------
+    >>> short_repr(list("abcdefghijklmnopqrstuvwxyz"))
+    ['a', 'b', 'c', ..., 'x', 'y', 'z']
+    >>> short_repr(tuple("abcdefghijklmnopqrstuvwxyz"), affix_size=1)
+    ('a', ..., 'z')
+    >>> short_repr(list("foo"))
+    ['f', 'o', 'o']
+    >>> short_repr(list("foo"), affix_size=1)
+    ['f', 'o', 'o']
+    >>> short_repr(list("foo2"), affix_size=1)
+    ['f', ..., '2']
+    >>> assert short_repr(None) is None
+    """
+    if values is None or len(values) <= (2 * affix_size + 1):
+        return values
+    elif isinstance(values, tuple):
+        return values[:affix_size] + (_Ellipsis(),) + values[-affix_size:]
+    else:
+        return values[:affix_size] + [_Ellipsis()] + values[-affix_size:]
+
+
 ##################################################
 # Boltons Utilities
 ##################################################

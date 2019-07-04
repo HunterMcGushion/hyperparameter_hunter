@@ -8,7 +8,7 @@ from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
     merge_compile_params,
     rewrite_model_builder,
 )
-from hyperparameter_hunter.space import Real, Categorical
+from hyperparameter_hunter import Real, Categorical
 
 ##################################################
 # Import Miscellaneous Assets

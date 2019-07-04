@@ -1,13 +1,14 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter import Real, Categorical, Integer
+from hyperparameter_hunter.space.space_core import Space
 from hyperparameter_hunter.utils.optimization_utils import (
     does_fit_in_space,
     filter_by_space,
     get_choice_dimensions,
     get_ids_by,
 )
-from hyperparameter_hunter.space import Real, Integer, Categorical, Space
 
 ##################################################
 # Import Miscellaneous Assets

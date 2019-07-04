@@ -1,14 +1,35 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter import Real, Categorical, Integer
 from hyperparameter_hunter.feature_engineering import EngineerStep
-from hyperparameter_hunter.space import Real, Categorical, Integer, Space
+from hyperparameter_hunter.space.space_core import Space
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 import pytest
 from sys import maxsize
+
+
+##################################################
+# `Space.rvs` with `Categorical` Strings
+##################################################
+def test_space_rvs():
+    """Test that calling `Space.rvs` returns expected values. This is specifically
+    aimed at ensuring `Categorical` instances containing strings produce the entire
+    string, rather than the first character, for example"""
+    space = Space([Integer(50, 100), Categorical(["glorot_normal", "orthogonal"])])
+
+    sample_0 = space.rvs(random_state=32)
+    sample_1 = space.rvs(n_samples=1, random_state=32)
+    sample_2 = space.rvs(n_samples=2, random_state=32)
+    sample_3 = space.rvs(n_samples=3, random_state=32)
+
+    assert sample_0 == [[73, "glorot_normal"]]
+    assert sample_1 == [[73, "glorot_normal"]]
+    assert sample_2 == [[73, "glorot_normal"], [93, "orthogonal"]]
+    assert sample_3 == [[73, "glorot_normal"], [93, "glorot_normal"], [55, "orthogonal"]]
 
 
 ##################################################

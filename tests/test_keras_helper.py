@@ -7,7 +7,7 @@ from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to
 from hyperparameter_hunter.library_helpers.keras_helper import keras_initializer_to_dict
 from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
 from hyperparameter_hunter.library_helpers.keras_helper import parameters_by_signature
-from hyperparameter_hunter.space import Integer
+from hyperparameter_hunter import Integer
 
 ##################################################
 # Import Miscellaneous Assets
