@@ -232,9 +232,7 @@ class Space:
         -----
         Expected to be used to project samples into a suitable space for numerical optimization"""
         #################### Pack by Dimension ####################
-        columns = []
-        for dim in self.dimensions:
-            columns.append([])
+        columns = [[] for _ in self.dimensions]
 
         for i in range(len(data)):
             for j in range(self.n_dims):

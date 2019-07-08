@@ -253,6 +253,14 @@ class Optimizer(object):
 
     @property
     def acq_optimizer(self) -> str:
+        """Method to minimize the acquisition function. See documentation for the `acq_optimizer`
+        kwarg in :meth:`Optimizer.__init__` for additional information
+
+        Returns
+        -------
+        {"lbfgs", "sampling"}
+            String in {"lbfgs", "sampling"}. If originally "auto", one of the two aforementioned
+            strings is selected based on :attr:`base_estimator`"""
         return self._acq_optimizer
 
     @acq_optimizer.setter
@@ -508,6 +516,11 @@ class Optimizer(object):
                     cand_xs = np.array([r[0] for r in results])
                     cand_acqs = np.array([r[1] for r in results])
                     next_x = cand_xs[np.argmin(cand_acqs)]
+                else:
+                    # `acq_optimizer` should have already been checked, so this shouldn't be hit,
+                    #   but, it's here anyways to prevent complaints about `next_x` not existing in
+                    #   the absence of this `else` clause
+                    raise RuntimeError(f"Invalid `acq_optimizer` value: {self.acq_optimizer}")
 
                 # L-BFGS-B should handle this, but just in case of precision errors...
                 if not self.space.is_categorical:

@@ -69,6 +69,9 @@ class RejectedOptional(metaclass=Singleton):
     def __str__(self):
         return "<NONE>"
 
+    def __repr__(self):
+        return "RejectedOptional()"
+
     def __format__(self, format_spec):
         return str(self).__format__(format_spec)
 
@@ -375,10 +378,10 @@ class Real(NumericalDimension):
 
         Attributes
         ----------
-        transform_: String
-            Original value passed through the `transform` kwarg - Because :meth:`transform` exists
         distribution: rv_generic
             See documentation of :meth:`_make_distribution` or :meth:`distribution`
+        transform_: String
+            Original value passed through the `transform` kwarg - Because :meth:`transform` exists
         transformer: Transformer
             See documentation of :meth:`_make_transformer` or :meth:`transformer`"""
         super().__init__(low, high)
@@ -392,10 +395,8 @@ class Real(NumericalDimension):
                 "`transform` must be in ['normalize', 'identity']. Got {}".format(self.transform_)
             )
 
-        # Define distribution and transformer spaces.
-        # XXX: The distribution is for sampling in the transformed space.
-        # The rvs on Dimension calls inverse_transform on the points sampled
-        # using distribution
+        # Define distribution and transformer spaces. `distribution` is for sampling in transformed
+        #   space. `Dimension.rvs` calls inverse_transform on the points sampled using distribution
         self.distribution = None  # TODO: Add as kwarg?
         self.transformer = None
 
@@ -515,10 +516,10 @@ class Integer(NumericalDimension):
 
         Attributes
         ----------
-        transform_: String
-            Original value passed through the `transform` kwarg - Because :meth:`transform` exists
         distribution: rv_generic
             See documentation of :meth:`_make_distribution` or :meth:`distribution`
+        transform_: String
+            Original value passed through the `transform` kwarg - Because :meth:`transform` exists
         transformer: Transformer
             See documentation of :meth:`_make_transformer` or :meth:`transformer`"""
         super().__init__(low, high)
@@ -635,10 +636,20 @@ class Categorical(Dimension):
 
         Attributes
         ----------
-        transform_: String
-            Original value passed through the `transform` kwarg - Because :meth:`transform` exists
+        categories: Tuple
+            Original value passed through the `categories` kwarg, cast to a tuple. If `optional` is
+            True, then an instance of :class:`RejectedOptional` will be appended to `categories`
         distribution: rv_generic
             See documentation of :meth:`_make_distribution` or :meth:`distribution`
+        optional: Boolean
+            Original value passed through the `optional` kwarg
+        prior: List, or None
+            Original value passed through the `prior` kwarg
+        prior_actual: List
+            Calculated prior value, initially equivalent to :attr:`prior`, but then set to a default
+            array if None
+        transform_: String
+            Original value passed through the `transform` kwarg - Because :meth:`transform` exists
         transformer: Transformer
             See documentation of :meth:`_make_transformer` or :meth:`transformer`"""
         super().__init__()

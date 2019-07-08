@@ -3,6 +3,7 @@
 ##################################################
 from hyperparameter_hunter import Real, Categorical, Integer
 from hyperparameter_hunter.feature_engineering import EngineerStep
+from hyperparameter_hunter.space.dimensions import RejectedOptional
 from hyperparameter_hunter.space.space_core import Space
 
 ##################################################
@@ -287,3 +288,10 @@ def test_get_by_name_use_location(space, name, expected):
 
     actual = space.get_by_name(name, use_location=True)
     assert actual == expected
+
+
+##################################################
+# `RejectedOptional` Tests
+##################################################
+def test_rejected_optional_repr():
+    assert "{!r}".format(RejectedOptional()) == "RejectedOptional()"
