@@ -64,7 +64,7 @@ class BayesianOptPro(SKOptPro):
         random_state=32,
         acquisition_function_kwargs=None,
         acquisition_optimizer_kwargs=None,
-        n_random_starts=10,
+        n_random_starts="DEPRECATED",
         callbacks=None,
         base_estimator_kwargs=None,
     ):
@@ -112,7 +112,7 @@ class GradientBoostedRegressionTreeOptPro(SKOptPro):
         random_state=32,
         acquisition_function_kwargs=None,
         acquisition_optimizer_kwargs=None,
-        n_random_starts=10,
+        n_random_starts="DEPRECATED",
         callbacks=None,
         base_estimator_kwargs=None,
     ):
@@ -155,7 +155,7 @@ class RandomForestOptPro(SKOptPro):
         random_state=32,
         acquisition_function_kwargs=None,
         acquisition_optimizer_kwargs=None,
-        n_random_starts=10,
+        n_random_starts="DEPRECATED",
         callbacks=None,
         base_estimator_kwargs=None,
     ):
@@ -198,7 +198,7 @@ class ExtraTreesOptPro(SKOptPro):
         random_state=32,
         acquisition_function_kwargs=None,
         acquisition_optimizer_kwargs=None,
-        n_random_starts=10,
+        n_random_starts="DEPRECATED",
         callbacks=None,
         base_estimator_kwargs=None,
     ):
@@ -241,7 +241,7 @@ class DummyOptPro(SKOptPro):
         random_state=32,
         acquisition_function_kwargs=None,
         acquisition_optimizer_kwargs=None,
-        n_random_starts=10,
+        n_random_starts="DEPRECATED",
         callbacks=None,
         base_estimator_kwargs=None,
     ):

@@ -28,6 +28,7 @@ from hyperparameter_hunter.exceptions import (
     EnvironmentInactiveError,
     EnvironmentInvalidError,
     RepeatedExperimentError,
+    DeprecatedWarning,
 )
 from hyperparameter_hunter.experiments import CVExperiment
 from hyperparameter_hunter.feature_engineering import FeatureEngineer
@@ -56,6 +57,7 @@ from inspect import currentframe, getframeinfo
 from os import walk, remove, rmdir
 from os.path import abspath
 from typing import Any, Dict
+from warnings import warn
 
 ##################################################
 # Import Learning Assets
@@ -625,7 +627,7 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
         acquisition_function_kwargs=None,
         acquisition_optimizer_kwargs=None,
         #################### Minimizer Parameters ####################
-        n_random_starts=10,
+        n_random_starts="DEPRECATED",
         callbacks=None,
         #################### Other Parameters ####################
         base_estimator_kwargs=None,
@@ -681,9 +683,9 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             Additional arguments passed to the acquisition function
         acquisition_optimizer_kwargs: Dict, or None, default=dict(n_points=10000, n_restarts_optimizer=5, n_jobs=1)
             Additional arguments passed to the acquisition optimizer
-        n_random_starts: Int, default=10
-            The number of Experiments to execute with random points before checking that
-            `n_initial_points` have been evaluated
+        n_random_starts: ...
+            .. deprecated:: 3.0.0
+                Use `n_initial_points`, instead. Will be removed in 3.2.0
         callbacks: Callable, list of callables, or None, default=[]
             If callable, then `callbacks(self.optimizer_result)` is called after each update to
             :attr:`optimizer`. If list, then each callable is called
@@ -707,16 +709,17 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
         self.acquisition_function = acquisition_function
         self.acquisition_optimizer = acquisition_optimizer
         self.random_state = random_state
-        self.acquisition_function_kwargs = dict(xi=0.01, kappa=1.96)
-        self.acquisition_optimizer_kwargs = dict(n_points=10000, n_restarts_optimizer=5, n_jobs=1)
 
+        self.acquisition_function_kwargs = dict(xi=0.01, kappa=1.96)
         self.acquisition_function_kwargs.update(acquisition_function_kwargs or {})
+        self.acquisition_optimizer_kwargs = dict(n_points=10000, n_restarts_optimizer=5, n_jobs=1)
         self.acquisition_optimizer_kwargs.update(acquisition_optimizer_kwargs or {})
 
-        #################### Minimizer Parameters ####################
-        # TODO: n_random_starts does nothing currently - Fix that
-        self.n_random_starts = n_random_starts
         self.callbacks = callbacks or []
+
+        if n_random_starts != "DEPRECATED":
+            self.n_initial_points = n_random_starts
+            warn(DeprecatedWarning("n_random_starts", "3.0.0", "3.2.0", "Use `n_initial_points`"))
 
         #################### Other Parameters ####################
         self.base_estimator_kwargs = base_estimator_kwargs or {}

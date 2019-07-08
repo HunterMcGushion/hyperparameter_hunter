@@ -45,6 +45,7 @@ def est_except(skip: str) -> list:
 def pytest_generate_tests(metafunc):
     arg_names, arg_values, id_list = None, [], []
 
+    # Only parametrize test functions explicitly named - Return other test functions unchanged
     if metafunc.function.__name__ == "test_valid":
         scenarios = scenario_pairs
     elif metafunc.function.__name__ == "test_invalid":
@@ -52,6 +53,7 @@ def pytest_generate_tests(metafunc):
     else:
         return
 
+    # Parametrize functions using `scenarios`
     for id_prefix, scenario_dict in scenarios.items():
         arg_names = list(scenario_dict.keys())
 
@@ -90,5 +92,22 @@ def test_invalid(est, opt):
     ],
 )
 def test_opt_pro_deprecations(opt_pro):
+    """Test that instantiating any OptPro with an outdated name raises a DeprecationWarning"""
     with pytest.deprecated_call():
         opt_pro()
+
+
+@pytest.mark.parametrize(
+    "opt_pro",
+    [
+        hh_opt.BayesianOptPro,
+        hh_opt.GradientBoostedRegressionTreeOptPro,
+        hh_opt.RandomForestOptPro,
+        hh_opt.ExtraTreesOptPro,
+        hh_opt.DummyOptPro,
+    ],
+)
+def test_opt_pro_n_random_starts_deprecation(opt_pro):
+    """Check that instantiating any OptPro with `n_random_starts` raises a DeprecationWarning"""
+    with pytest.deprecated_call():
+        opt_pro(n_random_starts=10)
