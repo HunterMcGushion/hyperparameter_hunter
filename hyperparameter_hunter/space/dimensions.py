@@ -69,6 +69,9 @@ class RejectedOptional(metaclass=Singleton):
     def __str__(self):
         return "<NONE>"
 
+    def __repr__(self):
+        return "RejectedOptional()"
+
     def __format__(self, format_spec):
         return str(self).__format__(format_spec)
 
