@@ -608,6 +608,9 @@ class EngineerStep:
             updated_hashes=self.updated_hashes,
         )
 
+    ##################################################
+    # Properties
+    ##################################################
     @property
     def f(self) -> Callable:
         """Feature engineering step callable that requests, modifies, and returns datasets"""
@@ -637,6 +640,12 @@ class EngineerStep:
             self._stage = get_engineering_step_stage(self.params)
         return self._stage
 
+    ##################################################
+    # Comparison Methods
+    ##################################################
+    def __hash__(self):
+        return hash((self.name, self.f, self.params, self.stage, self.do_validate))
+
     def __eq__(self, other):
         """Check whether `other` is equal to `self`
 
@@ -647,35 +656,115 @@ class EngineerStep:
 
         Parameters
         ----------
-        other: Any
-            Object to compare to `self`
+        other: EngineerStep, dict, str
+            Object to compare to `self`. If dict, the critical attributes mentioned above are
+            regarded as keys of `other`, and `other` should be of the form returned by
+            :meth:`EngineerStep.get_comparison_attrs`. If str, `other` will be compared to the
+            result of `self`'s :meth:`EngineerStep.stringify`
 
         Returns
         -------
         Boolean
-            True if `other` is equal to `self`, else False"""
-        if isinstance(other, dict):
-            return all(
-                [
-                    self.name == other.get("name", object()),
-                    make_hash_sha256(self.f) == other.get("f", object()),
-                    self.params == tuple(other.get("params", object())),
-                    self.stage == other.get("stage", object()),
-                    self.do_validate == other.get("do_validate", object()),
-                ]
-            )
-        return all(
-            [
-                self.name == getattr(other, "name", object()),
-                self.f == getattr(other, "f", object()),
-                self.params == getattr(other, "params", object()),
-                self.stage == getattr(other, "stage", object()),
-                self.do_validate == getattr(other, "do_validate", object()),
-            ]
-        )
+            True if `other` is equal to `self`, else False
 
-    def __hash__(self):
-        return hash((self.name, self.f, self.params, self.stage, self.do_validate))
+        Examples
+        --------
+        >>> def dummy_f(train_inputs, non_train_inputs):
+        ...     return train_inputs, non_train_inputs
+        >>> es_0 = EngineerStep(dummy_f)
+        >>> assert es_0 == EngineerStep(dummy_f)
+        >>> assert es_0 == EngineerStep.get_comparison_attrs(es_0)
+        >>> assert es_0 == es_0.stringify()
+        """
+        if isinstance(other, str):
+            return self.stringify() == other
+        elif isinstance(other, (dict, EngineerStep)):
+            # Collect dicts of attributes for comparison
+            other_attrs = self.get_comparison_attrs(other)
+            own_attrs = self.get_comparison_attrs(self)
+            # If `other_attrs["f"]` is str, should be SHA256 - Use hash of `self.f` to compare
+            if isinstance(other_attrs["f"], str):
+                own_attrs["f"] = make_hash_sha256(own_attrs["f"])
+
+            return own_attrs == other_attrs
+
+        return False
+
+    @staticmethod
+    def get_comparison_attrs(step_obj: Union["EngineerStep", dict]) -> dict:
+        """Build a dict of critical :class:`EngineerStep` attributes
+
+        Parameters
+        ----------
+        step_obj: EngineerStep, dict
+            Object for which critical :class:`EngineerStep` attributes should be collected
+
+        Returns
+        -------
+        attr_vals: Dict
+            Critical :class:`EngineerStep` attributes. If `step_obj` does not have a necessary
+            attribute (for `EngineerStep`) or a necessary key (for dict), its value in `attr_vals`
+            will be a placeholder object. This is to facilitate comparison, while also ensuring
+            missing values will always be considered unequal to other values
+
+        Examples
+        --------
+        >>> def dummy_f(train_inputs, non_train_inputs):
+        ...     return train_inputs, non_train_inputs
+        >>> es_0 = EngineerStep(dummy_f)
+        >>> EngineerStep.get_comparison_attrs(es_0)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        {'name': 'dummy_f',
+         'f': <function dummy_f at ...>,
+         'params': ('train_inputs', 'non_train_inputs'),
+         'stage': 'intra_cv',
+         'do_validate': False}
+        >>> EngineerStep.get_comparison_attrs(
+        ...     dict(foo="hello", f=dummy_f, params=["all_inputs", "all_targets"], stage="pre_cv")
+        ... )  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        {'name': <object object at ...>,
+         'f': <function dummy_f at ...>,
+         'params': ('all_inputs', 'all_targets'),
+         'stage': 'pre_cv',
+         'do_validate': <object object at ...>}
+        """
+        # Attributes necessary for equality
+        attr_names = ("name", "f", "params", "stage", "do_validate")
+        if isinstance(step_obj, dict):
+            attr_vals = {_: step_obj.get(_, object()) for _ in attr_names}
+        else:
+            attr_vals = {_: getattr(step_obj, _, object()) for _ in attr_names}
+
+        # Ensure :attr:`params` is always a tuple, not a list
+        attr_vals["params"] = tuple(attr_vals["params"])
+        return attr_vals
+
+    def stringify(self) -> str:
+        """Make a stringified representation of `self`, compatible with :meth:`EngineerStep.__eq__`
+
+        Returns
+        -------
+        String
+            String describing all critical attributes of the :class:`EngineerStep` instance. This
+            value is not particularly human-friendly due to both its length and the fact that
+            :attr:`EngineerStep.f` is represented by its hash
+
+        Examples
+        --------
+        >>> def dummy_f(train_inputs, non_train_inputs):
+        ...     return train_inputs, non_train_inputs
+        >>> EngineerStep(dummy_f).stringify()  # doctest: +ELLIPSIS
+        "EngineerStep(dummy_f, ..., ('train_inputs', 'non_train_inputs'), intra_cv, False)"
+        >>> EngineerStep(dummy_f, stage="pre_cv").stringify()  # doctest: +ELLIPSIS
+        "EngineerStep(dummy_f, ..., ('train_inputs', 'non_train_inputs'), pre_cv, False)"
+        """
+        return "{}({}, {}, {}, {}, {})".format(
+            self.__class__.__name__,
+            self.name,
+            make_hash_sha256(self.f),
+            self.params,
+            self.stage,
+            self.do_validate,
+        )
 
     @classmethod
     def honorary_step_from_dict(cls, step_dict: dict, dimension: Categorical):
