@@ -31,7 +31,7 @@ experiment = CVExperiment(
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
 optimizer = ExtraTreesOptPro(iterations=12, random_state=1337)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=LGBMRegressor,
     model_init_params=dict(
         boosting_type=Categorical(["gbdt", "dart"]),

@@ -78,7 +78,7 @@ def env_boston():
 
 def opt_pro(optimization_protocol):
     opt = optimization_protocol(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=XGBRegressor,
         model_init_params=dict(
             max_depth=Integer(2, 10),

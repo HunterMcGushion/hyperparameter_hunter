@@ -38,7 +38,7 @@ experiment = CVExperiment(
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
 optimizer = RandomForestOptPro(iterations=10, random_state=32)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=LGBMClassifier,
     model_init_params=dict(
         boosting_type=Categorical(["gbdt", "dart"]),

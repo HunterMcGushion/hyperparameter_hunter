@@ -24,7 +24,7 @@ Hyperparameter Optimization
 
    .. automethod:: __init__
       :noindex:
-   .. automethod:: set_experiment_guidelines
+   .. automethod:: forge_experiment
       :noindex:
    .. automethod:: go
       :noindex:
@@ -36,7 +36,7 @@ Hyperparameter Optimization
 
    .. automethod:: __init__
       :noindex:
-   .. automethod:: set_experiment_guidelines
+   .. automethod:: forge_experiment
       :noindex:
    .. automethod:: go
       :noindex:
@@ -48,7 +48,7 @@ Hyperparameter Optimization
 
    .. automethod:: __init__
       :noindex:
-   .. automethod:: set_experiment_guidelines
+   .. automethod:: forge_experiment
       :noindex:
    .. automethod:: go
       :noindex:
@@ -60,7 +60,7 @@ Hyperparameter Optimization
 
    .. automethod:: __init__
       :noindex:
-   .. automethod:: set_experiment_guidelines
+   .. automethod:: forge_experiment
       :noindex:
    .. automethod:: go
       :noindex:
@@ -72,7 +72,7 @@ Hyperparameter Optimization
 
    .. automethod:: __init__
       :noindex:
-   .. automethod:: set_experiment_guidelines
+   .. automethod:: forge_experiment
       :noindex:
    .. automethod:: go
       :noindex:

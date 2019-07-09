@@ -92,7 +92,7 @@ def execute():
     # `opt_0` recognizes `exp_0`'s `feature_engineer` and its results as valid learning material
     # This is because `opt_0` marks the engineer step functions omitted by `exp_0` as `optional=True`
     opt_0 = DummyOptPro(iterations=10)
-    opt_0.set_experiment_guidelines(
+    opt_0.forge_experiment(
         model_initializer=Ridge,
         model_init_params=dict(),
         feature_engineer=FeatureEngineer(

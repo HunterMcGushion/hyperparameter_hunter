@@ -152,7 +152,7 @@ def _build_penta_cat_int(input_shape):
 
 def do_optimization(opt_pro, build_fn):
     opt = opt_pro(iterations=2, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         KerasClassifier, build_fn, model_extra_params=dict(batch_size=32, epochs=1, verbose=0)
     )
     opt.go()

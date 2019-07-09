@@ -60,7 +60,7 @@ def _execute():
 
     #################### Optimization ####################
     optimizer = BayesianOptPro(iterations=10)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=KerasClassifier,
         model_init_params=dict(build_fn=_build_fn_optimization),
         model_extra_params=dict(

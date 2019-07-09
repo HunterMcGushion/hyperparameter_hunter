@@ -17,7 +17,7 @@ def _execute():
 
     optimizer = BayesianOptPro(iterations=10, read_experiments=True, random_state=None)
 
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(
             max_depth=Integer(2, 20),

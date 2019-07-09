@@ -308,7 +308,7 @@ def fe_optimizer(request):
     if request.param is not None:
         request.param = FeatureEngineer(request.param)
     opt = BayesianOptPro()
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=Ridge, model_init_params={}, feature_engineer=request.param
     )
     opt.go()
@@ -414,7 +414,7 @@ def test_similar_experiments_unordered():
     )
 
     opt = BayesianOptPro(iterations=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(objective="reg:linear", subsample=0.5, max_depth=3),
         feature_engineer=FeatureEngineer(
@@ -505,7 +505,7 @@ def test_reg_engineer(env_boston_regression, hh_assets, opt_pro):
     """Demonstrate problem with `BayesianOptPro` specifically - same configuration is fine with all
     other `OptPro`s"""
     opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=AdaBoostRegressor,
         model_init_params=dict(),
         feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])]),
@@ -519,7 +519,7 @@ def test_reg_engineer_integer_ok(env_boston_regression, hh_assets, opt_pro):
     fine now. Problem limited to not only `BayesianOptPro`, but also exclusively `Categorical`
     search spaces"""
     opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=AdaBoostRegressor,
         model_init_params=dict(n_estimators=Integer(10, 40)),
         feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])]),
@@ -547,7 +547,7 @@ def test_reg_engineer_categorical(env_boston_regression, hh_assets, opt_pro):
     """Demonstrate that `BayesianOptPro` breaks with multiple `Categorical`s when `FeatureEngineer`
     is included in the dimensions"""
     opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=AdaBoostRegressor,
         model_init_params=dict(loss=Categorical(["linear", "square", "exponential"])),
         feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale, normalize])]),
@@ -560,7 +560,7 @@ def test_reg_engineer_categorical_integer_ok(env_boston_regression, hh_assets, o
     """Identical to `test_reg_engineer_categorical`, except `Integer` added to demonstrate that all
     `OptPro`s can optimize with `FeatureEngineer` if space is not exclusively `Categorical`"""
     opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=AdaBoostRegressor,
         model_init_params=dict(
             loss=Categorical(["linear", "square", "exponential"]), n_estimators=Integer(10, 40)
@@ -575,7 +575,7 @@ def test_reg_categorical_ok(env_boston_regression, hh_assets, opt_pro):
     """Demonstrate that all `OptPro`s are fine with exclusively-`Categorical` space that doesn't
     include `FeatureEngineer`"""
     opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=AdaBoostRegressor,
         model_init_params=dict(loss=Categorical(["linear", "square", "exponential"])),
     )
@@ -586,7 +586,7 @@ def test_reg_categorical_ok(env_boston_regression, hh_assets, opt_pro):
 def test_reg_categorical_integer_ok(env_boston_regression, hh_assets, opt_pro):
     """Identical to `test_reg_categorical_ok`, except `Integer` added to show cooperation"""
     opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=AdaBoostRegressor,
         model_init_params=dict(
             loss=Categorical(["linear", "square", "exponential"]), n_estimators=Integer(10, 40)
@@ -598,7 +598,7 @@ def test_reg_categorical_integer_ok(env_boston_regression, hh_assets, opt_pro):
 @pytest.mark.parametrize("opt_pro", [DummyOptPro, ET, GBRT, RF, BayesianOptPro])
 def test_reg_integer_ok(env_boston_regression, hh_assets, opt_pro):
     opt = opt_pro(iterations=3, random_state=32, n_initial_points=1)
-    opt.set_experiment_guidelines(
+    opt.forge_experiment(
         model_initializer=AdaBoostRegressor, model_init_params=dict(n_estimators=Integer(10, 40))
     )
     opt.go()

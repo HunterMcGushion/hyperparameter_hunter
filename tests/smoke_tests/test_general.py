@@ -186,7 +186,7 @@ def exp_svc_0():
 @pytest.fixture(scope="function", autouse=False, params=[None, "f1_micro", "f1", "f1_macro"])
 def opt_svc_0(request):
     optimizer = BayesianOptPro(target_metric=request.param, iterations=2, random_state=32)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=SVC,
         model_init_params=dict(
             C=Real(0.9, 1.1),
@@ -210,7 +210,7 @@ def opt_svc_0(request):
 @pytest.fixture(scope="function", autouse=False)
 def opt_dtc_0():
     optimizer = ExtraTreesOptPro(iterations=2, random_state=1337)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=DecisionTreeClassifier,
         model_init_params=dict(
             criterion="gini",

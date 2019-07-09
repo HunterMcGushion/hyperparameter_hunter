@@ -40,7 +40,7 @@ experiment = CVExperiment(
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
 optimizer = BayesianOptPro(iterations=30, random_state=1337)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=XGBClassifier,
     model_init_params=dict(
         objective="reg:linear",

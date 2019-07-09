@@ -197,7 +197,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
     ##################################################
     # Core Methods:
     ##################################################
-    def set_experiment_guidelines(
+    def forge_experiment(
         self,
         model_initializer,
         model_init_params,
@@ -244,7 +244,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         The `auto_start` kwarg is not available here because :meth:`BaseOptPro._execute_experiment`
         sets it to False in order to check for duplicated keys before running the whole Experiment.
         This and `target_metric` being moved to :meth:`BaseOptPro.__init__` are the most notable
-        differences between calling :meth:`set_experiment_guidelines` and instantiating
+        differences between calling :meth:`forge_experiment` and instantiating
         :class:`~hyperparameter_hunter.experiments.CVExperiment`"""
         self.model_initializer = model_initializer
 
@@ -397,7 +397,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         Notes
         -----
-        As described in the Notes of :meth:`BaseOptPro.set_experiment_guidelines`, the
+        As described in the Notes of :meth:`BaseOptPro.forge_experiment`, the
         `auto_start` kwarg of :meth:`experiments.CVExperiment.__init__` is set to False in order to
         check for duplicated keys"""
         self._update_current_hyperparameters()

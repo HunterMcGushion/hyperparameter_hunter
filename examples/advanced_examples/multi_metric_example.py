@@ -70,7 +70,7 @@ OPT_MODEL_INIT_PARAMS = dict(
 )
 
 optimizer_0 = BayesianOptPro(iterations=2, random_state=32)
-optimizer_0.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
+optimizer_0.forge_experiment(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_0.go()
 
 # Now, take note of the single saved experiment that was found by `optimizer_0`. It lists the
@@ -86,7 +86,7 @@ optimizer_0.go()
 
 # Even better, telling HyperparameterHunter to switch `target_metric`s is easy! Here's how to do it:
 optimizer_1 = BayesianOptPro(target_metric="f1_micro", iterations=2, random_state=32)
-optimizer_1.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
+optimizer_1.forge_experiment(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_1.go()
 
 # The only difference between the code for `optimizer_1` and the code for `optimizer_0` before is
@@ -104,12 +104,12 @@ optimizer_1.go()
 # What if we now decide that we actually want to optimize using our normal "f1" metric, instead of
 # ... either "roc_auc" or "f1_micro"? Easy!
 optimizer_2 = BayesianOptPro(target_metric="f1", iterations=2, random_state=32)
-optimizer_2.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
+optimizer_2.forge_experiment(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_2.go()
 
 # Just like that, `optimizer_2` is reporting our "f1" scores! Let's finish by optimizing with the last of our four metrics.
 optimizer_3 = BayesianOptPro(target_metric="f1_macro", iterations=2, random_state=32)
-optimizer_3.set_experiment_guidelines(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
+optimizer_3.forge_experiment(LGBMClassifier, OPT_MODEL_INIT_PARAMS)
 optimizer_3.go()
 
 #################### 7. Bonus Exercises ####################

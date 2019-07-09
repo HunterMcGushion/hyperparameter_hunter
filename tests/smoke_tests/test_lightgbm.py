@@ -75,7 +75,7 @@ def exp_lgb_0():
 @pytest.fixture(scope="function", autouse=False, params=[None, "f1_micro", "f1", "f1_macro"])
 def opt_lgb_0(request):
     optimizer = BayesianOptPro(target_metric=request.param, iterations=2, random_state=32)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=LGBMClassifier,
         model_init_params=dict(
             boosting_type=Categorical(["gbdt", "dart"]),

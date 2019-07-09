@@ -201,7 +201,7 @@ def execute():
     #   18 different `imblearn` techniques, feel free to comment out some `EngineerStep`s below
 
     opt_0 = ET(iterations=20, random_state=32)
-    opt_0.set_experiment_guidelines(
+    opt_0.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(
             max_depth=Integer(2, 20),

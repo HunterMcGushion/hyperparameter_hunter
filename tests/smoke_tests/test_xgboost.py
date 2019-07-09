@@ -58,7 +58,7 @@ def exp_xgb_0():
 @pytest.fixture(scope="function", autouse=False)
 def opt_xgb_0():
     optimizer = RandomForestOptPro(iterations=2, random_state=1337)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(
             objective="reg:linear",
