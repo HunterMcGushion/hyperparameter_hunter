@@ -11,9 +11,10 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import Environment, Real, Integer, Categorical
+from hyperparameter_hunter import __version__, Environment, Real, Integer, Categorical
 from hyperparameter_hunter import BayesianOptPro, GBRT, RF, ET, DummyOptPro
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
+from hyperparameter_hunter.utils.version_utils import HHVersion
 
 ##################################################
 # Import Miscellaneous Assets
@@ -174,7 +175,10 @@ def test_multi_cat_keras_non_bayes(opt_pro, build_fn, hh_assets, env_breast_canc
     [
         pytest.param(
             _build_tri_cat,
-            marks=pytest.mark.xfail(reason="BayesianOptPro hates exclusively-Categorical spaces"),
+            marks=pytest.mark.xfail(
+                condition="HHVersion(__version__) <= '3.0.0alpha2'",
+                reason="BayesianOptPro hates exclusively-Categorical spaces",
+            ),
         ),
         _build_tri_cat_real,
     ],

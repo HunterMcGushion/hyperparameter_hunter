@@ -2,10 +2,12 @@
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter import __version__
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer, EngineerStep
 from hyperparameter_hunter import Categorical, Integer, BayesianOptPro, GBRT, RF, ET, DummyOptPro
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data, get_boston_data
 from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions
+from hyperparameter_hunter.utils.version_utils import HHVersion
 
 ##################################################
 # Import Miscellaneous Assets
@@ -464,7 +466,7 @@ def hh_assets():
 #   3. `n_estimators=Integer(10, 40)` in `model_init_params`
 # Above dimensions will be abbreviated as "D1", "D2", and "D3", respectively in illustration below
 #
-# | function                                 | D1? | D2? | D3? | Result                  |
+# | function                                 | D1? | D2? | D3? | Result (3.0.0alpha2)    |
 # |------------------------------------------|-----|-----|-----|-------------------------|
 # | test_reg_engineer                        |  Y  |     |     | `BayesianOptPro` breaks |
 # | test_reg_engineer_integer_ok             |  Y  |     |  Y  | All good                |
@@ -478,6 +480,8 @@ def hh_assets():
 #   1. Use `BayesianOptPro`
 #   2. Use exclusively `Categorical` dimensions
 #   3. At least one of the `Categorical` dimensions must be in `FeatureEngineer`
+#
+# NOTE TO FUTURE GENERATIONS: After version 3.0.0alpha2, this bug (also see issue #154) is fixed
 
 
 #################### Actual Tests ####################
@@ -490,7 +494,10 @@ def hh_assets():
         RF,
         pytest.param(
             BayesianOptPro,
-            marks=pytest.mark.xfail(reason="BayesianOptPro hates Engineer/Categorical-only space"),
+            marks=pytest.mark.xfail(
+                condition="HHVersion(__version__) <= '3.0.0alpha2'",
+                reason="BayesianOptPro hates Engineer/Categorical-only space",
+            ),
         ),
     ],
 )
@@ -529,7 +536,10 @@ def test_reg_engineer_integer_ok(env_boston_regression, hh_assets, opt_pro):
         RF,
         pytest.param(
             BayesianOptPro,
-            marks=pytest.mark.xfail(reason="BayesianOptPro hates Engineer/Categorical-only space"),
+            marks=pytest.mark.xfail(
+                condition="HHVersion(__version__) <= '3.0.0alpha2'",
+                reason="BayesianOptPro hates Engineer/Categorical-only space",
+            ),
         ),
     ],
 )

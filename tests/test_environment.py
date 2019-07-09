@@ -23,10 +23,17 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import RepeatedStratifiedKFold
 
+##################################################
+# Global Settings
+##################################################
+assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+# assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
+
 
 ##################################################
 # Dummy Objects for Testing
 ##################################################
+# TODO: Use `learning_utils.get_breast_cancer_data`. Will need to change expected `env_keys`
 def get_breast_cancer_data():
     data = load_breast_cancer()
     df = pd.DataFrame(data=data.data, columns=data.feature_names)
@@ -50,7 +57,7 @@ repeated_cv_params = dict(n_splits=5, n_repeats=2, random_state=32)
 default_env_params = dict(
     train_dataset=train_dataset,
     environment_params_path=None,
-    results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
+    results_path=assets_dir,
     holdout_dataset=get_holdout_set,
     test_dataset=train_dataset.copy(),
     target_column="diagnosis",
@@ -141,6 +148,20 @@ def test_environment_init_cross_experiment_params(runs, cv_type, _cv_params, exp
         )
     )
     assert env == expected
+
+
+# TODO: Refactor horrifying section above - Was this before past-Hunter knew about indirectly
+#   parametrized fixtures, or parametrization via meta-function hook?
+
+
+##################################################
+# `Environment.__repr__` Tests
+##################################################
+@pytest.mark.parametrize("env_params", [default_env_params])
+def test_environment_repr(env_params):
+    """Test that :meth:`Environment.__repr__` returns the expected value"""
+    env = Environment(**env_params)
+    assert env.__repr__() == f"Environment(cross_experiment_key={env.cross_experiment_key!s})"
 
 
 ##################################################

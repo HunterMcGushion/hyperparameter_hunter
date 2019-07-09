@@ -372,13 +372,8 @@ class BaseOptPro(metaclass=MergedOptProMeta):
                     break
                 self.skipped_iterations += 1
                 continue
-            except StopIteration:
-                if len(self.similar_experiments) + len(self.tested_keys) >= self.search_space_size:
-                    G.log_(f"Hyperparameter search space has been exhausted")
-                    break
-                # G.debug_(f'Re-initializing hyperparameter grid after testing {len(self.tested_keys)} keys')
-                self._set_hyperparameter_space()
-                continue
+            # NOTE: If reimplementing grid search, like `UninformedOptimizationProtocol`, add
+            #   `except StopIteration` and see this commit, and 9b7ca73 / e2c3b73 (October 25, 2018)
 
             self.logger.print_result(
                 self.current_hyperparameters_list,
@@ -386,6 +381,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
                 experiment_id=self.current_experiment.experiment_id,
             )
 
+            #################### Update Best Experiment ####################
             if (
                 (self.best_experiment is None)  # First evaluation
                 or (self.do_maximize and (self.best_score < self.current_score))  # New best max

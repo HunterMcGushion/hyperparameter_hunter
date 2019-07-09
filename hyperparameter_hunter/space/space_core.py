@@ -471,15 +471,19 @@ def normalize_dimensions(dimensions):
 
     Notes
     -----
-    The upper and lower bounds are inclusive for `Integer` dimensions. Based on
-    :func:`skopt.utils.normalize_dimensions`"""
+    The upper and lower bounds are inclusive for `Integer` dimensions"""
     space = Space(dimensions)
     transformed_dimensions = []
 
     if space.is_categorical:
         for dim in space:
+            # `skopt.utils.normalize_dimensions` makes comment on explicitly setting
+            #   `transform="identity"`, so apparently there's a good reason for it...
+            # Using original `transform` fixes all-`Categorical`/`BayesianOptPro` bug and proper
+            #   saved experiment result matching, but optimizer could be secretly misbehaving...
             transformed_dimensions.append(
-                Categorical(dim.categories, dim.prior, transform="identity", name=dim.name)
+                Categorical(dim.categories, dim.prior, transform=dim.transform_, name=dim.name)
+                # Categorical(dim.categories, dim.prior, transform="identity", name=dim.name)
             )
     else:
         for dim in space.dimensions:
