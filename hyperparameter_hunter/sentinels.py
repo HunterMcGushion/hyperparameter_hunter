@@ -17,12 +17,12 @@ Related
     :class:`hyperparameter_hunter.environment.Environment`, specifically as values in the
     `model_init_params` and `model_extra_params` arguments to a descendant of
     :class:`hyperparameter_hunter.experiments.BaseExperiment`
-:mod:`hyperparameter_hunter.optimization_core`
+:mod:`hyperparameter_hunter.optimization.protocol_core`
     This is a second point at which one might use the Sentinels exposed by
     :class:`hyperparameter_hunter.environment.Environment`. In this case, they could be provided as
     values in the `model_init_params` and `model_extra_params` arguments in a call to
-    :meth:`hyperparameter_hunter.optimization_core.BaseOptPro.set_experiment_guidelines`, the
-    structure of which intentionally mirrors that of
+    :meth:`hyperparameter_hunter.optimization.protocol_core.BaseOptPro.set_experiment_guidelines`,
+    the structure of which intentionally mirrors that of
     :meth:`hyperparameter_hunter.experiments.BaseExperiment.__init__`
 :mod:`hyperparameter_hunter.models`
     This is ultimately where `Sentinel` instances will be converted to the actual values that they

@@ -1,12 +1,12 @@
 """This module defines the OptPro (Optimization Protocol) classes that are intended for direct use.
 All classes defined herein should be descendants of one of the base classes defined in
-:mod:`hyperparameter_hunter.optimization_core`
+:mod:`hyperparameter_hunter.optimization.protocol_core`
 
 Related
 -------
-:mod:`hyperparameter_hunter.optimization_core`
+:mod:`hyperparameter_hunter.optimization.protocol_core`
     Defines the base Optimization Protocol classes from which the classes in
-    :mod:`hyperparameter_hunter.optimization` are descendants"""
+    :mod:`hyperparameter_hunter.optimization.backends.skopt.protocols` are descendants"""
 ##################################################
 # Import Own Assets
 ##################################################
