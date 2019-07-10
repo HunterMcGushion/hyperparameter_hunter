@@ -4,6 +4,7 @@
 from hyperparameter_hunter import Environment
 from hyperparameter_hunter.optimization.backends.skopt import protocols as hh_opt
 from hyperparameter_hunter.utils.general_utils import flatten, subdict
+from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data
 
 ##################################################
 # Import Miscellaneous Assets
@@ -17,16 +18,28 @@ from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
 from skopt.learning.gbrt import GradientBoostingQuantileRegressor
 from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
 
+##################################################
+# Global Settings
+##################################################
+assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+# assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
+
 
 @pytest.fixture(scope="module", autouse=True)
-def env():
-    return Environment(None, metrics=["roc_auc_score"])
+def env_auto_module():
+    return Environment(
+        train_dataset=get_toy_classification_data(),
+        results_path=assets_dir,
+        metrics=["roc_auc_score"],
+        cv_type="StratifiedKFold",
+        cv_params=dict(n_splits=5, shuffle=True, random_state=32),
+    )
 
 
 ##################################################
 # Test Parametrization
 ##################################################
-scenario_pairs = dict(
+EST_OPT_PRO_PAIRS = dict(
     bo=dict(est=["GP", GaussianProcessRegressor()], opt=[hh_opt.BayesianOptPro]),
     gbrt=dict(
         est=["GBRT", GradientBoostingQuantileRegressor()],
@@ -39,17 +52,63 @@ scenario_pairs = dict(
 
 
 def est_except(skip: str) -> list:
-    return flatten([_["est"] for _ in subdict(scenario_pairs, drop=[skip]).values()])
+    """Return flattened list of all "est" values in `EST_OPT_PRO_PAIRS` that are not members of
+    the dict named by `skip`
+
+    Parameters
+    ----------
+    skip: String
+        Key in `EST_OPT_PRO_PAIRS`, declaring the `base_estimator` values to exclude from the result
+
+    Returns
+    -------
+    List
+        Flat list of `base_estimator` values in `EST_OPT_PRO_PAIRS`, less those specified by `skip`
+
+    Examples
+    --------
+    >>> est_except("gbrt")  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ['GP', GaussianProcessRegressor(...),
+     'RF', RandomForestRegressor(...),
+     'ET', ExtraTreesRegressor(...),
+     'DUMMY']
+    """
+    return flatten([_["est"] for _ in subdict(EST_OPT_PRO_PAIRS, drop=[skip]).values()])
 
 
 def pytest_generate_tests(metafunc):
+    """Generate parameter permutations for selected test functions:
+
+    * :func:`test_valid_base_estimator`
+    * :func:`test_invalid_base_estimator`
+
+    Test function parametrization is performed using the module-level variable `EST_OPT_PRO_PAIRS`,
+    which is a dict, with a key for each OptimizationProtocol. The value of each key is a dict,
+    formatted thusly::
+        "est": [<valid `base_estimator` for OptPro>, ...],
+        "opt": [<OptPro class>, ...]
+
+    Each value of `EST_OPT_PRO_PAIRS`, therefore, defines valid `base_estimator` values for the
+    corresponding OptimizationProtocol class(es)
+
+    Notes
+    -----
+    Although it's an official (and awesome) PyTest feature, `pytest_generate_tests` is not terribly
+    well-known and seems a bit black-magic-y, so instead of leaving curious readers to do their own
+    research, I humbly recommend the following PyTest examples:
+
+    * `Basic "pytest_generate_tests" example
+      <https://docs.pytest.org/en/latest/parametrize.html#basic-pytest-generate-tests-example>`_
+    * `A quick port of "testscenarios"
+      <https://docs.pytest.org/en/latest/example/parametrize.html#a-quick-port-of-testscenarios>`_
+    """
     arg_names, arg_values, id_list = None, [], []
 
     # Only parametrize test functions explicitly named - Return other test functions unchanged
-    if metafunc.function.__name__ == "test_valid":
-        scenarios = scenario_pairs
-    elif metafunc.function.__name__ == "test_invalid":
-        scenarios = {k: dict(est=est_except(k), opt=v["opt"]) for k, v in scenario_pairs.items()}
+    if metafunc.function.__name__ == "test_valid_base_estimator":
+        scenarios = EST_OPT_PRO_PAIRS
+    elif metafunc.function.__name__ == "test_invalid_base_estimator":
+        scenarios = {k: dict(est=est_except(k), opt=v["opt"]) for k, v in EST_OPT_PRO_PAIRS.items()}
     else:
         return
 
