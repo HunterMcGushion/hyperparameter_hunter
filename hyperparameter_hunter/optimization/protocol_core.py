@@ -20,6 +20,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter import __version__
 from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
@@ -47,6 +48,7 @@ from hyperparameter_hunter.space.space_core import Space
 from hyperparameter_hunter.utils.boltons_utils import get_path
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict
 from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions, dimension_subset
+from hyperparameter_hunter.utils.version_utils import Deprecated
 
 ##################################################
 # Import Miscellaneous Assets
@@ -284,6 +286,15 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
 
         self.set_dimensions()
+
+    @Deprecated(
+        v_deprecate="3.0.0a2",
+        v_remove="3.2.0",
+        v_current=__version__,
+        details="Renamed to `forge_experiment`",
+    )
+    def set_experiment_guidelines(self, *args, **kwargs):
+        self.forge_experiment(*args, **kwargs)
 
     def set_dimensions(self):
         """Locate given hyperparameters that are `space` choice declarations and add them to

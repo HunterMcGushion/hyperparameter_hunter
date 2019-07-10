@@ -10,10 +10,12 @@ from hyperparameter_hunter.utils.learning_utils import get_toy_classification_da
 # Import Miscellaneous Assets
 ##################################################
 import pytest
+from unittest import mock
 
 ##################################################
 # Import Learning Assets
 ##################################################
+from sklearn.linear_model import Ridge
 from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
 from skopt.learning.gbrt import GradientBoostingQuantileRegressor
 from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
@@ -175,3 +177,53 @@ def test_opt_pro_n_random_starts_deprecation(opt_pro):
     """Check that instantiating any OptPro with `n_random_starts` raises a DeprecationWarning"""
     with pytest.deprecated_call():
         opt_pro(n_random_starts=10)
+
+
+##################################################
+# Deprecation Tests: `set_experiment_guidelines` -> `forge_experiment`
+##################################################
+@pytest.mark.parametrize(
+    "opt_pro",
+    [
+        hh_opt.BayesianOptPro,
+        hh_opt.GradientBoostedRegressionTreeOptPro,
+        hh_opt.RandomForestOptPro,
+        hh_opt.ExtraTreesOptPro,
+        hh_opt.DummyOptPro,
+    ],
+)
+def test_opt_pro_set_experiment_guidelines_deprecation(opt_pro):
+    """Check that invoking an OptPro's :meth:`set_experiment_guidelines` raises a
+    DeprecationWarning"""
+    opt = opt_pro()
+
+    with pytest.deprecated_call():
+        opt.set_experiment_guidelines(Ridge, {})
+
+
+@pytest.mark.parametrize(
+    "opt_pro",
+    [
+        hh_opt.BayesianOptPro,
+        hh_opt.GradientBoostedRegressionTreeOptPro,
+        hh_opt.RandomForestOptPro,
+        hh_opt.ExtraTreesOptPro,
+        hh_opt.DummyOptPro,
+    ],
+)
+@pytest.mark.parametrize(
+    "forge_experiment_params",
+    [
+        dict(model_initializer=Ridge, model_init_params={}),
+        dict(model_initializer=Ridge, model_init_params=dict(alpha=0.9, solver="svd")),
+    ],
+)
+def test_opt_pro_set_experiment_guidelines_calls_forge_experiment(opt_pro, forge_experiment_params):
+    """Check that invoking an OptPro's :meth:`set_experiment_guidelines` (although deprecated)
+    invokes the new :meth:`forge_experiment` with the parameters originally given"""
+    opt = opt_pro()
+    mock_path = "hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment"
+
+    with mock.patch(mock_path) as mock_forge_experiment:
+        opt.set_experiment_guidelines(**forge_experiment_params)
+        mock_forge_experiment.assert_called_once_with(**forge_experiment_params)
