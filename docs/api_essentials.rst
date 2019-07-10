@@ -19,7 +19,7 @@ Experiment Execution
 Hyperparameter Optimization
 ===========================
 
-.. autoclass:: hyperparameter_hunter.optimization.BayesianOptPro
+.. autoclass:: hyperparameter_hunter.optimization.backends.skopt.protocols.BayesianOptPro
    :noindex:
 
    .. automethod:: __init__
@@ -31,7 +31,7 @@ Hyperparameter Optimization
 
 ----------------------------------------
 
-.. autoclass:: hyperparameter_hunter.optimization.GradientBoostedRegressionTreeOptPro
+.. autoclass:: hyperparameter_hunter.optimization.backends.skopt.protocols.GradientBoostedRegressionTreeOptPro
    :noindex:
 
    .. automethod:: __init__
@@ -43,7 +43,7 @@ Hyperparameter Optimization
 
 ----------------------------------------
 
-.. autoclass:: hyperparameter_hunter.optimization.RandomForestOptPro
+.. autoclass:: hyperparameter_hunter.optimization.backends.skopt.protocols.RandomForestOptPro
    :noindex:
 
    .. automethod:: __init__
@@ -55,7 +55,7 @@ Hyperparameter Optimization
 
 ----------------------------------------
 
-.. autoclass:: hyperparameter_hunter.optimization.ExtraTreesOptPro
+.. autoclass:: hyperparameter_hunter.optimization.backends.skopt.protocols.ExtraTreesOptPro
    :noindex:
 
    .. automethod:: __init__
@@ -67,7 +67,7 @@ Hyperparameter Optimization
 
 ----------------------------------------
 
-.. autoclass:: hyperparameter_hunter.optimization.DummyOptPro
+.. autoclass:: hyperparameter_hunter.optimization.backends.skopt.protocols.DummyOptPro
    :noindex:
 
    .. automethod:: __init__
