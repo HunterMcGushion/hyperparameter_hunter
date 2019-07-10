@@ -67,13 +67,18 @@ def pytest_generate_tests(metafunc):
 
 
 ##################################################
-# Tests
+# `base_estimator` Tests
 ##################################################
-def test_valid(est, opt):
+def test_valid_base_estimator(est, opt):
+    """Test that an OptimizationProtocol does not complain when given a valid `base_estimator`.
+    Also test that selected strings and Regressor instances are equally valid values. Parametrized
+    via :func:`pytest_generate_tests`"""
     opt(base_estimator=est)
 
 
-def test_invalid(est, opt):
+def test_invalid_base_estimator(est, opt):
+    """Test that an OptimizationProtocol complains when given an invalid `base_estimator`.
+    Parametrized via :func:`pytest_generate_tests`"""
     with pytest.raises(TypeError, match="Expected `base_estimator` in .*"):
         opt(base_estimator=est)
 
