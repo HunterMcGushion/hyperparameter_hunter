@@ -351,13 +351,16 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             )
 
     def go(self):
-        """Begin hyperparameter optimization process after experiment guidelines have been set and
-        search dimensions are in place. This process includes the following: setting the
-        hyperparameter space; locating similar experiments to be used as learning material for
-        :class:`SKOptPro` s; and executing :meth:`_optimization_loop`, which
-        actually sets off the Experiment execution process"""
+        """Execute hyperparameter optimization, building an Experiment for each iteration
+
+        This method may only be invoked after invoking :meth:`.forge_experiment`, which defines
+        experiment guidelines and search dimensions. `go` performs a few important tasks: 1)
+        Formally setting the hyperparameter space; 2) Locating similar experiments to be used as
+        learning material (for OptPros that suggest incumbent search points by estimating utilities
+        using surrogate models); and 3) Actually setting off the optimization process, via
+        :meth:`._optimization_loop`"""
         if self.model_initializer is None:
-            raise ValueError("Experiment guidelines must be set before starting optimization")
+            raise ValueError("Must invoke `forge_experiment` before starting optimization")
 
         _reporter_params = dict(dict(do_maximize=self.do_maximize), **self.reporter_parameters)
         self.logger = OptimizationReporter(self.dimensions, **_reporter_params)
