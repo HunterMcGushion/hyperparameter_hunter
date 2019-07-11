@@ -4,7 +4,7 @@ HyperparameterHunter
 ![HyperparameterHunter Overview](docs/media/overview.gif)
 
 [![Build Status](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter.svg?branch=master)](https://travis-ci.org/HunterMcGushion/hyperparameter_hunter)
-[![Documentation Status](https://readthedocs.org/projects/hyperparameter-hunter/badge/?version=stable)](https://hyperparameter-hunter.readthedocs.io/en/latest/?badge=stable)
+[![Documentation Status](https://readthedocs.org/projects/hyperparameter-hunter/badge/?version=stable)](https://hyperparameter-hunter.readthedocs.io/en/stable/?badge=stable)
 [![Coverage Status](https://coveralls.io/repos/github/HunterMcGushion/hyperparameter_hunter/badge.svg?branch=master&service=github)](https://coveralls.io/github/HunterMcGushion/hyperparameter_hunter?branch=master&service=github)
 [![codecov](https://codecov.io/gh/HunterMcGushion/hyperparameter_hunter/branch/master/graph/badge.svg)](https://codecov.io/gh/HunterMcGushion/hyperparameter_hunter)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ef0d004a10ede0b228cc/maintainability)](https://codeclimate.com/github/HunterMcGushion/hyperparameter_hunter/maintainability)
