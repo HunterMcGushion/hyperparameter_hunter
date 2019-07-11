@@ -309,6 +309,8 @@ class Environment:
             an Experiment, and, if the subclassing documentation in `recorders` is followed
             properly, will create or update a result file for the just-executed Experiment
 
+        Other Parameters
+        ----------------
         cross_validation_type: ...
             * Alias for `cv_type` *
         cross_validation_params: ...
@@ -319,6 +321,27 @@ class Environment:
             * Alias for `reporting_params` *
         root_results_path: ...
             * Alias for `results_path` *
+
+        Attributes
+        ----------
+        train_input: DatasetSentinel
+            Sentinel replaced with current train input data during `Model` fitting/predicting.
+            Commonly given in the `model_extra_params` kwargs of
+            :class:`hyperparameter_hunter.experiments.BaseExperiment` or
+            :meth:`hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment` for
+            `eval_set`-like hyperparameters. Importantly, the actual value of this Sentinel is
+            determined after performing cross-validation data splitting, and after executing
+            :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`
+        train_target: DatasetSentinel
+            Like :attr:`.train_input`, except for current train target data
+        validation_input: DatasetSentinel
+            Like :attr:`.train_input`, except for current validation input data
+        validation_target: DatasetSentinel
+            Like :attr:`.train_input`, except for current validation target data
+        holdout_input: DatasetSentinel
+            Like :attr:`.train_input`, except for current holdout input data
+        holdout_target: DatasetSentinel
+            Like :attr:`.train_input`, except for current holdout target data
 
         Notes
         -----
