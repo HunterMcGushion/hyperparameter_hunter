@@ -112,22 +112,29 @@ class BaseOptPro(metaclass=MergedOptProMeta):
     ):
         """Base class for intermediate base optimization protocol classes
 
+        There are two important methods for all :class:`BaseOptPro` descendants that should be
+        invoked after initialization:
+
+        1. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+        2. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.go`
+
         Parameters
         ----------
-        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics`>)
-            A path denoting the metric to be used to compare completed Experiments within the
-            Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
-            The second value should be the name of a metric being recorded according to the values
-            supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info. Any values returned by, or
-            given as the `target_metric` input to, :func:`metrics.get_formatted_target_metric` are
-            acceptable values for :attr:`BaseOptPro.target_metric`
+        target_metric: Tuple, default=("oof", <:attr:`environment.Environment.metrics`[0]>)
+            Rarely necessary to explicitly provide this, as the default is usually sufficient. Path
+            denoting the metric to be used to compare Experiment performance. The first value
+            should be one of ["oof", "holdout", "in_fold"]. The second value should be the name of
+            a metric being recorded according to :attr:`environment.Environment.metrics_params`.
+            See the documentation for :func:`metrics.get_formatted_target_metric` for more info.
+            Any values returned by, or given as the `target_metric` input to,
+            :func:`~hyperparameter_hunter.metrics.get_formatted_target_metric` are acceptable
+            values for :attr:`BaseOptPro.target_metric`
         iterations: Int, default=1
-            The number of distinct experiments to execute
-        verbose: Int 0, 1, or 2, default=1
+            Number of Experiments to conduct during optimization upon invoking :meth:`BaseOptPro.go`
+        verbose: {0, 1, 2}, default=1
             Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization
-            Protocol. 2: In addition to logs shown when verbose=1, also show the logs from individual
-            Experiments
+            Protocol. 2: In addition to logs shown when verbose=1, also show the logs from
+            individual Experiments
         read_experiments: Boolean, default=True
             If True, all Experiment records that fit in the current :attr:`space` and guidelines,
             and match :attr:`algorithm_name`, will be read in and used to fit any optimizers
@@ -137,6 +144,13 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
             in `G.Env.metrics`. In nearly all cases, the "do_maximize" key should be ignored,
             as there are very few reasons to explicitly include it
+
+        Methods
+        -------
+        forge_experiment
+            Define constraints on Experiments conducted by OptPro (like hyperparameter search space)
+        go
+            Start optimization
 
         Notes
         -----
@@ -641,19 +655,26 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
     ):
         """Base class for SKOpt-based Optimization Protocols
 
+        There are two important methods for all :class:`SKOptPro` descendants that should be
+        invoked after initialization:
+
+        1. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+        2. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.go`
+
         Parameters
         ----------
-        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics`>)
-            A path denoting the metric to be used to compare completed Experiments within the
-            Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
-            The second value should be the name of a metric being recorded according to the values
-            supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or
-            used as the `target_metric` input to this function are acceptable values for
-            :attr:`BaseOptPro.target_metric`
+        target_metric: Tuple, default=("oof", <:attr:`environment.Environment.metrics`[0]>)
+            Rarely necessary to explicitly provide this, as the default is usually sufficient. Path
+            denoting the metric to be used to compare Experiment performance. The first value
+            should be one of ["oof", "holdout", "in_fold"]. The second value should be the name of
+            a metric being recorded according to :attr:`environment.Environment.metrics_params`.
+            See the documentation for :func:`metrics.get_formatted_target_metric` for more info.
+            Any values returned by, or given as the `target_metric` input to,
+            :func:`~hyperparameter_hunter.metrics.get_formatted_target_metric` are acceptable
+            values for :attr:`BaseOptPro.target_metric`
         iterations: Int, default=1
-            The number of distinct experiments to execute
-        verbose: Int 0, 1, or 2, default=1
+            Number of Experiments to conduct during optimization upon invoking :meth:`BaseOptPro.go`
+        verbose: {0, 1, 2}, default=1
             Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization
             Protocol. 2: In addition to logs shown when verbose=1, also show the logs from
             individual Experiments
@@ -661,29 +682,58 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             If True, all Experiment records that fit in the current :attr:`space` and guidelines,
             and match :attr:`algorithm_name`, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default=None
-            Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
-        base_estimator: String in ['GP', 'GBRT', 'RF', 'ET', 'DUMMY'], or an `sklearn` regressor, default='GP'
-            If one of the above strings, a default model of that type will be used. Else, should
-            inherit from :class:`sklearn.base.RegressorMixin`, and its :meth:`predict` should have
-            an optional `return_std` argument, which returns `std(Y | x)`, along with `E[Y | x]`
+            Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`. Note:
+            Unless provided explicitly, the key "do_maximize" will be added by default to
+            `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
+            in `G.Env.metrics`. In nearly all cases, the "do_maximize" key should be ignored,
+            as there are very few reasons to explicitly include it
+
+        Other Parameters
+        ----------------
+        base_estimator: {SKLearn Regressor, "GP", "RF", "ET", "GBRT", "DUMMY"}, default="GP"
+            If not string, should inherit from `sklearn.base.RegressorMixin`. In addition, the
+            `predict` method should have an optional `return_std` argument, which returns
+            `std(Y | x)`, along with `E[Y | x]`.
+
+            If `base_estimator` is a string in {"GP", "RF", "ET", "GBRT", "DUMMY"}, a surrogate
+            model corresponding to the relevant `X_minimize` function is created
         n_initial_points: Int, default=10
-            The number of complete evaluation points necessary before allowing Experiments to be
+            Number of complete evaluation points necessary before allowing Experiments to be
             approximated with `base_estimator`. Any valid Experiment records found will count as
             initialization points. If enough Experiment records are not found, additional points
             will be randomly sampled
-        acquisition_function: String in ['LCB', 'EI', 'PI', 'gp_hedge'], default='gp_hedge'
-            Function to minimize over the posterior distribution. 'LCB': lower confidence bound.
-            'EI': negative expected improvement. 'PI': negative probability of improvement.
-            'gp_hedge': Probabilistically choose one of the preceding three acquisition functions at
-            each iteration
-        acquisition_optimizer: String in ['sampling', 'lbfgs', 'auto'], default='auto'
+        acquisition_function:{"LCB", "EI", "PI", "gp_hedge"}, default="gp_hedge"
+            Function to minimize over the posterior distribution. Can be any of the following:
+            * "LCB": Lower confidence bound
+            * "EI": Negative expected improvement
+            * "PI": Negative probability of improvement
+            * "gp_hedge": Probabilistically choose one of the above three acquisition functions at
+              every iteration
+
+                * The gains `g_i` are initialized to zero
+                * At every iteration,
+
+                    * Each acquisition function is optimised independently to propose a candidate
+                      point `X_i`
+                    * Out of all these candidate points, the next point `X_best` is chosen by
+                      `softmax(eta g_i)`
+                    * After fitting the surrogate model with `(X_best, y_best)`, the gains are
+                      updated such that `g_i -= mu(X_i)`
+        acquisition_optimizer: {"sampling", "lbfgs", "auto"}, default="auto"
             Method to minimize the acquisition function. The fit model is updated with the optimal
-            value obtained by optimizing `acquisition_function` with `acquisition_optimizer`.
-            'sampling': optimize by computing `acquisition_function` at
-            `acquisition_optimizer_kwargs['n_points']` randomly sampled points. 'lbfgs': optimize by
-            sampling `n_restarts_optimizer` random points, then run 'lbfgs' for 20 iterations with
-            those points to find local minima, the optimal of which is used to update the prior.
-            'auto': configure on the basis of `base_estimator` and `dimensions`
+            value obtained by optimizing `acq_func` with `acq_optimizer`
+
+            * "sampling": `acq_func` is optimized by computing `acq_func` at `n_initial_points`
+              randomly sampled points.
+            * "lbfgs": `acq_func` is optimized by
+
+                  * Randomly sampling `n_restarts_optimizer` (from `acq_optimizer_kwargs`) points
+                  * "lbfgs" is run for 20 iterations with these initial points to find local minima
+                  * The optimal of these local minima is used to update the prior
+
+            * "auto": `acq_optimizer` is configured on the basis of the `base_estimator` and the
+              search space. If the space is `Categorical` or if the provided estimator is based on
+              tree-models, then this is set to "sampling"
         random_state: Int, `RandomState` instance, or None, default=None
             Set to something other than None for reproducible results
         acquisition_function_kwargs: Dict, or None, default=dict(xi=0.01, kappa=1.96)
@@ -698,6 +748,13 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             :attr:`optimizer`. If list, then each callable is called
         base_estimator_kwargs: Dict, or None, default={}
             Additional arguments passed to `base_estimator` when it is initialized
+
+        Methods
+        -------
+        forge_experiment
+            Define constraints on Experiments conducted by OptPro (like hyperparameter search space)
+        go
+            Start optimization
 
         Notes
         -----
