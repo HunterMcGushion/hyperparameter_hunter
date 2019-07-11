@@ -44,7 +44,7 @@ Hyperparameter Optimization
 
     optimizer = BayesianOptPro(iterations=10, read_experiments=True)
 
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(
             n_estimators=200,
