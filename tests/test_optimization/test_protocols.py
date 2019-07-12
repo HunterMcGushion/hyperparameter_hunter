@@ -37,6 +37,7 @@ EST_OPT_PRO_PAIRS = dict(
     dummy=dict(est=["DUMMY"], opt=[hh_opt.DummyOptPro]),
 )
 
+# Below is flat list of all "opt" values above. Aliases may appear as duplicated values
 ALL_SK_OPT_PROS = flatten([_["opt"] for _ in EST_OPT_PRO_PAIRS.values()])
 
 
@@ -49,6 +50,19 @@ def env_auto_module():
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=5, shuffle=True, random_state=32),
     )
+
+
+##################################################
+# `BaseOptPro` Miscellaneous Tests
+##################################################
+@pytest.mark.parametrize("opt_pro", ALL_SK_OPT_PROS)
+def test_go_before_forge_experiment_error(opt_pro):
+    """Test that invoking :meth:`hyperparameter_hunter.optimization.protocol_core.BaseOptPro.go`
+    before :meth:`hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+    raises ValueError"""
+    opt = opt_pro()
+    with pytest.raises(ValueError, match="Must invoke `forge_experiment` before starting .*"):
+        opt.go()
 
 
 ##################################################
