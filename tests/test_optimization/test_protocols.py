@@ -26,6 +26,19 @@ from skopt.learning.forest import RandomForestRegressor, ExtraTreesRegressor
 assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 # assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
 
+EST_OPT_PRO_PAIRS = dict(
+    bo=dict(est=["GP", GaussianProcessRegressor()], opt=[hh_opt.BayesianOptPro]),
+    gbrt=dict(
+        est=["GBRT", GradientBoostingQuantileRegressor()],
+        opt=[hh_opt.GradientBoostedRegressionTreeOptPro, hh_opt.GBRT],
+    ),
+    rf=dict(est=["RF", RandomForestRegressor()], opt=[hh_opt.RandomForestOptPro, hh_opt.RF]),
+    et=dict(est=["ET", ExtraTreesRegressor()], opt=[hh_opt.ExtraTreesOptPro, hh_opt.ET]),
+    dummy=dict(est=["DUMMY"], opt=[hh_opt.DummyOptPro]),
+)
+
+ALL_SK_OPT_PROS = flatten([_["opt"] for _ in EST_OPT_PRO_PAIRS.values()])
+
 
 @pytest.fixture(scope="module", autouse=True)
 def env_auto_module():
@@ -39,20 +52,9 @@ def env_auto_module():
 
 
 ##################################################
-# Test Parametrization
+# `base_estimator` Tests
 ##################################################
-EST_OPT_PRO_PAIRS = dict(
-    bo=dict(est=["GP", GaussianProcessRegressor()], opt=[hh_opt.BayesianOptPro]),
-    gbrt=dict(
-        est=["GBRT", GradientBoostingQuantileRegressor()],
-        opt=[hh_opt.GradientBoostedRegressionTreeOptPro, hh_opt.GBRT],
-    ),
-    rf=dict(est=["RF", RandomForestRegressor()], opt=[hh_opt.RandomForestOptPro, hh_opt.RF]),
-    et=dict(est=["ET", ExtraTreesRegressor()], opt=[hh_opt.ExtraTreesOptPro, hh_opt.ET]),
-    dummy=dict(est=["DUMMY"], opt=[hh_opt.DummyOptPro]),
-)
-
-
+#################### `base_estimator` Test Parametrization ####################
 def est_except(skip: str) -> list:
     """Return flattened list of all "est" values in `EST_OPT_PRO_PAIRS` that are not members of
     the dict named by `skip`
@@ -127,9 +129,7 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize(arg_names, arg_values, ids=id_list, scope="function")
 
 
-##################################################
-# `base_estimator` Tests
-##################################################
+#################### Actual `base_estimator` Tests ####################
 def test_valid_base_estimator(est, opt):
     """Test that an OptimizationProtocol does not complain when given a valid `base_estimator`.
     Also test that selected strings and Regressor instances are equally valid values. Parametrized
@@ -163,16 +163,7 @@ def test_opt_pro_deprecations(opt_pro):
         opt_pro()
 
 
-@pytest.mark.parametrize(
-    "opt_pro",
-    [
-        hh_opt.BayesianOptPro,
-        hh_opt.GradientBoostedRegressionTreeOptPro,
-        hh_opt.RandomForestOptPro,
-        hh_opt.ExtraTreesOptPro,
-        hh_opt.DummyOptPro,
-    ],
-)
+@pytest.mark.parametrize("opt_pro", ALL_SK_OPT_PROS)
 def test_opt_pro_n_random_starts_deprecation(opt_pro):
     """Check that instantiating any OptPro with `n_random_starts` raises a DeprecationWarning"""
     with pytest.deprecated_call():
@@ -182,16 +173,7 @@ def test_opt_pro_n_random_starts_deprecation(opt_pro):
 ##################################################
 # Deprecation Tests: `set_experiment_guidelines` -> `forge_experiment`
 ##################################################
-@pytest.mark.parametrize(
-    "opt_pro",
-    [
-        hh_opt.BayesianOptPro,
-        hh_opt.GradientBoostedRegressionTreeOptPro,
-        hh_opt.RandomForestOptPro,
-        hh_opt.ExtraTreesOptPro,
-        hh_opt.DummyOptPro,
-    ],
-)
+@pytest.mark.parametrize("opt_pro", ALL_SK_OPT_PROS)
 def test_opt_pro_set_experiment_guidelines_deprecation(opt_pro):
     """Check that invoking an OptPro's :meth:`set_experiment_guidelines` raises a
     DeprecationWarning"""
@@ -201,16 +183,7 @@ def test_opt_pro_set_experiment_guidelines_deprecation(opt_pro):
         opt.set_experiment_guidelines(Ridge, {})
 
 
-@pytest.mark.parametrize(
-    "opt_pro",
-    [
-        hh_opt.BayesianOptPro,
-        hh_opt.GradientBoostedRegressionTreeOptPro,
-        hh_opt.RandomForestOptPro,
-        hh_opt.ExtraTreesOptPro,
-        hh_opt.DummyOptPro,
-    ],
-)
+@pytest.mark.parametrize("opt_pro", ALL_SK_OPT_PROS)
 @pytest.mark.parametrize(
     "forge_experiment_params",
     [
