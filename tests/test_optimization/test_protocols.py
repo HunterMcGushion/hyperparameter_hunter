@@ -197,6 +197,7 @@ def test_opt_pro_set_experiment_guidelines_calls_forge_experiment(opt_pro, forge
     opt = opt_pro()
     mock_path = "hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment"
 
-    with mock.patch(mock_path) as mock_forge_experiment:
-        opt.set_experiment_guidelines(**forge_experiment_params)
-        mock_forge_experiment.assert_called_once_with(**forge_experiment_params)
+    with pytest.deprecated_call():
+        with mock.patch(mock_path) as mock_forge_experiment:
+            opt.set_experiment_guidelines(**forge_experiment_params)
+            mock_forge_experiment.assert_called_once_with(**forge_experiment_params)
