@@ -216,7 +216,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
     def forge_experiment(
         self,
         model_initializer,
-        model_init_params,
+        model_init_params=None,
         model_extra_params=None,
         feature_engineer=None,
         feature_selector=None,
@@ -263,8 +263,8 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         differences between calling :meth:`forge_experiment` and instantiating
         :class:`~hyperparameter_hunter.experiments.CVExperiment`"""
         self.model_initializer = model_initializer
-
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
+        model_init_params = model_init_params if model_init_params is not None else {}
         try:
             self.model_init_params.update(model_init_params)
         except TypeError:
