@@ -86,23 +86,66 @@ class BaseExperiment(ScoringMixIn):
         Parameters
         ----------
         model_initializer: Class, or functools.partial, or class instance
-            The algorithm class being used to initialize a model
-        model_init_params: Dict, or None, default=None
+            Algorithm class used to initialize a model, such as XGBoost's `XGBRegressor`, or
+            SKLearn's `KNeighborsClassifier`; although, there are hundreds of possibilities across
+            many different ML libraries. `model_initializer` is expected to define at least `fit`
+            and `predict` methods. `model_initializer` will be initialized with `model_init_params`,
+            and its "extra" methods (`fit`, `predict`, etc.) will be invoked with parameters in
+            `model_extra_params`
+        model_init_params: Dict, or object (optional)
             Dictionary of arguments given to create an instance of `model_initializer`. Any kwargs
             that are considered valid by the `__init__` method of `model_initializer` are valid in
-            `model_init_params`
-        model_extra_params: Dict, or None, default=None
-            A dictionary of extra parameters passed to :class:`models.Model`. This is used to
-            provide parameters to models' non-initialization methods (like `fit`, `predict`,
-            `predict_proba`, etc.), and for neural networks
-        feature_engineer: `FeatureEngineer`, or None, default=None
-            ...  # TODO: Add documentation
-        feature_selector: List of str, callable, list of booleans, default=None
+            `model_init_params`.
+
+            One of the key features that makes HyperparameterHunter so magical is that **ALL**
+            hyperparameters in the signature of `model_initializer` (and their default values) are
+            discovered -- whether or not they are explicitly given in `model_init_params`. Not only
+            does this make Experiment result descriptions incredibly thorough, it also makes
+            optimization smoother, more effective, and far less work for the user. For example, take
+            LightGBM's `LGBMRegressor`, with `model_init_params`=`dict(learning_rate=0.2)`.
+            HyperparameterHunter recognizes that this differs from the default of 0.1. It also
+            recognizes that `LGBMRegressor` is actually initialized with more than a dozen other
+            hyperparameters we didn't bother mentioning, and it records their values, too. So if we
+            want to optimize `num_leaves` tomorrow, the OptPro doesn't start from scratch. It knows
+            that we ran an Experiment that didn't explicitly mention `num_leaves`, but its default
+            value was 31, and it uses this information to fuel optimization -- all without us having
+            to manually keep track of tons of janky collections of hyperparameters. In fact, we
+            really don't need to go out of our way at all. HyperparameterHunter just acts as our
+            faithful lab assistant, keeping track of all the stuff we'd rather not worry about
+        model_extra_params: Dict (optional)
+            Dictionary of extra parameters for models' non-initialization methods (like `fit`,
+            `predict`, `predict_proba`, etc.), and for neural networks. To specify parameters for
+            an extra method, place them in a dict named for the extra method to which the
+            parameters should be given. For example, to call `fit` with `early_stopping_rounds`=5,
+            use `model_extra_params`=`dict(fit=dict(early_stopping_rounds=5))`.
+
+            For models whose `fit` methods have a kwarg like `eval_set` (such as XGBoost's), one can
+            use the `DatasetSentinel` attributes of the current active
+            :class:`~hyperparameter_hunter.environment.Environment`, documented under its
+            "Attributes" section and under
+            :attr:`~hyperparameter_hunter.environment.Environment.train_input`. An example using
+            several DatasetSentinels can be found in HyperparameterHunter's
+            [XGBoost Classification Example](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/xgboost_examples/classification.py)
+        feature_engineer: `FeatureEngineer`, or list (optional)
+            Feature engineering/transformation/pre-processing steps to apply to datasets defined in
+            :class:`~hyperparameter_hunter.environment.Environment`. If list, will be used to
+            initialize :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`, and can
+            contain any of the following values:
+
+                1. :class:`~hyperparameter_hunter.feature_engineering.EngineerStep` instance
+                2. Function input to :class:~hyperparameter_hunter.feature_engineering.EngineerStep`
+
+            For important information on properly formatting `EngineerStep` functions, please see
+            the documentation of :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`.
+            OptPros can perform hyperparameter optimization of `feature_engineer` steps. This
+            capability adds a third allowed value to the above list and is documented in
+            :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+        feature_selector: List of str, callable, or list of booleans (optional)
             Column names to include as input data for all provided DataFrames. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
             :attr:`target_column`, and :attr:`id_column`. `feature_selector` is provided as the
             second argument for calls to `pandas.DataFrame.loc` when constructing datasets
-        notes: String, or None, default=None
+        notes: String (optional)
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
             Experiment details in a more readable format
@@ -116,14 +159,24 @@ class BaseExperiment(ScoringMixIn):
             :meth:`BaseExperiment.experiment_workflow`, effectively completing all essential tasks
             without requiring additional method calls
         target_metric: Tuple, str, default=('oof', <:attr:`environment.Environment.metrics`[0]>)
-            A path denoting the metric to be used to compare completed Experiments or to use for
+            Path denoting the metric to be used to compare completed Experiments or to use for
             certain early stopping procedures in some model classes. The first value should be one
             of ['oof', 'holdout', 'in_fold']. The second value should be the name of a metric being
             recorded according to the values supplied in
-            :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info. Any values returned by, or
-            used as the `target_metric` input to this function are acceptable values for
-            :attr:`BaseExperiment.target_metric`"""
+            :attr:`hyperparameter_hunter.environment.Environment.metrics_params`. See the
+            documentation for :func:`hyperparameter_hunter.metrics.get_formatted_target_metric` for
+            more info. Any values returned by, or used as the `target_metric` input to this function
+            are acceptable values for `target_metric`
+
+        See Also
+        --------
+        :meth:`hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+            OptPro method to define hyperparameter search scaffold for building Experiments during
+            optimization. This method follows the same format as Experiment initialization, but it
+            adds the ability to provide hyperparameter values as ranges to search over, via
+            subclasses of :class:`~hyperparameter_hunter.space.dimensions.Dimension`. The other
+            notable difference is that `forge_experiment` removes the `auto_start` and
+            `target_metric` kwargs, which is described in the `forge_experiment` docstring Notes"""
         self.model_initializer = model_initializer
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
         model_init_params = model_init_params if model_init_params is not None else {}
