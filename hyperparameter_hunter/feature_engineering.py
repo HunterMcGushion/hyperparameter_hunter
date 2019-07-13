@@ -243,6 +243,14 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
         merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
     except ValueError as _ex:
         raise ValueError(f"Merging {df_names} into {merge_to} does not produce DataFrame") from _ex
+        # TODO: Add more specific error message for below scenario?
+        # Tricky: This will be raised when `stage`="pre_cv" and `merge_to`="non_train..." if
+        #   holdout/test data not available in `dfs`. May occur, for example, when using a step
+        #   function that requests "non_train_inputs", with an `Environment` that has neither
+        #   `holdout_dataset` nor `test_dataset` IF attempting to force the `EngineerStep`'s
+        #   `stage`="pre_cv", instead of its default "intra_cv". This is correct behavior because
+        #   "non_train_inputs" cannot be made under these circumstances; however, the precise cause
+        #   of the problem may not be immediately apparent
     return merged_df
 
 
@@ -920,6 +928,13 @@ class FeatureEngineer:
         for i, step in enumerate(self.steps):
             if step.stage == stage:
                 self.datasets = step(**self.datasets)
+
+    def __eq__(self, other: "FeatureEngineer"):
+        return (
+            isinstance(other, FeatureEngineer)
+            and len(self.steps) == len(other.steps)
+            and all(s_self == s_other for (s_self, s_other) in zip(self.steps, other.steps))
+        )
 
     def inverse_transform(self, data):
         """Perform the inverse transformation for all engineer steps in :attr:`steps` in sequence

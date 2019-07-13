@@ -133,9 +133,11 @@ class BaseExperiment(ScoringMixIn):
             self.model_init_params.update(dict(build_fn=model_init_params))
 
         self.model_extra_params = model_extra_params if model_extra_params is not None else {}
-        self.feature_engineer = (
-            feature_engineer if callable(feature_engineer) else FeatureEngineer()
-        )
+
+        self.feature_engineer = feature_engineer
+        if not isinstance(self.feature_engineer, FeatureEngineer):
+            self.feature_engineer = FeatureEngineer(self.feature_engineer)
+
         self.feature_selector = feature_selector if feature_selector is not None else []
 
         self.notes = notes
