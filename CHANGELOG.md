@@ -26,17 +26,8 @@
           A copy of Scikit-Optimize's original LICENSE can also be found in `optimization.backends.skopt`
 
 ### Deprecations
-* `lambda_callback` kwargs dealing with "experiment" and "repetition" time steps have been shortened
-    * These four kwargs have been changed to the following values:
-        * `on_experiment_start` -> `on_exp_start`
-        * `on_experiment_end` -> `on_exp_end`
-        * `on_repetition_start` -> `on_rep_start`
-        * `on_repetition_end` -> `on_rep_end`
-    * In summary, "experiment" is shortened to "exp", and "repetition" is shortened to "rep"
-    * The originals will continue to be available until their removal in v3.2.0
-    * This deprecation will break any custom callbacks created by subclassing `BaseCallback` (which 
-      is not the officially supported method), rather than using `lambda_callback`
-        * To fix such callbacks, simply rename the above methods
+* OptPros' `set_experiment_guidelines` method renamed to `forge_experiment`
+    * `set_experiment_guidelines` will be removed in v3.2.0
 * Optimization Protocols in :mod:`hyperparameter_hunter.optimization` renamed to use "OptPro"
     * This change affects the following optimization protocol classes:
         * `BayesianOptimization` -> `BayesianOptPro`
@@ -51,6 +42,17 @@
       :mod:`hyperparameter_hunter.optimization.protocol_core` that are not available in the package 
       namespace
     * The original names will continue to be available until their removal in v3.2.0
+* `lambda_callback` kwargs dealing with "experiment" and "repetition" time steps have been shortened
+    * These four kwargs have been changed to the following values:
+        * `on_experiment_start` -> `on_exp_start`
+        * `on_experiment_end` -> `on_exp_end`
+        * `on_repetition_start` -> `on_rep_start`
+        * `on_repetition_end` -> `on_rep_end`
+    * In summary, "experiment" is shortened to "exp", and "repetition" is shortened to "rep"
+    * The originals will continue to be available until their removal in v3.2.0
+    * This deprecation will break any custom callbacks created by subclassing `BaseCallback` (which
+      is not the officially supported method), rather than using `lambda_callback`
+        * To fix such callbacks, simply rename the above methods
 
 
 <a name="3.0.0alpha2"></a>
