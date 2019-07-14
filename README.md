@@ -185,7 +185,7 @@ def build_fn(input_shape):
     return model
 
 optimizer = opt.RandomForestOptPro(iterations=7)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=KerasClassifier,
     model_init_params=build_fn,
     model_extra_params=dict(
@@ -204,7 +204,7 @@ optimizer.go()
 
 ```python
 optimizer = opt.DummyOptPro(iterations=42)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=AdaBoostClassifier,  # (Or any of the dozens of other SKLearn algorithms)
     model_init_params=dict(
         n_estimators=Integer(75, 150),
@@ -221,7 +221,7 @@ optimizer.go()
 
 ```python
 optimizer = opt.BayesianOptPro(iterations=10)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=XGBClassifier,
     model_init_params=dict(
         max_depth=Integer(low=2, high=20),
@@ -240,7 +240,7 @@ optimizer.go()
 
 ```python
 optimizer = opt.BayesianOptPro(iterations=100)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=LGBMClassifier,
     model_init_params=dict(
         boosting_type=Categorical(['gbdt', 'dart']),
@@ -259,7 +259,7 @@ optimizer.go()
 
 ```python
 optimizer = opt.GradientBoostedRegressionTreeOptPro(iterations=32)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=CatBoostClassifier,
     model_init_params=dict(
         iterations=100,
@@ -278,7 +278,7 @@ optimizer.go()
 
 ```python
 optimizer = opt.ExtraTreesOptPro(iterations=10)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=RGFClassifier,
     model_init_params=dict(
         max_leaf=1000,
@@ -381,7 +381,7 @@ optimizer = BayesianOptPro(verbose=1)
 
 # Now we're going to say which hyperparameters we want to optimize.
 # Notice how this looks just like our `experiment` above
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=XGBClassifier,
     model_init_params=dict(
         objective='reg:linear',  # We're setting this as a constant guideline - Not one to optimize
