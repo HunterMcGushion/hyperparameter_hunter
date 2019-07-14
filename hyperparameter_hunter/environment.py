@@ -108,7 +108,21 @@ class Environment:
         experiment_callbacks=None,
         experiment_recorders=None,
     ):
-        """Class to organize the parameters that allow Experiments to be fairly compared
+        """Class to organize the parameters that allow Experiments/OptPros to be fairly compared
+
+        `Environment` is the collective starting point for all of HyperparameterHunter's biggest
+        and best toys: Experiments and OptimizationProtocols. Without an `Environment`, neither of
+        these will work.
+
+        The `Environment` is where we declare all the parameters that transcend traditional
+        "hyperparameters". It houses the stuff without which machine learning can't even really
+        start. Specifically, `Environment` cares about 1) The data used for fitting/predicting,
+        2) The cross-validation scheme used to split the data and fit models; and 3) How to evaluate
+        the predictions made on that data. There are plenty of other goodies documented below, but
+        the absolutely mission-critical parameters concerned with the above tasks are
+        `train_dataset`, `cv_type`, `cv_params`, and `metrics`. Additionally, it's important to
+        provide `results_path`, so Experiment/OptPro results can be saved, which is kind of what
+        HyperparameterHunter is all about
 
         Parameters
         ----------
@@ -128,8 +142,8 @@ class Environment:
             <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
             None or invalid, results will not be stored
         metrics: Dict, List, or None, default=None
-            Iterable describing the metrics to be recorded, along with a means to compute the value of
-            each metric. Should be of one of the two following forms:
+            Iterable describing the metrics to be recorded, along with a means to compute the value
+            of each metric. Should be of one of the two following forms:
 
             List Form:
 

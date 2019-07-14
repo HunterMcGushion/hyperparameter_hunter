@@ -81,7 +81,43 @@ class BaseExperiment(ScoringMixIn):
         auto_start=True,
         target_metric=None,
     ):
-        """Base class for :class:`BaseCVExperiment`
+        """One-off Experimentation base class
+
+        **Bare-bones Description:** Runs the cross-validation scheme defined by `Environment`,
+        during which 1) Datasets are processed according to `feature_engineer`; 2) Models are built
+        by instantiating `model_initializer` with `model_init_params`; 3) Models are trained on
+        processed data, optionally using parameters from `model_extra_params`; 4) Results are
+        logged and recorded for each fitting period; 5) Descriptions, predictions, results (both
+        averages and individual periods), etc. are saved.
+
+        **What's the Big Deal?** The most important takeaway from the above description is that
+        descriptions/results are THOROUGH and REUSABLE. By thorough, I mean that all of a model's
+        hyperparameters are saved, not just the ones given in `model_init_params`. This may sound
+        odd, but it's important because it makes results reusable during optimization, when you may
+        be using a different set of hyperparameters. It helps with other things like preventing
+        duplicate experiments and ensembling, as well. But the big part is that this transforms
+        hyperparameter optimization from an isolated, throwaway process we can only afford when an
+        ML project is sufficiently "mature" to a process that covers the entire lifespan of a
+        project. No Experiment is forgotten or wasted. Optimization is automatically given the data
+        it needs to succeed by drawing on all your past Experiments and optimization rounds.
+
+        The Experiment has three primary missions:
+        1. Act as scaffold for organizing ML Experimentation and optimization
+        2. Record Experiment descriptions and results
+        3. Eliminate lots of repetitive/error-prone boilerplate code
+
+        Providing a scaffold for the entire ML process is critical because without a standardized
+        format, everything we do looks different. Without a unified scaffold, development is slower,
+        more confusing, and less adaptable. One of the benefits of standardizing the format of ML
+        Experimentation is that it enables us to exhaustively record all the important
+        characteristics of Experiment, as well as an assortment of customizable result files -- all
+        in a way that allows them to be reused in the future.
+
+        **What About Data/Metrics?** Experiments require an active
+        :class:`~hyperparameter_hunter.environment.Environment` in order to function, from which
+        the Experiment collects important cross-experiment parameters, such as datasets, metrics,
+        cross-validation schemes, and even callbacks to inherit, among many other properties
+        documented in :class:`~hyperparameter_hunter.environment.Environment`
 
         Parameters
         ----------
@@ -176,7 +212,18 @@ class BaseExperiment(ScoringMixIn):
             adds the ability to provide hyperparameter values as ranges to search over, via
             subclasses of :class:`~hyperparameter_hunter.space.dimensions.Dimension`. The other
             notable difference is that `forge_experiment` removes the `auto_start` and
-            `target_metric` kwargs, which is described in the `forge_experiment` docstring Notes"""
+            `target_metric` kwargs, which is described in the `forge_experiment` docstring Notes
+        :class:`~hyperparameter_hunter.environment.Environment`
+            Provides critical information on how Experiments should be conducted, as well as the
+            data to be used by Experiments. An `Environment` must be active before executing any
+            Experiment or OptPro
+        :func:`~hyperparameter_hunter.callbacks.bases.lambda_callback`
+            Enables customization of the Experimentation process and access to all Experiment
+            internals through a collection of methods that are invoked at all the important periods
+            over an Experiment's lifespan. These can be provided via the `experiment_callbacks`
+            kwarg of :class:`~hyperparameter_hunter.environment.Environment`, and the callback
+            classes literally get thrown in to the parent classes of the Experiment, so they're
+            kind of a big deal"""
         self.model_initializer = model_initializer
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
         model_init_params = model_init_params if model_init_params is not None else {}
