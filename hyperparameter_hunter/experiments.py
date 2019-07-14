@@ -81,28 +81,107 @@ class BaseExperiment(ScoringMixIn):
         auto_start=True,
         target_metric=None,
     ):
-        """Base class for :class:`BaseCVExperiment`
+        """One-off Experimentation base class
+
+        **Bare-bones Description:** Runs the cross-validation scheme defined by `Environment`,
+        during which 1) Datasets are processed according to `feature_engineer`; 2) Models are built
+        by instantiating `model_initializer` with `model_init_params`; 3) Models are trained on
+        processed data, optionally using parameters from `model_extra_params`; 4) Results are
+        logged and recorded for each fitting period; 5) Descriptions, predictions, results (both
+        averages and individual periods), etc. are saved.
+
+        **What's the Big Deal?** The most important takeaway from the above description is that
+        descriptions/results are THOROUGH and REUSABLE. By thorough, I mean that all of a model's
+        hyperparameters are saved, not just the ones given in `model_init_params`. This may sound
+        odd, but it's important because it makes results reusable during optimization, when you may
+        be using a different set of hyperparameters. It helps with other things like preventing
+        duplicate experiments and ensembling, as well. But the big part is that this transforms
+        hyperparameter optimization from an isolated, throwaway process we can only afford when an
+        ML project is sufficiently "mature" to a process that covers the entire lifespan of a
+        project. No Experiment is forgotten or wasted. Optimization is automatically given the data
+        it needs to succeed by drawing on all your past Experiments and optimization rounds.
+
+        The Experiment has three primary missions:
+        1. Act as scaffold for organizing ML Experimentation and optimization
+        2. Record Experiment descriptions and results
+        3. Eliminate lots of repetitive/error-prone boilerplate code
+
+        Providing a scaffold for the entire ML process is critical because without a standardized
+        format, everything we do looks different. Without a unified scaffold, development is slower,
+        more confusing, and less adaptable. One of the benefits of standardizing the format of ML
+        Experimentation is that it enables us to exhaustively record all the important
+        characteristics of Experiment, as well as an assortment of customizable result files -- all
+        in a way that allows them to be reused in the future.
+
+        **What About Data/Metrics?** Experiments require an active
+        :class:`~hyperparameter_hunter.environment.Environment` in order to function, from which
+        the Experiment collects important cross-experiment parameters, such as datasets, metrics,
+        cross-validation schemes, and even callbacks to inherit, among many other properties
+        documented in :class:`~hyperparameter_hunter.environment.Environment`
 
         Parameters
         ----------
         model_initializer: Class, or functools.partial, or class instance
-            The algorithm class being used to initialize a model
-        model_init_params: Dict, or None, default=None
+            Algorithm class used to initialize a model, such as XGBoost's `XGBRegressor`, or
+            SKLearn's `KNeighborsClassifier`; although, there are hundreds of possibilities across
+            many different ML libraries. `model_initializer` is expected to define at least `fit`
+            and `predict` methods. `model_initializer` will be initialized with `model_init_params`,
+            and its "extra" methods (`fit`, `predict`, etc.) will be invoked with parameters in
+            `model_extra_params`
+        model_init_params: Dict, or object (optional)
             Dictionary of arguments given to create an instance of `model_initializer`. Any kwargs
             that are considered valid by the `__init__` method of `model_initializer` are valid in
-            `model_init_params`
-        model_extra_params: Dict, or None, default=None
-            A dictionary of extra parameters passed to :class:`models.Model`. This is used to
-            provide parameters to models' non-initialization methods (like `fit`, `predict`,
-            `predict_proba`, etc.), and for neural networks
-        feature_engineer: `FeatureEngineer`, or None, default=None
-            ...  # TODO: Add documentation
-        feature_selector: List of str, callable, list of booleans, default=None
+            `model_init_params`.
+
+            One of the key features that makes HyperparameterHunter so magical is that **ALL**
+            hyperparameters in the signature of `model_initializer` (and their default values) are
+            discovered -- whether or not they are explicitly given in `model_init_params`. Not only
+            does this make Experiment result descriptions incredibly thorough, it also makes
+            optimization smoother, more effective, and far less work for the user. For example, take
+            LightGBM's `LGBMRegressor`, with `model_init_params`=`dict(learning_rate=0.2)`.
+            HyperparameterHunter recognizes that this differs from the default of 0.1. It also
+            recognizes that `LGBMRegressor` is actually initialized with more than a dozen other
+            hyperparameters we didn't bother mentioning, and it records their values, too. So if we
+            want to optimize `num_leaves` tomorrow, the OptPro doesn't start from scratch. It knows
+            that we ran an Experiment that didn't explicitly mention `num_leaves`, but its default
+            value was 31, and it uses this information to fuel optimization -- all without us having
+            to manually keep track of tons of janky collections of hyperparameters. In fact, we
+            really don't need to go out of our way at all. HyperparameterHunter just acts as our
+            faithful lab assistant, keeping track of all the stuff we'd rather not worry about
+        model_extra_params: Dict (optional)
+            Dictionary of extra parameters for models' non-initialization methods (like `fit`,
+            `predict`, `predict_proba`, etc.), and for neural networks. To specify parameters for
+            an extra method, place them in a dict named for the extra method to which the
+            parameters should be given. For example, to call `fit` with `early_stopping_rounds`=5,
+            use `model_extra_params`=`dict(fit=dict(early_stopping_rounds=5))`.
+
+            For models whose `fit` methods have a kwarg like `eval_set` (such as XGBoost's), one can
+            use the `DatasetSentinel` attributes of the current active
+            :class:`~hyperparameter_hunter.environment.Environment`, documented under its
+            "Attributes" section and under
+            :attr:`~hyperparameter_hunter.environment.Environment.train_input`. An example using
+            several DatasetSentinels can be found in HyperparameterHunter's
+            [XGBoost Classification Example](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/xgboost_examples/classification.py)
+        feature_engineer: `FeatureEngineer`, or list (optional)
+            Feature engineering/transformation/pre-processing steps to apply to datasets defined in
+            :class:`~hyperparameter_hunter.environment.Environment`. If list, will be used to
+            initialize :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`, and can
+            contain any of the following values:
+
+                1. :class:`~hyperparameter_hunter.feature_engineering.EngineerStep` instance
+                2. Function input to :class:~hyperparameter_hunter.feature_engineering.EngineerStep`
+
+            For important information on properly formatting `EngineerStep` functions, please see
+            the documentation of :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`.
+            OptPros can perform hyperparameter optimization of `feature_engineer` steps. This
+            capability adds a third allowed value to the above list and is documented in
+            :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+        feature_selector: List of str, callable, or list of booleans (optional)
             Column names to include as input data for all provided DataFrames. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
             :attr:`target_column`, and :attr:`id_column`. `feature_selector` is provided as the
             second argument for calls to `pandas.DataFrame.loc` when constructing datasets
-        notes: String, or None, default=None
+        notes: String (optional)
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
             Experiment details in a more readable format
@@ -116,14 +195,35 @@ class BaseExperiment(ScoringMixIn):
             :meth:`BaseExperiment.experiment_workflow`, effectively completing all essential tasks
             without requiring additional method calls
         target_metric: Tuple, str, default=('oof', <:attr:`environment.Environment.metrics`[0]>)
-            A path denoting the metric to be used to compare completed Experiments or to use for
+            Path denoting the metric to be used to compare completed Experiments or to use for
             certain early stopping procedures in some model classes. The first value should be one
             of ['oof', 'holdout', 'in_fold']. The second value should be the name of a metric being
             recorded according to the values supplied in
-            :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info. Any values returned by, or
-            used as the `target_metric` input to this function are acceptable values for
-            :attr:`BaseExperiment.target_metric`"""
+            :attr:`hyperparameter_hunter.environment.Environment.metrics_params`. See the
+            documentation for :func:`hyperparameter_hunter.metrics.get_formatted_target_metric` for
+            more info. Any values returned by, or used as the `target_metric` input to this function
+            are acceptable values for `target_metric`
+
+        See Also
+        --------
+        :meth:`hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+            OptPro method to define hyperparameter search scaffold for building Experiments during
+            optimization. This method follows the same format as Experiment initialization, but it
+            adds the ability to provide hyperparameter values as ranges to search over, via
+            subclasses of :class:`~hyperparameter_hunter.space.dimensions.Dimension`. The other
+            notable difference is that `forge_experiment` removes the `auto_start` and
+            `target_metric` kwargs, which is described in the `forge_experiment` docstring Notes
+        :class:`~hyperparameter_hunter.environment.Environment`
+            Provides critical information on how Experiments should be conducted, as well as the
+            data to be used by Experiments. An `Environment` must be active before executing any
+            Experiment or OptPro
+        :func:`~hyperparameter_hunter.callbacks.bases.lambda_callback`
+            Enables customization of the Experimentation process and access to all Experiment
+            internals through a collection of methods that are invoked at all the important periods
+            over an Experiment's lifespan. These can be provided via the `experiment_callbacks`
+            kwarg of :class:`~hyperparameter_hunter.environment.Environment`, and the callback
+            classes literally get thrown in to the parent classes of the Experiment, so they're
+            kind of a big deal"""
         self.model_initializer = model_initializer
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
         model_init_params = model_init_params if model_init_params is not None else {}
@@ -133,9 +233,11 @@ class BaseExperiment(ScoringMixIn):
             self.model_init_params.update(dict(build_fn=model_init_params))
 
         self.model_extra_params = model_extra_params if model_extra_params is not None else {}
-        self.feature_engineer = (
-            feature_engineer if callable(feature_engineer) else FeatureEngineer()
-        )
+
+        self.feature_engineer = feature_engineer
+        if not isinstance(self.feature_engineer, FeatureEngineer):
+            self.feature_engineer = FeatureEngineer(self.feature_engineer)
+
         self.feature_selector = feature_selector if feature_selector is not None else []
 
         self.notes = notes

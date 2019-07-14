@@ -57,7 +57,7 @@ experiment_11 = CVExperiment(MLPClassifier, {})
 # ... experiment it can learn from because it's optimizing `AdaBoostClassifier`.
 
 optimizer = RandomForestOptPro(iterations=12, random_state=42)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=AdaBoostClassifier,
     model_init_params=dict(
         n_estimators=Integer(25, 100),

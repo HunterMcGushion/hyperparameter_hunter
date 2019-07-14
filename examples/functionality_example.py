@@ -30,7 +30,7 @@ def execute():
 
     # Now we're going to say which hyperparameters we want to optimize.
     # Notice how this looks just like our `experiment` above
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(
             objective="reg:linear",  # We're setting this as a constant guideline - Not one to optimize

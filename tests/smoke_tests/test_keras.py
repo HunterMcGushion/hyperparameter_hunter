@@ -77,7 +77,7 @@ def _build_fn_regressor(input_shape):
 @pytest.fixture(scope="function", autouse=False)
 def opt_regressor():
     optimizer = DummyOptPro(iterations=1)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=KerasRegressor,
         model_init_params=_build_fn_regressor,
         model_extra_params=dict(
@@ -105,7 +105,7 @@ def in_similar_experiment_ids(opt_0, opt_1):
 
 def run_initialization_matching_optimization_0(build_fn):
     optimizer = DummyOptPro(iterations=1)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=KerasClassifier,
         model_init_params=dict(build_fn=build_fn),
         model_extra_params=dict(epochs=1, batch_size=128, verbose=0),

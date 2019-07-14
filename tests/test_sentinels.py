@@ -137,7 +137,7 @@ def test_sentinels_experiment(env_0):
 @pytest.mark.skipif("xgboost" not in sys.modules, reason="Requires `XGBoost` library")
 def test_sentinels_optimization(env_0):
     optimizer = GBRT(iterations=2)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(objective="reg:linear", max_depth=Integer(2, 20), subsample=0.5),
         model_extra_params=dict(

@@ -19,9 +19,10 @@ Related
 -------
 :mod:`hyperparameter_hunter.space`
     Only related when optimizing `FeatureEngineer` steps within an Optimization Protocol, but
-    defines :class:`~hyperparameter_hunter.space.Categorical`, which is the mechanism for defining a
-    feature engineer step search space, and :class:`~hyperparameter_hunter.space.RejectedOptional`,
-    which is used to represent the absence of a feature engineer step, when labeled as `optional`"""
+    defines :class:`~hyperparameter_hunter.space.dimensions.Categorical`, which is the mechanism for
+    defining a feature engineer step search space, and
+    :class:`~hyperparameter_hunter.space.dimensions.RejectedOptional`, which is used to represent
+    the absence of a feature engineer step, when labeled as `optional`"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -242,6 +243,14 @@ def merge_dfs(merge_to: str, stage: str, dfs: DFDict) -> pd.DataFrame:
         merged_df = pd.concat([dfs[_] for _ in df_names], keys=df_names)
     except ValueError as _ex:
         raise ValueError(f"Merging {df_names} into {merge_to} does not produce DataFrame") from _ex
+        # TODO: Add more specific error message for below scenario?
+        # Tricky: This will be raised when `stage`="pre_cv" and `merge_to`="non_train..." if
+        #   holdout/test data not available in `dfs`. May occur, for example, when using a step
+        #   function that requests "non_train_inputs", with an `Environment` that has neither
+        #   `holdout_dataset` nor `test_dataset` IF attempting to force the `EngineerStep`'s
+        #   `stage`="pre_cv", instead of its default "intra_cv". This is correct behavior because
+        #   "non_train_inputs" cannot be made under these circumstances; however, the precise cause
+        #   of the problem may not be immediately apparent
     return merged_df
 
 
@@ -403,7 +412,7 @@ class EngineerStep:
         :class:`FeatureEngineer`
             The container for `EngineerStep` instances - `EngineerStep`s should always be provided
             to HyperparameterHunter through a `FeatureEngineer`
-        :class:`~hyperparameter_hunter.space.Categorical`
+        :class:`~hyperparameter_hunter.space.dimensions.Categorical`
             Can be used during optimization to search through a group of `EngineerStep`s given as
             `categories`. The `optional` kwarg of `Categorical` designates a `FeatureEngineer` step
             that may be one of the `EngineerStep`s in `categories`, or may be omitted entirely
@@ -811,13 +820,13 @@ class FeatureEngineer:
 
                 1. :class:`EngineerStep` instance,
                 2. Function to provide as input to :class:`EngineerStep`, or
-                3. :class:`~hyperparameter_hunter.space.Categorical`, with `categories` comprising
-                   a selection of the previous two `steps` values (optimization only)
+                3. :class:`~hyperparameter_hunter.space.dimensions.Categorical`, with `categories`
+                   comprising a selection of the previous two `steps` values (optimization only)
 
-            The third value should only be used during optimization. The `feature_engineer` provided
-            to a :class:`~hyperparameter_hunter.experiments.CVExperiment`, for example, may only
-            contain the first two values. To search a space optionally including an `EngineerStep`,
-            use the `optional` kwarg of :class:`~hyperparameter_hunter.space.Categorical`.
+            The third value can only be used during optimization. The `feature_engineer` provided to
+            :class:`~hyperparameter_hunter.experiments.CVExperiment`, for example, may only contain
+            the first two values. To search a space optionally including an `EngineerStep`, use the
+            `optional` kwarg of :class:`~hyperparameter_hunter.space.dimensions.Categorical`.
 
             See :class:`EngineerStep` for information on properly formatted `EngineerStep`
             functions. Additional engineering steps may be added via :meth:`add_step`
@@ -839,11 +848,12 @@ class FeatureEngineer:
 
         Notes
         -----
-        If `steps` does include any instances of :class:`hyperparameter_hunter.space.Categorical`,
-        this `FeatureEngineer` instance will not be usable by experiments. It can only be used
-        by Optimization Protocols. Furthermore, the `FeatureEngineer` that the Optimization Protocol
-        actually ends up using will not pass identity checks against the original `FeatureEngineer`
-        that contained `Categorical` steps
+        If `steps` does include any instances of
+        :class:`hyperparameter_hunter.space.dimensions.Categorical`, this `FeatureEngineer` instance
+        will not be usable by Experiments. It can only be used by Optimization Protocols.
+        Furthermore, the `FeatureEngineer` that the Optimization Protocol actually ends up using
+        will not pass identity checks against the original `FeatureEngineer` that contained
+        `Categorical` steps
 
         Examples
         --------
@@ -918,6 +928,13 @@ class FeatureEngineer:
         for i, step in enumerate(self.steps):
             if step.stage == stage:
                 self.datasets = step(**self.datasets)
+
+    def __eq__(self, other: "FeatureEngineer"):
+        return (
+            isinstance(other, FeatureEngineer)
+            and len(self.steps) == len(other.steps)
+            and all(s_self == s_other for (s_self, s_other) in zip(self.steps, other.steps))
+        )
 
     def inverse_transform(self, data):
         """Perform the inverse transformation for all engineer steps in :attr:`steps` in sequence

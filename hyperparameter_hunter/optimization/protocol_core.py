@@ -20,6 +20,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter import __version__
 from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
@@ -47,6 +48,7 @@ from hyperparameter_hunter.space.space_core import Space
 from hyperparameter_hunter.utils.boltons_utils import get_path
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict
 from hyperparameter_hunter.utils.optimization_utils import get_choice_dimensions, dimension_subset
+from hyperparameter_hunter.utils.version_utils import Deprecated
 
 ##################################################
 # Import Miscellaneous Assets
@@ -110,22 +112,29 @@ class BaseOptPro(metaclass=MergedOptProMeta):
     ):
         """Base class for intermediate base optimization protocol classes
 
+        There are two important methods for all :class:`BaseOptPro` descendants that should be
+        invoked after initialization:
+
+        1. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+        2. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.go`
+
         Parameters
         ----------
-        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics`>)
-            A path denoting the metric to be used to compare completed Experiments within the
-            Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
-            The second value should be the name of a metric being recorded according to the values
-            supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info. Any values returned by, or
-            given as the `target_metric` input to, :func:`metrics.get_formatted_target_metric` are
-            acceptable values for :attr:`BaseOptPro.target_metric`
+        target_metric: Tuple, default=("oof", <:attr:`environment.Environment.metrics`[0]>)
+            Rarely necessary to explicitly provide this, as the default is usually sufficient. Path
+            denoting the metric to be used to compare Experiment performance. The first value
+            should be one of ["oof", "holdout", "in_fold"]. The second value should be the name of
+            a metric being recorded according to :attr:`environment.Environment.metrics_params`.
+            See the documentation for :func:`metrics.get_formatted_target_metric` for more info.
+            Any values returned by, or given as the `target_metric` input to,
+            :func:`~hyperparameter_hunter.metrics.get_formatted_target_metric` are acceptable
+            values for :attr:`BaseOptPro.target_metric`
         iterations: Int, default=1
-            The number of distinct experiments to execute
-        verbose: Int 0, 1, or 2, default=1
+            Number of Experiments to conduct during optimization upon invoking :meth:`BaseOptPro.go`
+        verbose: {0, 1, 2}, default=1
             Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization
-            Protocol. 2: In addition to logs shown when verbose=1, also show the logs from individual
-            Experiments
+            Protocol. 2: In addition to logs shown when verbose=1, also show the logs from
+            individual Experiments
         read_experiments: Boolean, default=True
             If True, all Experiment records that fit in the current :attr:`space` and guidelines,
             and match :attr:`algorithm_name`, will be read in and used to fit any optimizers
@@ -135,6 +144,13 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
             in `G.Env.metrics`. In nearly all cases, the "do_maximize" key should be ignored,
             as there are very few reasons to explicitly include it
+
+        Methods
+        -------
+        forge_experiment
+            Define constraints on Experiments conducted by OptPro (like hyperparameter search space)
+        go
+            Start optimization
 
         Notes
         -----
@@ -197,40 +213,122 @@ class BaseOptPro(metaclass=MergedOptProMeta):
     ##################################################
     # Core Methods:
     ##################################################
-    def set_experiment_guidelines(
+    def forge_experiment(
         self,
         model_initializer,
-        model_init_params,
+        model_init_params=None,
         model_extra_params=None,
         feature_engineer=None,
         feature_selector=None,
         notes=None,
         do_raise_repeated=True,
     ):
-        """Provide arguments necessary to instantiate :class:`experiments.CVExperiment`. This method
-        has the same signature as :meth:`experiments.BaseExperiment.__init__` except where noted
+        """Define hyperparameter search scaffold for building Experiments during optimization
+
+        OptPros use this method to guide Experiment construction behind the scenes, which is why it
+        looks just like :meth:`hyperparameter_hunter.experiments.BaseExperiment.__init__`.
+        `forge_experiment` offers one major upgrade to standard Experiment initialization: it
+        accepts hyperparameters not only as concrete values, but also as space choices -- using
+        :class:`~hyperparameter_hunter.space.dimensions.Real`,
+        :class:`~hyperparameter_hunter.space.dimensions.Integer`, and
+        :class:`~hyperparameter_hunter.space.dimensions.Categorical`. This functionality applies to
+        the `model_init_params`, `model_extra_params` and `feature_engineer` kwargs. Any Dimensions
+        provided to `forge_experiment` are detected by the OptPro and used to define the
+        hyperparameter search space to be optimized
 
         Parameters
         ----------
         model_initializer: Class, or functools.partial, or class instance
-            The algorithm class being used to initialize a model
-        model_init_params: Dict, or object
-            The dictionary of arguments given when creating a model instance with
-            `model_initializer` via the `__init__` method of :class:`models.Model`. Any kwargs that
-            are considered valid by the `__init__` method of `model_initializer` are
-            valid in `model_init_params`
-        model_extra_params: Dict, or None, default=None
-            A dictionary of extra parameters passed to :class:`models.Model`. This is used to
-            provide parameters to models' non-initialization methods (like `fit`, `predict`,
-            `predict_proba`, etc.), and for neural networks
-        feature_engineer: `FeatureEngineer`, or None, default=None  # TODO: Add documentation
-            ...   # TODO: Add documentation
-        feature_selector: List of str, callable, list of booleans, default=None
+            Algorithm class used to initialize a model, such as XGBoost's `XGBRegressor`, or
+            SKLearn's `KNeighborsClassifier`; although, there are hundreds of possibilities across
+            many different ML libraries. `model_initializer` is expected to define at least `fit`
+            and `predict` methods. `model_initializer` will be initialized with `model_init_params`,
+            and its extra methods (`fit`, `predict`, etc.) will be invoked with parameters in
+            `model_extra_params`
+        model_init_params: Dict, or object (optional)
+            Dictionary of arguments given to create an instance of `model_initializer`. Any kwargs
+            that are considered valid by the `__init__` method of `model_initializer` are valid in
+            `model_init_params`.
+
+            In addition to providing concrete values, hyperparameters can be expressed as choices
+            (dimensions to optimize) by using instances of
+            :class:`~hyperparameter_hunter.space.dimensions.Real`,
+            :class:`~hyperparameter_hunter.space.dimensions.Integer`, or
+            :class:`~hyperparameter_hunter.space.dimensions.Categorical`. Furthermore,
+            hyperparameter choices and concrete values can be used together in `model_init_params`.
+
+            Using XGBoost's `XGBClassifier` to illustrate, the `model_init_params` kwarg of
+            :class:`~hyperparameter_hunter.experiments.CVExperiment` is limited to using concrete
+            values, such as ``dict(max_depth=10, learning_rate=0.1, booster="gbtree")``. This is
+            still valid for :meth:`.forge_experiment`. However, :meth:`.forge_experiment` also
+            allows `model_init_params` to consist entirely of space choices, such as
+            ``dict(max_depth=Integer(2, 20), learning_rate=Real(0.001, 0.5),
+            booster=Categorical(["gbtree", "dart"]))``, or as any combination of concrete values
+            and choices, for instance, ``dict(max_depth=10, learning_rate=Real(0.001, 0.5),
+            booster="gbtree")``.
+
+            One of the key features that makes HyperparameterHunter so magical is that **ALL**
+            hyperparameters in the signature of `model_initializer` (and their default values) are
+            discovered -- whether or not they are explicitly given in `model_init_params`. Not only
+            does this make Experiment result descriptions incredibly thorough, it also makes
+            optimization smoother, more effective, and far less work for the user. For example, take
+            LightGBM's `LGBMRegressor`, with `model_init_params`=`dict(learning_rate=0.2)`.
+            HyperparameterHunter recognizes that this differs from the default of 0.1. It also
+            recognizes that `LGBMRegressor` is actually initialized with more than a dozen other
+            hyperparameters we didn't bother mentioning, and it records their values, too. So if we
+            want to optimize `num_leaves` tomorrow, the OptPro doesn't start from scratch. It knows
+            that we ran an Experiment that didn't explicitly mention `num_leaves`, but its default
+            value was 31, and it uses this information to fuel optimization -- all without us having
+            to manually keep track of tons of janky collections of hyperparameters. In fact, we
+            really don't need to go out of our way at all. HyperparameterHunter just acts as our
+            faithful lab assistant, keeping track of all the stuff we'd rather not worry about
+        model_extra_params: Dict (optional)
+            Dictionary of extra parameters for models' non-initialization methods (like `fit`,
+            `predict`, `predict_proba`, etc.), and for neural networks. To specify parameters for
+            an extra method, place them in a dict named for the extra method to which the
+            parameters should be given. For example, to call `fit` with `early_stopping_rounds`=5,
+            use `model_extra_params`=`dict(fit=dict(early_stopping_rounds=5))`.
+
+            Declaring hyperparameter space choices works identically to `model_init_params`, meaning
+            that in addition to concrete values, extra parameters can be given as instances of
+            :class:`~hyperparameter_hunter.space.dimensions.Real`,
+            :class:`~hyperparameter_hunter.space.dimensions.Integer`, or
+            :class:`~hyperparameter_hunter.space.dimensions.Categorical`. To optimize over a space
+            in which `early_stopping_rounds` is between 3 and 9, use
+            `model_extra_params`=`dict(fit=dict(early_stopping_rounds=Real(3, 9)))`.
+
+            For models whose `fit` methods have a kwarg like `eval_set` (such as XGBoost's), one can
+            use the `DatasetSentinel` attributes of the current active
+            :class:`~hyperparameter_hunter.environment.Environment`, documented under its
+            "Attributes" section and under
+            :attr:`~hyperparameter_hunter.environment.Environment.train_input`. An example using
+            several DatasetSentinels can be found in HyperparameterHunter's
+            [XGBoost Classification Example](https://github.com/HunterMcGushion/hyperparameter_hunter/blob/master/examples/xgboost_examples/classification.py)
+        feature_engineer: `FeatureEngineer`, or list (optional)
+            Feature engineering/transformation/pre-processing steps to apply to datasets defined in
+            :class:`~hyperparameter_hunter.environment.Environment`. If list, will be used to
+            initialize :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`, and can
+            contain any of the following values:
+
+                1. :class:`~hyperparameter_hunter.feature_engineering.EngineerStep` instance
+                2. Function input to :class:~hyperparameter_hunter.feature_engineering.EngineerStep`
+                3. :class:`~hyperparameter_hunter.space.dimensions.Categorical`, with `categories`
+                   comprising a selection of the previous two values (optimization only)
+
+            For important information on properly formatting `EngineerStep` functions, please see
+            the documentation of :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`.
+
+            To search a space optionally including an `EngineerStep`, use the `optional` kwarg of
+            :class:`~hyperparameter_hunter.space.dimensions.Categorical`. This functionality is
+            illustrated in :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`. If
+            using a `FeatureEngineer` instance to optimize `feature_engineer`, this instance cannot
+            be used with `CVExperiment` because Experiments can't handle space choices
+        feature_selector: List of str, callable, or list of booleans (optional)
             Column names to include as input data for all provided DataFrames. If None,
             `feature_selector` is set to all columns in :attr:`train_dataset`, less
             :attr:`target_column`, and :attr:`id_column`. `feature_selector` is provided as the
             second argument for calls to `pandas.DataFrame.loc` when constructing datasets
-        notes: String, or None, default=None
+        notes: String (optional)
             Additional information about the Experiment that will be saved with the Experiment's
             description result file. This serves no purpose other than to facilitate saving
             Experiment details in a more readable format
@@ -241,23 +339,37 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         Notes
         -----
-        The `auto_start` kwarg is not available here because :meth:`BaseOptPro._execute_experiment`
-        sets it to False in order to check for duplicated keys before running the whole Experiment.
-        This and `target_metric` being moved to :meth:`BaseOptPro.__init__` are the most notable
-        differences between calling :meth:`set_experiment_guidelines` and instantiating
-        :class:`~hyperparameter_hunter.experiments.CVExperiment`"""
-        self.model_initializer = model_initializer
+        The `auto_start` kwarg is not available here because :meth:`._execute_experiment` sets it
+        to False in order to check for duplicated keys before running the whole Experiment. This
+        and `target_metric` being moved to :meth:`.__init__` are the most notable differences
+        between calling :meth:`forge_experiment` and instantiating
+        :class:`~hyperparameter_hunter.experiments.CVExperiment`
 
+        A more accurate name for this method might be something like "build_experiment_forge", since
+        `forge_experiment` itself does not actually execute any Experiments. However,
+        `forge_experiment` sounds cooler and much less clunky
+
+        See Also
+        --------
+        :class:`hyperparameter_hunter.experiments.BaseExperiment`
+            One-off experimentation counterpart to an OptPro's :meth:`.forge_experiment`.
+            Internally, OptPros feed the processed arguments from `forge_experiment` to initialize
+            Experiments. This hand-off to Experiments takes place in :meth:`._execute_experiment`
+        """
+        self.model_initializer = model_initializer
         self.model_init_params = identify_algorithm_hyperparameters(self.model_initializer)
+        model_init_params = model_init_params if model_init_params is not None else {}
         try:
             self.model_init_params.update(model_init_params)
         except TypeError:
             self.model_init_params.update(dict(build_fn=model_init_params))
 
         self.model_extra_params = model_extra_params if model_extra_params is not None else {}
-        self.feature_engineer = (
-            feature_engineer if feature_engineer is not None else FeatureEngineer()
-        )
+
+        self.feature_engineer = feature_engineer
+        if not isinstance(self.feature_engineer, FeatureEngineer):
+            self.feature_engineer = FeatureEngineer(self.feature_engineer)
+
         self.feature_selector = feature_selector if feature_selector is not None else []
 
         self.notes = notes
@@ -284,6 +396,15 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
 
         self.set_dimensions()
+
+    @Deprecated(
+        v_deprecate="3.0.0a2",
+        v_remove="3.2.0",
+        v_current=__version__,
+        details="Renamed to `forge_experiment`",
+    )
+    def set_experiment_guidelines(self, *args, **kwargs):
+        self.forge_experiment(*args, **kwargs)
 
     def set_dimensions(self):
         """Locate given hyperparameters that are `space` choice declarations and add them to
@@ -326,13 +447,16 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             )
 
     def go(self):
-        """Begin hyperparameter optimization process after experiment guidelines have been set and
-        search dimensions are in place. This process includes the following: setting the
-        hyperparameter space; locating similar experiments to be used as learning material for
-        :class:`SKOptPro` s; and executing :meth:`_optimization_loop`, which
-        actually sets off the Experiment execution process"""
+        """Execute hyperparameter optimization, building an Experiment for each iteration
+
+        This method may only be invoked after invoking :meth:`.forge_experiment`, which defines
+        experiment guidelines and search dimensions. `go` performs a few important tasks: 1)
+        Formally setting the hyperparameter space; 2) Locating similar experiments to be used as
+        learning material (for OptPros that suggest incumbent search points by estimating utilities
+        using surrogate models); and 3) Actually setting off the optimization process, via
+        :meth:`._optimization_loop`"""
         if self.model_initializer is None:
-            raise ValueError("Experiment guidelines must be set before starting optimization")
+            raise ValueError("Must invoke `forge_experiment` before starting optimization")
 
         _reporter_params = dict(dict(do_maximize=self.do_maximize), **self.reporter_parameters)
         self.logger = OptimizationReporter(self.dimensions, **_reporter_params)
@@ -340,6 +464,9 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         self.tested_keys = []
         self._set_hyperparameter_space()
         self._find_similar_experiments()
+        # TODO: Move above to new prep method that can be called before `go` - Called by `go` if not
+        #   already done, or if given new `force_update=True` kwarg to recheck similar experiments
+        # TODO: Should make it easier/faster to test some OptPro stuff by skipping optimization part
 
         loop_start_time = datetime.now()
         self._optimization_loop()
@@ -397,7 +524,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         Notes
         -----
-        As described in the Notes of :meth:`BaseOptPro.set_experiment_guidelines`, the
+        As described in the Notes of :meth:`BaseOptPro.forge_experiment`, the
         `auto_start` kwarg of :meth:`experiments.CVExperiment.__init__` is set to False in order to
         check for duplicated keys"""
         self._update_current_hyperparameters()
@@ -630,19 +757,26 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
     ):
         """Base class for SKOpt-based Optimization Protocols
 
+        There are two important methods for all :class:`SKOptPro` descendants that should be
+        invoked after initialization:
+
+        1. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`
+        2. :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.go`
+
         Parameters
         ----------
-        target_metric: Tuple, default=('oof', <first key in :attr:`environment.Environment.metrics`>)
-            A path denoting the metric to be used to compare completed Experiments within the
-            Optimization Protocol. The first value should be one of ['oof', 'holdout', 'in_fold'].
-            The second value should be the name of a metric being recorded according to the values
-            supplied in :attr:`environment.Environment.metrics_params`. See the documentation for
-            :func:`metrics.get_formatted_target_metric` for more info; any values returned by, or
-            used as the `target_metric` input to this function are acceptable values for
-            :attr:`BaseOptPro.target_metric`
+        target_metric: Tuple, default=("oof", <:attr:`environment.Environment.metrics`[0]>)
+            Rarely necessary to explicitly provide this, as the default is usually sufficient. Path
+            denoting the metric to be used to compare Experiment performance. The first value
+            should be one of ["oof", "holdout", "in_fold"]. The second value should be the name of
+            a metric being recorded according to :attr:`environment.Environment.metrics_params`.
+            See the documentation for :func:`metrics.get_formatted_target_metric` for more info.
+            Any values returned by, or given as the `target_metric` input to,
+            :func:`~hyperparameter_hunter.metrics.get_formatted_target_metric` are acceptable
+            values for :attr:`BaseOptPro.target_metric`
         iterations: Int, default=1
-            The number of distinct experiments to execute
-        verbose: Int 0, 1, or 2, default=1
+            Number of Experiments to conduct during optimization upon invoking :meth:`BaseOptPro.go`
+        verbose: {0, 1, 2}, default=1
             Verbosity mode for console logging. 0: Silent. 1: Show only logs from the Optimization
             Protocol. 2: In addition to logs shown when verbose=1, also show the logs from
             individual Experiments
@@ -650,29 +784,58 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             If True, all Experiment records that fit in the current :attr:`space` and guidelines,
             and match :attr:`algorithm_name`, will be read in and used to fit any optimizers
         reporter_parameters: Dict, or None, default=None
-            Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`
-        base_estimator: String in ['GP', 'GBRT', 'RF', 'ET', 'DUMMY'], or an `sklearn` regressor, default='GP'
-            If one of the above strings, a default model of that type will be used. Else, should
-            inherit from :class:`sklearn.base.RegressorMixin`, and its :meth:`predict` should have
-            an optional `return_std` argument, which returns `std(Y | x)`, along with `E[Y | x]`
+            Additional parameters passed to :meth:`reporting.OptimizationReporter.__init__`. Note:
+            Unless provided explicitly, the key "do_maximize" will be added by default to
+            `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
+            in `G.Env.metrics`. In nearly all cases, the "do_maximize" key should be ignored,
+            as there are very few reasons to explicitly include it
+
+        Other Parameters
+        ----------------
+        base_estimator: {SKLearn Regressor, "GP", "RF", "ET", "GBRT", "DUMMY"}, default="GP"
+            If not string, should inherit from `sklearn.base.RegressorMixin`. In addition, the
+            `predict` method should have an optional `return_std` argument, which returns
+            `std(Y | x)`, along with `E[Y | x]`.
+
+            If `base_estimator` is a string in {"GP", "RF", "ET", "GBRT", "DUMMY"}, a surrogate
+            model corresponding to the relevant `X_minimize` function is created
         n_initial_points: Int, default=10
-            The number of complete evaluation points necessary before allowing Experiments to be
+            Number of complete evaluation points necessary before allowing Experiments to be
             approximated with `base_estimator`. Any valid Experiment records found will count as
             initialization points. If enough Experiment records are not found, additional points
             will be randomly sampled
-        acquisition_function: String in ['LCB', 'EI', 'PI', 'gp_hedge'], default='gp_hedge'
-            Function to minimize over the posterior distribution. 'LCB': lower confidence bound.
-            'EI': negative expected improvement. 'PI': negative probability of improvement.
-            'gp_hedge': Probabilistically choose one of the preceding three acquisition functions at
-            each iteration
-        acquisition_optimizer: String in ['sampling', 'lbfgs', 'auto'], default='auto'
+        acquisition_function:{"LCB", "EI", "PI", "gp_hedge"}, default="gp_hedge"
+            Function to minimize over the posterior distribution. Can be any of the following:
+            * "LCB": Lower confidence bound
+            * "EI": Negative expected improvement
+            * "PI": Negative probability of improvement
+            * "gp_hedge": Probabilistically choose one of the above three acquisition functions at
+              every iteration
+
+                * The gains `g_i` are initialized to zero
+                * At every iteration,
+
+                    * Each acquisition function is optimised independently to propose a candidate
+                      point `X_i`
+                    * Out of all these candidate points, the next point `X_best` is chosen by
+                      `softmax(eta g_i)`
+                    * After fitting the surrogate model with `(X_best, y_best)`, the gains are
+                      updated such that `g_i -= mu(X_i)`
+        acquisition_optimizer: {"sampling", "lbfgs", "auto"}, default="auto"
             Method to minimize the acquisition function. The fit model is updated with the optimal
-            value obtained by optimizing `acquisition_function` with `acquisition_optimizer`.
-            'sampling': optimize by computing `acquisition_function` at
-            `acquisition_optimizer_kwargs['n_points']` randomly sampled points. 'lbfgs': optimize by
-            sampling `n_restarts_optimizer` random points, then run 'lbfgs' for 20 iterations with
-            those points to find local minima, the optimal of which is used to update the prior.
-            'auto': configure on the basis of `base_estimator` and `dimensions`
+            value obtained by optimizing `acq_func` with `acq_optimizer`
+
+            * "sampling": `acq_func` is optimized by computing `acq_func` at `n_initial_points`
+              randomly sampled points.
+            * "lbfgs": `acq_func` is optimized by
+
+                  * Randomly sampling `n_restarts_optimizer` (from `acq_optimizer_kwargs`) points
+                  * "lbfgs" is run for 20 iterations with these initial points to find local minima
+                  * The optimal of these local minima is used to update the prior
+
+            * "auto": `acq_optimizer` is configured on the basis of the `base_estimator` and the
+              search space. If the space is `Categorical` or if the provided estimator is based on
+              tree-models, then this is set to "sampling"
         random_state: Int, `RandomState` instance, or None, default=None
             Set to something other than None for reproducible results
         acquisition_function_kwargs: Dict, or None, default=dict(xi=0.01, kappa=1.96)
@@ -687,6 +850,13 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             :attr:`optimizer`. If list, then each callable is called
         base_estimator_kwargs: Dict, or None, default={}
             Additional arguments passed to `base_estimator` when it is initialized
+
+        Methods
+        -------
+        forge_experiment
+            Define constraints on Experiments conducted by OptPro (like hyperparameter search space)
+        go
+            Start optimization
 
         Notes
         -----

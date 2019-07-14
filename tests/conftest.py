@@ -12,6 +12,12 @@ from os import makedirs
 import pytest
 from shutil import rmtree
 
+##################################################
+# Global Settings
+##################################################
+assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+# assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
+
 
 # noinspection PyUnusedLocal
 @pytest.fixture(scope="module", autouse=True)
@@ -25,7 +31,7 @@ def new_G(request):
 def hh_assets(request):
     """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
     of the tests contained in each module, before it and its contents are deleted"""
-    temp_assets_path = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+    temp_assets_path = assets_dir
     try:
         makedirs(temp_assets_path)
     except FileExistsError:  # Can happen if tests stopped before deleting directory - Must empty it
@@ -39,7 +45,7 @@ def hh_assets(request):
 def env_fixture_0():
     return Environment(
         train_dataset=get_toy_classification_data(),
-        results_path="hyperparameter_hunter/__TEST__HyperparameterHunterAssets__",
+        results_path=assets_dir,
         metrics=["roc_auc_score"],
         cv_type="StratifiedKFold",
         cv_params=dict(n_splits=5, shuffle=True, random_state=32),

@@ -145,7 +145,7 @@ class Optimizer(object):
         Values of objective at corresponding points in `Xi`
     models: List
         Regression models used to fit observations and compute acquisition function
-    space: `hyperparameter_hunter.optimization.space.Space`
+    space: `hyperparameter_hunter.space.space_core.Space`
         Stores parameter search space used to sample points, bounds, and type of parameters
     n_initial_points_: Int
         Original value passed through the `n_initial_points` kwarg. The value of this attribute
@@ -697,7 +697,7 @@ def cook_estimator(base_estimator, space=None, **kwargs):
 
         If `base_estimator` is a string in {"GP", "RF", "ET", "GBRT", "DUMMY"}, a surrogate model
         corresponding to the relevant `X_minimize` function is created
-    space: `hyperparameter_hunter.optimization.space.Space`
+    space: `hyperparameter_hunter.space.space_core.Space`
         Required only if the `base_estimator` is a Gaussian Process. Ignored otherwise
     **kwargs: Dict
         Extra parameters provided to the `base_estimator` at initialization time

@@ -108,7 +108,21 @@ class Environment:
         experiment_callbacks=None,
         experiment_recorders=None,
     ):
-        """Class to organize the parameters that allow Experiments to be fairly compared
+        """Class to organize the parameters that allow Experiments/OptPros to be fairly compared
+
+        `Environment` is the collective starting point for all of HyperparameterHunter's biggest
+        and best toys: Experiments and OptimizationProtocols. Without an `Environment`, neither of
+        these will work.
+
+        The `Environment` is where we declare all the parameters that transcend traditional
+        "hyperparameters". It houses the stuff without which machine learning can't even really
+        start. Specifically, `Environment` cares about 1) The data used for fitting/predicting,
+        2) The cross-validation scheme used to split the data and fit models; and 3) How to evaluate
+        the predictions made on that data. There are plenty of other goodies documented below, but
+        the absolutely mission-critical parameters concerned with the above tasks are
+        `train_dataset`, `cv_type`, `cv_params`, and `metrics`. Additionally, it's important to
+        provide `results_path`, so Experiment/OptPro results can be saved, which is kind of what
+        HyperparameterHunter is all about
 
         Parameters
         ----------
@@ -128,8 +142,8 @@ class Environment:
             <ASSETS_DIRNAME> already exists at this path, new results will also be stored here. If
             None or invalid, results will not be stored
         metrics: Dict, List, or None, default=None
-            Iterable describing the metrics to be recorded, along with a means to compute the value of
-            each metric. Should be of one of the two following forms:
+            Iterable describing the metrics to be recorded, along with a means to compute the value
+            of each metric. Should be of one of the two following forms:
 
             List Form:
 
@@ -309,6 +323,8 @@ class Environment:
             an Experiment, and, if the subclassing documentation in `recorders` is followed
             properly, will create or update a result file for the just-executed Experiment
 
+        Other Parameters
+        ----------------
         cross_validation_type: ...
             * Alias for `cv_type` *
         cross_validation_params: ...
@@ -319,6 +335,27 @@ class Environment:
             * Alias for `reporting_params` *
         root_results_path: ...
             * Alias for `results_path` *
+
+        Attributes
+        ----------
+        train_input: DatasetSentinel
+            Sentinel replaced with current train input data during `Model` fitting/predicting.
+            Commonly given in the `model_extra_params` kwargs of
+            :class:`hyperparameter_hunter.experiments.BaseExperiment` or
+            :meth:`hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment` for
+            `eval_set`-like hyperparameters. Importantly, the actual value of this Sentinel is
+            determined after performing cross-validation data splitting, and after executing
+            :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`
+        train_target: DatasetSentinel
+            Like :attr:`.train_input`, except for current train target data
+        validation_input: DatasetSentinel
+            Like :attr:`.train_input`, except for current validation input data
+        validation_target: DatasetSentinel
+            Like :attr:`.train_input`, except for current validation target data
+        holdout_input: DatasetSentinel
+            Like :attr:`.train_input`, except for current holdout input data
+        holdout_target: DatasetSentinel
+            Like :attr:`.train_input`, except for current holdout target data
 
         Notes
         -----

@@ -30,7 +30,7 @@ env_kwargs = dict(
 # We'll set up a helper function, so we can easily re-run optimization with different Environments
 def do_optimization():
     optimizer = BayesianOptPro(iterations=5, random_state=1337)
-    optimizer.set_experiment_guidelines(
+    optimizer.forge_experiment(
         model_initializer=XGBClassifier,
         model_init_params=dict(
             objective="reg:linear",

@@ -43,7 +43,7 @@ experiment = CVExperiment(
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
 optimizer = GBRT(iterations=8, random_state=42)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=CatBoostClassifier,
     model_init_params=dict(
         iterations=100,

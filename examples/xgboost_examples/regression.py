@@ -31,7 +31,7 @@ experiment = CVExperiment(
 # And/or...
 #################### 2. Hyperparameter Optimization ####################
 optimizer = GBRT(iterations=20, random_state=32)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=XGBRegressor,
     model_init_params=dict(
         max_depth=Integer(2, 20),

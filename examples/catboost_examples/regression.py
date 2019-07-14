@@ -59,7 +59,7 @@ experiment = CVExperiment(
 # Notice below that `optimizer` still recognizes the results of `experiment` as valid learning material even
 # ... though their `verbose` values differ. This is because it knows that `verbose` has no effect on actual results.
 optimizer = DummyOptPro(iterations=10, random_state=777)
-optimizer.set_experiment_guidelines(
+optimizer.forge_experiment(
     model_initializer=CatBoostRegressor,
     model_init_params=dict(
         iterations=100,

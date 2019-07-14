@@ -10,6 +10,8 @@ Subpackages
     hyperparameter_hunter.data
     hyperparameter_hunter.keys
     hyperparameter_hunter.library_helpers
+    hyperparameter_hunter.optimization
+    hyperparameter_hunter.space
     hyperparameter_hunter.utils
 
 Submodules
@@ -95,22 +97,6 @@ hyperparameter\_hunter.models module
     :undoc-members:
     :show-inheritance:
 
-hyperparameter\_hunter.optimization module
-------------------------------------------
-
-.. automodule:: hyperparameter_hunter.optimization
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.optimization\_core module
-------------------------------------------------
-
-.. automodule:: hyperparameter_hunter.optimization_core
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 hyperparameter\_hunter.recorders module
 ---------------------------------------
 
@@ -147,14 +133,6 @@ hyperparameter\_hunter.settings module
 --------------------------------------
 
 .. automodule:: hyperparameter_hunter.settings
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.space module
------------------------------------
-
-.. automodule:: hyperparameter_hunter.space
     :members:
     :undoc-members:
     :show-inheritance:

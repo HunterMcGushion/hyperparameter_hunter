@@ -1,22 +1,33 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Bug Fixes
+* Fix bug causing `BayesianOptPro` to break, or fail experiment matching, when using an 
+  exclusively-`Categorical` search space. For details, see [#154](https://github.com/HunterMcGushion/hyperparameter_hunter/issues/154)
+
 ### Changes
-* `model_init_params` kwarg of `CVExperiment` is now optional. If not given, it will be evaluated 
-  as the default initialization parameters to `model_initializer`
+* `model_init_params` kwarg of both `CVExperiment` and all OptPros is now optional. If not given, 
+  it will be evaluated as the default initialization parameters to `model_initializer`
+* Convert `space.py` file module to `space` directory module, containing `space_core` and 
+  `dimensions`
+    * `space.dimensions` is the new home of the dimension classes used to define hyperparameter 
+      search spaces via :meth:`optimization.protocol_core.BaseOptPro.forge_experiment`:
+      `Real`, `Integer`, and `Categorical`
+    * `space.space_core` houses :class:`Space`, which is only used internally
+* Convert `optimization.py` and `optimization_core.py` file modules to `optimization` directory 
+  module, containing `protocol_core` and the `backends` directory
+    * `optimization_core.py` has been moved to `optimization.protocol_core.py`
+    * `optimization.backends` contains `skopt.engine` and `skopt.protocols`, the latter of which is
+      the new location of the original `optimization.py` file
+    * `optimization.backends.skopt.engine` is a partial vendorization of [Scikit-Optimize](https://github.com/scikit-optimize/scikit-optimize)'s
+      `Optimizer` class, which acts as the backend for :class:`optimization.protocol_core.SKOptPro`
+        * For additional information on the partial vendorization of key Scikit-Optimize components,
+          see [the `optimization.backends.skopt` README](https://github.com/HunterMcGushion/hyperparameter_hunter/tree/master/hyperparameter_hunter/optimization/backends/skopt).
+          A copy of Scikit-Optimize's original LICENSE can also be found in `optimization.backends.skopt`
 
 ### Deprecations
-* `lambda_callback` kwargs dealing with "experiment" and "repetition" time steps have been shortened
-    * These four kwargs have been changed to the following values:
-        * `on_experiment_start` -> `on_exp_start`
-        * `on_experiment_end` -> `on_exp_end`
-        * `on_repetition_start` -> `on_rep_start`
-        * `on_repetition_end` -> `on_rep_end`
-    * In summary, "experiment" is shortened to "exp", and "repetition" is shortened to "rep"
-    * The originals will continue to be available until their removal in v3.2.0
-    * This deprecation will break any custom callbacks created by subclassing `BaseCallback` (which 
-      is not the officially supported method), rather than using `lambda_callback`
-        * To fix such callbacks, simply rename the above methods
+* OptPros' `set_experiment_guidelines` method renamed to `forge_experiment`
+    * `set_experiment_guidelines` will be removed in v3.2.0
 * Optimization Protocols in :mod:`hyperparameter_hunter.optimization` renamed to use "OptPro"
     * This change affects the following optimization protocol classes:
         * `BayesianOptimization` -> `BayesianOptPro`
@@ -28,8 +39,20 @@
             * `ET` alias unchanged
         * `DummySearch` -> `DummyOptPro`
     * This change also affects the base classes for optimization protocols defined in 
-      :mod:`hyperparameter_hunter.optimization_core` that are not available in the package namespace
+      :mod:`hyperparameter_hunter.optimization.protocol_core` that are not available in the package 
+      namespace
     * The original names will continue to be available until their removal in v3.2.0
+* `lambda_callback` kwargs dealing with "experiment" and "repetition" time steps have been shortened
+    * These four kwargs have been changed to the following values:
+        * `on_experiment_start` -> `on_exp_start`
+        * `on_experiment_end` -> `on_exp_end`
+        * `on_repetition_start` -> `on_rep_start`
+        * `on_repetition_end` -> `on_rep_end`
+    * In summary, "experiment" is shortened to "exp", and "repetition" is shortened to "rep"
+    * The originals will continue to be available until their removal in v3.2.0
+    * This deprecation will break any custom callbacks created by subclassing `BaseCallback` (which
+      is not the officially supported method), rather than using `lambda_callback`
+        * To fix such callbacks, simply rename the above methods
 
 
 <a name="3.0.0alpha2"></a>
@@ -651,7 +674,7 @@ allowing users to define `eval_set` only if they want to (#22)
       )
       optimizer.go()
         ```
-    * The `dimensions` kwarg is removed from the OptimizationProtocol classes, and hyperparameter search dimensions are now provided along with the concrete hyperarameters via `set_experiment_guidelines`. If a value is a descendant of `hyperparameter_hunter.space.Dimension`, it is automatically detected as a space to be searched and optimized
+    * The `dimensions` kwarg is removed from the OptimizationProtocol classes, and hyperparameter search dimensions are now provided along with the concrete hyperparameters via `set_experiment_guidelines`. If a value is a descendant of `hyperparameter_hunter.space.Dimension`, it is automatically detected as a space to be searched and optimized
 * Improved support for Keras hyperparameter optimization
     * Keras Experiment:
 
