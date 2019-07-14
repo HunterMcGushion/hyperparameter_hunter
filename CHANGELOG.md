@@ -1,6 +1,10 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+
+<a name="3.0.0beta0"></a>
+## [3.0.0beta0] (2019-07-14)
+
 ### Bug Fixes
 * Fix bug causing `BayesianOptPro` to break, or fail experiment matching, when using an 
   exclusively-`Categorical` search space. For details, see [#154](https://github.com/HunterMcGushion/hyperparameter_hunter/issues/154)
@@ -740,7 +744,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha2...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0beta0...HEAD
+[3.0.0beta0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha2...v3.0.0beta0
 [3.0.0alpha2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha1...v3.0.0alpha2
 [3.0.0alpha1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha0...v3.0.0alpha1
 [3.0.0alpha0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v2.2.0...v3.0.0alpha0
