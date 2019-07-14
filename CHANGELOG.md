@@ -6,8 +6,8 @@
   exclusively-`Categorical` search space. For details, see [#154](https://github.com/HunterMcGushion/hyperparameter_hunter/issues/154)
 
 ### Changes
-* `model_init_params` kwarg of `CVExperiment` is now optional. If not given, it will be evaluated 
-  as the default initialization parameters to `model_initializer`
+* `model_init_params` kwarg of both `CVExperiment` and all OptPros is now optional. If not given, 
+  it will be evaluated as the default initialization parameters to `model_initializer`
 * Convert `space.py` file module to `space` directory module, containing `space_core` and 
   `dimensions`
     * `space.dimensions` is the new home of the dimension classes used to define hyperparameter 
