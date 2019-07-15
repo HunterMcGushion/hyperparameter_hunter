@@ -9,8 +9,8 @@ Environment
    :noindex:
    :members:
 
-Experiment Execution
-====================
+Experimentation
+===============
 
 .. autoclass:: hyperparameter_hunter.experiments.CVExperiment
    :noindex:
@@ -77,8 +77,33 @@ Hyperparameter Optimization
    .. automethod:: go
       :noindex:
 
-Extras
-======
+Hyperparameter Space
+====================
+
+.. autoclass:: hyperparameter_hunter.space.dimensions.Real
+   :noindex:
+
+   .. automethod:: __init__
+      :noindex:
+
+----------------------------------------
+
+.. autoclass:: hyperparameter_hunter.space.dimensions.Integer
+   :noindex:
+
+   .. automethod:: __init__
+      :noindex:
+
+----------------------------------------
+
+.. autoclass:: hyperparameter_hunter.space.dimensions.Categorical
+   :noindex:
+
+   .. automethod:: __init__
+      :noindex:
+
+Feature Engineering
+===================
 
 .. autoclass:: hyperparameter_hunter.feature_engineering.FeatureEngineer
    :noindex:
@@ -90,7 +115,8 @@ Extras
    :noindex:
    :members: __init__
 
-----------------------------------------
+Extras
+======
 
 .. autofunction:: hyperparameter_hunter.callbacks.bases.lambda_callback
    :noindex:
