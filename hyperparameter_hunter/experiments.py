@@ -203,6 +203,18 @@ class BaseExperiment(ScoringMixIn):
             documentation for :func:`hyperparameter_hunter.metrics.get_formatted_target_metric` for
             more info. Any values returned by, or used as the `target_metric` input to this function
             are acceptable values for `target_metric`
+        callbacks: `LambdaCallback`, or list of `LambdaCallback` (optional)
+            Callbacks injected directly into concrete Experiment (`CVExperiment`), adding new
+            functionality, or customizing existing processes. Should be a :class:`LambdaCallback` or
+            a list of such classes. `LambdaCallback` can be created using
+            :func:`.callbacks.bases.lambda_callback`, which documents the options for creating
+            callbacks. `callbacks` will be added to the MRO of the Experiment by
+            :class:`.experiment_core.ExperimentMeta` at `__call__` time, making `callbacks` new
+            base classes of the Experiment. See :func:`.callbacks.bases.lambda_callback` for more
+            information. The presence of LambdaCallbacks will not affect Experiment keys. In other
+            words, for the purposes of Experiment matching/recording, all other factors being equal,
+            an Experiment with `callbacks` is considered identical to an Experiment without, despite
+            whatever custom functionality was added by the LambdaCallbacks
 
         See Also
         --------
@@ -714,6 +726,7 @@ class BaseCVExperiment(BaseExperiment):
 # Core CV Experiment Classes:
 ##################################################
 class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
+    # noinspection PyUnusedLocal
     def __init__(
         self,
         model_initializer,
@@ -725,6 +738,7 @@ class CVExperiment(BaseCVExperiment, metaclass=ExperimentMeta):
         do_raise_repeated=False,
         auto_start=True,
         target_metric=None,
+        callbacks=None,  # I get picked up by `ExperimentMeta`
     ):
         BaseCVExperiment.__init__(
             self,

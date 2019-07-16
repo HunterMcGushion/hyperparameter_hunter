@@ -128,8 +128,11 @@ class ExperimentMeta(type):
 
         # Add callbacks explicitly supplied on class initialization
         if kwargs.get("callbacks", None) is not None:
-            for callback in kwargs["callbacks"]:
-                instance_bases.append(callback)
+            try:
+                for callback in kwargs["callbacks"]:
+                    instance_bases.append(callback)
+            except TypeError:
+                instance_bases.append(kwargs["callbacks"])
 
         # Infer necessary callbacks based on class initialization inputs
         if G.Env.holdout_dataset is not None:

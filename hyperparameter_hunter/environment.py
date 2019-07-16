@@ -307,13 +307,19 @@ class Environment:
             score does not meet some threshold you set, for example. `do_full_save` receives the
             Experiment description dict as input, so for help setting `do_full_save`, just look into
             one of your Experiment descriptions
-        experiment_callbacks: :class:`LambdaCallback`, list of :class:`LambdaCallback`, default=None
-            If not None, should be a :class:`LambdaCallback` produced by
-            :func:`.callbacks.bases.lambda_callback`, or a list of such classes. The contents will
-            be added to the MRO of the executed Experiment class by
-            :class:`.experiment_core.ExperimentMeta` at `__call__` time, making
-            `experiment_callbacks` new base classes of the Experiment. See
-            :func:`.callbacks.bases.lambda_callback` for more information
+        experiment_callbacks: `LambdaCallback`, or list of `LambdaCallback` (optional)
+            Callbacks injected directly into Experiments, adding new functionality, or customizing
+            existing processes. Should be a :class:`LambdaCallback` or a list of such classes.
+            `LambdaCallback` can be created using :func:`.callbacks.bases.lambda_callback`, which
+            documents the options for creating callbacks. `experiment_callbacks` will be added to
+            the MRO of the executed Experiment class by :class:`.experiment_core.ExperimentMeta` at
+            `__call__` time, making `experiment_callbacks` new base classes of the Experiment. See
+            :func:`.callbacks.bases.lambda_callback` for more information. Note that the Experiments
+            conducted by OptPros will still benefit from `experiment_callbacks`. The presence of
+            LambdaCallbacks will affect neither Environment keys, nor Experiment keys. In other
+            words, for the purposes of Experiment matching/recording, all other factors being equal,
+            an Experiment with `experiment_callbacks` is considered identical to an Experiment
+            without, despite whatever custom functionality was added by the LambdaCallbacks
         experiment_recorders: List, None, default=None
             If not None, may be a list whose values are tuples of
             (<:class:`recorders.BaseRecorder` descendant>, <str result_path>). The result_path str
@@ -415,6 +421,8 @@ class Environment:
         self.random_seeds = random_seeds
         self.random_seed_bounds = random_seed_bounds
         self.cv_params = cv_params
+        # TODO: Make `cv_params` optional. If not given, use default `cv_type` parameters. Test
+        #   Env keys are identical without `cv_params` and when explicitly given default params
 
         #################### Ancillary Environment Settings ####################
         self.verbose = verbose
