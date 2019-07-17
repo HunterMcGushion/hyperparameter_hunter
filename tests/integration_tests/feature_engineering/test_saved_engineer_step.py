@@ -22,7 +22,8 @@ See PR #139 (https://github.com/HunterMcGushion/hyperparameter_hunter/pull/139)"
 ##################################################
 # noinspection PyProtectedMember
 from hyperparameter_hunter import Environment, FeatureEngineer, EngineerStep, __version__
-from hyperparameter_hunter import Real, Integer, Categorical, BayesianOptPro, DummyOptPro
+from hyperparameter_hunter import CVExperiment, Real, Integer, Categorical
+from hyperparameter_hunter import BayesianOptPro, DummyOptPro, ExtraTreesOptPro
 from hyperparameter_hunter.utils.learning_utils import get_boston_data
 
 ##################################################
@@ -46,8 +47,6 @@ from xgboost import XGBRegressor
 # Global Settings
 ##################################################
 assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
-
-
 # assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
 
 
@@ -194,3 +193,118 @@ def test_honorary_step_from_dict(step_dict, dimension, expected):
 def test_honorary_step_from_dict_value_error(step_dict, dimension):
     with pytest.raises(ValueError, match="`step_dict` could not be found in `dimension`"):
         actual = EngineerStep.honorary_step_from_dict(step_dict, dimension)
+
+
+##################################################
+# Regression Tests: Optional `EngineerStep`s
+##################################################
+#################### Dummy EngineerStep Functions ####################
+def es_a(all_inputs):
+    return all_inputs
+
+
+def es_b(all_inputs):
+    return all_inputs
+
+
+def es_c(all_inputs):
+    return all_inputs
+
+
+def es_d(all_inputs):
+    return all_inputs
+
+
+def es_e(all_inputs):
+    return all_inputs
+
+
+#################### Result Matching Tests ####################
+@pytest.mark.parametrize(
+    "feature_engineer",
+    [
+        [Categorical([es_b, es_c], optional=True), Categorical([es_d, es_e], optional=True)],
+        [Categorical([es_b, es_c], optional=True), Categorical([es_d, es_e])],
+        [Categorical([es_a]), Categorical([es_b, es_c], optional=True), Categorical([es_d, es_e])],
+        [
+            Categorical([es_a]),
+            Categorical([es_b, es_c], optional=True),
+            Categorical([es_d, es_e], optional=True),
+        ],
+        [
+            Categorical([es_a], optional=True),
+            Categorical([es_b, es_c], optional=True),
+            Categorical([es_d, es_e], optional=True),
+        ],
+    ],
+)
+def test_optional_step_matching(env_boston, feature_engineer):
+    """Tests that a Space containing `optional` `Categorical` Feature Engineering steps matches with
+    the expected saved Experiments. This regression test is focused on issues that arise when
+    `EngineerStep`s other than the last one in the `FeatureEngineer` are `optional`. The simplified
+    version of this test below, :func:`test_limited_optional_step_matching`, demonstrates that
+    result matching works properly when only the final `EngineerStep` is `optional`"""
+    opt_0 = DummyOptPro(iterations=20, random_state=32)
+    opt_0.forge_experiment(XGBRegressor, feature_engineer=feature_engineer)
+    opt_0.go()
+
+    opt_1 = ExtraTreesOptPro(iterations=20, random_state=32)
+    opt_1.forge_experiment(XGBRegressor, feature_engineer=feature_engineer)
+    opt_1.get_ready()
+
+    # Assert `opt_1` matched with all Experiments executed by `opt_0`
+    assert len(opt_1.similar_experiments) == opt_0.successful_iterations
+
+
+@pytest.mark.parametrize(
+    "feature_engineer",
+    [
+        [Categorical([es_b, es_c])],
+        [Categorical([es_b, es_c], optional=True)],
+        [Categorical([es_b, es_c]), Categorical([es_d, es_e], optional=True)],
+        [Categorical([es_a]), Categorical([es_b, es_c]), Categorical([es_d, es_e])],
+        [Categorical([es_a]), Categorical([es_b, es_c]), Categorical([es_d, es_e], optional=True)],
+    ],
+)
+def test_limited_optional_step_matching(env_boston, feature_engineer):
+    """Simplified counterpart to above :func:`test_optional_step_matching`. Tests that a Space
+    containing `Categorical` Feature Engineering steps -- of which only the last ones may be
+    `optional` -- matches with the expected saved Experiments. These test cases do not demonstrate
+    the same bug being regression-tested by `test_optional_step_matching`. Instead, this test
+    function exists to ensure that the areas close to the above bug are behaving properly and to
+    help define the bug being tested by `test_optional_step_matching`. This function demonstrates
+    that `optional` is not problematic when used only in the final `EngineerStep`"""
+    opt_0 = DummyOptPro(iterations=20, random_state=32)
+    opt_0.forge_experiment(XGBRegressor, feature_engineer=feature_engineer)
+    opt_0.go()
+
+    opt_1 = ExtraTreesOptPro(iterations=20, random_state=32)
+    opt_1.forge_experiment(XGBRegressor, feature_engineer=feature_engineer)
+    opt_1.get_ready()
+
+    # Assert `opt_1` matched with all Experiments executed by `opt_0`
+    assert len(opt_1.similar_experiments) == opt_0.successful_iterations
+
+
+@pytest.mark.parametrize("es_0", [es_a, None])
+@pytest.mark.parametrize("es_1", [es_b, es_c, None])
+@pytest.mark.parametrize("es_2", [es_d, es_e, None])
+def test_optional_step_matching_by_exp(env_boston, es_0, es_1, es_2):
+    """Test that the result of an Experiment is correctly matched by an OptPro with all-`optional`
+    `EngineerStep` dimensions"""
+    feature_engineer = [_ for _ in [es_0, es_1, es_2] if _ is not None]
+    exp_0 = CVExperiment(XGBRegressor, feature_engineer=feature_engineer)
+
+    opt_0 = ExtraTreesOptPro(iterations=1, random_state=32)
+    opt_0.forge_experiment(
+        XGBRegressor,
+        feature_engineer=[
+            Categorical([es_a], optional=True),
+            Categorical([es_b, es_c], optional=True),
+            Categorical([es_d, es_e], optional=True),
+        ],
+    )
+    opt_0.get_ready()
+
+    # Assert `opt_0` matched with `exp_0`
+    assert len(opt_0.similar_experiments) == 1
