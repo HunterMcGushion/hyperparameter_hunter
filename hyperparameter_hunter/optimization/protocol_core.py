@@ -446,15 +446,9 @@ class BaseOptPro(metaclass=MergedOptProMeta):
                 self.dimensions,
             )
 
-    def go(self):
-        """Execute hyperparameter optimization, building an Experiment for each iteration
-
-        This method may only be invoked after invoking :meth:`.forge_experiment`, which defines
-        experiment guidelines and search dimensions. `go` performs a few important tasks: 1)
-        Formally setting the hyperparameter space; 2) Locating similar experiments to be used as
-        learning material (for OptPros that suggest incumbent search points by estimating utilities
-        using surrogate models); and 3) Actually setting off the optimization process, via
-        :meth:`._optimization_loop`"""
+    def get_ready(self):
+        """Prepare for optimization by finalizing hyperparameter space and identifying similar
+        Experiments. This method is automatically invoked when :meth:`go` is called if necessary"""
         if self.model_initializer is None:
             raise ValueError("Must invoke `forge_experiment` before starting optimization")
 
@@ -464,9 +458,26 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         self.tested_keys = []
         self._set_hyperparameter_space()
         self._find_similar_experiments()
-        # TODO: Move above to new prep method that can be called before `go` - Called by `go` if not
-        #   already done, or if given new `force_update=True` kwarg to recheck similar experiments
-        # TODO: Should make it easier/faster to test some OptPro stuff by skipping optimization part
+
+    def go(self, force_ready=False):
+        """Execute hyperparameter optimization, building an Experiment for each iteration
+
+        This method may only be invoked after invoking :meth:`.forge_experiment`, which defines
+        experiment guidelines and search dimensions. `go` performs a few important tasks: 1)
+        Formally setting the hyperparameter space; 2) Locating similar experiments to be used as
+        learning material (for OptPros that suggest incumbent search points by estimating utilities
+        using surrogate models); and 3) Actually setting off the optimization process, via
+        :meth:`._optimization_loop`
+
+        Parameters
+        ----------
+        force_ready: Boolean, default=False
+            If True, :meth:`get_ready` will be invoked even if it has already been called. This will
+            re-initialize the hyperparameter `space` and `similar_experiments`. Standard behavior is
+            for :meth:`go` to invoke :meth:`get_ready`, so `force_ready` is ignored unless
+            :meth:`get_ready` has been manually invoked"""
+        if force_ready or self.space is None:
+            self.get_ready()
 
         loop_start_time = datetime.now()
         self._optimization_loop()
