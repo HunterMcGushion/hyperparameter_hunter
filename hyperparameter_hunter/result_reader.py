@@ -341,6 +341,11 @@ class KerasResultFinder(ResultFinder):
 
         self.model_params = remap(self.model_params, visit=_visit)
 
+        # Below cleans out the temporary "params" dict built by `keras_optimization_helper`.
+        #   It exists in order to pass concrete values for choices during optimization through the
+        #   Keras model `build_fn`. However, at this stage, it just gets in the way since
+        #   :attr:`space` defines the choices, and their `location`s point to where they are within
+        #   :attr:`model_params`. Not deleting them would basically duplicate all choice Dimensions
         try:
             del self.model_params["model_extra_params"]["params"]
         except KeyError:
