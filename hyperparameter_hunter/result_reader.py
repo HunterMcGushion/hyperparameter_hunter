@@ -25,16 +25,16 @@ from typing import List, Tuple
 
 
 def finder_selector(module_name):
-    """Selects the appropriate ResultFinder class to use for `module_name`
+    """Selects the appropriate :class:`ResultFinder` to use for `module_name`
 
     Parameters
     ----------
     module_name: String
-        The module from whence the algorithm being used came
+        Module from whence the algorithm being used came
 
     Returns
     -------
-    :class:`ResultFinder`, or one of its descendants
+    Uninitialized :class:`ResultFinder`, or one of its descendants
 
     Examples
     --------
@@ -70,21 +70,26 @@ class ResultFinder:
         module_name: String
             Name of the module from whence the algorithm being used came
         cross_experiment_key: String
-            The cross_experiment_key produced by currently active :class:`environment.Environment`
+            :attr:`hyperparameter_hunter.environment.Environment.cross_experiment_key` produced by
+            the current `Environment`
         target_metric: Tuple
-            A path denoting the metric to be used. The first value should be one of ['oof',
-            'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
-            :attr:`environment.Environment.metrics_params`
-        space: :class:`space.Space`
-            Hyperparameter search space constraints
+            Path denoting the metric to be used. The first value should be one of {"oof",
+            "holdout", "in_fold"}, and the second value should be the name of a metric supplied in
+            :attr:`hyperparameter_hunter.environment.Environment.metrics_params`
+        space: Space
+            Instance of :class:`~hyperparameter_hunter.space.space_core.Space`, defining
+            hyperparameter search space constraints
         leaderboard_path: String
             Path to a leaderboard file, whose listed Experiments will be tested for compatibility
         descriptions_dir: String
             Path to a directory containing the description files of saved Experiments
         model_params: Dict
-            Concrete hyperparameters for the model. Common keys include 'model_init_params', and
-            'model_extra_params', both of which can be pointers to dicts of hyperparameters
-        sort: "target_asc", "target_desc", "chronological", "reverse_chronological", int
+            All hyperparameters for the model, both concrete and choice. Common keys include
+            "model_init_params" and "model_extra_params", both of which can be pointers to dicts of
+            hyperparameters. Additionally, "feature_engineer" may be included with an instance of
+            :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`
+        sort: {"target_asc", "target_desc", "chronological", "reverse_chronological"}, or int
+            ... Experimental...
             How to sort the experiment results that fit within the given constraints
 
             * "target_asc": Sort from experiments with the lowest value for `target_metric` to
@@ -102,7 +107,7 @@ class ResultFinder:
         self.leaderboard_path = leaderboard_path
         self.descriptions_dir = descriptions_dir
         self.model_params = model_params
-        self.sort = sort  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
+        self.sort = sort
 
         self.experiment_ids = []
         self.hyperparameters_and_scores = []
@@ -143,7 +148,7 @@ class ResultFinder:
         """For all :attr:`experiment_ids`, add a tuple of the Experiment's hyperparameters, and its
         :attr:`target_metric` value"""
         for _id in self.experiment_ids:
-            # TODO: Receive `description` from `get_scored_params` and extract whatever value is required by :attr:`sort`
+            # TODO: Get `description` from `get_scored_params` - Take whatever value `sort` needs
             vals = get_scored_params(f"{self.descriptions_dir}/{_id}.json", self.target_metric)
             self.hyperparameters_and_scores.append(vals + (_id,))
 
@@ -276,25 +281,30 @@ class KerasResultFinder(ResultFinder):
         Parameters
         ----------
         algorithm_name: String
-            The name of the algorithm whose hyperparameters are being optimized
+            Name of the algorithm whose hyperparameters are being optimized
         module_name: String
-            The name of the module from whence the algorithm being used came
+            Name of the module from whence the algorithm being used came
         cross_experiment_key: String
-            The cross_experiment_key produced by the current :class:`environment.Environment`
+            :attr:`hyperparameter_hunter.environment.Environment.cross_experiment_key` produced by
+            the current `Environment`
         target_metric: Tuple
-            Path denoting the metric to be used. The first value should be one of ['oof',
-            'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
-            :attr:`environment.Environment.metrics_params`
-        space: :class:`space.Space`
-            Hyperparameter search space constraints
+            Path denoting the metric to be used. The first value should be one of {"oof",
+            "holdout", "in_fold"}, and the second value should be the name of a metric supplied in
+            :attr:`hyperparameter_hunter.environment.Environment.metrics_params`
+        space: Space
+            Instance of :class:`~hyperparameter_hunter.space.space_core.Space`, defining
+            hyperparameter search space constraints
         leaderboard_path: String
             Path to a leaderboard file, whose listed Experiments will be tested for compatibility
         descriptions_dir: String
             Path to a directory containing the description files of saved Experiments
         model_params: Dict
-            Concrete hyperparameters for the model. Common keys include 'model_init_params', and
-            'model_extra_params', both of which can be pointers to dicts of hyperparameters
-        sort: "target_asc", "target_desc", "chronological", "reverse_chronological", int
+            Concrete hyperparameters for the model. Common keys include "model_init_params" and
+            "model_extra_params", both of which can be pointers to dicts of hyperparameters.
+            Additionally, "feature_engineer" may be included with an instance of
+            :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`
+        sort: {"target_asc", "target_desc", "chronological", "reverse_chronological"}, or int
+            ... Experimental...
             How to sort the experiment results that fit within the given constraints
 
             * "target_asc": Sort from experiments with the lowest value for `target_metric` to
@@ -313,7 +323,7 @@ class KerasResultFinder(ResultFinder):
             leaderboard_path=leaderboard_path,
             descriptions_dir=descriptions_dir,
             model_params=model_params,
-            sort=sort,  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
+            sort=sort,
         )
 
         from keras.callbacks import Callback as BaseKerasCallback
@@ -321,7 +331,8 @@ class KerasResultFinder(ResultFinder):
 
         # noinspection PyUnusedLocal
         def _visit(path, key, value):
-            """If `value` is `BaseKerasCallback`, return dict representation. Else default_visit"""
+            """If `value` is `BaseKerasCallback` or `BaseKerasInitializer`, return dict
+            representation. Else default_visit"""
             if isinstance(value, BaseKerasCallback):
                 return (key, keras_callback_to_dict(value))
             if isinstance(value, BaseKerasInitializer):
@@ -345,19 +356,19 @@ def has_experiment_result_file(results_dir, experiment_id, result_type=None):
     Parameters
     ----------
     results_dir: String
-        HyperparameterHunterAssets directory in which to search for experiment result files
-    experiment_id: String or `experiments.BaseExperiment` descendant instance
-        The ID of the experiment whose result files should be searched for in `results_dir`. If not
-        string, should be an instance of a descendant of :class:`experiments.BaseExperiment` that
-        has :attr:`experiment_id`
-    result_type: List, string, or None, default=None
+        HyperparameterHunterAssets directory in which to search for Experiment result files
+    experiment_id: String, or BaseExperiment
+        ID of the Experiment whose result files should be searched for in `results_dir`. If not
+        string, should be an instance of a descendant of
+        :class:`~hyperparameter_hunter.experiments.BaseExperiment` with an "experiment_id" attribute
+    result_type: List, or string (optional)
         Result file types for which to check. Valid values include any subdirectory name that can be
         included in "HyperparameterHunterAssets/Experiments" by default: ["Descriptions",
         "Heartbeats", "PredictionsOOF", "PredictionsHoldout", "PredictionsTest", "ScriptBackups"].
         If string, should be one of the aforementioned strings, or "ALL" to use all of the results.
         If list, should be a subset of the aforementioned list of valid values. Else, default is
         ["Descriptions", "Heartbeats", "PredictionsOOF", "ScriptBackups"]. The returned boolean
-        signifies whether ALL of the `result_type` files were found, not whether ANY of were found
+        signifies whether ALL of the `result_type` files were found, not whether ANY were found
 
     Returns
     -------
