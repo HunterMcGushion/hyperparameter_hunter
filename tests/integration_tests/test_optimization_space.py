@@ -150,12 +150,17 @@ def _build_penta_cat_int(input_shape):
     return model
 
 
-def do_optimization(opt_pro, build_fn):
+def do_optimization(opt_pro, build_fn, ready_only=False):
     opt = opt_pro(iterations=2, random_state=32, n_initial_points=1)
     opt.forge_experiment(
         KerasClassifier, build_fn, model_extra_params=dict(batch_size=32, epochs=1, verbose=0)
     )
-    opt.go()
+
+    if ready_only:
+        opt.get_ready()
+    else:
+        opt.go()
+
     return opt
 
 
@@ -166,7 +171,7 @@ def do_optimization(opt_pro, build_fn):
 # )
 def test_multi_cat_keras_non_bayes(opt_pro, build_fn, hh_assets, env_breast_cancer):
     opt_0 = do_optimization(opt_pro, build_fn)
-    opt_1 = do_optimization(opt_pro, build_fn)
+    opt_1 = do_optimization(opt_pro, build_fn, ready_only=True)
     assert len(opt_1.similar_experiments) == 2
 
 
@@ -189,4 +194,7 @@ def test_multi_cat_keras_non_bayes(opt_pro, build_fn, hh_assets, env_breast_canc
 def test_multi_cat_keras_bayes(build_fn, hh_assets, env_breast_cancer):
     opt_0 = do_optimization(BayesianOptPro, build_fn)
     opt_1 = do_optimization(BayesianOptPro, build_fn)
+    # Note that above does not use `ready_only=True` like :func:`test_multi_cat_keras_non_bayes`.
+    # Let it run through the whole optimization process to make sure there aren't any other
+    #   problems further along as a result of Experiment-matching
     assert len(opt_1.similar_experiments) == 2

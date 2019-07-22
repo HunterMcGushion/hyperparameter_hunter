@@ -459,7 +459,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         self._set_hyperparameter_space()
         self._find_similar_experiments()
 
-    def go(self, force_ready=False):
+    def go(self, force_ready=True):
         """Execute hyperparameter optimization, building an Experiment for each iteration
 
         This method may only be invoked after invoking :meth:`.forge_experiment`, which defines
