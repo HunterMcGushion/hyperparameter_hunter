@@ -286,6 +286,19 @@ def test_limited_optional_step_matching(env_boston, feature_engineer):
     assert len(opt_1.similar_experiments) == opt_0.successful_iterations
 
 
+##################################################
+# Exhaustive Experiment Matching Tests
+##################################################
+# The tests in this section are still related to the regression tests above, but these are
+#   conducted using a group of one-off Experiments, comprising all `FeatureEngineer` permutations
+#   that should fit within the `feature_engineer` space of `opt_0`:
+#   ```
+#   [
+#       Categorical([es_a], optional=True),
+#       Categorical([es_b, es_c], optional=True),
+#       Categorical([es_d, es_e], optional=True),
+#   ]
+#   ```
 @pytest.mark.parametrize("es_0", [es_a, None])
 @pytest.mark.parametrize("es_1", [es_b, es_c, None])
 @pytest.mark.parametrize("es_2", [es_d, es_e, None])
