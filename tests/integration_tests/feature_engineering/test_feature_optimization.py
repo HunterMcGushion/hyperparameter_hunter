@@ -387,8 +387,10 @@ def test_similar_experiments_optional(env_boston, fe_experiment, fe_optimizer):
 
 
 # noinspection PyUnusedLocal
-# TODO: Add `condition="__version__ < '...'"` to `xfail` when supported
-@pytest.mark.xfail(reason="`EngineerStep` matching is index-sensitive")
+@pytest.mark.xfail(
+    condition="HHVersion(__version__) <= '3.0.0beta0'",
+    reason="`EngineerStep` matching is index-sensitive",
+)
 @pytest.mark.skipif("xgboost" not in sys.modules, reason="Requires `XGBoost` library")
 def test_similar_experiments_unordered():
     """Check that an experiment with a single `EngineerStep` is considered "similar" by an
