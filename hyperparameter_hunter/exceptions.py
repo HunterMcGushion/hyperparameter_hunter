@@ -84,7 +84,10 @@ class EnvironmentInvalidError(Exception):
         extra: String, default=''
             Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
-            message = "The currently active Environment is invalid. Please review proper Environment instantiation"
+            message = (
+                "The currently active Environment is invalid. Please review proper "
+                "Environment instantiation"
+            )
         super(EnvironmentInvalidError, self).__init__(message + extra)
 
 
@@ -100,8 +103,31 @@ class RepeatedExperimentError(Exception):
         extra: String, default=''
             Extra content to append onto the end of `message` before raising the Exception"""
         if not message:
-            message = "An Experiment with identical hyperparameters has already been conducted and has saved results"
+            message = (
+                "An Experiment with identical hyperparameters has already been conducted "
+                "and has saved results"
+            )
         super(RepeatedExperimentError, self).__init__(message + extra)
+
+
+class IncompatibleCandidateError(Exception):
+    def __init__(self, candidate, template):
+        """Exception raised when a `candidate` hyperparameter set is incompatible with a `template`
+
+        Parameters
+        ----------
+        candidate: Any
+            Hyperparameter set that is incompatible with the choices/concrete values of `template`
+        template: Any
+            Hyperparameter set defined by
+            :meth:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment`.
+            May include any combination of space choices and concrete values"""
+        message = (
+            "The `candidate` hyperparameters are incompatible with the `template`\n"
+            f"   - `candidate`: {candidate}\n"
+            f"   - `template`:  {template}"
+        )
+        super(IncompatibleCandidateError, self).__init__(message)
 
 
 class ContinueRemap(Exception):
