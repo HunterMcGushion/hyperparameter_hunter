@@ -450,5 +450,41 @@ def subdict(d, keep=None, drop=None, key=None, value=None):
     return dict([(key(k), value(v)) for k, v in d.items() if k in keys])
 
 
+def multi_visit(*visitors) -> callable:
+    """Build a `remap`-compatible `visit` function by chaining together multiple `visit` functions
+
+    Parameters
+    ----------
+    *visitors: Tuple[callable]
+        Any number of `visit` functions of the form expected by
+        :func:`~hyperparameter_hunter.utils.boltons_utils.remap` that each accept three positional
+        arguments: "path", "key", and "value". `visitors` need not explicitly return any of the
+        values usually expected of a `visit` function. If one of `visitors` does not return
+        anything (or explicitly returns None), the next function in `visitors` is invoked with the
+        same input values. `visitors` are invoked in order until one of them actually returns
+        something
+
+    Returns
+    -------
+    visit: Callable
+        `visit` function of form used by :func:`~hyperparameter_hunter.utils.boltons_utils.remap`
+        that accepts three positional arguments: "path", "key", and "value". Behaves as if each
+        function in `visitors` had been invoked in sequence, returning the first non-null value
+        returned by one of the `visitors`"""
+
+    def visit(path, key, value):
+        for visitor in visitors:
+            result = visitor(path, key, value)
+
+            # `visit` functions aren't expected to actually return None. Valid return values are
+            #   documented in :func:`~hyperparameter_hunter.utils.boltons_utils.remap`. This means
+            #   that if None is returned, the visitor didn't actually explicitly return, and we're
+            #   getting the Python default return value of None, so we should just keep going
+            if result is not None:
+                return result
+
+    return visit
+
+
 if __name__ == "__main__":
     pass
