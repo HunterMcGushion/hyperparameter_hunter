@@ -89,9 +89,6 @@ class BayesianOptPro(SKOptPro):
             base_estimator_kwargs=base_estimator_kwargs,
         )
 
-    def go(self):
-        super().go()
-
 
 class GradientBoostedRegressionTreeOptPro(SKOptPro):
     """Sequential optimization with gradient boosted regression trees"""
