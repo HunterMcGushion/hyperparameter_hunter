@@ -94,6 +94,7 @@ class Optimizer(object):
         If len(`x0`) < `n_initial_points`, additional points are sampled at random
     acq_func: {"LCB", "EI", "PI", "gp_hedge", "EIps", "PIps"}, default="gp_hedge"
         Function to minimize over the posterior distribution. Can be any of the following:
+
         * "LCB": Lower confidence bound
         * "EI": Negative expected improvement
         * "PI": Negative probability of improvement
@@ -305,7 +306,7 @@ class Optimizer(object):
             With this strategy, a copy of optimizer is created, which is then asked for a point,
             and the point is told to the copy of optimizer with some fake objective (lie), the
             next point is asked from copy, it is also told to the copy with fake objective and so
-            on. The type of lie defines different flavours of "cl_..." strategies
+            on. The type of lie defines different flavours of "cl..." strategies
 
         Returns
         -------
