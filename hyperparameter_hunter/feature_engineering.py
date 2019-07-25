@@ -782,8 +782,9 @@ class EngineerStep:
         Parameters
         ----------
         step_dict: Dict
-            Dict of form saved in experiment description files for `EngineerStep`s. Expected to
+            Dict of form saved in Experiment description files for `EngineerStep`. Expected to
             have following keys, with values of the given types:
+
             * "name": String
             * "f": String (SHA256 hash)
             * "params": List[str], or Tuple[str, ...]
