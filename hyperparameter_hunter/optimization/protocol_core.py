@@ -817,6 +817,7 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             will be randomly sampled
         acquisition_function:{"LCB", "EI", "PI", "gp_hedge"}, default="gp_hedge"
             Function to minimize over the posterior distribution. Can be any of the following:
+
             * "LCB": Lower confidence bound
             * "EI": Negative expected improvement
             * "PI": Negative probability of improvement
