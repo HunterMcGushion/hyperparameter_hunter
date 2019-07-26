@@ -386,6 +386,39 @@ def test_similar_experiments_optional(env_boston, fe_experiment, fe_optimizer):
     assert fe_experiment.experiment_id in [_[2] for _ in fe_optimizer.similar_experiments]
 
 
+@pytest.mark.parametrize(
+    ["fe_experiment", "fe_optimizer"],
+    [
+        ([min_max_scale], optional_quantile_transform),
+        (None, [ChoiceMMNormalizeSS.functions]),
+        (None, [ChoiceMMNormalizeSS.engineers]),
+        ([min_max_scale, standard_scale], [ChoiceMMNormalizeSS.o_functions]),
+        ([standard_scale, min_max_scale], [ChoiceMMNormalizeSS.o_engineers]),
+        (
+            [min_max_scale, quantile_transform],
+            [ChoiceMMNormalizeSS.o_functions, ChoiceMMNormalizeSS.o_functions],
+        ),
+        (
+            [quantile_transform, min_max_scale],
+            [ChoiceMMNormalizeSS.o_engineers, ChoiceMMNormalizeSS.o_engineers],
+        ),
+        (
+            [min_max_scale, quantile_transform],
+            [ChoiceTarget.functions, ChoiceMMNormalizeSS.o_functions],
+        ),
+        (
+            [quantile_transform, min_max_scale],
+            [ChoiceMMNormalizeSS.o_engineers, ChoiceTarget.engineers],
+        ),
+    ],
+    indirect=["fe_experiment", "fe_optimizer"],
+)
+def test_not_similar_experiments(env_boston, fe_experiment, fe_optimizer):
+    """Test the opposite of :func:`test_similar_experiments_optional`. Ensure that an OptPro
+    has no `similar_experiments` following an Experiment using an incompatible `FeatureEngineer`"""
+    assert len(fe_optimizer.similar_experiments) == 0
+
+
 # noinspection PyUnusedLocal
 @pytest.mark.xfail(
     condition="HHVersion(__version__) <= '3.0.0beta0'",
