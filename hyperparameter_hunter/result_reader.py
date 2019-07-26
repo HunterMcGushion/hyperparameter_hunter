@@ -1,18 +1,21 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.feature_engineering import EngineerStep
+from hyperparameter_hunter.exceptions import IncompatibleCandidateError
+from hyperparameter_hunter.feature_engineering import EngineerStep, FeatureEngineer
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,
     keras_initializer_to_dict,
 )
 from hyperparameter_hunter.settings import G
+from hyperparameter_hunter.space.dimensions import Categorical, RejectedOptional
+from hyperparameter_hunter.space.space_core import Space
 from hyperparameter_hunter.utils.boltons_utils import remap, get_path
+from hyperparameter_hunter.utils.general_utils import multi_visit
 from hyperparameter_hunter.utils.optimization_utils import (
+    does_fit_in_space,
     get_ids_by,
     get_scored_params,
-    filter_by_space,
-    filter_by_guidelines,
 )
 
 ##################################################
@@ -21,7 +24,8 @@ from hyperparameter_hunter.utils.optimization_utils import (
 from copy import deepcopy
 from numbers import Number
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple, Union
+import wrapt
 
 
 def finder_selector(module_name):
@@ -48,6 +52,291 @@ def finder_selector(module_name):
         return ResultFinder
 
 
+def update_match_status(target_attr="match_status") -> callable:
+    """Build a decorator to apply to class instance methods to record inputs/outputs
+
+    Parameters
+    ----------
+    target_attr: String, default="match_status"
+        Name of dict attribute in the class instance of the decorated method, in which the decorated
+        method's inputs and outputs should be recorded. This attribute should be predefined and
+        documented by the class whose method is being decorated
+
+    Returns
+    -------
+    Callable
+        Decorator that will save the decorated method's inputs and outputs to the attribute dict
+        named by `target_attr`. Decorator assumes that the method will receive at least three
+        positional arguments: "exp_id", "params", and "score". "exp_id" is used as the key added to
+        `target_attr`, with a dict value, which includes the latter two positional arguments. Each
+        time the decorator is invoked with an "exp_id", an additional key is added to its dict that
+        is the name of the decorated method, and whose value is the decorated method's output
+
+    See Also
+    --------
+    :class:`ResultFinder`
+        Decorates "does_match..." methods using `update_match_status` in order to keep a detailed
+        record of the full pool of candidate Experiments in :attr:`ResultFinder.match_status`
+
+    Examples
+    --------
+    >>> class X:
+    ...     def __init__(self):
+    ...         self.match_status = dict()
+    ...     @update_match_status()
+    ...     def method_a(self, exp_id, params, score):
+    ...         return True
+    ...     @update_match_status()
+    ...     def method_b(self, exp_id, params, score):
+    ...         return False
+    >>> x = X()
+    >>> x.match_status
+    {}
+    >>> assert x.method_a("foo", None, 0.8) is True
+    >>> x.match_status  # doctest: +NORMALIZE_WHITESPACE
+    {'foo': {'params': None,
+             'score': 0.8,
+             'method_a': True}}
+    >>> assert x.method_b("foo", None, 0.8) is False
+    >>> x.match_status  # doctest: +NORMALIZE_WHITESPACE
+    {'foo': {'params': None,
+             'score': 0.8,
+             'method_a': True,
+             'method_b': False}}
+    >>> assert x.method_b("bar", "some stuff", 0.5) is False
+    >>> x.match_status  # doctest: +NORMALIZE_WHITESPACE
+    {'foo': {'params': None,
+             'score': 0.8,
+             'method_a': True,
+             'method_b': False},
+     'bar': {'params': 'some stuff',
+             'score': 0.5,
+             'method_b': False}}
+    """
+
+    @wrapt.decorator
+    def wrapper(wrapped, instance, args, kwargs):
+        result = wrapped(*args, **kwargs)
+
+        getattr(instance, target_attr).setdefault(args[0], dict(params=args[1], score=args[2]))[
+            wrapped.__name__
+        ] = result
+
+        return result
+
+    return wrapper
+
+
+def does_match_guidelines(
+    candidate_params: dict,
+    space: Space,
+    template_params: dict,
+    visitors=(),
+    dims_to_ignore: List[tuple] = None,
+) -> bool:
+    """Check candidate compatibility with template guideline hyperparameters
+
+    Parameters
+    ----------
+    candidate_params: Dict
+        Candidate Experiment hyperparameters to be compared to `template_params` after processing
+    space: Space
+        Hyperparameter search space constraints for the current template
+    template_params: Dict
+        Template hyperparameters to which `candidate_params` will be compared after processing.
+        Although the name of the function implies that these will all be guideline hyperparameters,
+        this is not a requirement, as any non-guideline hyperparameters will be removed during
+        processing by checking `space.names`
+    visitors: Callable, or Tuple[callable] (optional)
+        Extra `visit` function(s) invoked when
+        :func:`~hyperparameter_hunter.utils.boltons_utils.remap`-ing both `template_params` and
+        `candidate_params`. Can be used to filter out unwanted values, or to pre-process selected
+        values (and more) prior to performing the final compatibility check between the processed
+        `candidate_params` and guidelines in `template_params`
+    dims_to_ignore: List[tuple] (optional)
+        Paths to hyperparameter(s) that should be ignored when comparing `candidate_params` and
+        `template_params`. By default, hyperparameters pertaining to verbosity and random states
+        are ignored. Paths should be tuples of the form expected by
+        :func:`~hyperparameter_hunter.utils.boltons_utils.get_path`. Additionally a path may start
+        with None, which acts as a wildcard, matching any hyperparameters whose terminal path nodes
+        match the value following None. For example, ``(None, "verbose")`` would match paths such as
+        ``("model_init_params", "a", "verbose")`` and ``("model_extra_params", "b", 2, "verbose")``
+
+    Returns
+    -------
+    Boolean
+        True if the processed version of `candidate_params` is equal to the extracted and processed
+        guidelines from `template_params`. Else, False"""
+    dimensions_to_ignore = [
+        (None, "verbose"),
+        (None, "silent"),
+        (None, "random_state"),
+        (None, "seed"),
+    ]
+    if isinstance(dims_to_ignore, list):
+        dimensions_to_ignore.extend(dims_to_ignore)
+
+    # `dimensions_to_ignore` = hyperparameters to be ignored. Filter by all remaining (less
+    #   dimensions in `space`, which are also ignored)
+
+    def _visit(path, key, value):
+        """Return False if element in space dimensions, or in dimensions being ignored. Else, return
+        True. If `value` is of type tuple or set, it will be converted to a list in order to
+        simplify comparisons to the JSON-formatted `candidate_params`"""
+        # Remove elements whose full paths are in `dimensions_to_ignore` or `space.names()`
+        for dim in space.names() + dimensions_to_ignore:
+            if (path + (key,) == dim) or (dim[0] is None and dim[-1] == key):
+                return False
+        # Convert tuples/sets to lists
+        if isinstance(value, (tuple, set)):
+            return key, list(value)
+        return True
+
+    #################### Chain Together Visit Functions ####################
+    if callable(visitors):
+        visitors = (visitors,)
+    visit = multi_visit(*visitors, _visit)
+    # Extra `visitors` will be called first, with `_visit` acting as the default visit, called last
+
+    guidelines = remap(template_params, visit=visit)
+    # `guidelines` = `template_params` that are neither `space` choices, nor `dimensions_to_ignore`
+    return remap(candidate_params, visit=visit) == guidelines
+
+
+##################################################
+# `FeatureEngineer` Matching Utilities
+##################################################
+def validate_feature_engineer(
+    candidate: Union[dict, FeatureEngineer], template: FeatureEngineer
+) -> Union[bool, dict, FeatureEngineer]:
+    """Check `candidate` "feature_engineer" compatibility with `template` and sanitize `candidate`.
+    This is mostly a wrapper around :func:`validate_fe_steps` to ensure different inputs are
+    handled properly and to return False, rather than raising `IncompatibleCandidateError`
+
+    Parameters
+    ----------
+    candidate: Dict, or FeatureEngineer
+        Candidate "feature_engineer" to compare to `template`. If compatible with `template`, a
+        sanitized version of `candidate` will be returned (described below)
+    template: FeatureEngineer
+        Template "feature_engineer" to which `candidate` will be compared after processing
+
+    Returns
+    -------
+    Boolean, dict, or FeatureEngineer
+        False if `candidate` is deemed incompatible with `template`. Else, a sanitized `candidate`
+        with reinitialized :class:`~hyperparameter_hunter.feature_engineering.EngineerStep` steps
+        and with :class:`~hyperparameter_hunter.spaces.dimensions.RejectedOptional` filling in
+        missing :class:`~hyperparameter_hunter.spaces.dimensions.Categorical` steps that were
+        declared as :attr:`~hyperparameter_hunter.spaces.dimensions.Categorical.optional` by the
+        `template`"""
+    # Extract `steps` from `candidate`
+    if isinstance(candidate, FeatureEngineer):
+        steps = candidate.steps
+    else:  # `candidate` must be a dict
+        steps = candidate["steps"]
+
+    # Dataset hashes in `feature_engineer` and candidates can be ignored, since it is assumed
+    #   that candidates here had matching `Environment`s
+
+    try:
+        steps = validate_fe_steps(steps, template)
+
+        if isinstance(candidate, FeatureEngineer):
+            candidate.steps = steps
+        else:  # `candidate` must be a dict
+            candidate["steps"] = steps
+
+        return candidate
+    except IncompatibleCandidateError:
+        return False
+
+
+def validate_fe_steps(
+    candidate: Union[list, FeatureEngineer], template: Union[list, FeatureEngineer]
+) -> list:
+    """Check `candidate` "feature_engineer" `steps` compatibility with `template` and sanitize
+    `candidate`
+
+    Parameters
+    ----------
+    candidate: List, or FeatureEngineer
+        Candidate "feature_engineer" `steps` to compare to `template`. If compatible with
+        `template`, a sanitized version of `candidate` will be returned (described below)
+    template: List, or FeatureEngineer
+        Template "feature_engineer" `steps` to which `candidate` will be compared. `template` is
+        also used to sanitize `candidate` (described below)
+
+    Returns
+    -------
+    List
+        If `candidate` is compatible with `template`, returns a list resembling `candidate`, with
+        the following changes: 1) all step dicts in `candidate` are reinitialized to proper
+        `EngineerStep` instances; and 2) wherever `candidate` was missing a step that was tagged as
+        `optional` in `template`, `RejectedOptional` is added. In the end, if a list is returned, it
+        is built from `candidate`, guaranteed to be the same length as `template` and guaranteed
+        to contain only `EngineerStep` and `RejectedOptional` instances
+
+    Raises
+    ------
+    IncompatibleCandidateError
+        If `candidate` is incompatible with `template`. `candidate` may be incompatible with
+        `template` for any of the following reasons:
+
+        1. `candidate` has more steps than `template`
+        2. `candidate` has a step that differs from a concrete (non-`Categorical`) `template` step
+        2. `candidate` has a step that differs from a concrete (non-`Categorical`) `template` step
+        3. `candidate` has a step that does not fit in a `Categorical` `template` step
+        4. `candidate` is missing a concrete step in `template`
+        5. `candidate` is missing a non-`optional` `Categorical` step in `template`"""
+    # Extract `steps` if given `FeatureEngineer`
+    if isinstance(candidate, FeatureEngineer):
+        candidate = candidate.steps
+    if isinstance(template, FeatureEngineer):
+        template = template.steps
+
+    if len(template) == 0:
+        if len(candidate) == 0:
+            # All steps have been exhausted and passed, so `candidate` was a match
+            return []
+        # `candidate` steps remain while `template` is empty, so `candidate` is incompatible
+        raise IncompatibleCandidateError(candidate, template)
+
+    #################### Categorical Template Step ####################
+    if isinstance(template[-1], Categorical):
+        #################### Optional Categorical Template Step ####################
+        if template[-1].optional is True:
+            if len(candidate) == 0 or (candidate[-1] not in template[-1]):
+                # `candidate` is either empty or doesn't match an `optional` template step
+                candidate.append(RejectedOptional())
+
+        #################### Non-Optional Categorical Template Step ####################
+        elif len(candidate) == 0:
+            # `candidate` is empty while non-`optional` `template` steps remain - Incompatible
+            raise IncompatibleCandidateError(candidate, template)
+        elif candidate[-1] not in template[-1]:
+            raise IncompatibleCandidateError(candidate, template)
+
+    elif len(candidate) == 0:
+        raise IncompatibleCandidateError(candidate, template)
+
+    #################### Concrete Template Step ####################
+    elif candidate[-1] != template[-1]:
+        raise IncompatibleCandidateError(candidate, template)
+
+    #################### Reinitialize EngineerStep Dict ####################
+    if isinstance(candidate[-1], dict):
+        if isinstance(template[-1], Categorical):
+            candidate[-1] = EngineerStep.honorary_step_from_dict(candidate[-1], template[-1])
+        elif isinstance(template[-1], EngineerStep) and template[-1] == candidate[-1]:
+            candidate[-1] = template[-1]  # Adopt template value if `EngineerStep` equivalent
+
+    return validate_fe_steps(candidate[:-1], template[:-1]) + [candidate[-1]]
+
+
+##################################################
+# ResultFinder Classes
+##################################################
 class ResultFinder:
     def __init__(
         self,
@@ -59,7 +348,7 @@ class ResultFinder:
         leaderboard_path,
         descriptions_dir,
         model_params,
-        sort=None,  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
+        sort=None,  # TODO: Unfinished - To be used in `get_scored_params`/`experiment_ids`
     ):
         """Locate saved Experiments that are compatible with the given constraints
 
@@ -98,7 +387,59 @@ class ResultFinder:
               those with the lowest
             * "chronological": Sort from oldest experiments to newest
             * "reverse_chronological": Sort from newest experiments to oldest
-            * int: Random seed with which to shuffle experiments"""
+            * int: Random seed with which to shuffle experiments
+
+        Attributes
+        ----------
+        similar_experiments: List[Tuple[dict, Number, str]]
+            Candidate saved Experiment results that are fully compatible with the template
+            hyperparameters. Each value is a tuple triple of
+            (<hyperparameters>, <`target_metric` value>, <candidate `experiment_id`>).
+            `similar_experiments` is composed of the "finalists" from :attr:`match_status`
+        match_status: Dict[str, dict]
+            Record of the hyperparameters and `target_metric` values for all discovered Experiments,
+            keyed by values of :attr:`experiment_ids`. Each value is a dict containing two keys:
+            "params" (hyperparameter dict), and "score" (`target_metric` value number). In addition
+            to these two keys, a key may be added for every `ResultFinder` method decorated by
+            :func:`update_match_status`. The exact key will be the name of the method invoked (which
+            will always start with "does_match", followed by the name of the hyperparameter group
+            being checked). The value for each "does_match..." key is the value returned by that
+            method, whose truthiness dictates whether the candidate Experiment was a successful
+            match to the template hyperparameters for that group. For example, a `match_status`
+            entry for one Experiment could look like this::
+
+                {
+                    "params": <dict of hyperparameters for candidate>,
+                    "score": 0.42,  # `target_metric` value for candidate Experiment
+                    "does_match_init_params_space": True,
+                    "does_match_init_params_guidelines": False,
+                    "does_match_extra_params_space": False,
+                    "does_match_extra_params_guidelines": True,
+                    "does_match_feature_engineer": <`FeatureEngineer`>,  # Still truthy
+                }
+
+            Note that "model_init_params" and "model_extra_params" both check the compatibility of
+            "space" choices and concrete "guidelines" separately. Conversely, "feature_engineer" is
+            checked in its entirety by the single :meth:`does_match_feature_engineer`. Also note
+            that "does_match..." values are not restricted to booleans. For instance,
+            "does_match_feature_engineer" may be set to a reinitialized `FeatureEngineer`, which is
+            still truthy, even though it's not True. If all of the "does_match..." keys have truthy
+            values, the candidate is a full match and is added to :attr:`similar_experiments`
+
+        Methods
+        -------
+        find
+            Performs actual matching work by populating both :attr:`similar_experiments` and
+            :attr:`match_status`
+
+        See Also
+        --------
+        :func:`update_match_status`
+            Used to decorate "does_match..." methods in order to keep a detailed record of the full
+            pool of candidate Experiments in :attr:`match_status`. Aside from being used to compile
+            the list of finalist :attr:`similar_experiments`, :attr:`match_status` is helpful for
+            debugging purposes, specifically figuring out which aspects of a candidate are
+            incompatible with the template"""
         self.algorithm_name = algorithm_name
         self.module_name = module_name
         self.cross_experiment_key = cross_experiment_key
@@ -109,81 +450,280 @@ class ResultFinder:
         self.model_params = model_params
         self.sort = sort
 
-        self.experiment_ids = []
-        self.hyperparameters_and_scores = []
+        self._experiment_ids = None
+        self._mini_spaces = None
+
+        self.match_status = {}
         self.similar_experiments = []
 
+    @property
+    def experiment_ids(self) -> List[str]:
+        """Experiment IDs in the target Leaderboard that match :attr:`algorithm_name` and
+        :attr:`cross_experiment_key`
+
+        Returns
+        -------
+        List[str]
+            All saved Experiment IDs listed in the Leaderboard at :attr:`leaderboard_path` that
+            match the :attr:`algorithm_name` and :attr:`cross_experiment_key` of the template"""
+        if self._experiment_ids is None:
+            # TODO: If `sort`-ing chronologically, can use the "experiment_#" column in leaderboard
+            self._experiment_ids = get_ids_by(
+                leaderboard_path=self.leaderboard_path,
+                algorithm_name=self.algorithm_name,
+                cross_experiment_key=self.cross_experiment_key,
+                hyperparameter_key=None,
+            )
+
+        return self._experiment_ids
+
+    @property
+    def mini_spaces(self) -> Dict[str, Space]:
+        """Separate :attr:`space` into subspaces based on :attr:`model_params` keys
+
+        Returns
+        -------
+        Dict[str, Space]
+            Dict of subspaces, wherein keys are all keys of :attr:`model_params`. Each key's
+            corresponding value is a filtered subspace, containing all the dimensions in
+            :attr:`space` whose name tuples start with that key. Keys will usually be one of the
+            core hyperparameter group names ("model_init_params", "model_extra_params",
+            "feature_engineer", "feature_selector")
+
+        Examples
+        --------
+        >>> from hyperparameter_hunter import Integer
+        >>> def es_0(all_inputs):
+        ...     return all_inputs
+        >>> def es_1(all_inputs):
+        ...     return all_inputs
+        >>> def es_2(all_inputs):
+        ...     return all_inputs
+        >>> s = Space([
+        ...     Integer(900, 1500, name=("model_init_params", "max_iter")),
+        ...     Categorical(["svd", "cholesky", "lsgr"], name=("model_init_params", "solver")),
+        ...     Categorical([es_1, es_2], name=("feature_engineer", "steps", 1)),
+        ... ])
+        >>> rf = ResultFinder(
+        ...     "a", "b", "c", ("oof", "d"), space=s, leaderboard_path="e", descriptions_dir="f",
+        ...     model_params=dict(
+        ...         model_init_params=dict(
+        ...             max_iter=s.dimensions[0], normalize=True, solver=s.dimensions[1],
+        ...         ),
+        ...         feature_engineer=FeatureEngineer([es_0, s.dimensions[2]]),
+        ...     ),
+        ... )
+        >>> rf.mini_spaces  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        {'model_init_params': Space([Integer(low=900, high=1500),
+                                     Categorical(categories=('svd', 'cholesky', 'lsgr'))]),
+         'feature_engineer': Space([Categorical(categories=(<function es_1 at ...>,
+                                                            <function es_2 at ...>))])}
+        """
+        if self._mini_spaces is None:
+            self._mini_spaces = {}
+
+            # Need to use `space.names` and `get_by_name` because the `location` attribute should
+            #   be preferred to `name` if it exists, which is the case for Keras
+            names = self.space.names()
+
+            for param_group_name in self.model_params.keys():
+                # Use `space.get_by_name` to respect `location` (see comment above)
+                self._mini_spaces[param_group_name] = Space(
+                    [self.space.get_by_name(n) for n in names if n[0] == param_group_name]
+                )
+
+        return self._mini_spaces
+
     def find(self):
-        """Execute full result-finding workflow"""
-        self._get_ids()
-        G.debug_(f"Experiments matching cross-experiment key/algorithm: {len(self.experiment_ids)}")
-        self._get_scored_params()
-        self._filter_by_space()
-        G.debug_(f"Experiments fitting in the given space: {len(self.hyperparameters_and_scores)}")
+        """Execute full result-finding workflow, populating :attr:`similar_experiments`
 
-        if self.module_name == "keras":
-            multi_targets = [("model_init_params", "compile_params", "optimizer")]
-            if multi_targets[0] in self.space.names():
-                self._filter_by_guidelines_multi(multi_targets[0])
-            else:
-                self._filter_by_guidelines()
-        else:
-            self._filter_by_guidelines()
-
-        #################### Post-Process Similar Experiments ####################
-        self._reinitialize_similar_experiments()
-        G.debug_(f"Experiments matching current guidelines: {len(self.similar_experiments)}")
-
-    def _get_ids(self):
-        """Get ids of Experiments matching :attr:`algorithm_name` and :attr:`cross_experiment_key`"""
-        # TODO: If `sort`-ing chronologically, can use the "experiment_#" column in leaderboard
-        self.experiment_ids = get_ids_by(
-            leaderboard_path=self.leaderboard_path,
-            algorithm_name=self.algorithm_name,
-            cross_experiment_key=self.cross_experiment_key,
-            hyperparameter_key=None,
-        )
-
-    def _get_scored_params(self):
-        """For all :attr:`experiment_ids`, add a tuple of the Experiment's hyperparameters, and its
-        :attr:`target_metric` value"""
-        for _id in self.experiment_ids:
+        See Also
+        --------
+        :func:`update_match_status`
+            Used to decorate "does_match..." methods in order to keep a detailed record of the full
+            pool of candidate Experiments in :attr:`match_status`. Aside from being used to compile
+            the list of finalist :attr:`similar_experiments`, :attr:`match_status` is helpful for
+            debugging purposes, specifically figuring out which aspects of a candidate are
+            incompatible with the template
+        :meth:`does_match_feature_engineer`
+            Performs special functionality beyond that of the other "does_match..." methods, namely
+            providing an updated "feature_engineer" value for compatible candidates to use.
+            Specifics are documented in :meth:`does_match_feature_engineer`"""
+        for exp_id in self.experiment_ids:
+            description_path = f"{self.descriptions_dir}/{exp_id}.json"
             # TODO: Get `description` from `get_scored_params` - Take whatever value `sort` needs
-            vals = get_scored_params(f"{self.descriptions_dir}/{_id}.json", self.target_metric)
-            self.hyperparameters_and_scores.append(vals + (_id,))
+            params, score = get_scored_params(description_path, self.target_metric)
 
-    def _filter_by_space(self):
-        """Remove any elements of :attr:`hyperparameters_and_scores` whose values are declared in
-        :attr:`space`, but do not fit within the space constraints"""
-        self.hyperparameters_and_scores = filter_by_space(
-            self.hyperparameters_and_scores, self.space
-        )
+            #################### Match Init Params ####################
+            self.does_match_init_params_space(exp_id, params["model_init_params"], score)
 
-    def _filter_by_guidelines(self, model_params=None):
-        """Remove any elements of :attr:`hyperparameters_and_scores` whose values are not declared
-        in :attr:`space` but are provided in :attr:`model_params` that do not match
-        the values in :attr:`model_params`
+            multi_targets = [("model_init_params", "compile_params", "optimizer")]
+            if self.module_name == "keras" and multi_targets[0] in self.space.names():
+                self.does_match_init_params_guidelines_multi(
+                    exp_id, params["model_init_params"], score, multi_targets[0][1:]
+                )
+            else:
+                self.does_match_init_params_guidelines(exp_id, params["model_init_params"], score)
 
-        Parameters
-        ----------
-        model_params: Dict, default=:attr:`model_params`
-            If not None, a dict of model parameters that closely resembles :attr:`model_params`"""
-        self.similar_experiments.extend(
-            filter_by_guidelines(
-                self.hyperparameters_and_scores, self.space, **(model_params or self.model_params)
+            #################### Match Extra Params ####################
+            self.does_match_extra_params_space(exp_id, params["model_extra_params"], score)
+            self.does_match_extra_params_guidelines(exp_id, params["model_extra_params"], score)
+
+            #################### Match Feature Engineer ####################
+            # NOTE: Matching "feature_engineer" is critically different from the other "does_match"
+            #   methods. `does_match_feature_engineer` builds on the straight-forward compatibility
+            #   checks of the others by returning an updated "feature_engineer" for the candidate
+            #   if compatible. See :meth:`does_match_feature_engineer` for details
+            params["feature_engineer"] = self.does_match_feature_engineer(
+                exp_id, params["feature_engineer"], score
+            )
+
+            # Since updated "feature_engineer" is saved in `params`, clean up `match_status` entry
+            if self.match_status[exp_id]["does_match_feature_engineer"] is not False:
+                self.match_status[exp_id]["does_match_feature_engineer"] = True
+
+            #################### Determine Overall Match ####################
+            if all(v for k, v in self.match_status[exp_id].items() if k.startswith("does_match")):
+                self.similar_experiments.append((params, score, exp_id))
+
+        G.debug_(
+            "Matching Experiments:  {}  (Candidates:  {})".format(
+                len(self.similar_experiments), len(self.experiment_ids)
             )
         )
+        # TODO: Add option to print table of all candidates and their `match_status` values
 
-    def _filter_by_guidelines_multi(self, location):
-        """Helper to filter by guidelines when one of the guideline hyperparameters is directly
-        affected by a hyperparameter that is given as a space choice
+    ##################################################
+    # Match Helpers: Feature Engineering
+    ##################################################
+    # noinspection PyUnusedLocal
+    @update_match_status(target_attr="match_status")
+    def does_match_feature_engineer(
+        self, exp_id, params, score
+    ) -> Union[bool, dict, FeatureEngineer]:
+        """Check candidate compatibility with `feature_engineer` template guidelines and space
+        choices. This method is different from the other "does_match..." methods in two important
+        aspects:
+
+        1. It checks both guidelines and choices in a single method
+        2. It returns an updated `feature_engineer` for compatible candidates, rather than True
 
         Parameters
         ----------
+        exp_id: String
+            Candidate Experiment ID
+        params: Dict
+            Candidate "feature_engineer" to compare to the template in :attr:`model_params`. This
+            should always be a dict, not an instance of `FeatureEngineer`, which is not the case
+            for the template "feature_engineer" in :attr:`model_params`
+        score: Number
+            Value of the candidate Experiment's target metric
+
+        Returns
+        -------
+        Boolean, dict, or FeatureEngineer
+            Expanding on the second difference noted in the description, False will still be
+            returned if the candidate is deemed incompatible with the template (as is the case with
+            the other "does_match..." methods). The return value differs with compatible candidates
+            in order to provide a `feature_engineer` with reinitialized
+            :class:`~hyperparameter_hunter.feature_engineering.EngineerStep` steps and to fill in
+            missing :class:`~hyperparameter_hunter.spaces.dimensions.Categorical` steps that were
+            declared as :attr:`~hyperparameter_hunter.spaces.dimensions.Categorical.optional` by the
+            template. This updated `feature_engineer` is the value that then gets included in the
+            candidate's :attr:`similar_experiments` entry (assuming candidate is a full match)"""
+        return validate_feature_engineer(params, self.model_params["feature_engineer"])
+
+    ##################################################
+    # Match Helpers: Model Init Params
+    ##################################################
+    # noinspection PyUnusedLocal
+    @update_match_status(target_attr="match_status")
+    def does_match_init_params_space(self, exp_id, params, score) -> bool:
+        """Check candidate compatibility with `model_init_params` template space choices
+
+        Parameters
+        ----------
+        exp_id: String
+            Candidate Experiment ID
+        params: Dict
+            Candidate "model_init_params" to compare to the template in :attr:`model_params`
+        score: Number
+            Value of the candidate Experiment's target metric
+
+        Returns
+        -------
+        Boolean
+            True if candidate `params` fit in `model_init_params` space choices. Else, False"""
+        return does_fit_in_space(
+            dict(model_init_params=params), self.mini_spaces["model_init_params"]
+        )
+
+    # noinspection PyUnusedLocal
+    @update_match_status(target_attr="match_status")
+    def does_match_init_params_guidelines(
+        self, exp_id, params, score, template_params=None
+    ) -> bool:
+        """Check candidate compatibility with `model_init_params` template guidelines
+
+        Parameters
+        ----------
+        exp_id: String
+            Candidate Experiment ID
+        params: Dict
+            Candidate "model_init_params" to compare to the template in :attr:`model_params`
+        score: Number
+            Value of the candidate Experiment's target metric
+        template_params: Dict (optional)
+            If given, used as the template hyperparameters against which to compare candidate
+            `params`, rather than the standard guideline template of the "model_init_params" in
+            :attr:`model_params`. This is used by :meth:`does_match_init_params_guidelines_multi`
+
+        Returns
+        -------
+        Boolean
+            True if candidate `params` match `model_init_params` guidelines. Else, False
+
+        Notes
+        -----
+        Template hyperparameters are generally considered "guidelines" if they are declared as
+        concrete values, rather than space choices present in :attr:`space`"""
+        _res = does_match_guidelines(
+            dict(model_init_params=params),
+            self.mini_spaces["model_init_params"],
+            dict(model_init_params=(template_params or self.model_params["model_init_params"])),
+            dims_to_ignore=[
+                ("model_init_params", "build_fn"),
+                ("model_init_params", "n_jobs"),
+                ("model_init_params", "nthread"),
+                # TODO: Remove below once loss_functions are hashed in description files
+                ("model_init_params", "compile_params", "loss_functions"),
+            ],
+        )
+
+        return _res
+
+    def does_match_init_params_guidelines_multi(self, exp_id, params, score, location) -> bool:
+        """Check candidate compatibility with `model_init_params` template guidelines when a
+        guideline hyperparameter is directly affected by another hyperparameter that is given as
+        a space choice
+
+        Parameters
+        ----------
+        exp_id: String
+            Candidate Experiment ID
+        params: Dict
+            Candidate "model_init_params" to compare to the template in :attr:`model_params`
+        score: Number
+            Value of the candidate Experiment's target metric
         location: Tuple
             Location of the hyperparameter space choice that affects the acceptable guideline values
             of a particular hyperparameter. In other words, this is the path of a hyperparameter,
             which, if changed, would change the expected default value of another hyperparameter
+
+        Returns
+        -------
+        Boolean
+            True if candidate `params` match `model_init_params` guidelines. Else, False
 
         Notes
         -----
@@ -191,76 +731,110 @@ class ResultFinder:
         is given as a hyperparameter space choice. Each possible value of `optimizer` prescribes
         different default values for the `optimizer_params` argument, so special measures need to be
         taken to ensure the correct Experiments are declared to fit within the constraints"""
-        _model_params = deepcopy(self.model_params)
+        _model_params = deepcopy(self.model_params["model_init_params"])
 
-        if location == ("model_init_params", "compile_params", "optimizer"):
+        if location == ("compile_params", "optimizer"):
             from keras.optimizers import get as k_opt_get
 
-            update_location = ("model_init_params", "compile_params", "optimizer_params")
+            update_location = ("compile_params", "optimizer_params")
+            # `update_location` = Path to hyperparameter whose default value depends on `location`
             allowed_values = get_path(_model_params, location).bounds
+            # `allowed_values` = Good `("model_init_params", "compile_params", "optimizer")` values
 
             #################### Handle First Value (Dummy) ####################
-            self._filter_by_guidelines()
-            allowed_values = allowed_values[1:]
+            is_match = self.does_match_init_params_guidelines(exp_id, params, score)
+            # The first value gets handled separately from the rest because the value at
+            #   `update_location` is set according to `allowed_values[0]`. For the remaining
+            #   `allowed_values`, we need to manually set `update_location` for each
+
+            # If the first value was a match, the below `while` loop will never be entered because
+            #   `is_match` is already True
 
             #################### Handle Remaining Values ####################
-            for allowed_val in allowed_values:
-                updated_value = k_opt_get(allowed_val).get_config()
+            allowed_val_index = 1
+            while is_match is not True and allowed_val_index < len(allowed_values):
+                allowed_val = allowed_values[allowed_val_index]
+                # Determine current default value for the dependent hyperparameter
+                updated_val = k_opt_get(allowed_val).get_config()
 
+                # Set value at `update_location` to `updated_val`, then check if params match
                 def _visit(path, key, value):
                     """If `path` + `key` == `update_location`, return default for this choice. Else,
                     default_visit"""
                     if path + (key,) == update_location:
-                        return (key, updated_value)
+                        return (key, updated_val)
                     return (key, value)
 
-                self._filter_by_guidelines(model_params=remap(_model_params, visit=_visit))
+                is_match = self.does_match_init_params_guidelines(
+                    exp_id, params, score, template_params=remap(_model_params, visit=_visit)
+                )
+                # If `is_match` is True, the loop stops and :attr:`match_status`'s value at `exp_id`
+                #   for `does_match_init_params_guidelines` remains truthy
 
-            self.similar_experiments = sorted(
-                self.similar_experiments, key=lambda _: _[1], reverse=True
-            )
+                allowed_val_index += 1
+            return is_match
         else:
             raise ValueError("Received unhandled location: {}".format(location))
 
-    def _reinitialize_similar_experiments(self):
-        """Update :attr:`similar_experiments` to reinitialize any `EngineerStep`-like dicts in the
-        experiment's parameters to :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`
-        instances. Content of `similar_experiments` is otherwise unchanged"""
-        if not any(_[0] == "feature_engineer" for _ in self.space.names()):
-            return
-        self.similar_experiments = [self._get_initialized_exp(_) for _ in self.similar_experiments]
-
-    def _get_initialized_exp(self, exp: Tuple[dict, Number, str]) -> Tuple[dict, Number, str]:
-        """Initialize :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`s for a single
-        :attr:`similar_experiments` result entry
+    ##################################################
+    # Match Helpers: Model Extra Params
+    ##################################################
+    # noinspection PyUnusedLocal
+    @update_match_status(target_attr="match_status")
+    def does_match_extra_params_space(self, exp_id, params, score) -> bool:
+        """Check candidate compatibility with `model_extra_params` template space choices
 
         Parameters
         ----------
-        exp: Tuple[dict, Number, str]
-            Tuple of (<parameters>, <evaluation>, <ID>), whose parameters dict will be searched for
-            `EngineerStep`-like dicts
+        exp_id: String
+            Candidate Experiment ID
+        params: Dict
+            Candidate "model_extra_params" to compare to the template in :attr:`model_params`
+        score: Number
+            Value of the candidate Experiment's target metric
 
         Returns
         -------
-        Dict
-            Experiment parameters dict, in which any `EngineerStep`-like dicts have been initialized
-            to `EngineerStep` instances. All other key/value pairs are unchanged
-        Number
-            Unchanged target evaluation result of `exp`
-        String
-            Unchanged experiment ID of `exp`"""
-        (exp_params, exp_score, exp_id) = exp
-        engineer_steps = get_path(exp_params, ("feature_engineer", "steps"))  # type: List[dict]
+        Boolean
+            True if candidate `params` fit in `model_extra_params` space choices. Else, False"""
+        return does_fit_in_space(
+            dict(model_extra_params=params), self.mini_spaces["model_extra_params"]
+        )
 
-        for i, step in enumerate(engineer_steps):
-            # TODO: Requires consistent `EngineerStep` order - Update this if unordered steps added
-            dimension = self.space.get_by_name(("feature_engineer", "steps", i), default=None)
+    # noinspection PyUnusedLocal
+    @update_match_status(target_attr="match_status")
+    def does_match_extra_params_guidelines(self, exp_id, params, score) -> bool:
+        """Check candidate guideline compatibility with `model_extra_params` template
 
-            if dimension is not None:
-                new_step = EngineerStep.honorary_step_from_dict(step, dimension)
-                exp_params["feature_engineer"]["steps"][i] = new_step
+        Parameters
+        ----------
+        exp_id: String
+            Candidate Experiment ID
+        params: Dict
+            Candidate "model_extra_params" to compare to the template in :attr:`model_params`
+        score: Number
+            Value of the candidate Experiment's target metric
 
-        return (exp_params, exp_score, exp_id)
+        Returns
+        -------
+        Boolean
+            True if candidate `params` match `model_extra_params` guidelines. Else, False"""
+
+        # noinspection PyUnusedLocal
+        def visit_empty_dicts(path, key, value):
+            """Remove empty dicts in ("model_extra_params"). Simplify comparison between experiments
+            with no `model_extra_params` and, for example, `dict(fit=dict(verbose=True))`"""
+            if path and path[0] == "model_extra_params" and value == {}:
+                return False
+
+        _res = does_match_guidelines(
+            dict(model_extra_params=params),
+            self.mini_spaces["model_extra_params"],
+            dict(model_extra_params=self.model_params["model_extra_params"]),
+            visitors=(visit_empty_dicts,),
+        )
+
+        return _res
 
 
 class KerasResultFinder(ResultFinder):
@@ -274,7 +848,7 @@ class KerasResultFinder(ResultFinder):
         leaderboard_path,
         descriptions_dir,
         model_params,
-        sort=None,  # TODO: Unfinished - To be used in `_get_scored_params`/`_get_ids`
+        sort=None,  # TODO: Unfinished - To be used in `get_scored_params`/`experiment_ids`
     ):
         """ResultFinder for locating saved Keras Experiments compatible with the given constraints
 

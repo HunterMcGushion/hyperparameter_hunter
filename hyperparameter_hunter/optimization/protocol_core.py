@@ -556,12 +556,14 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         #################### Run Experiment ####################
         self.current_experiment.preparation_workflow()
+        self.current_experiment.experiment_workflow()
+        # If above raised `RepeatedExperimentError`, it is caught by :meth:`_optimization_loop`,
+        #   stopping this method before it can incorrectly update `tested_keys` below
 
         # Future Hunter, if multi-cross_experiment_keys ever supported, this will be a problem. Should've fixed it earlier, dummy
         if self.current_experiment.hyperparameter_key.key not in self.tested_keys:
             self.tested_keys.append(self.current_experiment.hyperparameter_key.key)
 
-        self.current_experiment.experiment_workflow()
         self.current_score = get_path(
             self.current_experiment.last_evaluation_results, self.target_metric
         )
