@@ -83,21 +83,21 @@ default_env_params = dict(
 ##################################################
 if get_distribution("scikit-learn").version >= "0.21.0":
     env_keys = [
-        "GaGtnkHlp-_N6wjSWlvFup1fVKRhptWKr5ZuO-Lfb1I=",
-        "kewedTF-4va4TbV1V_HtMDq1geaHjti8R0a2HRxo5rI=",
-        "pxDRseyZMF_-Uq5cVr6gVO6PdmjsrKcmnvVz6c5RqsA=",
-        "OTWwKWo9d7ir0KPNqIlwsoFNogJ_mrwQK_FqL4EK9gQ=",
-        "BGsfVUZC6hyFbr2YZzim6BJax3L90RiX5oGxhLN6RCw=",
-        "7eX67TmhSv9n5xn2IYgkMDmVZcXEjDVi8435WpLXv3A=",
+        "JmVKziNqJKJu87ZZwtMb4m4nj_aArpSQ_IulDTIbO_E=",
+        "a_ykAZaAPL1wvbQXtiMbJx6OpGZdrOlYlnjDQtu8nKI=",
+        "3uA1nG3gjPrTVYuqCmDPlAYEMTPFvb5x34MOgPyK9_Q=",
+        "EXzJlklxmF6LuWgfeuKym8vuJAowRJ3gXSI-jHUasEk=",
+        "GRJ79aqffE333z6grtB56JGxnuPzGPh1Eq8v5WoYYxw=",
+        "yKrfVZ-jCdpoxaH1E514QV4nUJGrLEiCH6vVbY58rN0=",
     ]
 else:
     env_keys = [
-        "LQuf_lTfr1xa9-JdjXpEVm9_b7oFZrLjzKNWESXeHlU=",
-        "2YQ5gqPa98rQqClDOR82ubsp9qXiKlz4VqsONOcze3Q=",
-        "nqICREczftTR3kphbkIXDEZup5utQmhqeyndjZ5lfqQ=",
-        "thDRj-vOjsLpplfaZl5qY8U6jRVeIoNbQHwXtWPhUTk=",
-        "fFiOUZCDoqJ6NisIZ9_ZjGd4pVbCO-aXYzMvYzq1OAk=",
-        "Kgqa7eSV52fPYVYeF6aIySKz6-QBRRShWklcoyePgBg=",
+        "2fqFnCq1-qjWDrvv6Gok6aNbUGe2yoklWMuvbg88ncQ=",
+        "RGSWQAec5s4YHuotu1nbhUN7qqwULoXJ7sHwI2B1XHI=",
+        "GktSneqJVTS-uHH_1JZv6vlaPV3oZhO4EYSNae0hUFQ=",
+        "43lJTamcEf1B8rSnEPuDBICPa7iz5Zbenhg20ARhNbs=",
+        "borjWHSHy-BMAFX-Zp0YzxXuhAZ7X2J5yzB2T2uF0qo=",
+        "skHEmRcUGUCmQC2AGLpMSJYxpRtNdEJ-zEPQKHn_rvQ=",
     ]
 
 scenarios_cv_params = [[repeated_cv_params, env_keys[0]], [cv_params, env_keys[1]]]

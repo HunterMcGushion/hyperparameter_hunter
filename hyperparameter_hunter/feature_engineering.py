@@ -1205,24 +1205,16 @@ def _hash_dataset(dataset: pd.DataFrame) -> dict:
 
     Examples
     --------
-    >>> assert _hash_dataset(pd.DataFrame(dict(a=[0, 1], b=[2, 3], c=[4, 5]))) == {
-    ...     'dataset': 'UD0kfFLj7_eX4P5g02UWV-P04yuJkrsOcnS6yBa48Ps=',
-    ...     'column_names': 'OUPCVME21ryrnjJtyZ1R-_rrr-wSMPxo9Gc1KxcdlhM=',
-    ...     'column_values': {
-    ...         'a': 'buQ0yuUUbLN57tC6050g7yWrvAdk-NwGIEEWHJC88EY=',
-    ...         'b': 'j9nBFZVu4ZEnsoaRYiI93DcrbV3A_hzcKdf0P5gS7g4=',
-    ...         'c': 'qO0pJn3TLhlsYj3nqliMBi8zds66JPsQ1uCJSFv9q9g=',
-    ...     },
-    ... }
-    >>> assert _hash_dataset(pd.DataFrame(dict(a=[0, 1], b=[6, 7], d=[8, 9]))) == {
-    ...     'dataset': '0jA8SnjKAbyG6tnwxwJ51Q8haeVcfMhBZ45ELuD2U6k=',
-    ...     'column_names': 'G-xgYT0flyJV26HrfFYiMh_BiSkStKkh-Utqq94DZAM=',
-    ...     'column_values': {
-    ...         'a': 'buQ0yuUUbLN57tC6050g7yWrvAdk-NwGIEEWHJC88EY=',
-    ...         'b': 'uIvA32AuBuj9LTU652UQUBI0VH9UmF2ZJeL4NefiiLg=',
-    ...         'd': 'G_y3SLas04T-_ejL4AVACrDQM_uyT4HFxo1Ig1tF5Z8=',
-    ...     },
-    ... }
+    >>> _hash_dataset(pd.DataFrame(dict(a=[0, 1], b=[2, 3])))  # doctest: +NORMALIZE_WHITESPACE
+    {'dataset': 't0rdT14SDIH-CVm-dce1Hlsr2oM7q6pss_GpV3rJ6bw=',
+     'column_names': 't2r52T-rdDqIDs75-83buoieqk0KyHEpRJMJAAzfzb4=',
+     'column_values': {'a': 'buQ0yuUUbLN57tC6050g7yWrvAdk-NwGIEEWHJC88EY=',
+                       'b': 'j9nBFZVu4ZEnsoaRYiI93DcrbV3A_hzcKdf0P5gS7g4='}}
+    >>> _hash_dataset(pd.DataFrame(dict(x=[0, 1], b=[6, 7])))  # doctest: +NORMALIZE_WHITESPACE
+    {'dataset': 'TNLSddRnWVfoytkhHrSNWXqVW2TV7cHKht8MMLWcbhY=',
+     'column_names': '9l1vTGGIxfuA4rJZ-ePalM-9Q5D0BfLp5bogE0U-oYQ=',
+     'column_values': {'x': 'l2dZ6AeGRuHH97J0qb8I1H-pwK-ubHqElDqFIuKAbIw=',
+                       'b': 'uIvA32AuBuj9LTU652UQUBI0VH9UmF2ZJeL4NefiiLg='}}
     >>> _hash_dataset(None)
     {'dataset': None, 'column_names': None, 'column_values': None}"""
     if (not isinstance(dataset, pd.DataFrame)) and (dataset is None or dataset == 0):

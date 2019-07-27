@@ -105,14 +105,22 @@ scenarios_dict = [
     [dict(bar=20, foo=10), "9HnwEsXdYmfufzs6He31LRWV03wnLltwkgHh-AKG3Ko="],
 ]
 scenarios_dataframe = [
-    [pd.DataFrame(), "_EMr0fJ5U8Z5MetmSTxLIrBChcdGLN2RM1Nlh6H1HSg="],
+    [pd.DataFrame(), "VlRtKQmvYEB_GxROp1dL8MtMSK9y4YuqxsnaIDbfKog="],
     [
         pd.DataFrame(data=[[10, 15], [20, 25]], columns=["foo", "bar"]),
-        "CtUj-FraurT-ppSV5q-MN-FGiG4-NZw_WpmIssbqal8=",
+        "pemlOQr8mbAFePlwfhI1lPiEAl1TC-luqJUQVabt4mM=",
     ],
     [
         pd.DataFrame(data=[[10, 15], [20, 25]], columns=["bar", "foo"]),
-        "yFS_JgF__tIUVIvQta7C89zzSvkNNqAWQY8aLNxQeVk=",
+        "t0WO1WL0egKoRGP-3aKwHlt0etRN7ZkuBys2_Ic23X0=",
+    ],
+    [
+        pd.DataFrame(data=[[10, 15], [20, 9000]], columns=["foo", "bar"]),
+        "O_OLSm0Nr1ytVAxqwDrkcm8wzF6du3vwEiJ9ODlfF0c=",
+    ],
+    [
+        pd.DataFrame(data=[[10, 15], [20, 25]], columns=["foo", "bar"], index=[92, 14]),
+        "X--QHC8mgcQvhqeZFRLFw3W_th2vCVJavzGajSvgYno=",
     ],
 ]
 # FLAG: Below test cases are highly sensitive. Any changes to declarations above (including comments), ...
