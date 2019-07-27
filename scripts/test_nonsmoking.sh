@@ -25,4 +25,5 @@ pytest \
     --cov-report term \
     tests/ \
     --durations=10 \
-    --ignore tests/smoke_tests
+    --ignore tests/smoke_tests \
+    -rfEX

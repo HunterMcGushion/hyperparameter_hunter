@@ -5,6 +5,7 @@ import base64
 from functools import partial
 import hashlib
 from inspect import getsourcelines
+import pandas as pd
 import re
 
 
@@ -48,6 +49,9 @@ def to_hashable(obj, **kwargs):
         return tuple(sorted((_k, to_hashable(_v, **kwargs)) for _k, _v in obj.items()))
     if isinstance(obj, (set, frozenset)):
         return tuple(sorted(to_hashable(_, **kwargs) for _ in obj))
+    if isinstance(obj, pd.DataFrame):
+        # `pd.util.hash_pandas_object` ignores columns, so return them as well
+        return (tuple(pd.util.hash_pandas_object(obj, index=True)), tuple(obj.columns))
 
     return obj
 
