@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import BaseLoggerCallback
-from hyperparameter_hunter.reporting import format_evaluation, format_fold_run
+from hyperparameter_hunter.reporting import format_evaluation, format_fold_run, _Color
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import sec_to_hms
 
@@ -94,22 +94,22 @@ class LoggerFitStatus(BaseLoggerCallback):
         super().on_rep_end()
 
     def on_exp_end(self):
-        content = "FINAL:    "
+        content = "FINAL     |  "
 
         content += format_evaluation(self.last_evaluation_results, float_format=self.float_format)
         content += self.log_separator if not content.endswith(" ") else ""
         content += self.__elapsed_helper("total_elapsed")
 
-        G.log("")
+        content = _Color.BLUE + content + _Color.STOP
         G.log(content, previous_frame=inspect.currentframe().f_back, add_time=False)
         super().on_exp_end()
 
     def __elapsed_helper(self, period):
         times = self.stat_aggregates["times"]
         if period == "total_elapsed":
-            return "Time Elapsed: {}".format(sec_to_hms(times[period], as_str=True))
+            return "Time: {}".format(sec_to_hms(times[period], as_str=True))
         else:
-            return "Time Elapsed: {}".format(sec_to_hms(times[period][-1], as_str=True))
+            return "Time: {}".format(sec_to_hms(times[period][-1], as_str=True))
 
 
 class LoggerOOF(BaseLoggerCallback):
