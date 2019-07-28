@@ -55,21 +55,26 @@ class Metric(object):
             will be treated as an attribute in :mod:`sklearn.metrics`, the value of which will be
             retrieved and used as `metric_function`
         direction: {"infer", "max", "min"}, default="infer"
-            How to evaluate the result of `metric_function` relative to previous results produced by
-            it. "max" signifies that metric values should be maximized, and that higher metric
-            values are better than lower values; it should be used for measures of accuracy. "min"
-            signifies that metric values should be minimized, and that lower metric values are
-            better than higher values; it should be used for measures of error or loss. If "infer",
-            `direction` will be set to: 1) "min" if `name` contains one of the following strings:
-            ["error", "loss"]; or 2) "max" if `name` contains neither of the aforementioned strings
+            How to compare the result of `metric_function` relative to previous evaluations
+
+            * "max": Metric values should be maximized, and higher metric values are better than
+              lower values; it should be used for measures of accuracy
+            * "min": Metric values should be minimized, and lower metric values are better than
+              higher values; it should be used for measures of error or loss
+            * "infer": `direction` will be set to:
+
+                1. "min" if `name` (or `metric_function`'s name) contains "error" or "loss"
+                2. "max" if `name` contains neither of the aforementioned strings
 
         Notes
         -----
-        Because `direction` = "infer" only looks for "error"/"loss" in `name` , common abbreviations
-        for error measures may be ignored, including but not limited to, the following:
-        "mae" for "mean_absolute_error"; "rmsle" for "root_mean_squared_logarithmic_error"; or
-        simply "hinge", or "cross_entropy" without an "error"/"loss" suffix. In cases such as these,
-        provide an explicit `direction` = "min" to avoid backwards optimization and leaderboards
+        `direction` = "infer" looks for "error"/"loss" in `name` first, then in the name of
+        `metric_function`. This means that `name` can be an abbreviation/anything for error
+        measures and `direction` will still be correctly inferred as long as the actual callable
+        for `metric_function` has "error"/"loss" in its name. For example, `direction` = "min" is
+        safely inferred when using "mae" for "mean_absolute_error" or "rmsle" for
+        "root_mean_squared_logarithmic_error". This functions as described whether `metric_function`
+        is a string naming an SKLearn metric, or a callable whose name includes "error"/"loss"
 
         Examples
         --------
@@ -81,8 +86,18 @@ class Metric(object):
         Metric(my_f1_score, <function f1_score at 0x...>, max)
         >>> Metric("hamming_loss", sk_metrics.hamming_loss)  # doctest: +ELLIPSIS
         Metric(hamming_loss, <function hamming_loss at 0x...>, min)
+
+        *Respect explicit `direction` even if it doesn't make sense for the `metric_function`*
+
         >>> Metric("r2_score", sk_metrics.r2_score, direction="min")  # doctest: +ELLIPSIS
-        Metric(r2_score, <function r2_score at 0x...>, min)"""
+        Metric(r2_score, <function r2_score at 0x...>, min)
+
+        *Direction inference based on `metric_function` name, rather than `name` itself*
+
+        >>> Metric("mae", "median_absolute_error")  # doctest: +ELLIPSIS
+        Metric(mae, <function median_absolute_error at 0x...>, min)
+        >>> Metric("hl", sk_metrics.hamming_loss)  # doctest: +ELLIPSIS
+        Metric(hl, <function hamming_loss at 0x...>, min)"""
         self.name = name
         self.metric_function = self._set_metric_function(metric_function)
         self.direction = self._set_direction(direction)
@@ -95,24 +110,6 @@ class Metric(object):
 
     def __call__(self, target, prediction):
         return self.metric_function(target, prediction)
-
-    def _set_direction(self, direction):
-        """Ensure provided `direction` is valid and inferred if necessary
-
-        Parameters
-        ----------
-        direction: {"infer", "max", "min"}
-            See `direction` documentation of :meth:`Metric.__init__`
-
-        Returns
-        -------
-        String
-            One of "min", or "max" depending on explicit `direction`/inference"""
-        if direction == "infer":
-            return "min" if any(_ in self.name for _ in ["error", "loss"]) else "max"
-        elif direction not in ["max", "min"]:
-            raise ValueError(f"`direction` must be 'infer', 'max', or 'min', not {direction}")
-        return direction
 
     def _set_metric_function(self, f):
         """Ensure provided `f` is a valid callable
@@ -127,11 +124,35 @@ class Metric(object):
         Callable
             A function derived from `f` if `f` was not already callable. Else `f`"""
         if not callable(f):
+            # Try to find a function of given name in `sklearn.metrics`
             try:
                 return sk_metrics.__getattribute__(self.name if f is None else f)
             except AttributeError:
                 raise AttributeError(f"`sklearn.metrics` has no attribute: {f or self.name}")
         return f
+
+    def _set_direction(self, direction):
+        """Ensure provided `direction` is valid and inferred if necessary
+
+        Parameters
+        ----------
+        direction: {"infer", "max", "min"}
+            See `direction` documentation of :meth:`Metric.__init__`
+
+        Returns
+        -------
+        String
+            One of "min", or "max" depending on explicit `direction`/inference"""
+        if direction == "infer":
+            # Check if `name` or `metric_function`'s name includes "error"/"loss"
+            if any(_ in self.name for _ in ["error", "loss"]):
+                return "min"
+            if any(_ in self.metric_function.__name__ for _ in ["error", "loss"]):
+                return "min"
+            return "max"
+        elif direction not in ["max", "min"]:
+            raise ValueError(f"`direction` must be 'infer', 'max', or 'min', not {direction}")
+        return direction
 
 
 def format_metrics(metrics: Union[Dict, List]) -> Dict[str, Metric]:
