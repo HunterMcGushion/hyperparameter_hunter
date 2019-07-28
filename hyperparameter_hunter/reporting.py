@@ -372,7 +372,7 @@ class OptimizationReporter:
         )
         self.do_maximize = do_maximize
 
-        self.end = " | "
+        self.end = "| "
         self.y_max = None
         self.x_max = None
         self.iteration = 0
@@ -408,9 +408,17 @@ class OptimizationReporter:
         -------
         line_len: Int
             The number of characters the line should span"""
-        line_len = 29
-        line_len += sum([_ + 5 for _ in self.sizes])
-        line_len += self.show_experiment_id + 3 if self.show_experiment_id else 0
+        line_len = 24
+        # 24 is from "  #|   Time|      Value|", which are the required heading columns, except
+        #   for "ID", whose (optional) length is calculated below
+        # Can also be expressed as the sum of following four numbers:
+        #   5  == ``len(self.end) * 3 - 1`` (subtract 1 to drop extra space at right-side table end)
+        #   3  == size of "#" column
+        #   6  == size of "Time" column
+        #   10 == size of "Value" column
+
+        line_len += sum([_ + 4 for _ in self.sizes])
+        line_len += self.show_experiment_id + len(self.end) if self.show_experiment_id else 0
         return line_len
 
     def print_header(self, header, line):
@@ -425,11 +433,14 @@ class OptimizationReporter:
         print(header)
         print(line)
 
-        self._print_column_name("Step", 5)
+        self._print_column_name("#", 3)
         if self.show_experiment_id:
             self._print_column_name("ID", self.show_experiment_id)
         self._print_column_name("Time", 6)
+        # size=6 because `expand_mins_secs` returns 2 units of time, each with 2 digits + 1 letter
         self._print_column_name("Value", 10)
+        # size=10 for 5 fractional digits/mantissa, plus decimal itself, leaving 4 spaces for
+        #   the integer part/characteristic, potentially prefixed by a negative symbol
 
         for index in self.sorted_indexes:
             self._print_column_name(self.parameter_names[index], self.sizes[index] + 2)
@@ -465,7 +476,7 @@ class OptimizationReporter:
             If not None, should be a string that is the UUID of the Experiment"""
         if not self.verbose:
             return
-        print("{:>5d}".format(self.iteration), end=self.end)
+        print("{:>3d}".format(self.iteration), end=self.end)
 
         #################### Experiment ID ####################
         if self.show_experiment_id:
