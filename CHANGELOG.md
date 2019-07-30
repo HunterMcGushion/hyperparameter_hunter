@@ -1,6 +1,19 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Features
+* Enable OptPro's to identify `similar_experiments` when using a search space whose dimensions 
+  include `Categorical.optional` `EngineerStep`s at indexes that may differ from those of the 
+  candidate Experiments
+* Add `callbacks` kwarg to `CVExperiment`, which enables providing `LambdaCallback`s for an 
+  Experiment right when you're initializing it
+    * Functions like the existing `experiment_callbacks` kwarg of `Environment`
+* Improve `Metric.direction` inference to check the name of the `metric_function` for "error"/"loss"
+  strings, after checking the `name` itself
+    * This means that an `Environment.metrics` value of ``{"mae": "median_absolute_error"}`` will be
+      correctly inferred to have `direction`="min", making it easier to use short aliases for those
+      extra-long error metric names
+
 ### Bug Fixes
 * Fix bug causing metrics to be evaluated using the transformed targets/predictions, rather than the 
   inverted (original space) predictions, after performing target transformation via `EngineerStep`
@@ -8,6 +21,8 @@
       calculated using transformed targets/predictions (True), or inverted data (False)
     * Default value of `save_transformed_metrics` is chosen based on dtype of targets. See [#169](https://github.com/HunterMcGushion/hyperparameter_hunter/pull/169)
 
+### Breaking Changes
+* Ignore Pandas version during dataset hashing for more consistent `Environment` keys. See [#166](https://github.com/HunterMcGushion/hyperparameter_hunter/issues/166)
 
 <a name="3.0.0beta0"></a>
 ## [3.0.0beta0] (2019-07-14)
