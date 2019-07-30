@@ -7,7 +7,13 @@ import pandas as pd
 ###############################################
 # Import Learning Assets
 ###############################################
-from sklearn.datasets import load_boston, load_breast_cancer, load_diabetes, make_classification
+from sklearn.datasets import (
+    load_boston,
+    load_breast_cancer,
+    load_diabetes,
+    load_iris,
+    make_classification,
+)
 
 
 ##################################################
@@ -92,6 +98,8 @@ def get_boston_data():
 
     Examples
     --------
+    >>> pd.set_option("display.max_columns", 10000)  # Ensure all columns are printed below
+    >>> pd.set_option("display.width", 110)  # Ensure all columns are printed below
     >>> get_boston_data().head()
           CRIM    ZN  INDUS  CHAS    NOX     RM   AGE     DIS  RAD    TAX  PTRATIO       B  LSTAT  MEDV
     0  0.00632  18.0   2.31   0.0  0.538  6.575  65.2  4.0900  1.0  296.0     15.3  396.90   4.98  24.0
@@ -121,6 +129,51 @@ def get_diabetes_data(target="progression"):
     data = load_diabetes()
     df = pd.DataFrame(data=data.data, columns=[_.replace(" ", "_") for _ in data.feature_names])
     df[target] = data.target
+    return df
+
+
+def get_iris_data(target="species", use_str_target=False):
+    """Get the Iris classification dataset, formatted as a DataFrame
+
+    Parameters
+    ----------
+    target: String, default="species"
+        What to name the column in `df` that contains the target output values
+    use_str_target: Boolean, default=False
+        If True, replace label-encoded target values with string labels
+
+    Returns
+    -------
+    df: pandas.DataFrame
+        This Iris dataset, with friendly column names
+
+    Examples
+    --------
+    >>> get_iris_data(use_str_target=False).sample(n=5, random_state=32)
+         sepal_length_(cm)  sepal_width_(cm)  petal_length_(cm)  petal_width_(cm)  species
+    55                 5.7               2.8                4.5               1.3        1
+    22                 4.6               3.6                1.0               0.2        0
+    26                 5.0               3.4                1.6               0.4        0
+    56                 6.3               3.3                4.7               1.6        1
+    134                6.1               2.6                5.6               1.4        2
+    >>> get_iris_data(use_str_target=True).sample(n=5, random_state=32)
+         sepal_length_(cm)  sepal_width_(cm)  petal_length_(cm)  petal_width_(cm)     species
+    55                 5.7               2.8                4.5               1.3  versicolor
+    22                 4.6               3.6                1.0               0.2      setosa
+    26                 5.0               3.4                1.6               0.4      setosa
+    56                 6.3               3.3                4.7               1.6  versicolor
+    134                6.1               2.6                5.6               1.4   virginica
+    """
+    data = load_iris()
+    df = pd.DataFrame(data=data.data, columns=[_.replace(" ", "_") for _ in data.feature_names])
+    df[target] = data.target
+
+    if use_str_target:
+        # Replace label-encoded target values with string labels
+        df.loc[:, target].replace(
+            to_replace=dict(zip([0, 1, 2], data.target_names)), value=None, inplace=True
+        )
+
     return df
 
 
