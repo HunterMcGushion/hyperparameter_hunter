@@ -40,6 +40,7 @@ from inspect import signature, isclass
 import numpy as np
 import os.path
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 from typing import List, Optional, Tuple, Union
 
 ##################################################
@@ -72,6 +73,7 @@ class Environment:
         ),
         to_csv_params=dict(),
         do_full_save=default_do_full_save,
+        save_transformed_metrics=None,
     )
 
     @ParametersFromFile(key="environment_params_path", verbose=True)
@@ -107,6 +109,7 @@ class Environment:
         do_full_save=None,
         experiment_callbacks=None,
         experiment_recorders=None,
+        save_transformed_metrics=None,
     ):
         """Class to organize the parameters that allow Experiments/OptPros to be fairly compared
 
@@ -328,6 +331,21 @@ class Environment:
             `experiment_recorders` will be provided to `recorders.RecorderList` upon completion of
             an Experiment, and, if the subclassing documentation in `recorders` is followed
             properly, will create or update a result file for the just-executed Experiment
+        save_transformed_metrics: Boolean (optional)
+            Declares manner in which a model's predictions should be evaluated through the provided
+            `metrics`, with regard to target data transformations. This setting can be ignored if
+            no transformation of the target variable takes place (either through
+            :class:`~hyperparameter_hunter.feature_engineering.FeatureEngineer`,
+            :class:`~hyperparameter_hunter.feature_engineering.EngineerStep`, or otherwise).
+
+            The default value of `save_transformed_metrics` depends on the dtype of the target data
+            in `train_dataset`. If all target columns are numeric, `save_transformed_metrics`=False,
+            meaning metric evaluation should use the original/inverted targets and predictions. Else
+            if any target column is non-numeric, `save_transformed_metrics`=True, meaning evaluation
+            should use the transformed targets and predictions because most metrics require numeric
+            inputs. This is described further in :attr:`save_transformed_metrics`. A more
+            descriptive name for this may be "calculate_metrics_using_transformed_predictions",
+            but that's a bit verbose--even by my standards
 
         Other Parameters
         ----------------
@@ -432,6 +450,7 @@ class Environment:
         self.do_full_save = do_full_save
         self.experiment_callbacks = experiment_callbacks or []
         self.experiment_recorders = experiment_recorders or []
+        self.save_transformed_metrics = save_transformed_metrics
 
         self.result_paths = {
             "root": self.results_path,
@@ -495,6 +514,10 @@ class Environment:
 
     @target_column.setter
     def target_column(self, value):
+        if value is None:
+            # TODO: Clean up this logic duplicated by `update_custom_environment_params`' setting of
+            #   `target_column` to its default -- `save_transformed_metrics` needs it on __init__
+            value = [self.DEFAULT_PARAMS["target_column"]]
         self._target_column = [value] if isinstance(value, str) else value
 
     #################### `train_dataset` ####################
@@ -594,6 +617,37 @@ class Environment:
                 continue
             if cb.__name__ != "LambdaCallback":
                 raise ValueError(f"experiment_callbacks must be LambdaCallback instances, not {cb}")
+
+    #################### `save_transformed_metrics` ####################
+    @property
+    def save_transformed_metrics(self) -> bool:
+        """If `save_transformed_metrics` is True, and target transformation does occur, then
+        experiment metrics are calculated using the transformed targets and predictions, which is
+        the form returned directly by a fitted model's `predict` method. For example, if target data
+        is label-encoded, and an :class:`feature_engineering.EngineerStep` is used to one-hot encode
+        the target, then metrics functions will receive the following as input:
+        (one-hot-encoded targets, one-hot-encoded predictions).
+
+        Conversely, if `save_transformed_metrics` is False, and target transformation does occur,
+        then experiment metrics are calculated using the inverse of the transformed targets and
+        predictions, which is same form as the original target data. Continuing the example of
+        label-encoded target data, and an :class:`feature_engineering.EngineerStep` to one-hot
+        encode the target, in this case, metrics functions will receive the following as input:
+        (label-encoded targets, label-encoded predictions)"""
+        return self._save_transformed_metrics
+
+    @save_transformed_metrics.setter
+    def save_transformed_metrics(self, value):
+        if value is None:
+            if all(is_numeric_dtype(self.train_dataset[col]) for col in self.target_column):
+                # If all target columns are numeric, assume metric evaluation should use the
+                #   original/inverted targets and predictions
+                value = False
+            else:
+                # If any target column is non-numeric, assume evaluation should use the transformed
+                #   targets and predictions because most metrics require numeric inputs
+                value = True
+        self._save_transformed_metrics = value
 
     ##################################################
     # Core Methods

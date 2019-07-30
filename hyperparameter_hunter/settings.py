@@ -94,29 +94,6 @@ class G(object):
         target, which is the same form as the original target data. Continuing the example of
         label-encoded target data, and an :class:`feature_engineering.EngineerStep` to one-hot
         encode the target, in this case, label-encoded predictions will be saved.
-    save_transformed_metrics: True
-        Declares manner in which a model's predictions should be evaluated through the provided
-        :attr:`environment.Environment.metrics`, with regard to
-        :class:`feature_engineering.FeatureEngineer` transformations. If no transformation of the
-        target variable takes place (either through :class:`feature_engineering.FeatureEngineer`,
-        :class:`feature_engineering.EngineerStep`, or otherwise), then this setting can be ignored.
-
-        A more descriptive name for this may be "calculate_metrics_using_transformed_predictions",
-        but that's a bit verbose, even by my standards.
-
-        If `save_transformed_metrics` is True (default), and target transformation does occur, then
-        experiment metrics are calculated using the transformed targets and predictions, which is
-        the form returned directly by a fitted model's `predict` method. For example, if target data
-        is label-encoded, and an :class:`feature_engineering.EngineerStep` is used to one-hot encode
-        the target, then metrics functions will receive the following as input:
-        (one-hot-encoded targets, and one-hot-encoded predictions).
-
-        Conversely, if `save_transformed_metrics` is False, and target transformation does occur,
-        then experiment metrics are calculated using the inverse of the transformed targets and
-        predictions, which is same form as the original target data. Continuing the example of
-        label-encoded target data, and an :class:`feature_engineering.EngineerStep` to one-hot
-        encode the target, in this case, metrics functions will receive the following as input:
-        (label-encoded targets, and label-encoded predictions).
     priority_callbacks: Tuple
         Intended for internal use only. The contents of this tuple are inserted at the front of an
         Experiment's list of callback bases via :class:`experiment_core.ExperimentMeta`, ahead of
@@ -139,7 +116,6 @@ class G(object):
 
     #################### Miscellaneous Settings ####################
     save_transformed_predictions = False
-    save_transformed_metrics = True
 
     #################### Internal Settings ####################
     priority_callbacks = tuple()

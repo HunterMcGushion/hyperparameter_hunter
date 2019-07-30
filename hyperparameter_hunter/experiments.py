@@ -379,8 +379,7 @@ class BaseExperiment(ScoringMixIn):
         #################### Build Datasets ####################
         data_kwargs = dict(feature_selector=self.feature_selector, target_column=self.target_column)
         self.data_train = TrainDataset(self.train_dataset, require_data=True, **data_kwargs)
-        # TODO: Might be better to initialize `data_oof` with same data as `data_train`
-        self.data_oof = OOFDataset(None, **data_kwargs)
+        self.data_oof = OOFDataset(self.train_dataset, **data_kwargs)
         self.data_holdout = HoldoutDataset(self.holdout_dataset, **data_kwargs)
         self.data_test = TestDataset(self.test_dataset, feature_selector=self.feature_selector)
 
