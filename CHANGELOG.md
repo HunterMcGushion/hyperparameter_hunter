@@ -1,6 +1,13 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Bug Fixes
+* Fix bug causing metrics to be evaluated using the transformed targets/predictions, rather than the 
+  inverted (original space) predictions, after performing target transformation via `EngineerStep`
+    * Adds new `Environment` kwarg: `save_transformed_metrics`, which dictates whether metrics are 
+      calculated using transformed targets/predictions (True), or inverted data (False)
+    * Default value of `save_transformed_metrics` is chosen based on dtype of targets. See [#169](https://github.com/HunterMcGushion/hyperparameter_hunter/pull/169)
+
 
 <a name="3.0.0beta0"></a>
 ## [3.0.0beta0] (2019-07-14)
