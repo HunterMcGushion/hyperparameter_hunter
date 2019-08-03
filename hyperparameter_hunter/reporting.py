@@ -388,7 +388,7 @@ class OptimizationReporter:
 
     def print_saved_results_header(self):
         """Print a header signifying that saved Experiment results are being read"""
-        header = f"{_Color.RED}Saved Result Files{_Color.STOP}"
+        header = f"{_Color.RED}Saved Results{_Color.STOP}"
         self.print_header(header, (_Color.RED + "_" * self._line_len() + _Color.STOP))
 
     def print_random_points_header(self):
@@ -409,13 +409,13 @@ class OptimizationReporter:
         line_len: Int
             The number of characters the line should span"""
         line_len = 24
-        # 24 is from "  #|   Time|      Value|", which are the required heading columns, except
+        # 24 is from "  #|   Time|      Score|", which are the required heading columns, except
         #   for "ID", whose (optional) length is calculated below
         # Can also be expressed as the sum of following four numbers:
         #   5  == ``len(self.end) * 3 - 1`` (subtract 1 to drop extra space at right-side table end)
         #   3  == size of "#" column
         #   6  == size of "Time" column
-        #   10 == size of "Value" column
+        #   10 == size of "Score" column
 
         line_len += sum([_ + 4 for _ in self.sizes])
         line_len += self.show_experiment_id + len(self.end) if self.show_experiment_id else 0
@@ -438,7 +438,7 @@ class OptimizationReporter:
             self._print_column_name("ID", self.show_experiment_id)
         self._print_column_name("Time", 6)
         # size=6 because `expand_mins_secs` returns 2 units of time, each with 2 digits + 1 letter
-        self._print_column_name("Value", 10)
+        self._print_column_name("Score", 10)
         # size=10 for 5 fractional digits/mantissa, plus decimal itself, leaving 4 spaces for
         #   the integer part/characteristic, potentially prefixed by a negative symbol
 
