@@ -808,6 +808,9 @@ class EngineerStep:
                 return category
         raise ValueError("`step_dict` could not be found in `dimension`")
 
+    def __repr__(self) -> str:
+        return "{}({})".format(self.__class__.__name__, self.name)
+
 
 class FeatureEngineer:
     def __init__(self, steps=None, do_validate=False, **datasets: DFDict):
