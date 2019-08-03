@@ -320,3 +320,25 @@ def test_dimension_count_checking_single_point(et_optimizer, tell_x, tell_y):
 def test_dimension_count_checking_multiple_points(et_optimizer, tell_x, tell_y):
     with pytest.raises(ValueError, match="Not all points have the same dimensions as the space"):
         et_optimizer.tell(tell_x, tell_y)
+
+
+@pytest.mark.parametrize("base_estimator", ["GP", "RF", "ET", "GBRT", "gp", "rf", "et", "gbrt"])
+@pytest.mark.parametrize("next_x", [(-1.0,)])
+def test_warn_on_re_ask(base_estimator, next_x):
+    """Test that `Optimizer.warn_on_re_ask` logs warning when `Optimizer._ask` suggests a point
+    that has already been `tell`-ed to `Optimizer`
+
+    Notes
+    -----
+    "DUMMY"/"dummy" is invalid for `base_estimator` here because it always suggests random points"""
+    # Initialize `Optimizer` and `tell` it about `next_x`
+    opt = Optimizer(
+        [(-2.0, 2.0)], base_estimator, n_initial_points=1, random_state=1, warn_on_re_ask=True
+    )
+    opt.tell(next_x, 1.0)
+
+    # Force `Optimizer._next_x` (set by `Optimizer._tell`) to the point we just told it
+    opt._next_x = next_x
+
+    with pytest.warns(UserWarning, match="Repeated suggestion: .*"):
+        opt.ask()
