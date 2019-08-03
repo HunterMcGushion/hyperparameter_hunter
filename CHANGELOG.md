@@ -21,6 +21,11 @@
       calculated using transformed targets/predictions (True), or inverted data (False)
     * Default value of `save_transformed_metrics` is chosen based on dtype of targets. See [#169](https://github.com/HunterMcGushion/hyperparameter_hunter/pull/169)
 
+### Changes
+* Add `warn_on_re_ask` kwarg to all OptPro initializers. If True (default=False), a warning will be 
+  logged whenever the internal optimizer suggests a point that has already been evaluated--before 
+  returning a new, random point to evaluate instead
+
 ### Breaking Changes
 * Ignore Pandas version during dataset hashing for more consistent `Environment` keys. See [#166](https://github.com/HunterMcGushion/hyperparameter_hunter/issues/166)
 

@@ -28,6 +28,7 @@ was taken from the original Scikit-Optimize source, and how it was modified ther
 ##################################################
 # Import Own Assets
 ##################################################
+from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.space.space_core import Space, normalize_dimensions
 
 ##################################################
@@ -137,6 +138,14 @@ class Optimizer(object):
         Additional arguments to be passed to the acquisition function.
     acq_optimizer_kwargs: Dict (optional)
         Additional arguments to be passed to the acquisition optimizer
+    warn_on_re_ask: Boolean, default=False
+        If True, and the internal `optimizer` recommends a point that has already been evaluated
+        on invocation of `ask`, a warning is logged before recommending a random point. Either
+        way, a random point is used instead of already-evaluated recommendations. However,
+        logging the fact that this has taken place can be useful to indicate that the optimizer
+        may be stalling, especially if it repeatedly recommends the same point. In these cases,
+        if the suggested point is not optimal, it can be helpful to switch a different OptPro
+        (especially `DummyOptPro`), which will suggest points using different criteria
 
     Attributes
     ----------
@@ -169,6 +178,7 @@ class Optimizer(object):
         random_state=None,
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
+        warn_on_re_ask=False,
     ):
         self.rng = check_random_state(random_state)
         self.space = Space(dimensions)
@@ -212,6 +222,8 @@ class Optimizer(object):
         n_jobs = acq_optimizer_kwargs.get("n_jobs", 1)
         self.n_jobs = n_jobs
         self.acq_optimizer_kwargs = acq_optimizer_kwargs
+
+        self.warn_on_re_ask = warn_on_re_ask
 
         #################### Configure Search Space ####################
         if isinstance(self.base_estimator, GaussianProcessRegressor):
@@ -376,7 +388,12 @@ class Optimizer(object):
         Returns
         -------
         Some point in :attr:`space`, which is random while less than `n_initial_points` observations
-        have been `tell`-ed. After that, `base_estimator` is used to determine the next point"""
+        have been `tell`-ed. After that, `base_estimator` is used to determine the next point
+
+        Notes
+        -----
+        If the suggested point has already been evaluated, a random point will be returned instead,
+        optionally accompanied by a warning message (depending on :attr:`warn_on_re_ask`)"""
         if self._n_initial_points > 0 or self.base_estimator is None:
             # Does not copy `self.rng` in order to keep advancing random state
             return self.space.rvs(random_state=self.rng)[0]
@@ -384,10 +401,18 @@ class Optimizer(object):
             if not self.models:
                 raise RuntimeError("Random evaluations exhausted and no model has been fit")
 
+            #################### Check for Repeated Suggestion ####################
             next_x = self._next_x
+            # Check distances between `next_x` and all evaluated points
             min_delta_x = min([self.space.distance(next_x, xi) for xi in self.Xi])
-            if abs(min_delta_x) <= 1e-8:
-                warnings.warn("Objective has been evaluated at this point before")
+
+            if abs(min_delta_x) <= 1e-8:  # `next_x` has already been evaluated
+                if self.warn_on_re_ask:
+                    G.warn_("Repeated suggestion: {}".format(next_x))
+
+                # Set `_next_x` to random point, then re-invoke `_ask` to validate new point
+                self._next_x = self.space.rvs(random_state=self.rng)[0]
+                return self._ask()
 
             # Return point computed from last call to `tell`
             return next_x

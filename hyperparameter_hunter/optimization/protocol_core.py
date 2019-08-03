@@ -109,6 +109,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         verbose=1,
         read_experiments=True,
         reporter_parameters=None,
+        warn_on_re_ask=False,
     ):
         """Base class for intermediate base optimization protocol classes
 
@@ -144,6 +145,14 @@ class BaseOptPro(metaclass=MergedOptProMeta):
             `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
             in `G.Env.metrics`. In nearly all cases, the "do_maximize" key should be ignored,
             as there are very few reasons to explicitly include it
+        warn_on_re_ask: Boolean, default=False
+            If True, and the internal `optimizer` recommends a point that has already been evaluated
+            on invocation of `ask`, a warning is logged before recommending a random point. Either
+            way, a random point is used instead of already-evaluated recommendations. However,
+            logging the fact that this has taken place can be useful to indicate that the optimizer
+            may be stalling, especially if it repeatedly recommends the same point. In these cases,
+            if the suggested point is not optimal, it can be helpful to switch a different OptPro
+            (especially `DummyOptPro`), which will suggest points using different criteria
 
         Methods
         -------
@@ -163,6 +172,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         self.verbose = verbose
         self.read_experiments = read_experiments
         self.reporter_parameters = reporter_parameters or {}
+        self.warn_on_re_ask = warn_on_re_ask
 
         #################### Experiment Guidelines ####################
         self.model_initializer = None
@@ -754,6 +764,7 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
         verbose=1,
         read_experiments=True,
         reporter_parameters=None,
+        warn_on_re_ask=False,
         #################### Optimizer Class Parameters ####################
         base_estimator="GP",
         n_initial_points=10,
@@ -802,6 +813,14 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             `reporter_params`, with a value inferred from the `direction` of :attr:`target_metric`
             in `G.Env.metrics`. In nearly all cases, the "do_maximize" key should be ignored,
             as there are very few reasons to explicitly include it
+        warn_on_re_ask: Boolean, default=False
+            If True, and the internal `optimizer` recommends a point that has already been evaluated
+            on invocation of `ask`, a warning is logged before recommending a random point. Either
+            way, a random point is used instead of already-evaluated recommendations. However,
+            logging the fact that this has taken place can be useful to indicate that the optimizer
+            may be stalling, especially if it repeatedly recommends the same point. In these cases,
+            if the suggested point is not optimal, it can be helpful to switch a different OptPro
+            (especially `DummyOptPro`), which will suggest points using different criteria
 
         Other Parameters
         ----------------
@@ -915,6 +934,7 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             verbose=verbose,
             read_experiments=read_experiments,
             reporter_parameters=reporter_parameters,
+            warn_on_re_ask=warn_on_re_ask,
         )
 
     def _set_hyperparameter_space(self):
@@ -943,6 +963,7 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
             random_state=self.random_state,
             acq_func_kwargs=self.acquisition_function_kwargs,
             acq_optimizer_kwargs=self.acquisition_optimizer_kwargs,
+            warn_on_re_ask=self.warn_on_re_ask,
         )
 
     def _update_optimizer(self, hyperparameters, score, fit=True):
@@ -980,14 +1001,7 @@ class SKOptPro(BaseOptPro, metaclass=ABCMeta):
         -------
         current_hyperparameters: Dict
             The next set of hyperparameters that will be searched"""
-        _current_hyperparameters = self.optimizer.ask()
-
-        if _current_hyperparameters == self.current_hyperparameters_list:
-            new_parameters = self.space.rvs(random_state=None)[0]
-            G.debug_("REPEATED  asked={}  new={}".format(_current_hyperparameters, new_parameters))
-            _current_hyperparameters = new_parameters
-
-        self.current_hyperparameters_list = _current_hyperparameters
+        self.current_hyperparameters_list = self.optimizer.ask()
 
         current_hyperparameters = dict(
             zip(self.space.names(use_location=False), self.current_hyperparameters_list)
