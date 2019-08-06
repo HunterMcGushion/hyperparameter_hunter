@@ -25,6 +25,7 @@ from hyperparameter_hunter import Environment, FeatureEngineer, EngineerStep, __
 from hyperparameter_hunter import CVExperiment, Real, Integer, Categorical
 from hyperparameter_hunter import BayesianOptPro, DummyOptPro, ExtraTreesOptPro
 from hyperparameter_hunter.utils.learning_utils import get_boston_data
+from hyperparameter_hunter.utils.version_utils import HHVersion
 
 ##################################################
 # Import Miscellaneous Assets
@@ -114,7 +115,7 @@ def test_saved_engineer_step_update_0(env_boston, protocol_0, protocol_1):
     assert len(opt_1.similar_experiments) == 3  # From `opt_pro`'s `iterations`
 
 
-@pytest.mark.xfail(condition="__version__ < '3.0.0alpha2'")
+@pytest.mark.xfail(condition="HHVersion(__version__) < '3.0.0alpha2'")
 @pytest.mark.parametrize(
     ["protocol_0", "protocol_1"], [(DummyOptPro, BayesianOptPro), (BayesianOptPro, BayesianOptPro)]
 )
