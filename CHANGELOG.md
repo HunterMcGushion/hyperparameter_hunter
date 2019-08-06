@@ -1,6 +1,10 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+
+<a name="3.0.0beta1"></a>
+## [3.0.0beta1] (2019-08-05)
+
 ### Features
 * Enable OptPro's to identify `similar_experiments` when using a search space whose dimensions 
   include `Categorical.optional` `EngineerStep`s at indexes that may differ from those of the 
@@ -771,7 +775,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0beta0...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0beta1...HEAD
+[3.0.0beta1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0beta0...v3.0.0beta1
 [3.0.0beta0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha2...v3.0.0beta0
 [3.0.0alpha2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha1...v3.0.0alpha2
 [3.0.0alpha1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha0...v3.0.0alpha1
