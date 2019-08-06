@@ -1092,7 +1092,8 @@ allowing users to define `eval_set` only if they want to (#22)
 * Initial release
 
 
-[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0beta1...HEAD
+[Unreleased]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0beta1...v3.0.0
 [3.0.0beta1]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0beta0...v3.0.0beta1
 [3.0.0beta0]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha2...v3.0.0beta0
 [3.0.0alpha2]: https://github.com/HunterMcGushion/hyperparameter_hunter/compare/v3.0.0alpha1...v3.0.0alpha2
