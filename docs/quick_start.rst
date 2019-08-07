@@ -13,7 +13,7 @@ Set Up an Environment
     from sklearn.model_selection import StratifiedKFold
     from xgboost import XGBClassifier
 
-    data = load_breast_cancer
+    data = load_breast_cancer()
     df = pd.DataFrame(data=data.data, columns=data.feature_names)
     df["target"] = data.target
 
@@ -22,7 +22,7 @@ Set Up an Environment
 	    results_path="path/to/results/directory",
 	    metrics=["roc_auc_score"],
 	    cv_type=StratifiedKFold,
-	    cv_params=dict(n_splits=5, shuffle=2, random_state=32)
+	    cv_params=dict(n_splits=5, shuffle=True, random_state=32)
     )
 
 Individual Experimentation
