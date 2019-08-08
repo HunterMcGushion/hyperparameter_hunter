@@ -34,7 +34,7 @@ You're a glorious peacock, and we just wanna let you fly.
       classes 
     * `FeatureEngineer` can be passed as the `feature_engineer` kwarg to either: 
         1. Instantiate a [`CVExperiment`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.experiments.BaseExperiment), or
-        2. Call the [`set_experiment_guidelines`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.optimization_core.BaseOptimizationProtocol.set_experiment_guidelines)
+        2. Call the [`forge_experiment`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.optimization.html#hyperparameter_hunter.optimization.protocol_core.BaseOptPro.forge_experiment)
            method of any Optimization Protocol
     * `FeatureEngineer` is just a container for `EngineerStep`s
         * Instantiate it with a simple list of `EngineerStep`s, or functions to construct `EngineerStep`s
@@ -137,7 +137,7 @@ You're a glorious peacock, and we just wanna let you fly.
   # Pretend we already set up our `Environment` and we want to optimize the our scaler
   # We'll also throw in some standard hyperparameter optimization - This is HyperparameterHunter, after all
   optimizer_0 = GBRT()
-  optimizer_0.set_experiment_guidelines(
+  optimizer_0.forge_experiment(
       Ridge, 
       dict(alpha=Real(0.5, 1.0), max_iter=Integer(500, 2000), solver="svd"), 
       feature_engineer=FeatureEngineer([Categorical([standard_scale, min_max_scale])])
@@ -159,7 +159,7 @@ You're a glorious peacock, and we just wanna let you fly.
       return all_targets, np.expm1
   
   optimizer_1 = GBRT()
-  optimizer_1.set_experiment_guidelines(
+  optimizer_1.forge_experiment(
       Ridge, {}, feature_engineer=FeatureEngineer([
           Categorical([standard_scale, min_max_scale]),
           Categorical([quantile_transform, log_transform]),
@@ -191,14 +191,14 @@ You're a glorious peacock, and we just wanna let you fly.
   
   # Pretend we already set up our `Environment` and we want to optimize the our scaler
   optimizer_0 = DummySearch()
-  optimizer_0.set_experiment_guidelines(
+  optimizer_0.forge_experiment(
       Ridge, {}, feature_engineer=FeatureEngineer([
           Categorical([standard_scale, min_max_scale])
       ])
   )
   # `optimizer_0` above will try each of our scaler functions, but what if we shouldn't use either?
   optimizer_1 = DummySearch()
-  optimizer_1.set_experiment_guidelines(
+  optimizer_1.forge_experiment(
       Ridge, {}, feature_engineer=FeatureEngineer([
           Categorical([standard_scale, min_max_scale], optional=True)
       ])
