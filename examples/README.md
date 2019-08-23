@@ -116,7 +116,7 @@
         <td>Multiple-run-averaging in cross-validation</td>    
     </tr>
     <tr>
-        <th rowspan=1 nowrap>SKLearn</th>
+        <th rowspan=2 nowrap>SKLearn</th>
         <td nowrap>Classification</td>
         <td nowrap>
             <a href="sklearn_examples/classification.ipynb">NB</a>
@@ -124,6 +124,13 @@
             <a href="sklearn_examples/classification.py">Script</a>
         </td>
         <td>Consecutive Experiments with different models</td>
+    </tr>
+    <tr>
+        <td nowrap>Class Weight</td>
+        <td nowrap>
+            <a href="sklearn_examples/class_weight.py">Script</a>
+        </td>
+        <td>Optimize class_weight in multi-classification - Iris dataset</td>
     </tr>
     <tr>
         <th rowspan=2 nowrap>XGBoost</th>
