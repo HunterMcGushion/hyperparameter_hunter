@@ -707,8 +707,8 @@ class BaseCVExperiment(BaseExperiment):
         self.on_run_start()
         self.model = model_selector(self.model_initializer)(
             self.model_initializer,
-            self.model_init_params,
-            self.model_extra_params,
+            deepcopy(self.model_init_params),
+            deepcopy(self.model_extra_params),
             train_input=self.data_train.input.T.fold,
             train_target=self.data_train.target.T.fold,
             validation_input=self.data_oof.input.T.fold,
