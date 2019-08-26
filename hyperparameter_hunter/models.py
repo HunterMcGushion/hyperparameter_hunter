@@ -32,6 +32,11 @@ import warnings
 ##################################################
 import sklearn.utils as sklearn_utils
 
+try:
+    from keras import backend as K
+except ImportError:
+    K = None
+
 load_model = lambda _: _
 
 
@@ -466,6 +471,9 @@ class KerasModel(Model):
         validation_data = None
         if (self.validation_input is not None) and (self.validation_target is not None):
             validation_data = (self.validation_input, self.validation_target)
+
+        # Clear current TF graph to remove old models
+        K.clear_session()
 
         return self.model_initializer(
             build_fn=self.initialization_params["build_fn"],
