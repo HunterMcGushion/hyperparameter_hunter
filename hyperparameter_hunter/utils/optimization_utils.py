@@ -10,7 +10,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exceptions import ContinueRemap
+from hyperparameter_hunter.io.exceptions import ContinueRemap
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.space.dimensions import Real, Integer, Categorical, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
@@ -198,15 +198,15 @@ def visit_feature_engineer(path, key, value):
     >>> visit_feature_engineer(("feature_engineer", "steps"), "foo", lambda _: _)
     Traceback (most recent call last):
         File "optimization_utils.py", line ?, in visit_feature_engineer
-    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing
+    hyperparameter_hunter.io.exceptions.ContinueRemap: Just keep doing what you were doing
     >>> visit_feature_engineer(("feature_engineer",), "foo", dict())
     Traceback (most recent call last):
         File "optimization_utils.py", line ?, in visit_feature_engineer
-    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing
+    hyperparameter_hunter.io.exceptions.ContinueRemap: Just keep doing what you were doing
     >>> visit_feature_engineer(("foo",), "bar", dict())
     Traceback (most recent call last):
         File "optimization_utils.py", line ?, in visit_feature_engineer
-    hyperparameter_hunter.exceptions.ContinueRemap: Just keep doing what you were doing"""
+    hyperparameter_hunter.io.exceptions.ContinueRemap: Just keep doing what you were doing"""
     if path and path[0] == "feature_engineer":
         # Drop dataset hashes
         if key in ("datasets", "original_hashes", "updated_hashes") and isinstance(value, dict):

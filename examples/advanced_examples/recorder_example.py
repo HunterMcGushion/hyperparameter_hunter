@@ -1,5 +1,5 @@
 from hyperparameter_hunter import Environment, BayesianOptPro, Real, Integer, Categorical
-from hyperparameter_hunter.recorders import UnsortedIDLeaderboardRecorder, BaseRecorder
+from hyperparameter_hunter.io.recorders import UnsortedIDLeaderboardRecorder, BaseRecorder
 from hyperparameter_hunter.utils.file_utils import make_dirs, read_json
 import pandas as pd
 from sklearn.datasets import load_breast_cancer

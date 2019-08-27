@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import settings
-from hyperparameter_hunter.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
+from hyperparameter_hunter.io.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.keys.makers import CrossExperimentKeyMaker
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
 

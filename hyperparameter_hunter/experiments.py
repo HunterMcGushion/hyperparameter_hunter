@@ -21,23 +21,22 @@ on what's going on in :mod:`experiment_core`, and its related modules"""
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import __version__
 from hyperparameter_hunter.algorithm_handlers import (
     identify_algorithm,
     identify_algorithm_hyperparameters,
 )
 from hyperparameter_hunter.data import TrainDataset, OOFDataset, HoldoutDataset, TestDataset
-from hyperparameter_hunter.exceptions import (
+from hyperparameter_hunter.experiment_core import ExperimentMeta
+from hyperparameter_hunter.feature_engineering import FeatureEngineer
+from hyperparameter_hunter.io.exceptions import (
     EnvironmentInactiveError,
     EnvironmentInvalidError,
     RepeatedExperimentError,
 )
-from hyperparameter_hunter.experiment_core import ExperimentMeta
-from hyperparameter_hunter.feature_engineering import FeatureEngineer
+from hyperparameter_hunter.io.recorders import RecorderList
 from hyperparameter_hunter.keys.makers import HyperparameterKeyMaker
 from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_metric
 from hyperparameter_hunter.models import model_selector
-from hyperparameter_hunter.recorders import RecorderList
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
 
@@ -58,7 +57,6 @@ import warnings
 ##################################################
 # Import Learning Assets
 ##################################################
-from sklearn.model_selection import KFold, StratifiedKFold, RepeatedKFold, RepeatedStratifiedKFold
 import sklearn.utils as sklearn_utils
 
 pd.set_option("display.expand_frame_repr", False)

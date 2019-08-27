@@ -8,7 +8,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exceptions import DeprecatedWarning, UnsupportedWarning
+from hyperparameter_hunter.io.exceptions import DeprecatedWarning, UnsupportedWarning
 
 ##################################################
 # Import Miscellaneous Assets

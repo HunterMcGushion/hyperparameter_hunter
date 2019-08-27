@@ -12,6 +12,14 @@ hyperparameter\_hunter.keys.hashing module
     :undoc-members:
     :show-inheritance:
 
+hyperparameter\_hunter.keys.ids module
+--------------------------------------
+
+.. automodule:: hyperparameter_hunter.keys.ids
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 hyperparameter\_hunter.keys.makers module
 -----------------------------------------
 

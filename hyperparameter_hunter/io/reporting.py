@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import exceptions
+from hyperparameter_hunter.io import exceptions
 from hyperparameter_hunter.space.dimensions import Categorical
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import now_time, expand_mins_secs

@@ -17,8 +17,8 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exceptions import EnvironmentInvalidError, EnvironmentInactiveError
 from hyperparameter_hunter.feature_engineering import FeatureEngineer, EngineerStep
+from hyperparameter_hunter.io.exceptions import EnvironmentInvalidError, EnvironmentInactiveError
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.library_helpers.keras_helper import (
     keras_callback_to_dict,

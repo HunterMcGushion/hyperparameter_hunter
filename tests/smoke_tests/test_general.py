@@ -4,8 +4,11 @@
 from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
 from hyperparameter_hunter import BayesianOptPro, ExtraTreesOptPro, lambda_callback
 from hyperparameter_hunter.callbacks.recipes import confusion_matrix_oof, confusion_matrix_holdout
-from hyperparameter_hunter.recorders import YAMLDescriptionRecorder, UnsortedIDLeaderboardRecorder
-from hyperparameter_hunter.result_reader import has_experiment_result_file
+from hyperparameter_hunter.io.recorders import (
+    YAMLDescriptionRecorder,
+    UnsortedIDLeaderboardRecorder,
+)
+from hyperparameter_hunter.io.result_reader import has_experiment_result_file
 from hyperparameter_hunter.utils.learning_utils import (
     get_toy_classification_data,
     get_breast_cancer_data,

@@ -2,7 +2,7 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import BaseLoggerCallback
-from hyperparameter_hunter.reporting import format_evaluation, format_fold_run, _Color
+from hyperparameter_hunter.io.reporting import format_evaluation, format_fold_run, _Color
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.general_utils import sec_to_hms
 
