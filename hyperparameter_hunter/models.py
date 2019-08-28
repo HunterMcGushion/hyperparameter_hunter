@@ -54,11 +54,6 @@ def model_selector(model_initializer):
 
     Examples
     --------
-    >>> from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
-    >>> model_selector(KerasClassifier) == KerasModel
-    True
-    >>> model_selector(KerasRegressor) == KerasModel
-    True
     >>> from sklearn.svm import SVC
     >>> model_selector(SVC) == Model
     True

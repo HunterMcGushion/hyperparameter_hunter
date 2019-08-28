@@ -2,17 +2,40 @@ dist: xenial
 language: python
 python:
   - "3.6"
+matrix:
+  include:
+    - python: 3.6
+      env: KERAS="true"
+    - python: 3.6
+      env: KERAS="false"
+    - python: 3.7
+      env: KERAS="true"
+    - python: 3.7
+      env: KERAS="false"
+    # Check Black code style compliance
+    - name: "Black code style"
+      python: 3.6
+      script:
+        - black --check --diff hyperparameter_hunter tests examples setup.py
+      after_success: skip
 install:
   - pip install --upgrade pip
   - pip install flake8
   - pip install -r requirements.txt
+  # Install Keras/TensorFlow for Keras-enabled Travis jobs
+  - if [[ "$KERAS" == "true" ]]; then
+      pip install keras;
+      pip install tensorflow;
+    fi
 before_script:
-  # stop the build if there are Python syntax errors or undefined names
+  # Stop the build if there are Python syntax errors or undefined names
   - flake8 . --count --select=E901,E999,F821,F822,F823 --ignore=E266 --show-source --statistics
-  # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
+  # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
   - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --ignore=E266 --statistics
 script:
   - make test
 after_success:
+  # Combine coverage reports from Travis jobs
+  - coverage combine --append
   - coveralls
   - codecov

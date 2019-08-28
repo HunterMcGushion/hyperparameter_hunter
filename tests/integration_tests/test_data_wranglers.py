@@ -3,11 +3,7 @@
 ##################################################
 from hyperparameter_hunter import Environment, CVExperiment, FeatureEngineer
 from hyperparameter_hunter.callbacks.recipes import lambda_check_train_targets
-from hyperparameter_hunter.data.data_chunks.target_chunks import (
-    TrainTargetChunk,
-    # OOFTargetChunk,  # TODO: Add tests
-    # HoldoutTargetChunk,  # TODO: Add tests
-)
+from hyperparameter_hunter.data.data_chunks.target_chunks import TrainTargetChunk
 
 ##################################################
 # Import Miscellaneous Assets
