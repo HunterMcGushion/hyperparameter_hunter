@@ -24,10 +24,10 @@ from sklearn.svm import SVC
     ["initializer", "model_cls"],
     [
         pytest.param(
-            KerasClassifier, KerasModel, mark=pytest.mark.skipif("keras" not in sys.modules)
+            KerasClassifier, KerasModel, marks=pytest.mark.skipif("'keras' not in sys.modules")
         ),
         pytest.param(
-            KerasRegressor, KerasModel, mark=pytest.mark.skipif("keras" not in sys.modules)
+            KerasRegressor, KerasModel, marks=pytest.mark.skipif("'keras' not in sys.modules")
         ),
         (SVC, Model),
         (None, Model),
