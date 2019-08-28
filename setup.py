@@ -64,7 +64,7 @@ setup(
             "hyperparameter-hunter",
             # "keras",
             # "tensorflow",
-            "yaml",
+            "pyyaml",
             "xgboost",
             "coveralls",
             "codecov",
