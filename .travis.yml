@@ -13,7 +13,8 @@ matrix:
     - python: 3.7
       env: KERAS="false"
     # Check Black code style compliance
-    - python: 3.6
+    - name: "Black code style"
+      python: 3.6
       script:
         - black --check --diff hyperparameter_hunter tests examples setup.py
       after_success: skip
