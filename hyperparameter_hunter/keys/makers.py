@@ -39,13 +39,11 @@ from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 ##################################################
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-import dill  # TODO: Figure out if this can be safely removed
 from functools import partial
 from inspect import isclass, getsource
 from os import listdir
 import os.path
 import pandas as pd
-from pickle import PicklingError
 import shelve
 
 ##################################################
