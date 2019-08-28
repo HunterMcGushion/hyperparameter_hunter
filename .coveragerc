@@ -1,4 +1,5 @@
 [run]
+parallel = True
 omit =
     hyperparameter_hunter/library_helpers/__temp_files/*
 

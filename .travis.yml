@@ -9,6 +9,9 @@ matrix:
     - python: 3.6
       env: KERAS="false"
     - python: 3.7
+      env: KERAS="true"
+    - python: 3.7
+      env: KERAS="false"
 install:
   - pip install --upgrade pip
   - pip install flake8
@@ -25,5 +28,6 @@ before_script:
 script:
   - make test
 after_success:
+  - coverage combine
   - coveralls
   - codecov
