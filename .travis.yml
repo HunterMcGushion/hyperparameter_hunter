@@ -28,6 +28,6 @@ before_script:
 script:
   - make test
 after_success:
-  - coverage combine
+  - coverage combine --append
   - coveralls
   - codecov
