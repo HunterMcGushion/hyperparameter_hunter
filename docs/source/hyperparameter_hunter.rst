@@ -8,6 +8,7 @@ Subpackages
 
     hyperparameter_hunter.callbacks
     hyperparameter_hunter.data
+    hyperparameter_hunter.io
     hyperparameter_hunter.keys
     hyperparameter_hunter.library_helpers
     hyperparameter_hunter.optimization
@@ -29,14 +30,6 @@ hyperparameter\_hunter.environment module
 -----------------------------------------
 
 .. automodule:: hyperparameter_hunter.environment
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.exceptions module
-----------------------------------------
-
-.. automodule:: hyperparameter_hunter.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
@@ -73,14 +66,6 @@ hyperparameter\_hunter.importer module
     :undoc-members:
     :show-inheritance:
 
-hyperparameter\_hunter.leaderboards module
-------------------------------------------
-
-.. automodule:: hyperparameter_hunter.leaderboards
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 hyperparameter\_hunter.metrics module
 -------------------------------------
 
@@ -93,30 +78,6 @@ hyperparameter\_hunter.models module
 ------------------------------------
 
 .. automodule:: hyperparameter_hunter.models
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.recorders module
----------------------------------------
-
-.. automodule:: hyperparameter_hunter.recorders
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.reporting module
----------------------------------------
-
-.. automodule:: hyperparameter_hunter.reporting
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-hyperparameter\_hunter.result\_reader module
---------------------------------------------
-
-.. automodule:: hyperparameter_hunter.result_reader
     :members:
     :undoc-members:
     :show-inheritance:

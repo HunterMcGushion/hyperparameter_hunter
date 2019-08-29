@@ -2,8 +2,8 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import FeatureEngineer, Categorical
-from hyperparameter_hunter.exceptions import IncompatibleCandidateError
-from hyperparameter_hunter.result_reader import validate_fe_steps
+from hyperparameter_hunter.i_o.exceptions import IncompatibleCandidateError
+from hyperparameter_hunter.i_o.result_reader import validate_fe_steps
 from hyperparameter_hunter.space.dimensions import RejectedOptional
 
 ##################################################

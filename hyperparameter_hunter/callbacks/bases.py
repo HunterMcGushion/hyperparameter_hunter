@@ -24,7 +24,7 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.exceptions import DeprecatedWarning
+from hyperparameter_hunter.i_o.exceptions import DeprecatedWarning
 from hyperparameter_hunter.settings import G
 
 ##################################################
