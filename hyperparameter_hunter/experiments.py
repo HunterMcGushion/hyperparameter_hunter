@@ -28,12 +28,12 @@ from hyperparameter_hunter.algorithm_handlers import (
 from hyperparameter_hunter.data import TrainDataset, OOFDataset, HoldoutDataset, TestDataset
 from hyperparameter_hunter.experiment_core import ExperimentMeta
 from hyperparameter_hunter.feature_engineering import FeatureEngineer
-from hyperparameter_hunter.io.exceptions import (
+from hyperparameter_hunter.i_o.exceptions import (
     EnvironmentInactiveError,
     EnvironmentInvalidError,
     RepeatedExperimentError,
 )
-from hyperparameter_hunter.io.recorders import RecorderList
+from hyperparameter_hunter.i_o.recorders import RecorderList
 from hyperparameter_hunter.keys.makers import HyperparameterKeyMaker
 from hyperparameter_hunter.metrics import ScoringMixIn, get_formatted_target_metric
 from hyperparameter_hunter.models import model_selector

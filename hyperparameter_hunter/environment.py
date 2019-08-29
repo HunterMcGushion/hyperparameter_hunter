@@ -23,7 +23,7 @@ Despite the fact that :mod:`hyperparameter_hunter.settings` is the only module l
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.callbacks.bases import BaseCallback
-from hyperparameter_hunter.io.reporting import ReportingHandler
+from hyperparameter_hunter.i_o.reporting import ReportingHandler
 from hyperparameter_hunter.keys.makers import CrossExperimentKeyMaker
 from hyperparameter_hunter.metrics import format_metrics
 from hyperparameter_hunter.sentinels import DatasetSentinel
