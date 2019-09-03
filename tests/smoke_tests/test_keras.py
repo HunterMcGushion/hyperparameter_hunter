@@ -1,12 +1,14 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter import Environment, Real, Integer, Categorical, DummyOptPro
+from hyperparameter_hunter import Environment, CVExperiment, Real, Integer, Categorical
+from hyperparameter_hunter import DummyOptPro, BayesianOptPro
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data, get_diabetes_data
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+import pandas as pd
 import pytest
 
 try:
@@ -18,16 +20,24 @@ except Exception:
 # Import Learning Assets
 ##################################################
 from keras.callbacks import ReduceLROnPlateau
-from keras.layers import Dense, Dropout
+from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
 from keras.models import Sequential
 from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 from keras.initializers import glorot_normal, orthogonal, Orthogonal
+from sklearn.datasets import load_digits
 
 ##################################################
 # Global Settings
 ##################################################
 assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 # assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
+
+
+def get_digits_data(n_class=2):
+    input_data, target_data = load_digits(n_class=n_class, return_X_y=True)
+    train_df = pd.DataFrame(data=input_data)
+    train_df["target"] = target_data
+    return train_df
 
 
 ##################################################
@@ -51,6 +61,17 @@ def initialization_matching_env():
         metrics=["roc_auc_score"],
         cv_type="KFold",
         cv_params=dict(n_splits=2, shuffle=True, random_state=32),
+    )
+
+
+@pytest.fixture(scope="function", autouse=False)
+def env_digits():
+    return Environment(
+        train_dataset=get_digits_data(),
+        results_path=assets_dir,
+        metrics=["roc_auc_score"],
+        cv_type="StratifiedKFold",
+        cv_params=dict(n_splits=3, shuffle=True, random_state=32),
     )
 
 
@@ -92,6 +113,58 @@ def opt_regressor():
 
 def test_regressor_opt(env_0, opt_regressor):
     ...
+
+
+##################################################
+# Categorical Tuple Optimization
+##################################################
+def build_fn_digits_exp(input_shape=-1):
+    model = Sequential(
+        [
+            Reshape((8, 8, -1), input_shape=(64,)),
+            Conv2D(filters=32, kernel_size=(5, 5), activation="relu"),
+            MaxPooling2D(pool_size=(2, 2)),
+            Dropout(0.5),
+            Flatten(),
+            Dense(1, activation="sigmoid"),
+        ]
+    )
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    return model
+
+
+def build_fn_digits_opt(input_shape=-1):
+    model = Sequential(
+        [
+            Reshape((8, 8, -1), input_shape=(64,)),
+            Conv2D(32, kernel_size=Categorical([(3, 3), (5, 5)]), activation="relu"),
+            MaxPooling2D(pool_size=Categorical([(2, 2), (3, 3)])),
+            Dropout(0.5),
+            Flatten(),
+            Dense(1, activation="sigmoid"),
+        ]
+    )
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    return model
+
+
+def test_categorical_tuple_match(env_digits):
+    """Test that optimization of a `Categorical` space, whose values are tuples can be performed
+    and that saved results from such a space are correctly identified as similar Experiments"""
+    model_extra_params = dict(batch_size=32, epochs=3, verbose=0, shuffle=True)
+    exp_0 = CVExperiment(KerasClassifier, build_fn_digits_exp, model_extra_params)
+
+    #################### First OptPro ####################
+    opt_0 = BayesianOptPro(iterations=1, random_state=32, n_initial_points=1)
+    opt_0.forge_experiment(KerasClassifier, build_fn_digits_opt, model_extra_params)
+    opt_0.go()
+    assert len(opt_0.similar_experiments) == 1  # Should match `exp_0`
+
+    #################### Second OptPro ####################
+    opt_1 = BayesianOptPro(iterations=1, random_state=32, n_initial_points=1)
+    opt_1.forge_experiment(KerasClassifier, build_fn_digits_opt, model_extra_params)
+    opt_1.go()
+    assert len(opt_1.similar_experiments) == 2  # Should match `exp_0` and `opt_0`
 
 
 ##################################################

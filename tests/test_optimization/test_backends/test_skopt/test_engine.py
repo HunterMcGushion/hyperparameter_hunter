@@ -297,9 +297,9 @@ def test_bounds_checking_2D(et_optimizer, tell_x, tell_y):
 @pytest.mark.parametrize(
     ["et_optimizer", "tell_x", "tell_y"],
     [
-        pytest.param([(-2, 2)], (-1, -1), 2.0, id="1d_extra_dim"),
-        pytest.param([(-2, 2), (-2, 2)], (-1,), 2.0, id="2d_missing_dim"),
-        pytest.param([(-2, 2), (-2, 2)], (-1, -1, -1), 2.0, id="2d_extra_dim"),
+        pytest.param([(-2, 2)], [-1, -1], 2.0, id="1d_extra_dim"),
+        pytest.param([(-2, 2), (-2, 2)], [-1], 2.0, id="2d_missing_dim"),
+        pytest.param([(-2, 2), (-2, 2)], [-1, -1, -1], 2.0, id="2d_extra_dim"),
     ],
     indirect=["et_optimizer"],
 )
@@ -313,8 +313,8 @@ def test_dimension_count_checking_single_point(et_optimizer, tell_x, tell_y):
 @pytest.mark.parametrize(
     ["tell_x", "tell_y"],
     [
-        pytest.param([(-1,), (-1, 0), (-1, 1)], 2.0, id="2d_missing_dim"),
-        pytest.param([(-1, -1, -1), (-1, 0), (-1, 1)], 2.0, id="2d_extra_dim"),
+        pytest.param([[-1], [-1, 0], [-1, 1]], 2.0, id="2d_missing_dim"),
+        pytest.param([[-1, -1, -1], [-1, 0], [-1, 1]], 2.0, id="2d_extra_dim"),
     ],
 )
 def test_dimension_count_checking_multiple_points(et_optimizer, tell_x, tell_y):
@@ -323,7 +323,7 @@ def test_dimension_count_checking_multiple_points(et_optimizer, tell_x, tell_y):
 
 
 @pytest.mark.parametrize("base_estimator", ["GP", "RF", "ET", "GBRT", "gp", "rf", "et", "gbrt"])
-@pytest.mark.parametrize("next_x", [(-1.0,)])
+@pytest.mark.parametrize("next_x", [[-1.0]])
 def test_warn_on_re_ask(base_estimator, next_x):
     """Test that `Optimizer.warn_on_re_ask` logs warning when `Optimizer._ask` suggests a point
     that has already been `tell`-ed to `Optimizer`
