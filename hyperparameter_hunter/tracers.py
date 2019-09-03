@@ -61,7 +61,7 @@ class ArgumentTracer(type):
         else:
             instance = super().__call__(*args, **kwargs)
 
-        setattr(instance, "__hh_used_args", args)
+        setattr(instance, "__hh_used_args", list(args))
         setattr(instance, "__hh_used_kwargs", kwargs)
 
         return instance

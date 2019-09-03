@@ -45,19 +45,51 @@ def default_json_write(obj):
     >>> assert default_json_write(np.int8(32)) == 32
     >>> assert np.isclose(default_json_write(np.float16(3.14)), 3.14, atol=0.001)
     >>> assert default_json_write(pd.Index(["a", "b", "c"])) == ["a", "b", "c"]
+    >>> assert default_json_write((1, 2)) == {"__tuple__": [1, 2]}
     >>> default_json_write(object())  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         File "file_utils.py", line ?, in default_json_write
     TypeError: <object object at ...> is not JSON serializable"""
+    #################### Builtin Types ####################
+    if isinstance(obj, tuple):
+        return {"__tuple__": list(obj)}
+    #################### NumPy Types ####################
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     if isinstance(obj, np.integer):
         return int(obj)
     if isinstance(obj, np.floating):
         return float(obj)
+    #################### Pandas Types ####################
     if isinstance(obj, pd.Index):
         return list(obj)
+
     raise TypeError(f"{obj!r} is not JSON serializable")
+
+
+def hook_json_read(obj):
+    """Hook function to decode JSON objects during reading
+
+    Parameters
+    ----------
+    obj: Object
+        JSON object to process, or return unchanged
+
+    Returns
+    -------
+    Object
+        If `obj` contains the key "__tuple__", its value is cast to a tuple and returned. Else,
+        `obj` is returned unchanged
+
+    Examples
+    --------
+    >>> assert hook_json_read({"__tuple__": [1, 2]}) == (1, 2)
+    >>> assert hook_json_read({"__tuple__": (1, 2)}) == (1, 2)
+    >>> assert hook_json_read({"a": "foo", "b": 42}) == {"a": "foo", "b": 42}
+    """
+    if "__tuple__" in obj:
+        return tuple(obj["__tuple__"])
+    return obj
 
 
 def write_json(file_path, data, do_clear=False):
@@ -76,7 +108,7 @@ def write_json(file_path, data, do_clear=False):
         clear_file(file_path)
 
     with open(file_path, "w") as f:
-        json.dump(data, f, default=default_json_write)
+        json.dump(data, f, default=default_json_write, tuple_as_array=False)
 
 
 def read_json(file_path, np_arr=False):
@@ -93,7 +125,7 @@ def read_json(file_path, np_arr=False):
     -------
     content: Object
         The contents of the .json file located at `file_path`"""
-    content = json.loads(open(file_path).read())
+    content = json.loads(open(file_path).read(), object_hook=hook_json_read)
 
     if np_arr is True:
         return np.array(content)

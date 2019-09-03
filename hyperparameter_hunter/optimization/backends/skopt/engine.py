@@ -662,7 +662,7 @@ def is_list_like(x):
     -------
     Boolean
         True if `x` is list-like. Else False"""
-    return isinstance(x, (list, tuple))
+    return isinstance(x, (list, np.ndarray))
 
 
 def is_2d_list_like(x):

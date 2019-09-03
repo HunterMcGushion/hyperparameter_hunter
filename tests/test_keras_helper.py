@@ -67,7 +67,7 @@ dummy_0_layers = [
         "class_name": "Dense",
         "__hh_default_args": ["units"],
         "__hh_default_kwargs": default_dense,
-        "__hh_used_args": (50,),
+        "__hh_used_args": [50],
         "__hh_used_kwargs": dict(
             kernel_initializer="uniform", input_shape=(30,), activation="relu"
         ),
@@ -76,14 +76,14 @@ dummy_0_layers = [
         "class_name": "Dropout",
         "__hh_default_args": ["rate"],
         "__hh_default_kwargs": default_dropout,
-        "__hh_used_args": (0.5,),
+        "__hh_used_args": [0.5],
         "__hh_used_kwargs": {},
     },
     {
         "class_name": "Dense",
         "__hh_default_args": ["units"],
         "__hh_default_kwargs": default_dense,
-        "__hh_used_args": (1,),
+        "__hh_used_args": [1],
         "__hh_used_kwargs": dict(kernel_initializer="uniform", activation="sigmoid"),
     },
 ]
@@ -136,14 +136,14 @@ dummy_1_layers = [
             mask_zero=False,
             input_length=None,
         ),
-        "__hh_used_args": tuple(),
+        "__hh_used_args": [],
         "__hh_used_kwargs": dict(input_dim=9999, output_dim=200, input_length=100, trainable=True),
     },
     {
         "class_name": "SpatialDropout1D",
         "__hh_default_args": ["rate"],
         "__hh_default_kwargs": dict(),
-        "__hh_used_args": tuple(),
+        "__hh_used_args": [],
         "__hh_used_kwargs": dict(rate=0.5),
     },
     {
@@ -152,21 +152,21 @@ dummy_1_layers = [
         "__hh_default_kwargs": (
             dict(data_format=None) if get_distribution("keras").version >= "2.2.0" else {}
         ),
-        "__hh_used_args": tuple(),
+        "__hh_used_args": [],
         "__hh_used_kwargs": dict(),
     },
     {
         "class_name": "Dense",
         "__hh_default_args": ["units"],
         "__hh_default_kwargs": default_dense,
-        "__hh_used_args": (100,),
+        "__hh_used_args": [100],
         "__hh_used_kwargs": dict(activation="relu"),
     },
     {
         "class_name": "Dense",
         "__hh_default_args": ["units"],
         "__hh_default_kwargs": default_dense,
-        "__hh_used_args": (1,),
+        "__hh_used_args": [1],
         "__hh_used_kwargs": dict(activation="sigmoid"),
     },
 ]

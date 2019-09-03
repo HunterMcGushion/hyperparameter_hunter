@@ -1,6 +1,15 @@
 <a name="Unreleased"></a>
 ## [Unreleased]
 
+### Features
+* Enabled optimization of tuple values via [`Categorical`](https://hyperparameter-hunter.readthedocs.io/en/stable/source/hyperparameter_hunter.space.html#hyperparameter_hunter.space.dimensions.Categorical)
+    * This can be used with Keras to search over different `kernel_size` values for `Conv2D` or 
+      `pool_size` values for `MaxPooling2D`, for example:
+    ```python
+  Conv2D(64, kernel_size=Categorical([(2, 2), (3, 3), (4, 4)]), activation="relu")
+  MaxPooling2D(pool_size=Categorical([(1, 1), (3, 3)]))
+    ```
+
 
 <a name="3.0.0"></a>
 ## [3.0.0] (2019-08-06) Artemis
@@ -167,7 +176,7 @@ You're a glorious peacock, and we just wanna let you fly.
   )
     ``` 
     
-* [`Categorical.optional`](https://hyperparameter-hunter.readthedocs.io/en/latest/source/hyperparameter_hunter.html#hyperparameter_hunter.space.Categorical)
+* [`Categorical.optional`](https://hyperparameter-hunter.readthedocs.io/en/stable/source/hyperparameter_hunter.space.html#hyperparameter_hunter.space.dimensions.Categorical)
     * As `Categorical` is the means of optimizing `EngineerStep`s in simple lists, it became 
       necessary to answer the question of whether that crazy new feature you've been cooking up in 
       the lab should even be included at all

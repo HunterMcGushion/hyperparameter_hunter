@@ -536,6 +536,11 @@ class OptimizationReporter:
                 content = "{0: >{1}.{2}f}".format(
                     values[index], self.sizes[index] + 2, min(self.sizes[index] - 3, 6 - 2)
                 )
+            elif isinstance(values[index], tuple):
+                content = "{0!s: >{1}}".format(values[index], self.sizes[index] + 2)
+                # Above is nearly identical to below inside `try`, with addition of "!s". We're
+                #   doing this only with tuples because otherwise it would print out a very
+                #   verbose (`__repr__`) string for `EngineerStep`, rather than just its `name`
             else:
                 try:
                     content = "{0: >{1}}".format(values[index], self.sizes[index] + 2)
