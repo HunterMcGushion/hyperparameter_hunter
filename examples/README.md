@@ -49,7 +49,7 @@
         <td>Model extra params (eval_set) - Environment data sentinels</td>    
     </tr>
     <tr>
-        <th rowspan=4 nowrap>Keras</th>
+        <th rowspan=5 nowrap>Keras</th>
         <td nowrap>Simple Experiment</td>
         <td nowrap>
             <a href="keras_examples/experiment_example.py">Script</a>
@@ -76,6 +76,13 @@
             <a href="keras_examples/image_classification_example.py">Script</a>
         </td>
         <td>Hand-written digits dataset (label encoded)</td>    
+    </tr>
+    <tr>
+        <td nowrap>MNIST Example</td>
+        <td nowrap>
+            <a href="keras_examples/mnist_example.py">Script</a>
+        </td>
+        <td>Optimization and Experimentation with MNIST dataset</td>    
     </tr>
     <tr>
         <th rowspan=2 nowrap>LightGBM</th>
