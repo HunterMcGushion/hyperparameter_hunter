@@ -7,6 +7,7 @@ reject_names = ["_example_runner.py"]
 reject_paths = [
     "catboost_examples/classification.py",  # Takes too long (forest cover type dataset)
     "lightgbm_examples/classification.py",  # Takes too long (forest cover type dataset)
+    "keras_examples/mnist_example.py",  # Takes too long
 ]
 
 
