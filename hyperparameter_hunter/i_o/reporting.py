@@ -391,11 +391,6 @@ class OptimizationReporter:
         header = f"{_Color.RED}Saved Results{_Color.STOP}"
         self.print_header(header, (_Color.RED + "_" * self._line_len() + _Color.STOP))
 
-    def print_random_points_header(self):
-        """Print a header signifying that random point evaluation rounds are starting"""
-        header = f"{_Color.RED}Random Point Evaluation{_Color.STOP}"
-        self.print_header(header, (_Color.RED + "_" * self._line_len() + _Color.STOP))
-
     def print_optimization_header(self):
         """Print a header signifying that Optimization rounds are starting"""
         header = f"{_Color.RED}Hyperparameter Optimization{_Color.STOP}"
@@ -455,13 +450,7 @@ class OptimizationReporter:
             The name of the column to print
         size: Int
             The number of characters that `value` should span"""
-        try:
-            print("{0:>{1}}".format(value, size), end=self.end)
-        except TypeError:  # Probably given tuple including param origin (init_params, extra_params, etc.)
-            if len(value) == 1:
-                print("{0:>{1}}".format(value[0], size), end=self.end)
-            else:
-                print("{0:>{1}}".format(str(value), size), end=self.end)
+        print("{0:>{1}}".format(value, size), end=self.end)
 
     def print_result(self, hyperparameters, evaluation, experiment_id=None):
         """Print a row containing the results of an Experiment just executed
@@ -555,9 +544,7 @@ class OptimizationReporter:
 
     def print_summary(self):
         """Print a summary of the results of hyperparameter optimization upon completion"""
-        # TODO: Finish this
-        if not self.verbose:
-            return
+        # TODO: Do this
 
 
 def format_frame_source(previous_frame, **kwargs):
@@ -763,11 +750,7 @@ def format_evaluation(results, separator="  |  ", float_format="{:.5f}"):
         metric_entry_vals = []
 
         for metric_id, metric_value in values.items():
-            try:
-                formatted_value = float_format.format(metric_value)
-            except ValueError:
-                formatted_value = "{}".format(metric_value)
-
+            formatted_value = float_format.format(metric_value)
             metric_entry_vals.append("{}={}".format(metric_id, formatted_value))
 
         metric_entry += ", ".join(metric_entry_vals) + ")"
