@@ -694,9 +694,7 @@ class BaseOptPro(metaclass=MergedOptProMeta):
         """Check that there is a currently active and unoccupied Environment instance"""
         if G.Env is None:
             raise EnvironmentInactiveError()
-        if G.Env.current_task is None:
-            G.log_(f'Validated Environment with key: "{G.Env.cross_experiment_key}"')
-        else:
+        if G.Env.current_task is not None:
             raise EnvironmentInvalidError("Must finish current task before starting a new one")
 
     def _validate_parameters(self):

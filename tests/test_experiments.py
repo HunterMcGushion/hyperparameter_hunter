@@ -1,7 +1,9 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.experiments import get_cv_indices
+from hyperparameter_hunter import settings
+from hyperparameter_hunter.experiments import BaseExperiment, CVExperiment, get_cv_indices
+from hyperparameter_hunter.i_o.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 
 ##################################################
 # Import Miscellaneous Assets
@@ -13,6 +15,7 @@ import pytest
 ##################################################
 # Import Learning Assets
 ##################################################
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold, RepeatedKFold
 
 ##################################################
@@ -20,6 +23,28 @@ from sklearn.model_selection import KFold, RepeatedKFold
 ##################################################
 assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
 # assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
+
+
+##################################################
+# `BaseExperiment._validate_environment` Tests
+##################################################
+def test_inactive_environment(monkeypatch, env_fixture_0):
+    """Test that initializing an Experiment without an active `Environment` raises
+    `EnvironmentInactiveError`"""
+    # Currently have a valid `settings.G.Env` (`env_fixture_0`), so set it to None
+    monkeypatch.setattr(settings.G, "Env", None)
+    with pytest.raises(EnvironmentInactiveError):
+        BaseExperiment(LogisticRegression, dict())
+
+
+def test_invalid_environment(monkeypatch, env_fixture_0):
+    """Test that initializing an Experiment when there is an active `Environment` -- but
+    :attr:`hyperparameter_hunter.environment.Environment.current_task` is not None -- raises
+    `EnvironmentInvalidError`"""
+    # Currently have a valid `settings.G.Env` (`env_fixture_0`), so give it a fake `current_task`
+    monkeypatch.setattr(settings.G.Env, "current_task", "some other task")
+    with pytest.raises(EnvironmentInvalidError, match="Current experiment must finish before .*"):
+        CVExperiment(LogisticRegression, dict())
 
 
 ##################################################

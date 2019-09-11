@@ -256,8 +256,8 @@ class BaseExperiment(ScoringMixIn):
         self.target_metric = target_metric
 
         #################### Attributes From Active Environment ####################
-        G.Env.initialize_reporting()
         self._validate_environment()
+        G.Env.initialize_reporting()
 
         self.train_dataset = G.Env.train_dataset.copy()
         try:
@@ -420,7 +420,6 @@ class BaseExperiment(ScoringMixIn):
             raise EnvironmentInactiveError("")
         if G.Env.current_task is None:
             G.Env.current_task = self
-            G.log(f"Validated Environment:  '{self.cross_experiment_key}'")
         else:
             raise EnvironmentInvalidError("Current experiment must finish before starting another")
 
