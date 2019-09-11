@@ -2,6 +2,8 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Environment
+from hyperparameter_hunter import settings
+from hyperparameter_hunter.i_o.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.optimization.backends.skopt import protocols as hh_opt
 from hyperparameter_hunter.utils.general_utils import flatten, subdict
 from hyperparameter_hunter.utils.learning_utils import get_toy_classification_data
@@ -215,3 +217,27 @@ def test_opt_pro_set_experiment_guidelines_calls_forge_experiment(opt_pro, forge
         with mock.patch(mock_path) as mock_forge_experiment:
             opt.set_experiment_guidelines(**forge_experiment_params)
             mock_forge_experiment.assert_called_once_with(**forge_experiment_params)
+
+
+##################################################
+# `BaseOptPro._validate_environment` Tests
+##################################################
+@pytest.mark.parametrize("opt_pro", ALL_SK_OPT_PROS)
+def test_inactive_environment(monkeypatch, env_fixture_0, opt_pro):
+    """Test that initializing an OptPro without an active `Environment` raises
+    `EnvironmentInactiveError`"""
+    # Currently have a valid `settings.G.Env` (`env_fixture_0`), so set it to None
+    monkeypatch.setattr(settings.G, "Env", None)
+    with pytest.raises(EnvironmentInactiveError):
+        opt_pro()
+
+
+@pytest.mark.parametrize("opt_pro", ALL_SK_OPT_PROS)
+def test_invalid_environment(monkeypatch, env_fixture_0, opt_pro):
+    """Test that initializing an OptPro when there is an active `Environment` -- but
+    :attr:`hyperparameter_hunter.environment.Environment.current_task` is not None -- raises
+    `EnvironmentInvalidError`"""
+    # Currently have a valid `settings.G.Env` (`env_fixture_0`), so give it a fake `current_task`
+    monkeypatch.setattr(settings.G.Env, "current_task", "some other task")
+    with pytest.raises(EnvironmentInvalidError, match="Must finish current task before starting.*"):
+        opt_pro()

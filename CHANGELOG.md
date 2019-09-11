@@ -9,6 +9,9 @@
   Conv2D(64, kernel_size=Categorical([(2, 2), (3, 3), (4, 4)]), activation="relu")
   MaxPooling2D(pool_size=Categorical([(1, 1), (3, 3)]))
     ```
+    
+### Changes
+* Removed the "Validated Environment ..." log messages made when initializing an Experiment/OptPro
 
 
 <a name="3.0.0"></a>
