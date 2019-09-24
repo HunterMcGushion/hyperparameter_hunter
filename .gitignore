@@ -13,6 +13,7 @@ __temp_model_builder.py
 foo_checkpoint
 MNIST_data/
 examples/feature_engineering_examples/data/
+_saved_models/
 
 # Documentation
 _build
