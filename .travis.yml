@@ -1,37 +1,77 @@
 dist: xenial
 language: python
+cache: pip
 python:
-  - "3.6"
+  - 3.7  # Default
+  - 3.6
+env:
+  global:
+    - KERAS="true"
+  matrix:
+    - KERAS="false"
+
+    - KERAS_VERSION="2.2.5" TENSORFLOW_VERSION="1.13.1"
+    - KERAS_VERSION="2.2.5" TENSORFLOW_VERSION="1.14.0"
+    # - KERAS_VERSION="2.2.5" TENSORFLOW_VERSION="2.0.0"
+
+    - KERAS_VERSION="2.3.0" TENSORFLOW_VERSION="1.13.1"
+    - KERAS_VERSION="2.3.0" TENSORFLOW_VERSION="1.14.0"
+    # - KERAS_VERSION="2.3.0" TENSORFLOW_VERSION="2.0.0"
+
 matrix:
+  fast_finish: true
   include:
-    - python: 3.6
-      env: KERAS="true"
-    - python: 3.6
+    # - python: 3.7
+    #   env: KERAS="true"
+    # - python: 3.6
+    #   env: KERAS="true"
+
+    - name: "Code Style (Black/Flake8)"
       env: KERAS="false"
-    - python: 3.7
-      env: KERAS="true"
-    - python: 3.7
-      env: KERAS="false"
-    # Check Black code style compliance
-    - name: "Black code style"
-      python: 3.6
+      install:
+        - pip install black
+        - pip install flake8
       script:
+        # Black code style
         - black --check --diff hyperparameter_hunter tests examples setup.py
+        # Stop the build if there are Python syntax errors or undefined names
+        - flake8 . --count --select=E901,E999,F821,F822,F823 --ignore=E266 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --ignore=E266 --statistics
       after_success: skip
-install:
-  - pip install --upgrade pip
-  - pip install flake8
+  exclude:
+    - env: KERAS="true"
+  allow_failures:
+    - python: 3.7
+      env: KERAS_VERSION="2.3.0" TENSORFLOW_VERSION="1.13.1"
+    - python: 3.7
+      env: KERAS_VERSION="2.3.0" TENSORFLOW_VERSION="1.14.0"
+    - python: 3.6
+      env: KERAS_VERSION="2.3.0" TENSORFLOW_VERSION="1.13.1"
+    - python: 3.6
+      env: KERAS_VERSION="2.3.0" TENSORFLOW_VERSION="1.14.0"
+
+before_install:
+  - pip install -U pip
   - pip install -r requirements.txt
+install:
   # Install Keras/TensorFlow for Keras-enabled Travis jobs
-  - if [[ "$KERAS" == "true" ]]; then
-      pip install keras;
-      pip install tensorflow;
-    fi
-before_script:
-  # Stop the build if there are Python syntax errors or undefined names
-  - flake8 . --count --select=E901,E999,F821,F822,F823 --ignore=E266 --show-source --statistics
-  # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-  - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --ignore=E266 --statistics
+  - |
+      if [[ "$KERAS" == "true" ]]; then
+        # Install specific Keras version if specified
+        if [[ -n "$KERAS_VERSION" ]]; then
+          pip install keras=="$KERAS_VERSION";
+        else
+          pip install keras;
+        fi
+
+        # Install specific TensorFlow version if specified
+        if [[ -n "$TENSORFLOW_VERSION" ]]; then
+          pip install tensorflow=="$TENSORFLOW_VERSION";
+        else
+          pip install tensorflow;
+        fi
+      fi
 script:
   - make test
 after_success:

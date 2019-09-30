@@ -59,7 +59,6 @@ setup(
         "travis": [
             "pytest>=4.0",
             "pytest-cov",
-            "black",
             "hyperparameter-hunter",
             "pyyaml",
             "xgboost",
