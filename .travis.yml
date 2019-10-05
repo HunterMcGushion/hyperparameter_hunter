@@ -76,11 +76,13 @@ script:
   - make test
 after_success:
   # Combine coverage reports from Travis jobs
-  # - coverage combine --append
   - coverage combine
+  # Tell Coveralls to wait for all results before merging
   - COVERALLS_PARALLEL=true coveralls
+  # Send reports to Codecov. It automatically handles merging coverage results
   - codecov
 notifications:
   webhooks:
     urls:
+      # Tell Coveralls it's ok to merge now (https://docs.coveralls.io/parallel-build-webhook)
       - https://coveralls.io/webhook

@@ -58,7 +58,7 @@ setup(
         "docs": ["numpydoc", "hyperparameter-hunter", "keras"],
         "travis": [
             "pytest>=4.0",
-            "pytest-cov<2.6.0",
+            "pytest-cov",
             "hyperparameter-hunter",
             "pyyaml",
             "xgboost",
