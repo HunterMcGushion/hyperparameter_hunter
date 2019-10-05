@@ -80,3 +80,7 @@ after_success:
   - coverage combine
   - COVERALLS_PARALLEL=true coveralls
   - codecov
+notifications:
+  webhooks:
+    urls:
+      - https://coveralls.io/webhook
