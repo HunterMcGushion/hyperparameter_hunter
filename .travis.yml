@@ -76,6 +76,6 @@ script:
   - make test
 after_success:
   # Combine coverage reports from Travis jobs
-  - coverage combine --append
+  # - coverage combine --append
   - coveralls
   - codecov
