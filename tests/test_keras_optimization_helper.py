@@ -1,7 +1,7 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
+from hyperparameter_hunter.compat.keras_optimization_helper import (
     clean_parenthesized_string,
     consolidate_layers,
     find_space_fragments,

@@ -15,13 +15,13 @@ Related
 :mod:`hyperparameter_hunter.utils.parsing_utils`
     Defines utilities to assist in parsing source code provided by users to declare Keras
     model-building functions
-:mod:`hyperparameter_hunter.library_helpers.keras_helper`
+:mod:`hyperparameter_hunter.compat.keras_helper`
     Defines utilities to assist in characterizing Keras models"""
 ##################################################
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter.settings import G, TEMP_MODULES_DOT_PATH, TEMP_MODULES_DIR_PATH
-from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
+from hyperparameter_hunter.compat.keras_helper import parameterize_compiled_keras_model
 from hyperparameter_hunter.space.dimensions import Real, Integer, Categorical
 from hyperparameter_hunter.utils.boltons_utils import remap, default_enter
 from hyperparameter_hunter.utils.general_utils import deep_restricted_update, subdict

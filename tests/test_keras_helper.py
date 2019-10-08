@@ -1,12 +1,12 @@
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.library_helpers.keras_helper import get_concise_params_dict
-from hyperparameter_hunter.library_helpers.keras_helper import get_keras_attr
-from hyperparameter_hunter.library_helpers.keras_helper import keras_callback_to_key
-from hyperparameter_hunter.library_helpers.keras_helper import keras_initializer_to_dict
-from hyperparameter_hunter.library_helpers.keras_helper import parameterize_compiled_keras_model
-from hyperparameter_hunter.library_helpers.keras_helper import parameters_by_signature
+from hyperparameter_hunter.compat.keras_helper import get_concise_params_dict
+from hyperparameter_hunter.compat.keras_helper import get_keras_attr
+from hyperparameter_hunter.compat.keras_helper import keras_callback_to_key
+from hyperparameter_hunter.compat.keras_helper import keras_initializer_to_dict
+from hyperparameter_hunter.compat.keras_helper import parameterize_compiled_keras_model
+from hyperparameter_hunter.compat.keras_helper import parameters_by_signature
 from hyperparameter_hunter import Integer
 
 ##################################################

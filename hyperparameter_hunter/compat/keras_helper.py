@@ -244,7 +244,7 @@ def parameterize_compiled_keras_model(model) -> Tuple[List[dict], dict]:
     model: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
         A compiled instance of a Keras model, made using the Keras `wrappers.scikit_learn` module.
         This must be a completely valid Keras model, which means that it often must be the result
-        of :func:`library_helpers.keras_optimization_helper.initialize_dummy_model`. Using the
+        of :func:`compat.keras_optimization_helper.initialize_dummy_model`. Using the
         resulting dummy model ensures the model will pass Keras checks that would otherwise reject
         instances of `space.Space` descendants used to provide hyperparameter choices
 

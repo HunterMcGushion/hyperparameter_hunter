@@ -35,8 +35,8 @@ from hyperparameter_hunter.i_o.exceptions import (
 )
 from hyperparameter_hunter.i_o.reporting import OptimizationReporter
 from hyperparameter_hunter.i_o.result_reader import finder_selector
-from hyperparameter_hunter.library_helpers.keras_helper import reinitialize_callbacks
-from hyperparameter_hunter.library_helpers.keras_optimization_helper import (
+from hyperparameter_hunter.compat.keras_helper import reinitialize_callbacks
+from hyperparameter_hunter.compat.keras_optimization_helper import (
     keras_prep_workflow,
     link_choice_ids,
 )

@@ -20,12 +20,12 @@ Related
 from hyperparameter_hunter.feature_engineering import FeatureEngineer, EngineerStep
 from hyperparameter_hunter.i_o.exceptions import EnvironmentInvalidError, EnvironmentInactiveError
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
-from hyperparameter_hunter.library_helpers.keras_helper import (
+from hyperparameter_hunter.compat.keras_helper import (
     keras_callback_to_dict,
     keras_initializer_to_dict,
     parameterize_compiled_keras_model,
 )
-from hyperparameter_hunter.library_helpers.keras_optimization_helper import initialize_dummy_model
+from hyperparameter_hunter.compat.keras_optimization_helper import initialize_dummy_model
 from hyperparameter_hunter.metrics import Metric
 from hyperparameter_hunter.sentinels import Sentinel
 from hyperparameter_hunter.settings import G
