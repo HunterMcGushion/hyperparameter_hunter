@@ -54,8 +54,8 @@ RESULT_FILE_SUB_DIR_PATHS = {
 # Temporary File Paths
 ##################################################
 TEMP_MODULES_DIR_NAME = "__temp_files"
-TEMP_MODULES_DOT_PATH = f"hyperparameter_hunter.library_helpers.{TEMP_MODULES_DIR_NAME}"
-TEMP_MODULES_DIR_PATH = f"{os.path.split(__file__)[0]}/library_helpers/{TEMP_MODULES_DIR_NAME}"
+TEMP_MODULES_DOT_PATH = f"hyperparameter_hunter.compat.{TEMP_MODULES_DIR_NAME}"
+TEMP_MODULES_DIR_PATH = f"{os.path.split(__file__)[0]}/compat/{TEMP_MODULES_DIR_NAME}"
 
 
 ##################################################

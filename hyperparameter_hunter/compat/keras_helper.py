@@ -11,6 +11,7 @@ from hyperparameter_hunter.utils.general_utils import to_snake_case, subdict
 # noinspection PyProtectedMember
 from inspect import signature, _empty
 from types import MethodType
+from typing import List, Tuple
 
 ##################################################
 # Global Variables
@@ -234,7 +235,7 @@ def get_keras_attr(model, attr, max_depth=3, default=sentinel_default_value):
         raise
 
 
-def parameterize_compiled_keras_model(model):
+def parameterize_compiled_keras_model(model) -> Tuple[List[dict], dict]:
     """Traverse a compiled Keras model to gather critical information about the layers used to
     construct its architecture, and the parameters used to compile it
 
@@ -243,20 +244,20 @@ def parameterize_compiled_keras_model(model):
     model: Instance of :class:`keras.wrappers.scikit_learn.<KerasClassifier; KerasRegressor>`
         A compiled instance of a Keras model, made using the Keras `wrappers.scikit_learn` module.
         This must be a completely valid Keras model, which means that it often must be the result
-        of :func:`library_helpers.keras_optimization_helper.initialize_dummy_model`. Using the
+        of :func:`compat.keras_optimization_helper.initialize_dummy_model`. Using the
         resulting dummy model ensures the model will pass Keras checks that would otherwise reject
         instances of `space.Space` descendants used to provide hyperparameter choices
 
     Returns
     -------
-    layers: List
-        A list containing a dict for each layer found in the architecture of `model`. A layer dict
+    layers: List[Dict]
+        List containing a dict for each layer found in the architecture of `model`. A layer dict
         should contain the following keys: ['class_name', '__hh_default_args',
         '__hh_default_kwargs', '__hh_used_args', '__hh_used_kwargs']
     compile_params: Dict
-        The parameters used on the call to :meth:`model.compile`. If a value for a certain parameter
+        Parameters used on the call to :meth:`model.compile`. If a value for a certain parameter
         was not explicitly provided, its default value will be included in `compile_params`"""
-    # NOTE: Tested optimizer and loss with both callable and string inputs - Converted to callables automatically
+    # NOTE: `optimizer`/`loss` as callable or string is converted to callable automatically
     ##################################################
     # Model Compile Parameters
     ##################################################
@@ -293,19 +294,19 @@ def parameterize_compiled_keras_model(model):
         layers.append(layer_obj)
 
     ##################################################
-    # Handle Custom Losses/Optimizers
+    # Check Custom Losses/Optimizers
     ##################################################
     if any([_.__module__ != "keras.losses" for _ in compile_params["loss_functions"]]):
         G.warn(
-            "Custom loss functions will not be hashed and saved, meaning they are identified only by their names."
-            + "\nIf you plan on tuning loss functions at all, please ensure custom functions are not given the same names as any"
-            + " of Keras's loss functions. Otherwise, naming conflicts may occur and make results very confusing."
+            "Custom losses are not hashed/saved. They are identified only by their names."
+            + "\nEnsure custom function names differ from those of Keras's native loss functions. "
+            + "Otherwise, naming conflicts may make results very confusing (especially if tuning)."
         )
     if get_keras_attr(model, "optimizer").__module__ != "keras.optimizers":
         G.warn(
-            "Custom optimizers will not be hashed and saved, meaning they are identified only by their names."
-            + "\nIf you plan on tuning optimizers at all, please ensure custom optimizers are not given the same names as any"
-            + " of Keras's optimizers. Otherwise, naming conflicts may occur and make results very confusing."
+            "Custom optimizers are not hashed/saved. They are identified only by their names."
+            + "\nEnsure custom optimizer names differ from those of Keras's native optimizers. "
+            + "Otherwise, naming conflicts may make results very confusing (especially if tuning)."
         )
 
     return layers, compile_params

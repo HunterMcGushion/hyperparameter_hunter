@@ -4,7 +4,7 @@ locate imports; and 3) preparing and cleaning source code for reuse
 
 Related
 -------
-:mod:`hyperparameter_hunter.library_helpers.keras_optimization_helper`
+:mod:`hyperparameter_hunter.compat.keras_optimization_helper`
     Uses :mod:`hyperparameter_hunter.utils.parsing_utils` to prepare for Keras optimization
 
 Notes

@@ -18,7 +18,7 @@ from hyperparameter_hunter.utils.file_utils import read_json
 from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 
 try:
-    from hyperparameter_hunter.library_helpers.keras_optimization_helper import consolidate_layers
+    from hyperparameter_hunter.compat.keras_optimization_helper import consolidate_layers
 except ImportError:
     pass
 
