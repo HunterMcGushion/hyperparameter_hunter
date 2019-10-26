@@ -47,6 +47,7 @@ setup(
         "nbformat",
         "numpy",
         "pandas",
+        "ruamel.yaml",
         "scikit-learn",
         "scikit-optimize",
         "scipy",

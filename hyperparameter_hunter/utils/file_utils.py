@@ -13,8 +13,10 @@ import numpy as np
 import os
 import os.path
 import pandas as pd
+from pathlib import Path
+from ruamel.yaml import YAML
 import simplejson as json
-from typing import Union
+from typing import Any, List, Tuple, Union
 import wrapt
 
 
@@ -179,6 +181,91 @@ def add_to_json(file_path, data_to_add, key=None, condition=None, default=None, 
                 original_data[key] = data_to_add
 
         write_json(file_path, original_data)
+
+
+##################################################
+# YAML File Functions
+##################################################
+# Extra Representers used in the default HH Ruamel YAML instance
+_RUAMEL_REPRESENTERS: List[Tuple[type, callable]] = [
+    (np.ndarray, lambda dumper, data: dumper.represent_list(data.tolist())),
+    (np.float64, lambda dumper, data: dumper.represent_float(float(data))),
+    (np.int64, lambda dumper, data: dumper.represent_int(int(data))),
+    (tuple, lambda dumper, data: dumper.represent_sequence("tag:yaml.org,2002:python/tuple", data)),
+    (str, lambda dumper, data: dumper.represent_scalar("tag:yaml.org,2002:str", data, style='"')),
+]
+# Extra Constructors used in the default HH Ruamel YAML instance
+_RUAMEL_CONSTRUCTORS: List[Tuple[str, callable]] = [
+    ("tag:yaml.org,2002:python/tuple", lambda loader, node: tuple(loader.construct_sequence(node)))
+]
+
+
+def get_ruamel_instance() -> YAML:
+    """Get the default :class:`ruamel.yaml.YAML` instance used for dumping/loading YAML files
+
+    Returns
+    -------
+    yml: YAML
+        :class:`ruamel.yaml.YAML` instance configured for HyperparameterHunter, outfitted with
+        additional Ruamel Representers to properly format non-standard data types"""
+    #################### Prepare Ruamel YAML Instance ####################
+    yml = YAML(typ="safe")
+    yml.default_flow_style = None
+    yml.sort_base_mapping_type_on_output = False  # False retains original mapping order
+    yml.top_level_colon_align = True  # Make it easier to see top-level elements
+    yml.width = 100
+
+    #################### Add Auxiliary Ruamel Representers/Constructors ####################
+    for (data_type, representer) in _RUAMEL_REPRESENTERS:
+        yml.representer.add_representer(data_type, representer)
+
+    for (tag, constructor) in _RUAMEL_CONSTRUCTORS:
+        yml.constructor.add_constructor(tag, constructor)
+
+    return yml
+
+
+def read_yaml(file_path: str, yml: YAML = None) -> object:
+    """Get the contents of the .yaml file located at `file_path`
+
+    Parameters
+    ----------
+    file_path: String
+        Path to the .yaml file to be read
+    yml: YAML (optional)
+        :class:`ruamel.yaml.YAML` instance used to load data from `file_path`. If not given, the
+        result of :func:`get_ruamel_instance` is used
+
+    Returns
+    -------
+    Object
+        Contents of the .yaml file located at `file_path`"""
+    yml = get_ruamel_instance() if yml is None else yml
+    return yml.load(file_path)
+
+
+def write_yaml(file_path: Union[str, Path], data: Any, yml: YAML = None, do_make_dirs: bool = True):
+    """Write `data` to the YAML file specified by `file_path`
+
+    Parameters
+    ----------
+    file_path: String, or Path
+        Target .yaml file path to which `data` will be written
+    data: Object
+        Content to save at the .yaml file given by `file_path`
+    yml: YAML (optional)
+        :class:`ruamel.yaml.YAML` instance used to dump `data` to `file_path`. If not given, the
+        result of :func:`get_ruamel_instance` is used
+    do_make_dirs: Boolean, default=True
+        If True, create any parent directories in `file_path` that don't already exist"""
+    file_path = Path(file_path)
+    yml = get_ruamel_instance() if yml is None else yml
+
+    if do_make_dirs:
+        make_dirs(file_path.parent, exist_ok=True)
+
+    with open(file_path, "w+") as f:
+        yml.dump(data, f)
 
 
 ##################################################
