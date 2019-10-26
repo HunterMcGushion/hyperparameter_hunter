@@ -929,14 +929,14 @@ class KerasResultFinder(ResultFinder):
 ##################################################
 # Utilities
 ##################################################
-def has_experiment_result_file(results_dir, experiment_id, result_type=None):
-    """Check if the specified result files exist in `results_dir` for Experiment `experiment_id`
+def has_experiment_result_file(results_dir, exp_id, result_type=None):
+    """Check if the specified result files exist in `results_dir` for Experiment `exp_id`
 
     Parameters
     ----------
     results_dir: String
         HyperparameterHunterAssets directory in which to search for Experiment result files
-    experiment_id: String, or BaseExperiment
+    exp_id: String, or BaseExperiment
         ID of the Experiment whose result files should be searched for in `results_dir`. If not
         string, should be an instance of a descendant of
         :class:`~hyperparameter_hunter.experiments.BaseExperiment` with an "experiment_id" attribute
@@ -953,8 +953,13 @@ def has_experiment_result_file(results_dir, experiment_id, result_type=None):
     -------
     Boolean
         True if all result files specified by `result_type` exist in `results_dir` for the
-        Experiment specified by `experiment_id`. Else, False"""
-    experiment_id = experiment_id if isinstance(experiment_id, str) else experiment_id.experiment_id
+        Experiment specified by `exp_id`. Else, False"""
+    exp_id = exp_id if isinstance(exp_id, str) else exp_id.experiment_id
+
+    if results_dir.endswith("HyperparameterHunterAssets"):
+        exp_dir = Path(results_dir) / "Experiments"
+    else:
+        exp_dir = Path(results_dir) / "HyperparameterHunterAssets" / "Experiments"
 
     #################### Format `result_type` ####################
     if not result_type:
@@ -972,25 +977,20 @@ def has_experiment_result_file(results_dir, experiment_id, result_type=None):
         result_type = [result_type]
 
     for subdir in result_type:
-        #################### Select Result File Suffix ####################
+        #################### Select Result File Suffixes ####################
         if subdir == "Descriptions":
-            suffix = ".json"
+            suffixes = (".yaml", ".yml", ".json")
         elif subdir == "Heartbeats":
-            suffix = ".log"
+            suffixes = (".log",)
         elif subdir == "ScriptBackups":
-            suffix = ".py"
+            suffixes = (".py",)
         elif subdir.startswith("Predictions"):
-            suffix = ".csv"
+            suffixes = (".csv",)
         else:
             raise ValueError(f"Cannot resolve suffix for subdir `result_type`: {subdir}")
 
         #################### Check "Experiments" Directory ####################
-        if results_dir.endswith("HyperparameterHunterAssets"):
-            experiments_dir = Path(results_dir) / "Experiments"
-        else:
-            experiments_dir = Path(results_dir) / "HyperparameterHunterAssets" / "Experiments"
-
-        if not (experiments_dir / subdir / f"{experiment_id}{suffix}").exists():
+        if not any((exp_dir / subdir / f"{exp_id}{suffix}").exists() for suffix in suffixes):
             return False
 
     return True
