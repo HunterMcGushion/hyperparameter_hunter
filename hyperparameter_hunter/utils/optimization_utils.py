@@ -112,8 +112,8 @@ def find_experiment_description(description_dir: str, experiment_id: str) -> dic
             return reader(description_path.with_suffix(extension))
         except FileNotFoundError:
             continue
-    else:
-        raise ValueError(f"Expected YAML/JSON `description_path`, not {description_path}")
+
+    raise ValueError(f"Expected YAML/JSON `description_path`, not {description_path}")
 
 
 def get_scored_params(description_dir, experiment_id, target_metric, get_description=False):
