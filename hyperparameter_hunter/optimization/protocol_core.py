@@ -8,7 +8,7 @@ Related
     Defines the optimization classes that are intended for direct use. All classes defined in
     :mod:`hyperparameter_hunter.optimization.backends.skopt.protocols` should be descendants of
     :class:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro`
-:mod:`hyperparameter_hunter.result_reader`
+:mod:`hyperparameter_hunter.i_o.result_reader`
     Used to locate result files for Experiments that are similar to the current optimization
     constraints, and produce data to learn from in the case of :class:`SKOptPro`
 :mod:`hyperparameter_hunter.space`

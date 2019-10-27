@@ -13,7 +13,7 @@ Related
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.space.dimensions import Real, Integer, Categorical, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
-from hyperparameter_hunter.utils.file_utils import read_json
+from hyperparameter_hunter.utils.file_utils import read_json, read_yaml
 from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 
 try:
@@ -26,6 +26,7 @@ except ImportError:
 ##################################################
 from contextlib import suppress
 import pandas as pd
+from pathlib import Path
 
 
 ##################################################
@@ -88,13 +89,42 @@ def get_ids_by(
     return matching_ids
 
 
-def get_scored_params(experiment_description_path, target_metric, get_description=False):
+def find_experiment_description(description_dir: str, experiment_id: str) -> dict:
+    """Locate and return the Description file contents for `experiment_id`. Assumes the Description
+    file extension to be in {".yaml", ".yml", ".json"}, and checks for files in that order,
+    returning the first one found
+
+    Parameters
+    ----------
+    description_dir: String
+        Path to a directory containing the Description files of saved Experiments
+    experiment_id: String
+        ID of the saved Experiment whose Description should be returned
+
+    Returns
+    -------
+    Dict
+        Experiment Description file contents"""
+    description_path = Path(description_dir) / experiment_id  # Extension unknown right now
+
+    for (extension, reader) in [(".yaml", read_yaml), (".yml", read_yaml), (".json", read_json)]:
+        try:
+            return reader(description_path.with_suffix(extension))
+        except FileNotFoundError:
+            continue
+    else:
+        raise ValueError(f"Expected YAML/JSON `description_path`, not {description_path}")
+
+
+def get_scored_params(description_dir, experiment_id, target_metric, get_description=False):
     """Retrieve the hyperparameters of a completed Experiment, along with its performance evaluation
 
     Parameters
     ----------
-    experiment_description_path: String
-        The path to an Experiment's description .json file
+    description_dir: String
+        Path to a directory containing the Description files of saved Experiments
+    experiment_id: String
+        ID of the saved Experiment whose Description should be returned
     target_metric: Tuple
         A path denoting the metric to be used. If tuple, the first value should be one of ['oof',
         'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
@@ -110,7 +140,7 @@ def get_scored_params(experiment_description_path, target_metric, get_descriptio
         A dict of the hyperparameters used by the Experiment
     evaluation: Float
         Value of the Experiment's `target_metric`"""
-    description = read_json(file_path=experiment_description_path)
+    description = find_experiment_description(description_dir, experiment_id)
     evaluation = get_path(description["final_evaluations"], target_metric)
     all_hyperparameters = description["hyperparameters"]
 

@@ -14,7 +14,7 @@ from hyperparameter_hunter.i_o.exceptions import EnvironmentInactiveError, Envir
 from hyperparameter_hunter.i_o.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
 from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs, read_json
-from hyperparameter_hunter.utils.file_utils import RetryMakeDirs
+from hyperparameter_hunter.utils.file_utils import RetryMakeDirs, write_yaml
 from hyperparameter_hunter.utils.general_utils import subdict
 
 ##################################################
@@ -124,7 +124,8 @@ class RecorderList(object):
             an Experiment. The contents of `extra_recorders` are blacklisted in the same way as
             normal `recorders`. That is, if `file_blacklist` contains the `result_path_key` of a
             recorder in `extra_recorders`, that recorder is blacklisted"""
-        # WARNING: Take care if modifying the order/contents of :attr:`recorders`. See :meth:`save_result` documentation for info
+        # WARNING: Take care if modifying the order/contents of :attr:`recorders`
+        #   See :meth:`save_result` documentation for info
         self.recorders = [
             TestedKeyRecorder,
             LeaderboardEntryRecorder,
@@ -193,7 +194,7 @@ class DescriptionRecorder(BaseRecorder):
         "cross_experiment_key",
         "last_evaluation_results",
         "stat_aggregates",
-        # 'train_features',
+        # "train_features",
         "source_script",
         "notes",
         "model_initializer",
@@ -204,25 +205,22 @@ class DescriptionRecorder(BaseRecorder):
     ]
 
     def format_result(self):
-        """Format an OrderedDict containing the Experiment's identifying attributes, results,
+        """Format a dict containing the Experiment's identifying attributes, results,
         hyperparameters used, and other stats or information that may be useful"""
-        self.result = OrderedDict(
-            [
-                ("experiment_id", self.experiment_id),
-                ("algorithm_name", self.algorithm_name),
-                ("module_name", self.module_name),
-                ("hyperparameter_key", self.hyperparameter_key.key),
-                ("cross_experiment_key", self.cross_experiment_key.key),
-                ("final_evaluations", self.last_evaluation_results),
-                ("hyperparameters", self.hyperparameter_key.parameters),
-                ("cross_experiment_parameters", self.cross_experiment_key.parameters),
-                ("train_features", None),  # TODO: Record the column features in train df
-                ("platform", node()),
-                ("source_script", self.source_script),
-                ("notes", self.notes or ""),
-                ("aggregates", self.stat_aggregates),
-            ]
-        )
+        self.result = dict()
+        self.result["experiment_id"] = self.experiment_id
+        self.result["algorithm_name"] = self.algorithm_name
+        self.result["module_name"] = self.module_name
+        self.result["hyperparameter_key"] = self.hyperparameter_key.key
+        self.result["cross_experiment_key"] = self.cross_experiment_key.key
+        self.result["final_evaluations"] = self.last_evaluation_results
+        self.result["hyperparameters"] = self.hyperparameter_key.parameters
+        self.result["cross_experiment_parameters"] = self.cross_experiment_key.parameters
+        self.result["train_features"] = None  # TODO: Record the column features in train df
+        self.result["platform"] = node()
+        self.result["source_script"] = self.source_script
+        self.result["notes"] = self.notes or ""
+        self.result["aggregates"] = self.stat_aggregates
 
         #################### Filter Hyperparameters' model_init_params ####################
         self.result["hyperparameters"]["model_init_params"] = subdict(
@@ -230,22 +228,29 @@ class DescriptionRecorder(BaseRecorder):
         )
 
     def save_result(self):
-        """Save the Experiment description as a .json file, named after :attr:`experiment_id`. If
-        :attr:`do_full_save` is a callable and returns False when given the description object, the
-        result recording loop will be broken, and the remaining result files will not be saved
+        """Save the Experiment Description as a .yaml/.json file, named after :attr:`experiment_id`.
+        If :attr:`do_full_save` is a callable and returns False when given the description object,
+        the result recording loop will be broken, and the remaining result files will not be saved
 
         Returns
         -------
-        'break'
-            This string will be returned if :attr:`do_full_save` is a callable and returns False
-            when given the description object. This is the signal for
-            :class:`recorders.RecorderList` to stop recording result files"""
-        try:
-            write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
-        except FileNotFoundError:
-            make_dirs(self.result_path, exist_ok=False)
-            write_json(f"{self.result_path}/{self.experiment_id}.json", self.result, do_clear=False)
+        "break", or None
+            "break" is returned if :attr:`do_full_save` is callable and returns False when given the
+            Description (:attr:`result`). This is the signal for :class:`recorders.RecorderList` to
+            stop saving files. Otherwise, nothing is returned, continuing the recording process
 
+        See Also
+        --------
+        :attr:`hyperparameter_hunter.settings.G.description_format`
+            Dictates whether to save Description as a .yaml file (default), or .json"""
+        if G.description_format == "yaml":
+            write_yaml(f"{self.result_path}/{self.experiment_id}.yaml", self.result)
+        elif G.description_format == "json":
+            write_json(f"{self.result_path}/{self.experiment_id}.json", self.result)
+        else:
+            raise ValueError(f"Unexpected `G.description_format`: {G.description_format}")
+
+        #################### Decide Whether to Kill Recorder Loop ####################
         if (self.do_full_save is not None) and (not self.do_full_save(self.result)):
             G.warn("Breaking result-saving loop early! Remaining result files will not be saved")
             return "break"

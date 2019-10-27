@@ -2,6 +2,15 @@
 ## [Unreleased]
 
 ### Features
+* Save Experiment Description files in YAML (from JSON)
+    * Makes Description files easier for humans to read
+    * Fixes issues with certain hyperparameter types ignored by JSON, such as dicts with non-string 
+      keys, and tuples
+    * If you hate the new YAML Descriptions and want to go back to JSON, you can set 
+      `settings.G.description_format` to "json"
+        * Consider opening [an issue](https://github.com/HunterMcGushion/hyperparameter_hunter/issues),
+          telling me this was a dumb decision. Feedback is very much appreciated (honestly)
+        * Be warned that reverting to "json" means the above-noted issues could occur 
 * Enabled optimization of tuple values via [`Categorical`](https://hyperparameter-hunter.readthedocs.io/en/stable/source/hyperparameter_hunter.space.html#hyperparameter_hunter.space.dimensions.Categorical)
     * This can be used with Keras to search over different `kernel_size` values for `Conv2D` or 
       `pool_size` values for `MaxPooling2D`, for example:

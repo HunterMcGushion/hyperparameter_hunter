@@ -1,3 +1,11 @@
+"""This module handles reading and processing saved Experiment result files and determining their
+match status to guidelines/search space
+
+Related
+-------
+:mod:`hyperparameter_hunter.optimization.protocol_core`
+    OptPros use :class:`ResultFinder` to identify saved Experiment results that fit within the
+    current guidelines/search space"""
 ##################################################
 # Import Own Assets
 ##################################################
@@ -550,9 +558,8 @@ class ResultFinder:
             providing an updated "feature_engineer" value for compatible candidates to use.
             Specifics are documented in :meth:`does_match_feature_engineer`"""
         for exp_id in self.experiment_ids:
-            description_path = f"{self.descriptions_dir}/{exp_id}.json"
             # TODO: Get `description` from `get_scored_params` - Take whatever value `sort` needs
-            params, score = get_scored_params(description_path, self.target_metric)
+            params, score = get_scored_params(self.descriptions_dir, exp_id, self.target_metric)
 
             #################### Match Init Params ####################
             self.does_match_init_params_space(exp_id, params["model_init_params"], score)
