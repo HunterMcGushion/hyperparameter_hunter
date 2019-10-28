@@ -13,15 +13,18 @@ from hyperparameter_hunter.data import OOFDataset, HoldoutDataset, TestDataset
 from hyperparameter_hunter.i_o.exceptions import EnvironmentInactiveError, EnvironmentInvalidError
 from hyperparameter_hunter.i_o.leaderboards import GlobalLeaderboard
 from hyperparameter_hunter.settings import G
-from hyperparameter_hunter.utils.file_utils import write_json, add_to_json, make_dirs, read_json
-from hyperparameter_hunter.utils.file_utils import RetryMakeDirs, write_yaml
+from hyperparameter_hunter.utils.file_utils import (
+    add_to_json,
+    RetryMakeDirs,
+    write_json,
+    write_yaml,
+)
 from hyperparameter_hunter.utils.general_utils import subdict
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
 from platform import node
 import shutil
 from sys import exc_info
@@ -420,24 +423,3 @@ class UnsortedIDLeaderboardRecorder(BaseRecorder):
     def save_result(self):
         """Save the updated leaderboard file"""
         self.result.save(path=self.result_paths["unsorted_id_leaderboard"])
-
-
-class YAMLDescriptionRecorder(BaseRecorder):
-    result_path_key = "yaml_description"
-    required_attributes = ["result_paths", "experiment_id"]
-
-    def format_result(self):
-        pass
-
-    def save_result(self):
-        from yaml import dump
-
-        self.result = read_json(f"{self.result_paths['description']}/{self.experiment_id}.json")
-
-        make_dirs(self.result_path, exist_ok=True)
-        with open(f"{self.result_path}/{self.experiment_id}.yml", "w+") as f:
-            dump(self.result, f, default_flow_style=False, width=200)
-
-
-if __name__ == "__main__":
-    pass
