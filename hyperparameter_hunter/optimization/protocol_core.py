@@ -393,17 +393,17 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         #################### Deal with Keras ####################
         if self.module_name == "keras":
-            reusable_build_fn, reusable_wrapper_params, dummy_layers, dummy_compile_params = keras_prep_workflow(
+            build_fn, wrapper_params, dummy_layers, dummy_compile_params = keras_prep_workflow(
                 self.model_initializer,
                 self.model_init_params["build_fn"],
                 self.model_extra_params,
                 self.source_script,
             )
-            self.model_init_params = dict(build_fn=reusable_build_fn)
-            self.model_extra_params = reusable_wrapper_params
+            self.model_init_params = dict(build_fn=build_fn)  # Reusable
+            self.model_extra_params = wrapper_params  # Reusable
             self.dummy_layers = dummy_layers
             self.dummy_compile_params = dummy_compile_params
-            # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
+            # FLAG: Handle `optimizer` capitalization conflicts: `optimizer`="Adam" vs "adam"
 
         self.set_dimensions()
 
