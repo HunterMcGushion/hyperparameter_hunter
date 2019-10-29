@@ -13,176 +13,15 @@ import numpy as np
 import os
 import os.path
 import pandas as pd
+from pathlib import Path
+from ruamel.yaml import YAML
 import simplejson as json
-from typing import Union
+from typing import Any, List, Tuple, Union
 import wrapt
 
 
 ##################################################
-# JSON File Functions
-##################################################
-def default_json_write(obj):
-    """Convert values that are not JSON-friendly to a more acceptable type
-
-    Parameters
-    ----------
-    obj: Object
-        The object that is expected to be of a type that is incompatible with JSON files
-
-    Returns
-    -------
-    Object
-        The value of `obj` after being cast to a type accepted by JSON
-
-    Raises
-    ------
-    TypeError
-        If the type of `obj` is unhandled
-
-    Examples
-    --------
-    >>> assert default_json_write(np.array([1, 2, 3])) == [1, 2, 3]
-    >>> assert default_json_write(np.int8(32)) == 32
-    >>> assert np.isclose(default_json_write(np.float16(3.14)), 3.14, atol=0.001)
-    >>> assert default_json_write(pd.Index(["a", "b", "c"])) == ["a", "b", "c"]
-    >>> assert default_json_write((1, 2)) == {"__tuple__": [1, 2]}
-    >>> default_json_write(object())  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-        File "file_utils.py", line ?, in default_json_write
-    TypeError: <object object at ...> is not JSON serializable"""
-    #################### Builtin Types ####################
-    if isinstance(obj, tuple):
-        return {"__tuple__": list(obj)}
-    #################### NumPy Types ####################
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    if isinstance(obj, np.integer):
-        return int(obj)
-    if isinstance(obj, np.floating):
-        return float(obj)
-    #################### Pandas Types ####################
-    if isinstance(obj, pd.Index):
-        return list(obj)
-
-    raise TypeError(f"{obj!r} is not JSON serializable")
-
-
-def hook_json_read(obj):
-    """Hook function to decode JSON objects during reading
-
-    Parameters
-    ----------
-    obj: Object
-        JSON object to process, or return unchanged
-
-    Returns
-    -------
-    Object
-        If `obj` contains the key "__tuple__", its value is cast to a tuple and returned. Else,
-        `obj` is returned unchanged
-
-    Examples
-    --------
-    >>> assert hook_json_read({"__tuple__": [1, 2]}) == (1, 2)
-    >>> assert hook_json_read({"__tuple__": (1, 2)}) == (1, 2)
-    >>> assert hook_json_read({"a": "foo", "b": 42}) == {"a": "foo", "b": 42}
-    """
-    if "__tuple__" in obj:
-        return tuple(obj["__tuple__"])
-    return obj
-
-
-def write_json(file_path, data, do_clear=False):
-    """Write `data` to the JSON file specified by `file_path`, optionally clearing the file before
-    adding `data`
-
-    Parameters
-    ----------
-    file_path: String
-        The target .json file path to which `data` will be written
-    data: Object
-        The content to save at the .json file given by `file_path`
-    do_clear: Boolean, default=False
-        If True, the contents of the file at `file_path` will be cleared before saving `data`"""
-    if do_clear is True:
-        clear_file(file_path)
-
-    with open(file_path, "w") as f:
-        json.dump(data, f, default=default_json_write, tuple_as_array=False)
-
-
-def read_json(file_path, np_arr=False):
-    """Get the contents of the .json file located at `file_path`
-
-    Parameters
-    ----------
-    file_path: String
-        The path of the .json file to be read
-    np_arr: Boolean, default=False
-        If True, the contents read from `file_path` will be cast to a numpy array before returning
-
-    Returns
-    -------
-    content: Object
-        The contents of the .json file located at `file_path`"""
-    content = json.loads(open(file_path).read(), object_hook=hook_json_read)
-
-    if np_arr is True:
-        return np.array(content)
-
-    return content
-
-
-def add_to_json(file_path, data_to_add, key=None, condition=None, default=None, append_value=False):
-    """Append `data_to_add` to the contents of the .json file specified by `file_path`
-
-    Parameters
-    ----------
-    file_path: String
-        The target .json file path to which `data_to_add` will be added and saved
-    data_to_add: Object
-        The data to add to the contents of the .json file given by `file_path`
-    key: String, or None, default=None
-        If None, the original contents of the file at `file_path` should not be of type dict. If
-        string, the original content at `file_path` is expected to be a dict, and `data_to_add` will
-        be added to the original dict under the key `key`. Therefore, `key` is expected to be a
-        unique key to the original dict contents of `file_path`, unless `append_value` is True
-    condition: Callable, or None, default=None
-        If callable, will be given the original contents of the .json file at `file_path` as input,
-        and should return a boolean value. If `condition(original_data)` is truthy, `data_to_add`
-        will be added to the contents of the file at `file_path` as usual. Otherwise, `data_to_add`
-        will not be added to the file, and the contents at `file_path` will remain unchanged. If
-        `condition` is None, it will be treated as having been truthy, and will proceed to append
-        `data_to_add` to the target file
-    default: Object, or None, default=None
-        If the attempt to read the original content at `file_path` raises a `FileNotFoundError` and
-        `default` is not None, `default` will be used as the original data for the file. Otherwise,
-        the error will be raised
-    append_value: Boolean, default=False
-        If True and the original data at `file_path` is a dict, then `data_to_add` will be appended
-        as a list to the value of the original data at key `key`"""
-    try:
-        original_data = read_json(file_path)
-    except FileNotFoundError:
-        if default is not None:
-            original_data = default
-        else:
-            raise
-
-    if condition is None or original_data is None or condition(original_data):
-        if key is None and isinstance(original_data, list):
-            original_data.append(data_to_add)
-        elif isinstance(key, str) and isinstance(original_data, dict):
-            if append_value is True:
-                original_data[key] = original_data[key] + [data_to_add]
-            else:
-                original_data[key] = data_to_add
-
-        write_json(file_path, original_data)
-
-
-##################################################
-# General File Functions
+# General File Utilities/Decorators
 ##################################################
 def make_dirs(name, mode=0o0777, exist_ok=False):
     """Permissive version of `os.makedirs` that gives full permissions by default
@@ -216,7 +55,8 @@ def clear_file(file_path):
 class RetryMakeDirs(object):
     def __init__(self):
         """Execute decorated callable, but if `OSError` is raised, call :func:`make_dirs` on the
-        directory specified by the exception, then recall the decorated callable again
+        directory specified by the exception, then recall the decorated callable again. This also
+        works with operations on files, in which case the file's parent directories are created
 
         Examples
         --------
@@ -240,6 +80,8 @@ class RetryMakeDirs(object):
         try:
             return wrapped(*args, **kwargs)
         except OSError as _ex:
+            # TODO: Add ability to check `kwargs` for value dictating whether to call `make_dirs`
+            #   - Provide name or index (if arg) of value to check in `RetryMakeDirs.__init__`
             if _ex.filename:
                 make_dirs(os.path.split(_ex.filename)[0], exist_ok=True)
         return wrapped(*args, **kwargs)
@@ -331,6 +173,240 @@ class ParametersFromFile(object):
                     G.debug(f"Parameter `{k}` set to user default in parameters file: '{file}'")
 
         return wrapped(*args, **kwargs)
+
+
+##################################################
+# JSON File Utilities
+##################################################
+def default_json_write(obj):
+    """Convert values that are not JSON-friendly to a more acceptable type
+
+    Parameters
+    ----------
+    obj: Object
+        Object that is expected to be of a type that is incompatible with JSON files
+
+    Returns
+    -------
+    Object
+        Value of `obj` after being cast to a type accepted by JSON
+
+    Raises
+    ------
+    TypeError
+        If the type of `obj` is unhandled
+
+    Examples
+    --------
+    >>> assert default_json_write(np.array([1, 2, 3])) == [1, 2, 3]
+    >>> assert default_json_write(np.int8(32)) == 32
+    >>> assert np.isclose(default_json_write(np.float16(3.14)), 3.14, atol=0.001)
+    >>> assert default_json_write(pd.Index(["a", "b", "c"])) == ["a", "b", "c"]
+    >>> assert default_json_write((1, 2)) == {"__tuple__": [1, 2]}
+    >>> default_json_write(object())  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        File "file_utils.py", line ?, in default_json_write
+    TypeError: <object object at ...> is not JSON serializable"""
+    #################### Builtin Types ####################
+    if isinstance(obj, tuple):
+        return {"__tuple__": list(obj)}
+    #################### NumPy Types ####################
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    #################### Pandas Types ####################
+    if isinstance(obj, pd.Index):
+        return list(obj)
+
+    raise TypeError(f"{obj!r} is not JSON serializable")
+
+
+def hook_json_read(obj):
+    """Hook function to decode JSON objects during reading
+
+    Parameters
+    ----------
+    obj: Object
+        JSON object to process, or return unchanged
+
+    Returns
+    -------
+    Object
+        If `obj` contains the key "__tuple__", its value is cast to a tuple and returned. Else,
+        `obj` is returned unchanged
+
+    Examples
+    --------
+    >>> assert hook_json_read({"__tuple__": [1, 2]}) == (1, 2)
+    >>> assert hook_json_read({"__tuple__": (1, 2)}) == (1, 2)
+    >>> assert hook_json_read({"a": "foo", "b": 42}) == {"a": "foo", "b": 42}
+    """
+    if "__tuple__" in obj:
+        return tuple(obj["__tuple__"])
+    return obj
+
+
+def read_json(file_path: str) -> object:
+    """Get the contents of the .json file located at `file_path`
+
+    Parameters
+    ----------
+    file_path: String
+        Path to the .json file to be read
+
+    Returns
+    -------
+    content: Object
+        The contents of the .json file located at `file_path`"""
+    content = json.loads(open(file_path).read(), object_hook=hook_json_read)
+    return content
+
+
+@RetryMakeDirs()
+def write_json(file_path: str, data: Any):
+    """Write `data` to the JSON file specified by `file_path`
+
+    Parameters
+    ----------
+    file_path: String
+        Target .json file path to which `data` will be written
+    data: Object
+        Content to save in the .json file given by `file_path`"""
+    with open(file_path, "w") as f:
+        json.dump(data, f, default=default_json_write, tuple_as_array=False)
+
+
+def add_to_json(file_path, data_to_add, key=None, condition=None, default=None, append_value=False):
+    """Append `data_to_add` to the contents of the .json file specified by `file_path`
+
+    Parameters
+    ----------
+    file_path: String
+        The target .json file path to which `data_to_add` will be added and saved
+    data_to_add: Object
+        The data to add to the contents of the .json file given by `file_path`
+    key: String, or None, default=None
+        If None, the original contents of the file at `file_path` should not be of type dict. If
+        string, the original content at `file_path` is expected to be a dict, and `data_to_add` will
+        be added to the original dict under the key `key`. Therefore, `key` is expected to be a
+        unique key to the original dict contents of `file_path`, unless `append_value` is True
+    condition: Callable, or None, default=None
+        If callable, will be given the original contents of the .json file at `file_path` as input,
+        and should return a boolean value. If `condition(original_data)` is truthy, `data_to_add`
+        will be added to the contents of the file at `file_path` as usual. Otherwise, `data_to_add`
+        will not be added to the file, and the contents at `file_path` will remain unchanged. If
+        `condition` is None, it will be treated as having been truthy, and will proceed to append
+        `data_to_add` to the target file
+    default: Object, or None, default=None
+        If the attempt to read the original content at `file_path` raises a `FileNotFoundError` and
+        `default` is not None, `default` will be used as the original data for the file. Otherwise,
+        the error will be raised
+    append_value: Boolean, default=False
+        If True and the original data at `file_path` is a dict, then `data_to_add` will be appended
+        as a list to the value of the original data at key `key`"""
+    try:
+        original_data = read_json(file_path)
+    except FileNotFoundError:
+        if default is not None:
+            original_data = default
+        else:
+            raise
+
+    if condition is None or original_data is None or condition(original_data):
+        if key is None and isinstance(original_data, list):
+            original_data.append(data_to_add)
+        elif isinstance(key, str) and isinstance(original_data, dict):
+            if append_value is True:
+                original_data[key] = original_data[key] + [data_to_add]
+            else:
+                original_data[key] = data_to_add
+
+        write_json(file_path, original_data)
+
+
+##################################################
+# YAML File Utilities
+##################################################
+# Extra Representers used in the default HH Ruamel YAML instance
+_RUAMEL_REPRESENTERS: List[Tuple[type, callable]] = [
+    (np.ndarray, lambda dumper, data: dumper.represent_list(data.tolist())),
+    (np.float64, lambda dumper, data: dumper.represent_float(float(data))),
+    (np.int64, lambda dumper, data: dumper.represent_int(int(data))),
+    (tuple, lambda dumper, data: dumper.represent_sequence("tag:yaml.org,2002:python/tuple", data)),
+    (str, lambda dumper, data: dumper.represent_scalar("tag:yaml.org,2002:str", data, style='"')),
+]
+# Extra Constructors used in the default HH Ruamel YAML instance
+_RUAMEL_CONSTRUCTORS: List[Tuple[str, callable]] = [
+    ("tag:yaml.org,2002:python/tuple", lambda loader, node: tuple(loader.construct_sequence(node)))
+]
+
+
+def get_ruamel_instance() -> YAML:
+    """Get the default :class:`ruamel.yaml.YAML` instance used for dumping/loading YAML files
+
+    Returns
+    -------
+    yml: YAML
+        :class:`ruamel.yaml.YAML` instance configured for HyperparameterHunter, outfitted with
+        additional Ruamel Representers to properly format non-standard data types"""
+    #################### Prepare Ruamel YAML Instance ####################
+    yml = YAML(typ="safe")
+    yml.default_flow_style = None
+    yml.sort_base_mapping_type_on_output = False  # False retains original mapping order
+    yml.top_level_colon_align = True  # Make it easier to see top-level elements
+    yml.width = 100
+
+    #################### Add Auxiliary Ruamel Representers/Constructors ####################
+    for (data_type, representer) in _RUAMEL_REPRESENTERS:
+        yml.representer.add_representer(data_type, representer)
+
+    for (tag, constructor) in _RUAMEL_CONSTRUCTORS:
+        yml.constructor.add_constructor(tag, constructor)
+
+    return yml
+
+
+def read_yaml(file_path: Union[str, Path], yml: YAML = None) -> object:
+    """Get the contents of the .yaml file located at `file_path`
+
+    Parameters
+    ----------
+    file_path: String, or Path
+        Path to the .yaml file to be read
+    yml: YAML (optional)
+        :class:`ruamel.yaml.YAML` instance used to load data from `file_path`. If not given, the
+        result of :func:`get_ruamel_instance` is used
+
+    Returns
+    -------
+    Object
+        Contents of the .yaml file located at `file_path`"""
+    file_path = Path(file_path)
+    yml = get_ruamel_instance() if yml is None else yml
+    return yml.load(file_path)
+
+
+@RetryMakeDirs()
+def write_yaml(file_path: Union[str, Path], data: Any, yml: YAML = None):
+    """Write `data` to the YAML file specified by `file_path`
+
+    Parameters
+    ----------
+    file_path: String, or Path
+        Target .yaml file path to which `data` will be written
+    data: Object
+        Content to save in the .yaml file given by `file_path`
+    yml: YAML (optional)
+        :class:`ruamel.yaml.YAML` instance used to dump `data` to `file_path`. If not given, the
+        result of :func:`get_ruamel_instance` is used"""
+    file_path = Path(file_path)
+    yml = get_ruamel_instance() if yml is None else yml
+
+    with open(file_path, "w+") as f:
+        yml.dump(data, f)
 
 
 ##################################################

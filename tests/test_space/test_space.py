@@ -2,15 +2,42 @@
 # Import Own Assets
 ##################################################
 from hyperparameter_hunter import Real, Categorical, Integer
-from hyperparameter_hunter.feature_engineering import EngineerStep
+from hyperparameter_hunter import Environment, CVExperiment, BayesianOptPro, EngineerStep
 from hyperparameter_hunter.space.dimensions import RejectedOptional
 from hyperparameter_hunter.space.space_core import Space
+from hyperparameter_hunter.utils.learning_utils import get_iris_data
 
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from os import makedirs
 import pytest
+from shutil import rmtree
 from sys import maxsize
+
+##################################################
+# Import Learning Assets
+##################################################
+from sklearn.ensemble import RandomForestClassifier
+
+##################################################
+# Global Settings
+##################################################
+assets_dir = "hyperparameter_hunter/__TEST__HyperparameterHunterAssets__"
+# assets_dir = "hyperparameter_hunter/HyperparameterHunterAssets"
+
+
+@pytest.fixture(scope="function", autouse=False)
+def hh_assets():
+    """Construct a temporary HyperparameterHunterAssets directory that exists only for the duration
+    of the tests contained in each function, before it and its contents are deleted"""
+    temp_assets_path = assets_dir
+    try:
+        makedirs(temp_assets_path)
+    except FileExistsError:
+        rmtree(temp_assets_path)
+        makedirs(temp_assets_path)
+    yield
 
 
 ##################################################
@@ -295,3 +322,68 @@ def test_get_by_name_use_location(space, name, expected):
 ##################################################
 def test_rejected_optional_repr():
     assert "{!r}".format(RejectedOptional()) == "RejectedOptional()"
+
+
+##################################################
+# Nested Dimension Optimization Matching Tests
+##################################################
+# Regression tests to ensure proper Experiment result matching when optimizing `Dimension` s nested
+#   inside other structures. See https://github.com/HunterMcGushion/hyperparameter_hunter/issues/183
+
+
+@pytest.fixture()
+def env_iris():
+    env = Environment(
+        train_dataset=get_iris_data(),
+        results_path=assets_dir,
+        target_column="species",
+        metrics=["hamming_loss"],
+        cv_params=dict(n_splits=5, shuffle=True, random_state=32),
+    )
+    return env
+
+
+def get_nested_dict_rfc_opt_pro() -> BayesianOptPro:
+    """Get a :class:`BayesianOptPro` instance, forged with Dimensions in a nested `class_weight`
+    dict under `model_init_params`--for `RandomForestClassifier`"""
+    opt = BayesianOptPro(iterations=2, random_state=32, n_initial_points=1)
+    opt.forge_experiment(
+        model_initializer=RandomForestClassifier,
+        model_init_params=dict(
+            n_estimators=Integer(5, 100),
+            # Below `class_weight` is object under test
+            class_weight={0: Categorical([1, 3]), 1: Categorical([1, 4]), 2: Integer(1, 9)},
+        ),
+    )
+    return opt
+
+
+def test_nested_dict_matching_exp(env_iris):
+    """Test that individual values in a `class_weight` dict can be optimized and matched with
+    compatible saved Experiment results. See HH issue #183 (linked above) for details"""
+    # Experiment, whose saved results should be matched by `opt`
+    exp = CVExperiment(
+        RandomForestClassifier, dict(n_estimators=10, class_weight={0: 1, 1: 1, 2: 1})
+    )
+
+    # OptPro, whose Dimensions should match with results of `exp`
+    opt = get_nested_dict_rfc_opt_pro()
+    opt.go()
+
+    # Check that `opt` matched with `exp`
+    assert exp.experiment_id in [_[2] for _ in opt.similar_experiments]
+
+
+def test_nested_dict_matching_opt(env_iris):
+    """Test that individual values in a `class_weight` dict can be optimized and matched with
+    compatible saved OptPro results. See HH issue #183 (linked above) for details"""
+    # First OptPro, whose Dimensions should match with below `opt_1`
+    opt_0 = get_nested_dict_rfc_opt_pro()
+    opt_0.go()
+
+    # Second OptPro, identical to `opt_0`, whose Dimensions should match with results of `opt_0`
+    opt_1 = get_nested_dict_rfc_opt_pro()
+    opt_1.go()
+
+    # Assert `opt_1` matched with all Experiments executed by `opt_0`
+    assert len(opt_1.similar_experiments) == opt_0.successful_iterations

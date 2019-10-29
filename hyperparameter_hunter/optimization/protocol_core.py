@@ -8,7 +8,7 @@ Related
     Defines the optimization classes that are intended for direct use. All classes defined in
     :mod:`hyperparameter_hunter.optimization.backends.skopt.protocols` should be descendants of
     :class:`~hyperparameter_hunter.optimization.protocol_core.BaseOptPro`
-:mod:`hyperparameter_hunter.result_reader`
+:mod:`hyperparameter_hunter.i_o.result_reader`
     Used to locate result files for Experiments that are similar to the current optimization
     constraints, and produce data to learn from in the case of :class:`SKOptPro`
 :mod:`hyperparameter_hunter.space`
@@ -393,17 +393,17 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         #################### Deal with Keras ####################
         if self.module_name == "keras":
-            reusable_build_fn, reusable_wrapper_params, dummy_layers, dummy_compile_params = keras_prep_workflow(
+            build_fn, wrapper_params, dummy_layers, dummy_compile_params = keras_prep_workflow(
                 self.model_initializer,
                 self.model_init_params["build_fn"],
                 self.model_extra_params,
                 self.source_script,
             )
-            self.model_init_params = dict(build_fn=reusable_build_fn)
-            self.model_extra_params = reusable_wrapper_params
+            self.model_init_params = dict(build_fn=build_fn)  # Reusable
+            self.model_extra_params = wrapper_params  # Reusable
             self.dummy_layers = dummy_layers
             self.dummy_compile_params = dummy_compile_params
-            # FLAG: Deal with capitalization conflicts when comparing similar experiments: `optimizer`='Adam' vs 'adam'
+            # FLAG: Handle `optimizer` capitalization conflicts: `optimizer`="Adam" vs "adam"
 
         self.set_dimensions()
 

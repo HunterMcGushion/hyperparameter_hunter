@@ -10,11 +10,10 @@ Related
 ##################################################
 # Import Own Assets
 ##################################################
-from hyperparameter_hunter.i_o.exceptions import ContinueRemap
 from hyperparameter_hunter.keys.hashing import make_hash_sha256
 from hyperparameter_hunter.space.dimensions import Real, Integer, Categorical, RejectedOptional
 from hyperparameter_hunter.utils.boltons_utils import get_path, remap
-from hyperparameter_hunter.utils.file_utils import read_json
+from hyperparameter_hunter.utils.file_utils import read_json, read_yaml
 from hyperparameter_hunter.utils.general_utils import extra_enter_attrs
 
 try:
@@ -27,6 +26,7 @@ except ImportError:
 ##################################################
 from contextlib import suppress
 import pandas as pd
+from pathlib import Path
 
 
 ##################################################
@@ -89,13 +89,42 @@ def get_ids_by(
     return matching_ids
 
 
-def get_scored_params(experiment_description_path, target_metric, get_description=False):
+def find_experiment_description(description_dir: str, experiment_id: str) -> dict:
+    """Locate and return the Description file contents for `experiment_id`. Assumes the Description
+    file extension to be in {".yaml", ".yml", ".json"}, and checks for files in that order,
+    returning the first one found
+
+    Parameters
+    ----------
+    description_dir: String
+        Path to a directory containing the Description files of saved Experiments
+    experiment_id: String
+        ID of the saved Experiment whose Description should be returned
+
+    Returns
+    -------
+    Dict
+        Experiment Description file contents"""
+    description_path = Path(description_dir) / experiment_id  # Extension unknown right now
+
+    for (extension, reader) in [(".yaml", read_yaml), (".yml", read_yaml), (".json", read_json)]:
+        try:
+            return reader(description_path.with_suffix(extension))
+        except FileNotFoundError:
+            continue
+
+    raise ValueError(f"Expected YAML/JSON `description_path`, not {description_path}")
+
+
+def get_scored_params(description_dir, experiment_id, target_metric, get_description=False):
     """Retrieve the hyperparameters of a completed Experiment, along with its performance evaluation
 
     Parameters
     ----------
-    experiment_description_path: String
-        The path to an Experiment's description .json file
+    description_dir: String
+        Path to a directory containing the Description files of saved Experiments
+    experiment_id: String
+        ID of the saved Experiment whose Description should be returned
     target_metric: Tuple
         A path denoting the metric to be used. If tuple, the first value should be one of ['oof',
         'holdout', 'in_fold'], and the second value should be the name of a metric supplied in
@@ -111,7 +140,7 @@ def get_scored_params(experiment_description_path, target_metric, get_descriptio
         A dict of the hyperparameters used by the Experiment
     evaluation: Float
         Value of the Experiment's `target_metric`"""
-    description = read_json(file_path=experiment_description_path)
+    description = find_experiment_description(description_dir, experiment_id)
     evaluation = get_path(description["final_evaluations"], target_metric)
     all_hyperparameters = description["hyperparameters"]
 
@@ -163,59 +192,6 @@ def does_fit_in_space(root, space):
     Boolean
         True if `root` subset (at `space` locations) fits in `space` dimensions. Else, False"""
     return dimension_subset(root, space.names()) in space
-
-
-def visit_feature_engineer(path, key, value):
-    """Helper to be used within a `visit` function intended for a `remap`-like function
-
-    Parameters
-    ----------
-    path: Tuple
-        The path of keys that leads to `key`
-    key: String
-        The parameter name
-    value: Object
-        The value of the parameter `key`
-
-    Returns
-    -------
-    False if the value represents a dataset, or tuple of (`key`, <hash of `value`>). If neither of
-    these are returned, a `ContinueRemap` exception is raised
-
-    Raises
-    ------
-    ContinueRemap
-        If a value is not returned by `visit_function_engineer`. For proper functioning, this raised
-        `ContinueRemap` is assumed to be handled by the calling `visit` function. Usually, the
-        `except` block for `ContinueRemap` will simply continue execution of `visit`
-
-    Examples
-    --------
-    >>> visit_feature_engineer(("feature_engineer",), "datasets", dict())
-    False
-    >>> visit_feature_engineer(("feature_engineer", "steps"), "f", lambda _: _)  # pytest: +ELLIPSIS
-    ('f', '...')
-    >>> visit_feature_engineer(("feature_engineer", "steps"), "foo", lambda _: _)
-    Traceback (most recent call last):
-        File "optimization_utils.py", line ?, in visit_feature_engineer
-    hyperparameter_hunter.i_o.exceptions.ContinueRemap: Just keep doing what you were doing
-    >>> visit_feature_engineer(("feature_engineer",), "foo", dict())
-    Traceback (most recent call last):
-        File "optimization_utils.py", line ?, in visit_feature_engineer
-    hyperparameter_hunter.i_o.exceptions.ContinueRemap: Just keep doing what you were doing
-    >>> visit_feature_engineer(("foo",), "bar", dict())
-    Traceback (most recent call last):
-        File "optimization_utils.py", line ?, in visit_feature_engineer
-    hyperparameter_hunter.i_o.exceptions.ContinueRemap: Just keep doing what you were doing"""
-    if path and path[0] == "feature_engineer":
-        # Drop dataset hashes
-        if key in ("datasets", "original_hashes", "updated_hashes") and isinstance(value, dict):
-            return False
-        # Ensure `EngineerStep.f` is hashed
-        with suppress(IndexError):
-            if path[1] == "steps" and key == "f" and callable(value):
-                return key, make_hash_sha256(value)
-    raise ContinueRemap
 
 
 def get_choice_dimensions(params, iter_attrs=None):

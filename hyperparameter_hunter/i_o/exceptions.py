@@ -130,11 +130,6 @@ class IncompatibleCandidateError(Exception):
         super(IncompatibleCandidateError, self).__init__(message)
 
 
-class ContinueRemap(Exception):
-    def __str__(self):
-        return "Just keep doing what you were doing"
-
-
 ##################################################
 # Deprecation Warnings
 ##################################################

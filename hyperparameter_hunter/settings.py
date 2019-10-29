@@ -94,6 +94,9 @@ class G(object):
         target, which is the same form as the original target data. Continuing the example of
         label-encoded target data, and an :class:`feature_engineering.EngineerStep` to one-hot
         encode the target, in this case, label-encoded predictions will be saved.
+    description_format: {"yaml", "json"}, default="yaml"
+        How to save Experiment Description files. See
+        :meth:`hyperparameter_hunter.i_o.recorders.RecorderList.__init__`
     priority_callbacks: Tuple
         Intended for internal use only. The contents of this tuple are inserted at the front of an
         Experiment's list of callback bases via :class:`experiment_core.ExperimentMeta`, ahead of
@@ -116,11 +119,13 @@ class G(object):
 
     #################### Miscellaneous Settings ####################
     save_transformed_predictions = False
+    description_format = "yaml"
 
     #################### Internal Settings ####################
     priority_callbacks = tuple()
 
-    #################### Standard Logging Set by :class:`environment.Environment` ####################
+    #################### Standard Logging ####################
+    # Set by :class:`environment.Environment`
     @staticmethod
     def log(content, *args, **kwargs):
         """Set in :meth:`environment.Environment.initialize_reporting` to the updated version of
@@ -139,7 +144,8 @@ class G(object):
         :meth:`reporting.ReportingHandler.warn`"""
         warnings.warn(content, *args, **kwargs)
 
-    #################### Optimization Logging Set by :class:`protocol_core.BaseOptPro` ####################
+    #################### Optimization Logging ####################
+    # Set by :class:`protocol_core.BaseOptPro`
     log_ = print
     debug_ = print
     warn_ = warnings.warn
