@@ -13,7 +13,7 @@ import sys
 # Import Learning Assets
 ##################################################
 try:
-    from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+    from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
 except (ModuleNotFoundError, ImportError):
     KerasClassifier, KerasRegressor = None, None
 

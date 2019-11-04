@@ -1,8 +1,8 @@
 from hyperparameter_hunter import Environment, CVExperiment
 import pandas as pd
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasClassifier
+from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.datasets import load_digits
 
 

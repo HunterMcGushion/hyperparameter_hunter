@@ -49,8 +49,8 @@ from types import FunctionType, MethodType
 try:
     stderr = sys.stderr
     sys.stderr = open(os.devnull, "w")
-    from keras.callbacks import Callback as base_keras_callback
-    from keras.initializers import Initializer as BaseKerasInitializer
+    from tensorflow.keras.callbacks import Callback as base_keras_callback
+    from tensorflow.keras.initializers import Initializer as BaseKerasInitializer
 
     sys.stderr = stderr
 except ModuleNotFoundError:

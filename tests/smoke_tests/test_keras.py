@@ -19,11 +19,11 @@ except Exception:
 ##################################################
 # Import Learning Assets
 ##################################################
-from keras.callbacks import ReduceLROnPlateau
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
-from keras.initializers import glorot_normal, orthogonal, Orthogonal
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+from tensorflow.keras.initializers import glorot_normal, orthogonal, Orthogonal
 from sklearn.datasets import load_digits
 
 ##################################################

@@ -22,9 +22,10 @@ from hyperparameter_hunter.space.dimensions import Real, Integer, Categorical
 ##################################################
 # noinspection PyProtectedMember
 from inspect import signature, _empty, currentframe, getframeinfo
+import abc
 
 
-class ArgumentTracer(type):
+class ArgumentTracer(abc.ABCMeta):
     """Metaclass to trace the default arguments and explicitly provided arguments of its
     descendants. It also has special provisions for instantiating dummy models if directed to"""
 
