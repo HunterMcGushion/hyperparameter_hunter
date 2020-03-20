@@ -393,7 +393,12 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         #################### Deal with Keras ####################
         if self.module_name == "keras":
-            reusable_build_fn, reusable_wrapper_params, dummy_layers, dummy_compile_params = keras_prep_workflow(
+            (
+                reusable_build_fn,
+                reusable_wrapper_params,
+                dummy_layers,
+                dummy_compile_params,
+            ) = keras_prep_workflow(
                 self.model_initializer,
                 self.model_init_params["build_fn"],
                 self.model_extra_params,
