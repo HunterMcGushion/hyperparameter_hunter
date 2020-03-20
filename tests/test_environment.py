@@ -81,7 +81,25 @@ default_env_params = dict(
 ##################################################
 # Environment Initialization Scenarios
 ##################################################
-if get_distribution("scikit-learn").version >= "0.21.0":
+if get_distribution("scikit-learn").version >= "0.22.1":
+    env_keys = [
+        "mq2AbzYPiRbLSIRmfzhChbJU4ZRSyfa_QHpzn2Q91Lw=",
+        "3cqeYUuJpzdTqZce_wYJTRnSsJAJhjVe0-ophuYqT-w=",
+        "BKd3SkDICQWcmJEF6HgMUpoy6qvzexWcQvoe8Z668RI=",
+        "QASd57OkHyewVf6fDtia3QDjUgQJgH2oxJfy0rN8Mk0=",
+        "4wfjujp3xIAb2-48TYAnmeTw8pnGfeFeYLJsUUoMmP8=",
+        "ypSS2UgcT48_X8YBPdGIwXcqnnzUyjMRnpNla6BM-aU=",
+    ]
+elif get_distribution("scikit-learn").version >= "0.22":
+    env_keys = [
+        "CrpaPtZc3pb_iRXx3yOhj9Ia_duy_5YqWVQ9pAvZyYM=",
+        "NJEmEitFdS0bTtSHMvb1C9I6vSJ4GlzkIy2JMCidBPo=",
+        "fHNr3fZyA-uZjAJWMd_SgMyyb7dex6_psYIXy3PCvSk=",
+        "ayj0zhnngjAtuEniXz3yXhqKR71w0eoS13UTUMO171I=",
+        "KT732K9_WsVFGeC1bQMgexTqjjtheq0Lge47lSzLWGU=",
+        "WQXaRTCYi-OXXnOinTfwgY7KI6JVmxio4MqNI3KTDcc=",
+    ]
+elif get_distribution("scikit-learn").version >= "0.21.0":
     env_keys = [
         "JmVKziNqJKJu87ZZwtMb4m4nj_aArpSQ_IulDTIbO_E=",
         "a_ykAZaAPL1wvbQXtiMbJx6OpGZdrOlYlnjDQtu8nKI=",

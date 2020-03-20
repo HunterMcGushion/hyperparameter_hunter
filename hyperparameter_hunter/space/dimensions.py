@@ -37,7 +37,7 @@ from uuid import uuid4 as uuid
 from scipy.stats._distn_infrastructure import rv_generic
 from scipy.stats.distributions import randint, rv_discrete, uniform
 from sklearn.utils import check_random_state
-from skopt.space.transformers import CategoricalEncoder, Normalize, Identity, Log10, Pipeline
+from skopt.space.transformers import CategoricalEncoder, Normalize, Identity, LogN, Pipeline
 from skopt.space.transformers import Transformer
 
 
@@ -81,6 +81,11 @@ def _uniform_inclusive(loc=0.0, scale=1.0):
     # Like scipy.stats.distributions but inclusive of `high`
     # XXX scale + 1. might not actually be a float after scale if scale is very large
     return uniform(loc=loc, scale=np.nextafter(scale, scale + 1.0))
+
+
+class Log10(LogN):
+    def __init__(self):
+        super().__init__(base=10)
 
 
 ##################################################
