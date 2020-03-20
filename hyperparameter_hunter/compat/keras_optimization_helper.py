@@ -56,7 +56,9 @@ try:
 except ModuleNotFoundError:
     base_keras_callback = type("PlaceholderBaseKerasCallback", (), {})
     BaseKerasInitializer = type("PlaceholderBaseKerasInitializer", (), {})
-
+# when working on cuda10.1, no information will be output, but pass and stop
+except Except as e:
+    print(e)
 
 def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script):
     """Conduct preparation steps necessary before hyperparameter optimization on a `Keras` model.
