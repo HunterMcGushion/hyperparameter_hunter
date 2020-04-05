@@ -70,7 +70,7 @@ from skopt.callbacks import check_callback
 from skopt.utils import eval_callbacks
 
 try:
-    from keras import backend as K
+    from tensorflow.keras import backend as K
 except ImportError:
     K = None
 
@@ -428,8 +428,8 @@ class BaseOptPro(metaclass=MergedOptProMeta):
 
         #################### Remap Extra Objects ####################
         if self.module_name == "keras":
-            from keras.initializers import Initializer as KerasInitializer
-            from keras.callbacks import Callback as KerasCB
+            from tensorflow.keras.initializers import Initializer as KerasInitializer
+            from tensorflow.keras.callbacks import Callback as KerasCB
 
             self.init_iter_attrs.append(lambda _p, _k, _v: isinstance(_v, KerasInitializer))
             self.extra_iter_attrs.append(lambda _p, _k, _v: isinstance(_v, KerasCB))

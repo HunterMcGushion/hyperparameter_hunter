@@ -734,7 +734,7 @@ class ResultFinder:
         _model_params = deepcopy(self.model_params["model_init_params"])
 
         if location == ("compile_params", "optimizer"):
-            from keras.optimizers import get as k_opt_get
+            from tensorflow.keras.optimizers import get as k_opt_get
 
             update_location = ("compile_params", "optimizer_params")
             # `update_location` = Path to hyperparameter whose default value depends on `location`
@@ -900,8 +900,8 @@ class KerasResultFinder(ResultFinder):
             sort=sort,
         )
 
-        from keras.callbacks import Callback as BaseKerasCallback
-        from keras.initializers import Initializer as BaseKerasInitializer
+        from tensorflow.keras.callbacks import Callback as BaseKerasCallback
+        from tensorflow.keras.initializers import Initializer as BaseKerasInitializer
 
         # noinspection PyUnusedLocal
         def _visit(path, key, value):

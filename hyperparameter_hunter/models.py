@@ -33,7 +33,7 @@ import warnings
 import sklearn.utils as sklearn_utils
 
 try:
-    from keras import backend as K
+    from tensorflow.keras import backend as K
 except ImportError:
     K = None
 
@@ -383,7 +383,7 @@ class KerasModel(Model):
         )
 
         global load_model
-        from keras.models import load_model
+        from tensorflow.keras.models import load_model
 
     def initialize_model(self):
         """Create an instance of a model using :attr:`model_initializer`, with

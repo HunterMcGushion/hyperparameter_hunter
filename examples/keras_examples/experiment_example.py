@@ -1,10 +1,10 @@
 from hyperparameter_hunter import Environment, CVExperiment
 from hyperparameter_hunter.utils.learning_utils import get_breast_cancer_data
 import os.path
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from keras.layers import Dense, Activation, Dropout
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasClassifier
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.layers import Dense, Activation, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 
 
 def build_fn(input_shape=-1):

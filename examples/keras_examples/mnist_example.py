@@ -9,10 +9,10 @@ except Exception:
     raise
 
 import pandas as pd
-from keras.datasets import mnist
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasClassifier
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 
 
 ##################################################

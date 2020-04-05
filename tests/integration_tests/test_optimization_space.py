@@ -31,9 +31,9 @@ except Exception:
 ##################################################
 # Import Learning Assets
 ##################################################
-from keras.layers import Dense, Dropout
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasClassifier
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 
 ##################################################
 # Global Settings

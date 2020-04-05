@@ -23,12 +23,12 @@ except Exception:
 ##################################################
 # Import Learning Assets
 ##################################################
-from keras import initializers
-from keras import callbacks
-from keras.layers import Dense, Dropout, Embedding, Flatten, SpatialDropout1D
-from keras.losses import binary_crossentropy, mean_absolute_error
-from keras.models import Sequential
-from keras.optimizers import Adam, RMSprop
+from tensorflow.keras import initializers
+from tensorflow.keras import callbacks
+from tensorflow.keras.layers import Dense, Dropout, Embedding, Flatten, SpatialDropout1D
+from tensorflow.keras.losses import binary_crossentropy, mean_absolute_error
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam, RMSprop
 
 ##################################################
 # Parametrization Helper Dicts
