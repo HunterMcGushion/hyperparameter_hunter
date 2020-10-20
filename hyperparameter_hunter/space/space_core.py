@@ -197,10 +197,16 @@ class Space:
         columns = []
 
         for dim in self.dimensions:
-            if sp_version < (0, 16):
-                columns.append(dim.rvs(n_samples=n_samples))
-            else:
-                columns.append(dim.rvs(n_samples=n_samples, random_state=rng))
+            new_val = None
+            try:
+                if sp_version < (0, 16):
+                    new_val = dim.rvs(n_samples=n_samples)
+                else:
+                    new_val = dim.rvs(n_samples=n_samples, random_state=rng)
+            except TypeError:  # `'<' not supported between instances of 'Version' and 'str'`
+                new_val = dim.rvs(n_samples=n_samples, random_state=rng)
+            finally:
+                columns.append(new_val)
 
         #################### Transpose ####################
         rows = []
