@@ -34,6 +34,7 @@ from hyperparameter_hunter.space.space_core import Space, normalize_dimensions
 ##################################################
 # Import Miscellaneous Assets
 ##################################################
+from joblib import Parallel, delayed
 from math import log
 from numbers import Number
 import numpy as np
@@ -46,7 +47,6 @@ import warnings
 from scipy.optimize import fmin_l_bfgs_b
 from sklearn.base import clone, is_regressor
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.externals.joblib import Parallel, delayed
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils import check_random_state
 
