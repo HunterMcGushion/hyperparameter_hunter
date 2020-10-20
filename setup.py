@@ -48,7 +48,7 @@ setup(
         "nbformat",
         "numpy",
         "pandas",
-        "scikit-learn",
+        "scikit-learn<=0.22.2",
         "scikit-optimize",
         "scipy",
         "simplejson",
