@@ -43,11 +43,12 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
+        "joblib",
         "nbconvert",
         "nbformat",
         "numpy",
         "pandas",
-        "scikit-learn",
+        "scikit-learn<=0.22.2",
         "scikit-optimize",
         "scipy",
         "simplejson",
@@ -57,7 +58,7 @@ setup(
         "dev": ["pre-commit"],
         "docs": ["numpydoc", "hyperparameter-hunter", "keras"],
         "travis": [
-            "pytest>=4.0",
+            "pytest>=4.6",
             "pytest-cov",
             "hyperparameter-hunter",
             "pyyaml",
@@ -68,7 +69,7 @@ setup(
     },
     include_package_data=True,
     zip_safe=False,
-    tests_require=["pytest>=4.0", "pytest-cov"],
+    tests_require=["pytest>=4.6", "pytest-cov"],
     classifiers=(
         "Intended Audience :: Developers",
         "Intended Audience :: Education",

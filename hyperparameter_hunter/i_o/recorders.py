@@ -90,10 +90,10 @@ class BaseRecorder(metaclass=ABCMeta):
     @abstractmethod
     def required_attributes(self) -> list:
         """Return attributes of the current Experiment that are necessary to properly record result.
-         Specifically, `BaseRecorder` fetches the attrs via :class:`settings.G.Env.current_task`,
-         which can also be regarded as :class:`environment.Environment.current_task`, but this is
-         an implementation detail. It is simpler to use :class:`experiments.BaseExperiment`, and its
-         appropriate descendants as a reference for acceptable values of `required_attributes`"""
+        Specifically, `BaseRecorder` fetches the attrs via :class:`settings.G.Env.current_task`,
+        which can also be regarded as :class:`environment.Environment.current_task`, but this is
+        an implementation detail. It is simpler to use :class:`experiments.BaseExperiment`, and its
+        appropriate descendants as a reference for acceptable values of `required_attributes`"""
 
     @abstractmethod
     def format_result(self):

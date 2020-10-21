@@ -46,16 +46,17 @@ from types import FunctionType, MethodType
 ##################################################
 # Import Learning Assets
 ##################################################
+stderr = sys.stderr
+sys.stderr = open(os.devnull, "w")
+
 try:
-    stderr = sys.stderr
-    sys.stderr = open(os.devnull, "w")
     from keras.callbacks import Callback as base_keras_callback
     from keras.initializers import Initializer as BaseKerasInitializer
-
-    sys.stderr = stderr
 except ModuleNotFoundError:
     base_keras_callback = type("PlaceholderBaseKerasCallback", (), {})
     BaseKerasInitializer = type("PlaceholderBaseKerasInitializer", (), {})
+finally:
+    sys.stderr = stderr
 
 
 def keras_prep_workflow(model_initializer, build_fn, extra_params, source_script):
