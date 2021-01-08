@@ -549,7 +549,6 @@ class EngineerStep:
 
         if self.do_validate:
             self.updated_hashes = hash_datasets(new_datasets)
-        # TODO: Check `self.do_validate` here to decide whether to `compare_dataset_columns`
         return new_datasets
 
     def inverse_transform(self, data):
