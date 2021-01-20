@@ -899,16 +899,12 @@ def get_path(root, path, default=_UNSET):
                 cur = cur[seg]
             except (KeyError, IndexError) as exc:
                 raise PathAccessError(exc, seg, path)
-            except TypeError as exc:
+            except (TypeError, ValueError) as exc:
                 # either string index in a list, or a parent that
                 # doesn't support indexing
-                try:
-                    seg = int(seg)
-                    cur = cur[seg]
-                except (ValueError, KeyError, IndexError, TypeError):
-                    if not is_iterable(cur):
-                        exc = TypeError("%r object is not indexable" % type(cur).__name__)
-                    raise PathAccessError(exc, seg, path)
+                if not is_iterable(cur):
+                    exc = TypeError("%r object is not indexable" % type(cur).__name__)
+                raise PathAccessError(exc, seg, path)
     except PathAccessError:
         if default is _UNSET:
             raise
