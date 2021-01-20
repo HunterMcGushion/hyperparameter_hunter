@@ -7,7 +7,7 @@ from keras.layers import Dense, Activation, Dropout
 from keras.models import Sequential
 from keras.wrappers.scikit_learn import KerasClassifier
 
-
+## INITIAL HYPERPARAMETERS MODEL
 def _build_fn_experiment(input_shape):
     model = Sequential(
         [
@@ -19,18 +19,20 @@ def _build_fn_experiment(input_shape):
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
     return model
 
-
+## HYPERPARAMETER OPTIMIZER
 def _build_fn_optimization(input_shape):
     model = Sequential(
         [
             Dense(
-                Integer(50, 150),
-                kernel_initializer="uniform",
-                input_shape=input_shape,
-                activation="relu",
+                Integer(50, 150),  # TO OPTIMIZE: Dense 'units', from 50 to 150, in integer values
+                kernel_initializer="uniform",  # FIXED (no optimization)
+                input_shape=input_shape,  # FIXED
+                activation="relu",  # FIXED
             ),
-            Dropout(Real(0.2, 0.7)),
-            Dense(1, kernel_initializer="uniform", activation=Categorical(["sigmoid", "relu"])),
+            Dropout(Real(0.2, 0.7)),  # TO OPTIMIZE: Dropout rate, from 0.2 to 0.7, in real values
+            Dense(1,  # FIXED
+                  kernel_initializer="uniform",  # FIXED
+                  activation=Categorical(["sigmoid", "relu"])),  # TO OPTIMIZE: Dense activation, one of "sigmoid", "relu"
         ]
     )
     model.compile(
